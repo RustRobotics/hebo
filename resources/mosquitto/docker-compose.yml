@@ -1,0 +1,12 @@
+version: "3.0"
+services:
+  mosquitto-ruo:
+    image: eclipse-mosquitto:1.6.7
+    restart: always
+    ports:
+      - 127.0.0.1:1883:1883
+      - 127.0.0.1:9001:9001
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./data:/mosquitto/data
+
