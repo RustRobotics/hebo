@@ -1,5 +1,5 @@
 // Copyright (c) 2020 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
-// Use of this source is governed by General Public License that can be found
+// Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
 use super::base::*;
@@ -8,12 +8,12 @@ use super::error::Error;
 use std::io;
 use super::connect_packet::ConnectPacket;
 use super::publish_packet::PublishPacket;
-use super::stream::{Stream, SyncStream};
+use super::stream::{Stream, SyncStream, StreamTypes};
 
 #[derive(Debug)]
 pub struct Client {
     connect_options: ConnectOptions,
-    stream: SyncStream,
+    stream: StreamTypes,
 }
 
 impl Client {
@@ -24,7 +24,7 @@ impl Client {
 
         let client = Client {
             connect_options,
-            stream,
+            stream: StreamTypes::SyncStream(stream),
         };
 
         Ok(client)
