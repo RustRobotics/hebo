@@ -4,27 +4,28 @@
 
 use std::io;
 use super::{
+    async_stream::AsyncStream,
     base::*,
     connect_options::*,
     connect_packet::ConnectPacket,
     error::Error,
     publish_packet::PublishPacket,
-    sync_stream::SyncStream,
 };
 
 #[derive(Debug)]
-pub struct Client {
+pub struct AsyncClient {
     connect_options: ConnectOptions,
-    stream: SyncStream,
+    stream: AsyncStream,
 }
 
-impl Client {
-    pub fn connect(connect_options: ConnectOptions) -> io::Result<Client> {
-        let mut stream = SyncStream::connect(connect_options.address().clone())?;
+impl AsyncClient {
+    pub async fn connect(connect_options: ConnectOptions) -> io::Result<AsyncClient> {
+        let mut stream = AsyncStream::connect(connect_options.address().clone()).await;
         let conn_packet = ConnectPacket::new();
-        stream.send(conn_packet);
+        stream.send(conn_packet).await;
+        log::info!("stream send conn packet");
 
-        let client = Client {
+        let client = AsyncClient {
             connect_options,
             stream,
         };
@@ -32,13 +33,14 @@ impl Client {
         Ok(client)
     }
 
-    pub fn publish(&mut self, topic: &str, qos: QoSLevel, data: &[u8]) {
+    pub async fn publish(&mut self, topic: &str, qos: QoSLevel, data: &[u8]) {
         let mut msg_packet = PublishPacket::new(topic.as_bytes());
         msg_packet.set_message(data).unwrap();
-        self.stream.send(msg_packet);
+        log::info!("Send publish packet");
+        self.stream.send(msg_packet).await;
     }
 
-    pub fn disconnect(&mut self) {
+    pub async fn disconnect(&mut self) {
     }
 
     pub fn on_connect(&mut self) {
