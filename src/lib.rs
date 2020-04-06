@@ -5,5 +5,12 @@
 mod base;
 pub use base::*;
 
+pub mod error;
+
 mod connect_options;
 pub use connect_options::*;
+
+mod client;
+pub use client::*;
+
+mod stream;

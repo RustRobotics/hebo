@@ -3,16 +3,26 @@
 // in the LICENSE file.
 
 use std::time::Duration;
+use std::net::{ToSocketAddrs, SocketAddr};
+use std::io;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct HttpProxy {
+    pub hostname: String,
+    pub port: u16,
+    pub login: String,
+    pub password: String,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Socks5Proxy {
+    pub hostname: String,
+    pub port: u16,
+    pub login: String,
+    pub password: String,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Proxy {
     None,
     Http(HttpProxy),
@@ -22,7 +32,7 @@ pub enum Proxy {
 pub trait Authentication {
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct UsernameAuth {
     pub username: String,
     pub password: String,
@@ -31,33 +41,45 @@ pub struct UsernameAuth {
 impl Authentication for UsernameAuth {
 }
 
+#[derive(Clone, Debug)]
 pub struct ConnectOptions {
-    address: String,
-    port: u16,
+    address: SocketAddr,
+    client_id: String,
     keep_alive: Duration,
     proxy: Proxy,
-    auth: Option<Box<dyn Authentication>>,
 }
 
 impl Default for ConnectOptions {
     fn default() -> Self {
         ConnectOptions {
-            address: "127.0.0.1".to_string(),
-            port: 1883,
+            address: SocketAddr::from(([127, 0, 0, 1], 1883)),
+            client_id: String::new(),
             keep_alive: Duration::from_secs(30),
             proxy: Proxy::None,
-            auth: None,
         }
     }
 }
 
 impl ConnectOptions {
-    pub fn new(addr: &str, port: u16) -> ConnectOptions {
-        ConnectOptions {
-            address: addr.to_string(),
-            port: port,
+    pub fn new<A: ToSocketAddrs>(address: A) -> io::Result<ConnectOptions> {
+        let mut addrs = address.to_socket_addrs()?;
+        Ok(ConnectOptions {
+            address: addrs.nth(0).unwrap(),
             ..Self::default()
-        }
+        })
+    }
+
+    pub fn address(&self) -> &SocketAddr {
+        &self.address
+    }
+
+    pub fn set_client_id(&mut self, client_id: &str) -> &mut Self {
+        self.client_id = client_id.to_string();
+        self
+    }
+
+    pub fn client_id(&self) -> &str {
+        &self.client_id
     }
 
     pub fn set_keepalive(&mut self, keep_alive: Duration) -> &mut Self {
