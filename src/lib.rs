@@ -3,14 +3,13 @@
 // in the LICENSE file.
 
 mod base;
-pub use base::*;
-
 pub mod error;
-
 mod connect_options;
-pub use connect_options::*;
-
 mod client;
-pub use client::*;
+pub mod connect_packet;
+pub mod publish_packet;
+pub mod stream;
 
-mod stream;
+pub use base::*;
+pub use connect_options::*;
+pub use client::*;

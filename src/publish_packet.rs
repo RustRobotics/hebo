@@ -7,13 +7,13 @@ use byteorder::{BigEndian, WriteBytesExt};
 use std::io::{Result, Write};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
-pub struct PublishMessage {
+pub struct PublishPacket {
     pub header_flags: HeaderFlags,
     topic: Vec<u8>,
     msg: Vec<u8>,
 }
 
-impl ToNetPacket for PublishMessage {
+impl ToNetPacket for PublishPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
         let old_len = v.len();
         self.header_flags.to_net(v)?;
@@ -26,8 +26,8 @@ impl ToNetPacket for PublishMessage {
     }
 }
 
-impl PublishMessage {
-    pub fn new(topic: &[u8]) -> PublishMessage {
+impl PublishPacket {
+    pub fn new(topic: &[u8]) -> PublishPacket {
         let header_flags = HeaderFlags {
             msg_type: MsgType::Publish,
             reserved: Reserved::Publish {
@@ -36,7 +36,7 @@ impl PublishMessage {
                 retain: false,
             },
         };
-        PublishMessage {
+        PublishPacket {
             header_flags: header_flags,
             topic: Vec::from(topic),
             msg: vec![],
