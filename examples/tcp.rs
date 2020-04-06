@@ -2,7 +2,14 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use tokio::{
+    net::TcpStream,
+    prelude::*,
+    };
 
-fn main() {
-    println!("Hello, tokio");
+#[tokio::main]
+async fn main() {
+    let addr = "127.0.0.1:1883";
+    let mut stream = TcpStream::connect(addr).await.unwrap();
+    log::info!("stream created");
 }

@@ -4,7 +4,6 @@
 
 mod base;
 pub use base::*;
-mod connect;
-pub use connect::*;
-mod publish;
-pub use publish::*;
+
+mod connect_options;
+pub use connect_options::*;
