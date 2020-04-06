@@ -1,0 +1,7 @@
+version: "3.0"
+services:
+  ruo-emqx:
+    image: emqx/emqx
+    ports:
+      - 127.0.0.1:1883:1883
+    restart: always
