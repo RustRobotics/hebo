@@ -2,16 +2,16 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::io::Result;
+use super::error::Error;
+use std::io;
 
 /// Convert native data types to network byte stream.
 pub trait ToNetPacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize>;
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize>;
 }
 
-pub trait FromNetPacket {
-    type Output;
-    fn from_net(buf: &[u8]) -> Result<Self::Output>;
+pub trait FromNetPacket: Sized {
+    fn from_net(buf: &[u8]) -> Result<Self, Error>;
 }
 
 #[repr(u8)]
@@ -26,6 +26,18 @@ pub enum PacketType {
     ConnectAck = 2,
 
     Publish = 3,
+}
+
+impl From<u8> for PacketType {
+    fn from(flag: u8) -> Self {
+        match flag {
+            0 => PacketType::Unknown,
+            1 => PacketType::ConnectCmd,
+            2 => PacketType::ConnectAck,
+            3 => PacketType::Publish,
+            _ => PacketType::Unknown,
+        }
+    }
 }
 
 impl Default for PacketType {
@@ -58,20 +70,24 @@ pub struct FixedHeader {
     pub packet_flags: PacketFlags,
 }
 
-/*
 impl FromNetPacket for FixedHeader {
-    type Output = FixedHeader;
-
-    fn from_net(buf: &[u8]) -> Result<Self::Output> {
-        Ok(
-        )
+    fn from_net(buf: &[u8]) -> Result<Self, Error> {
+        let flags = buf[0];
+        let packet_type = ((flags & 0b1111_0000) >> 4).into();
+        let packet_flags = match flags & 0b0000_1111 {
+            0 => PacketFlags::Reserved,
+            _ => return Err(Error::InvalidFixedHeader),
+        };
+        Ok(FixedHeader {
+            packet_type,
+            packet_flags,
+        })
     }
 }
-*/
 
 impl ToNetPacket for FixedHeader {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
-        let packet_type = (self.packet_type as u8 & 0b00001111) << 4;
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+        let packet_type = (self.packet_type as u8 & 0b0000_1111) << 4;
         let packet_flags = match self.packet_flags {
             PacketFlags::Reserved => 0b0000_0000,
             PacketFlags::Publish { dup, qos, retain } => {
@@ -108,7 +124,7 @@ impl Default for Version {
 }
 
 impl ToNetPacket for Version {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         v.push(*self as u8);
         Ok(1)
     }
