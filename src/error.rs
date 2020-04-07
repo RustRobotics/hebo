@@ -6,4 +6,5 @@
 pub enum Error {
     TcpConnectError,
     InvalidFixedHeader,
+    PacketEmpty,
 }

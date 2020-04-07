@@ -72,6 +72,9 @@ pub struct FixedHeader {
 
 impl FromNetPacket for FixedHeader {
     fn from_net(buf: &[u8]) -> Result<Self, Error> {
+        if buf.len() == 0 {
+            return Err(Error::PacketEmpty);
+        }
         let flags = buf[0];
         let packet_type = ((flags & 0b1111_0000) >> 4).into();
         let packet_flags = match flags & 0b0000_1111 {

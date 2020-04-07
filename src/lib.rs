@@ -2,17 +2,16 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-mod async_client;
-mod async_stream;
+pub mod async_client;
 mod base;
-pub mod error;
-mod connect_options;
 mod client;
+mod connect_options;
 pub mod connect_packet;
+pub mod error;
 pub mod publish_packet;
 mod sync_stream;
 
-pub use base::*;
-pub use connect_options::*;
-pub use client::Client;
 pub use async_client::AsyncClient;
+pub use base::*;
+pub use client::Client;
+pub use connect_options::*;

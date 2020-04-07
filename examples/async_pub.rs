@@ -2,11 +2,27 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use ruo::{
-    AsyncClient,
-    ConnectOptions,
-    QoSLevel,
-};
+use ruo::async_client::AsyncDelegate;
+use ruo::{AsyncClient, ConnectOptions, QoSLevel};
+
+#[derive(Debug)]
+struct Delegate {}
+
+impl Delegate {
+    pub fn new() -> Delegate {
+        Delegate {}
+    }
+}
+
+impl AsyncDelegate for Delegate {
+    fn on_connect(&self) {
+        log::info!("on_connect()");
+    }
+
+    fn on_message(&self, buf: &[u8]) {
+        log::info!("on message: {}", buf.len());
+    }
+}
 
 #[tokio::main]
 async fn main() {
@@ -15,8 +31,7 @@ async fn main() {
 
     let addr = "127.0.0.1:1883";
     let options = ConnectOptions::new(addr).unwrap();
-    let mut client = AsyncClient::connect(options).await.unwrap();
-    //client.publish("hello", QoSLevel::QoS0, b"Hello, world").await;
-    //log::info!("publish message sent");
+    let delegate = Box::new(Delegate::new());
+    let mut client = AsyncClient::new(options, Some(delegate)).await;
     client.start().await;
 }
