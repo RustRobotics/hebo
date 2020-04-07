@@ -15,8 +15,12 @@ impl Delegate {
 }
 
 impl AsyncDelegate for Delegate {
-    fn on_connect(&self) {
+    fn on_connect(&self, client: &AsyncClient) {
         log::info!("on_connect()");
+        client
+            .publish("hello", QoSLevel::QoS0, b"Hello, world")
+            .await;
+        log::info!("publish message sent");
     }
 
     fn on_message(&self, buf: &[u8]) {
