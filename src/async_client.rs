@@ -2,20 +2,24 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use super::{
-    base::*, connect_options::*, connect_packet::ConnectPacket, publish_packet::PublishPacket,
-    subscribe_packet::SubscribePacket,
-};
+use super::base::*;
+use super::connect_options::*;
+use super::connect_packet::ConnectPacket;
+use super::ping_packet::PingPacket;
+use super::publish_packet::PublishPacket;
+use super::subscribe_packet::SubscribePacket;
 use std::cell::RefCell;
 use std::fmt::Debug;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+use tokio::time::interval;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct AsyncClient {
     connect_options: ConnectOptions,
-    socket: Arc<RefCell<TcpStream>>,
+    socket: Arc<Mutex<RefCell<TcpStream>>>,
 }
 
 impl AsyncClient {
@@ -23,7 +27,7 @@ impl AsyncClient {
         let socket = TcpStream::connect(connect_options.address()).await.unwrap();
         let client = AsyncClient {
             connect_options,
-            socket: Arc::new(RefCell::new(socket)),
+            socket: Arc::new(Mutex::new(RefCell::new(socket))),
         };
 
         let conn_packet = ConnectPacket::new();
@@ -39,7 +43,14 @@ impl AsyncClient {
         let mut buf: Vec<u8> = Vec::with_capacity(1024);
         log::info!("reader loop");
         loop {
-            let n_recv = self.socket.borrow_mut().read_buf(&mut buf).await.unwrap();
+            let n_recv = self
+                .socket
+                .lock()
+                .unwrap()
+                .borrow_mut()
+                .read_buf(&mut buf)
+                .await
+                .unwrap();
             if n_recv == 0 {
                 continue;
             }
@@ -68,7 +79,10 @@ impl AsyncClient {
     async fn send<P: ToNetPacket>(&self, packet: P) {
         let mut buf = Vec::new();
         packet.to_net(&mut buf).unwrap();
-        self.socket.borrow_mut().write_all(&buf).await.unwrap();
+        if let Ok(socket_cell) = self.socket.lock() {
+            let mut socket = socket_cell.borrow_mut();
+            socket.write_all(&buf).await.unwrap();
+        }
     }
 
     pub async fn publish(&self, topic: &str, qos: QoSLevel, data: &[u8]) {
@@ -89,6 +103,26 @@ impl AsyncClient {
         log::info!("On connect()");
         self.subscribe("hello", QoSLevel::QoS0).await;
         self.publish("hello", QoSLevel::QoS0, b"Hello, world").await;
+
+        self.start_timer();
+    }
+
+    fn start_timer(&self) {
+        let client = self.clone();
+        tokio::spawn(async move {
+            log::info!("client: {:?}", client);
+            let mut timer = interval(Duration::from_secs(3));
+            loop {
+                log::info!("tick()");
+                timer.tick().await;
+                client.ping().await;
+            }
+        });
+    }
+
+    async fn ping(&self) {
+        let packet = PingPacket::new();
+        self.send(packet).await;
     }
 
     //fn on_disconnect(&mut self) {}

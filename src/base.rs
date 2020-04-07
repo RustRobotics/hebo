@@ -108,6 +108,7 @@ pub enum PacketFlags {
         retain: bool,
     },
     Subscribe,
+    PingReq,
 }
 
 impl Default for PacketFlags {
@@ -158,6 +159,7 @@ impl ToNetPacket for FixedHeader {
                 dup + qos + retain
             }
             PacketFlags::Subscribe => 0b0000_0010,
+            PacketFlags::PingReq => 0b0000_0000,
         };
         let flags = packet_type + packet_flags;
         v.push(flags);

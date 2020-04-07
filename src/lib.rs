@@ -8,6 +8,7 @@ mod client;
 mod connect_options;
 pub mod connect_packet;
 pub mod error;
+pub mod ping_packet;
 pub mod publish_packet;
 pub mod subscribe_packet;
 mod sync_stream;
