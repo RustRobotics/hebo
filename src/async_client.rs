@@ -8,7 +8,6 @@ use super::{
     base::*,
     connect_options::*,
     connect_packet::ConnectPacket,
-    error::Error,
     publish_packet::PublishPacket,
 };
 
@@ -21,6 +20,7 @@ pub struct AsyncClient {
 impl AsyncClient {
     pub async fn connect(connect_options: ConnectOptions) -> io::Result<AsyncClient> {
         let mut stream = AsyncStream::connect(connect_options.address().clone()).await;
+
         let conn_packet = ConnectPacket::new();
         stream.send(conn_packet).await;
         log::info!("stream send conn packet");
@@ -31,6 +31,11 @@ impl AsyncClient {
         };
 
         Ok(client)
+    }
+
+    pub async fn start(&mut self) {
+        log::info!("client.start()");
+        self.stream.recv().await;
     }
 
     pub async fn publish(&mut self, topic: &str, qos: QoSLevel, data: &[u8]) {

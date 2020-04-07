@@ -16,5 +16,7 @@ async fn main() {
     let addr = "127.0.0.1:1883";
     let options = ConnectOptions::new(addr).unwrap();
     let mut client = AsyncClient::connect(options).await.unwrap();
-    client.publish("hello", QoSLevel::QoS0, b"Hello, world").await;
+    //client.publish("hello", QoSLevel::QoS0, b"Hello, world").await;
+    //log::info!("publish message sent");
+    client.start().await;
 }

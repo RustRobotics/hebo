@@ -8,7 +8,7 @@ use std::io::{Result, Write};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct PublishPacket {
-    pub header_flags: HeaderFlags,
+    pub fixed_header: FixedHeader,
     topic: Vec<u8>,
     msg: Vec<u8>,
 }
@@ -16,7 +16,7 @@ pub struct PublishPacket {
 impl ToNetPacket for PublishPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
         let old_len = v.len();
-        self.header_flags.to_net(v)?;
+        self.fixed_header.to_net(v)?;
         v.push(self.msg_len());
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;
         v.write(&self.topic)?;
@@ -28,16 +28,16 @@ impl ToNetPacket for PublishPacket {
 
 impl PublishPacket {
     pub fn new(topic: &[u8]) -> PublishPacket {
-        let header_flags = HeaderFlags {
-            msg_type: MsgType::Publish,
-            reserved: Reserved::Publish {
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Publish,
+            packet_flags: PacketFlags::Publish {
                 dup: false,
                 qos: QoSLevel::QoS0,
                 retain: false,
             },
         };
         PublishPacket {
-            header_flags: header_flags,
+            fixed_header: fixed_header,
             topic: Vec::from(topic),
             msg: vec![],
         }

@@ -7,7 +7,6 @@ use super::{
     base::*,
     connect_options::*,
     connect_packet::ConnectPacket,
-    error::Error,
     publish_packet::PublishPacket,
     sync_stream::SyncStream,
 };

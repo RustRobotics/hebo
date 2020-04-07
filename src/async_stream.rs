@@ -3,9 +3,10 @@
 // in the LICENSE file.
 
 use super::base::ToNetPacket;
-use tokio::prelude::*;
-use tokio::net::TcpStream;
 use std::net::SocketAddr;
+use tokio::io::{AsyncWriteExt, BufReader};
+use tokio::net::TcpStream;
+use tokio::prelude::*;
 
 #[derive(Debug)]
 pub struct AsyncStream {
@@ -15,8 +16,19 @@ pub struct AsyncStream {
 impl AsyncStream {
     pub async fn connect(addr: SocketAddr) -> Self {
         let socket = TcpStream::connect(addr).await.unwrap();
-        AsyncStream {
-            socket,
+        AsyncStream { socket }
+    }
+
+    pub async fn recv(&mut self) {
+        let (reader, _) = self.socket.split();
+        // Start read loop.
+        let mut buf_reader = BufReader::new(reader);
+        let mut buf = [0_u8; 1024];
+        log::info!("reader loop");
+        loop {
+            let n_recv = buf_reader.read(&mut buf).await.unwrap();
+            println!("n_recv: {}", n_recv);
+            println!("buf: {:?}", &buf[..24]);
         }
     }
 

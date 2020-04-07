@@ -9,9 +9,14 @@ pub trait ToNetPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize>;
 }
 
+pub trait FromNetPacket {
+    type Output;
+    fn from_net(buf: &[u8]) -> Result<Self::Output>;
+}
+
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum MsgType {
+pub enum PacketType {
     Unknown = 0,
 
     /// Request to connect to broker.
@@ -23,15 +28,15 @@ pub enum MsgType {
     Publish = 3,
 }
 
-impl Default for MsgType {
+impl Default for PacketType {
     fn default() -> Self {
-        MsgType::ConnectCmd
+        PacketType::ConnectCmd
     }
 }
 
-/// Reserved flags
+/// Packet flags
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum Reserved {
+pub enum PacketFlags {
     Reserved,
     Publish {
         dup: bool,
@@ -40,25 +45,36 @@ pub enum Reserved {
     },
 }
 
-impl Default for Reserved {
+impl Default for PacketFlags {
     fn default() -> Self {
-        Reserved::Reserved
+        PacketFlags::Reserved
     }
 }
 
 /// Header flags of a mqtt packet.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
-pub struct HeaderFlags {
-    pub msg_type: MsgType,
-    pub reserved: Reserved,
+pub struct FixedHeader {
+    pub packet_type: PacketType,
+    pub packet_flags: PacketFlags,
 }
 
-impl ToNetPacket for HeaderFlags {
+/*
+impl FromNetPacket for FixedHeader {
+    type Output = FixedHeader;
+
+    fn from_net(buf: &[u8]) -> Result<Self::Output> {
+        Ok(
+        )
+    }
+}
+*/
+
+impl ToNetPacket for FixedHeader {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
-        let msg_type = (self.msg_type as u8 & 0b00001111) << 4;
-        let reserved = match self.reserved {
-            Reserved::Reserved => 0b0000_0000,
-            Reserved::Publish { dup, qos, retain } => {
+        let packet_type = (self.packet_type as u8 & 0b00001111) << 4;
+        let packet_flags = match self.packet_flags {
+            PacketFlags::Reserved => 0b0000_0000,
+            PacketFlags::Publish { dup, qos, retain } => {
                 let dup = if dup { 0b0000_10000 } else { 0b0000_0000 };
                 let qos = match qos {
                     QoSLevel::QoS0 => 0b0000_0000,
@@ -70,7 +86,7 @@ impl ToNetPacket for HeaderFlags {
                 dup + qos + retain
             }
         };
-        let flags = msg_type + reserved;
+        let flags = packet_type + packet_flags;
         v.push(flags);
 
         Ok(1)

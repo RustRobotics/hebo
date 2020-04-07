@@ -82,7 +82,7 @@ impl ToNetPacket for ConnectFlags {
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct ConnectPacket {
-    pub header_flags: HeaderFlags,
+    pub fixed_header: FixedHeader,
     msg_len: u8,
     protocol_name: Vec<u8>,
     pub version: Version,
@@ -124,7 +124,7 @@ impl ConnectPacket {
 impl ToNetPacket for ConnectPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
         let old_len = v.len();
-        self.header_flags.to_net(v)?;
+        self.fixed_header.to_net(v)?;
         v.push(self.msg_len());
         v.write_u16::<BigEndian>(self.protocol_name.len() as u16)?;
         v.write(&self.protocol_name)?;
