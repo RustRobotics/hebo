@@ -21,7 +21,7 @@ pub struct AsyncClient {
 impl AsyncClient {
     pub async fn new(connect_options: ConnectOptions) -> AsyncClient {
         let socket = TcpStream::connect(connect_options.address()).await.unwrap();
-        let mut client = AsyncClient {
+        let client = AsyncClient {
             connect_options,
             socket: Arc::new(RefCell::new(socket)),
         };
@@ -68,22 +68,19 @@ impl AsyncClient {
     async fn send<P: ToNetPacket>(&self, packet: P) {
         let mut buf = Vec::new();
         packet.to_net(&mut buf).unwrap();
-        log::info!("send buf: {:x?}", buf);
         self.socket.borrow_mut().write_all(&buf).await.unwrap();
     }
 
     pub async fn publish(&self, topic: &str, qos: QoSLevel, data: &[u8]) {
         log::info!("Send publish packet");
-        let mut packet = PublishPacket::new(topic, qos, data);
+        let packet = PublishPacket::new(topic, qos, data);
         self.send(packet).await;
     }
 
     pub async fn subscribe(&self, topic: &str, qos: QoSLevel) {
         log::info!("subscribe to: {}", topic);
-        let mut packet = SubscribePacket::new(topic, qos);
-        let mut buf = Vec::new();
-        packet.to_net(&mut buf).unwrap();
-        self.socket.borrow_mut().write_all(&buf).await.unwrap();
+        let packet = SubscribePacket::new(topic, qos);
+        self.send(packet).await;
     }
 
     pub async fn disconnect(&mut self) {}
@@ -94,9 +91,15 @@ impl AsyncClient {
         self.publish("hello", QoSLevel::QoS0, b"Hello, world").await;
     }
 
-    fn on_disconnect(&mut self) {}
+    //fn on_disconnect(&mut self) {}
 
     async fn on_message(&self, buf: &Vec<u8>) {
-        log::info!("on message(): {:x?}", &buf);
+        match PublishPacket::from_net(buf) {
+            Ok(packet) => {
+                log::info!("packet: {:?}", packet);
+                log::info!("message: {:?}", std::str::from_utf8(packet.message()));
+            }
+            Err(err) => log::warn!("Failed to parse publish msg: {:?}", err),
+        }
     }
 }

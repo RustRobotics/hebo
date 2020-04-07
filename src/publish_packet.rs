@@ -3,30 +3,43 @@
 // in the LICENSE file.
 
 use super::base::*;
-use byteorder::{BigEndian, WriteBytesExt};
-use std::io::{Result, Write};
+use super::error::Error;
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use std::io::{self, Write};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 // TODO(Shaohua): Replace with slice
 pub struct PublishPacket {
+    fixed_header: FixedHeader,
     topic: String,
-    qos: QoSLevel,
     msg: Vec<u8>,
 }
 
-impl ToNetPacket for PublishPacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
-        let old_len = v.len();
+impl FromNetPacket for PublishPacket {
+    fn from_net(v: &[u8]) -> Result<Self, Error> {
+        let mut offset: usize = 0;
+        let fixed_header = FixedHeader::from_net(v)?;
+        offset += 1;
+        let remaining_len = v[offset] as usize;
+        offset += 1;
+        let topic_len = BigEndian::read_u16(&v[offset..offset + 2]) as usize;
+        offset += 2;
+        let topic = String::from_utf8((&v[offset..offset + topic_len]).to_vec()).unwrap();
+        offset += topic_len;
+        let msg_len = remaining_len - topic_len - 2;
+        let msg = v[offset..offset + msg_len].to_vec();
+        Ok(PublishPacket {
+            fixed_header,
+            topic,
+            msg,
+        })
+    }
+}
 
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Publish,
-            packet_flags: PacketFlags::Publish {
-                dup: false,
-                qos: self.qos,
-                retain: false,
-            },
-        };
-        fixed_header.to_net(v)?;
+impl ToNetPacket for PublishPacket {
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+        let old_len = v.len();
+        self.fixed_header.to_net(v)?;
         let msg_len = 2 // Topic length bytes
             + self.topic.len() // Topic length
             + self.msg.len(); // Message length
@@ -41,9 +54,17 @@ impl ToNetPacket for PublishPacket {
 
 impl PublishPacket {
     pub fn new(topic: &str, qos: QoSLevel, msg: &[u8]) -> PublishPacket {
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Publish,
+            packet_flags: PacketFlags::Publish {
+                dup: false,
+                qos: qos,
+                retain: false,
+            },
+        };
         PublishPacket {
+            fixed_header,
             topic: topic.to_string(),
-            qos: qos,
             msg: msg.to_vec(),
         }
     }

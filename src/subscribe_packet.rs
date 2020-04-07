@@ -30,7 +30,7 @@ impl ToNetPacket for SubscribePacket {
         v.push(msg_len as u8);
 
         // Variable header
-        v.write_u16::<BigEndian>(self.packet_id);
+        v.write_u16::<BigEndian>(self.packet_id).unwrap();
 
         // Payload
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;

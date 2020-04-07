@@ -29,7 +29,7 @@ impl Client {
     }
 
     pub fn publish(&mut self, topic: &str, qos: QoSLevel, data: &[u8]) {
-        let mut packet = PublishPacket::new(topic, qos, data);
+        let _packet = PublishPacket::new(topic, qos, data);
         //self.stream.send(msg_packet);
     }
 

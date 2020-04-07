@@ -2,29 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use ruo::{AsyncClient, ConnectOptions, QoSLevel};
-use std::sync::Arc;
-
-#[derive(Debug)]
-struct Delegate {}
-
-impl Delegate {
-    pub fn new() -> Delegate {
-        Delegate {}
-    }
-
-    async fn on_connect(&self, client: &AsyncClient) {
-        log::info!("on_connect()");
-        client
-            .publish("hello", QoSLevel::QoS0, b"Hello, world")
-            .await;
-        log::info!("publish message sent");
-    }
-
-    fn on_message(&self, buf: &[u8]) {
-        log::info!("on message: {}", buf.len());
-    }
-}
+use ruo::{AsyncClient, ConnectOptions};
 
 #[tokio::main]
 async fn main() {
