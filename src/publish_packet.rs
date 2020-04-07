@@ -7,19 +7,32 @@ use byteorder::{BigEndian, WriteBytesExt};
 use std::io::{Result, Write};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+// TODO(Shaohua): Replace with slice
 pub struct PublishPacket {
-    pub fixed_header: FixedHeader,
-    topic: Vec<u8>,
+    topic: String,
+    qos: QoSLevel,
     msg: Vec<u8>,
 }
 
 impl ToNetPacket for PublishPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
         let old_len = v.len();
-        self.fixed_header.to_net(v)?;
-        v.push(self.msg_len());
+
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Publish,
+            packet_flags: PacketFlags::Publish {
+                dup: false,
+                qos: self.qos,
+                retain: false,
+            },
+        };
+        fixed_header.to_net(v)?;
+        let msg_len = 2 // Topic length bytes
+            + self.topic.len() // Topic length
+            + self.msg.len(); // Message length
+        v.push(msg_len as u8);
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;
-        v.write(&self.topic)?;
+        v.write(&self.topic.as_bytes())?;
         v.write(&self.msg)?;
 
         Ok(v.len() - old_len)
@@ -27,36 +40,19 @@ impl ToNetPacket for PublishPacket {
 }
 
 impl PublishPacket {
-    pub fn new(topic: &[u8]) -> PublishPacket {
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Publish,
-            packet_flags: PacketFlags::Publish {
-                dup: false,
-                qos: QoSLevel::QoS0,
-                retain: false,
-            },
-        };
+    pub fn new(topic: &str, qos: QoSLevel, msg: &[u8]) -> PublishPacket {
         PublishPacket {
-            fixed_header: fixed_header,
-            topic: Vec::from(topic),
-            msg: vec![],
+            topic: topic.to_string(),
+            qos: qos,
+            msg: msg.to_vec(),
         }
     }
 
-    fn topic(&self) -> &str {
-        self.topic
+    pub fn topic(&self) -> &str {
+        &self.topic
     }
 
-    fn message(&self) -> &[u8] {
-        self.msg
-    }
-
-    pub fn msg_len(&self) -> u8 {
-        (
-            2 // topic len
-         + self.topic.len() // topic
-         + self.msg.len()
-            // message
-        ) as u8
+    pub fn message(&self) -> &[u8] {
+        &self.msg
     }
 }

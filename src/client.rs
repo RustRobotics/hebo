@@ -2,14 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::io;
 use super::{
-    base::*,
-    connect_options::*,
-    connect_packet::ConnectPacket,
-    publish_packet::PublishPacket,
+    base::*, connect_options::*, connect_packet::ConnectPacket, publish_packet::PublishPacket,
     sync_stream::SyncStream,
 };
+use std::io;
 
 #[derive(Debug)]
 pub struct Client {
@@ -32,20 +29,15 @@ impl Client {
     }
 
     pub fn publish(&mut self, topic: &str, qos: QoSLevel, data: &[u8]) {
-        let mut msg_packet = PublishPacket::new(topic.as_bytes());
-        msg_packet.set_message(data).unwrap();
-        self.stream.send(msg_packet);
+        let mut packet = PublishPacket::new(topic, qos, data);
+        //self.stream.send(msg_packet);
     }
 
-    pub fn disconnect(&mut self) {
-    }
+    pub fn disconnect(&mut self) {}
 
-    pub fn on_connect(&mut self) {
-    }
+    pub fn on_connect(&mut self) {}
 
-    pub fn on_disconnect(&mut self) {
-    }
+    pub fn on_disconnect(&mut self) {}
 
-    pub fn on_message(&mut self) {
-    }
+    pub fn on_message(&mut self) {}
 }

@@ -23,12 +23,11 @@ impl ToNetPacket for SubscribePacket {
         };
         fixed_header.to_net(v)?;
 
-        let remaining_len = 2 // Variable length
+        let msg_len = 2 // Variable length
             + 2 // Payload length
             + self.topic.len() // Topic length
             + 1; // Requested QoS
-        v.push(remaining_len as u8);
-        log::info!("remaining_len: {}", remaining_len);
+        v.push(msg_len as u8);
 
         // Variable header
         v.write_u16::<BigEndian>(self.packet_id);

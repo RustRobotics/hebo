@@ -43,7 +43,7 @@ impl AsyncClient {
             if n_recv == 0 {
                 continue;
             }
-            log::info!("n_recv: {:?}", n_recv);
+            //log::info!("n_recv: {:?}", n_recv);
             self.recv_router(&mut buf).await;
             buf.clear();
         }
@@ -52,11 +52,12 @@ impl AsyncClient {
     async fn recv_router(&mut self, buf: &mut Vec<u8>) {
         match FixedHeader::from_net(&buf) {
             Ok(fixed_header) => {
-                log::info!("fixed header: {:?}", fixed_header);
+                //log::info!("fixed header: {:?}", fixed_header);
                 match fixed_header.packet_type {
                     PacketType::ConnectAck => self.on_connect().await,
                     PacketType::Publish => self.on_message(&buf).await,
-                    PacketType::PubAck => log::info!("PubAck: {:?}", &buf),
+                    PacketType::PubAck => log::info!("PubAck: {:x?}", &buf),
+                    PacketType::SubAck => log::info!("SubAck: {:x?}", &buf),
                     t => log::info!("Unhandled msg: {:?}", t),
                 }
             }
@@ -67,14 +68,13 @@ impl AsyncClient {
     async fn send<P: ToNetPacket>(&self, packet: P) {
         let mut buf = Vec::new();
         packet.to_net(&mut buf).unwrap();
-        log::info!("buf: {:?}", buf);
+        log::info!("send buf: {:x?}", buf);
         self.socket.borrow_mut().write_all(&buf).await.unwrap();
     }
 
     pub async fn publish(&self, topic: &str, qos: QoSLevel, data: &[u8]) {
         log::info!("Send publish packet");
-        let mut packet = PublishPacket::new(topic.as_bytes());
-        packet.set_message(data).unwrap();
+        let mut packet = PublishPacket::new(topic, qos, data);
         self.send(packet).await;
     }
 
