@@ -43,14 +43,12 @@ impl PublishPacket {
         }
     }
 
-    pub fn set_topic(&mut self, topic: &[u8]) -> Result<usize> {
-        self.topic.clear();
-        self.topic.write(topic)
+    fn topic(&self) -> &str {
+        self.topic
     }
 
-    pub fn set_message(&mut self, msg: &[u8]) -> Result<usize> {
-        self.msg.clear();
-        self.msg.write(msg)
+    fn message(&self) -> &[u8] {
+        self.msg
     }
 
     pub fn msg_len(&self) -> u8 {

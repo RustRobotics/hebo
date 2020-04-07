@@ -8,43 +8,48 @@ use std::io::{Result, Write};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribePacket {
-    pub fixed_header: FixedHeader,
     topic: Vec<u8>,
+    qos: QoSLevel,
+    packet_id: PacketId,
 }
 
 impl ToNetPacket for SubscribePacket {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
         let old_len = v.len();
-        self.fixed_header.to_net(v)?;
-        v.push(self.msg_len());
+
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Subscribe,
+            packet_flags: PacketFlags::Subscribe,
+        };
+        fixed_header.to_net(v)?;
+
+        let remaining_len = 2 // Variable length
+            + 2 // Payload length
+            + self.topic.len() // Topic length
+            + 1; // Requested QoS
+        v.push(remaining_len as u8);
+        log::info!("remaining_len: {}", remaining_len);
+
+        // Variable header
+        v.write_u16::<BigEndian>(self.packet_id);
+
+        // Payload
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;
         v.write(&self.topic)?;
+        let qos: u8 = 0b0000_0011 & (self.qos as u8);
+        v.push(qos);
 
         Ok(v.len() - old_len)
     }
 }
 
 impl SubscribePacket {
-    pub fn new(topic: &[u8], qos: QoSLevel) -> PublishPacket {
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Publish,
-            packet_flags: PacketFlags::Publish {
-                dup: false,
-                qos: qos,
-                retain: false,
-            },
-        };
-        PublishPacket {
-            fixed_header: fixed_header,
+    // TODO(Shaohua): Add packet_id to param.
+    pub fn new(topic: &str, qos: QoSLevel) -> SubscribePacket {
+        SubscribePacket {
             topic: Vec::from(topic),
+            qos: qos,
+            packet_id: 23290,
         }
-    }
-
-    pub fn msg_len(&self) -> u8 {
-        (
-            2 // topic len
-         + self.topic.len()
-            // topic
-        ) as u8
     }
 }

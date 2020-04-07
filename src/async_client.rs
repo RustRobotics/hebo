@@ -40,24 +40,23 @@ impl AsyncClient {
         log::info!("reader loop");
         loop {
             let n_recv = self.socket.borrow_mut().read_buf(&mut buf).await.unwrap();
-            log::info!("n_recv: {:?}", n_recv);
             if n_recv == 0 {
                 continue;
             }
-
+            log::info!("n_recv: {:?}", n_recv);
             self.recv_router(&mut buf).await;
-
             buf.clear();
         }
     }
 
-    async fn recv_router(&mut self, buf: &mut [u8]) {
+    async fn recv_router(&mut self, buf: &mut Vec<u8>) {
         match FixedHeader::from_net(&buf) {
             Ok(fixed_header) => {
                 log::info!("fixed header: {:?}", fixed_header);
                 match fixed_header.packet_type {
                     PacketType::ConnectAck => self.on_connect().await,
-                    PacketType::Publish => self.on_message().await,
+                    PacketType::Publish => self.on_message(&buf).await,
+                    PacketType::PubAck => log::info!("PubAck: {:?}", &buf),
                     t => log::info!("Unhandled msg: {:?}", t),
                 }
             }
@@ -79,8 +78,8 @@ impl AsyncClient {
         self.send(packet).await;
     }
 
-    pub fn subscribe(&self, topic: &str, qos: QoSLevel) {
-        log::info!("subscribe to: %s", topic);
+    pub async fn subscribe(&self, topic: &str, qos: QoSLevel) {
+        log::info!("subscribe to: {}", topic);
         let mut packet = SubscribePacket::new(topic, qos);
         let mut buf = Vec::new();
         packet.to_net(&mut buf).unwrap();
@@ -91,13 +90,13 @@ impl AsyncClient {
 
     async fn on_connect(&self) {
         log::info!("On connect()");
-        self.subscribe("hello", QoSLevel::QoS0);
+        self.subscribe("hello", QoSLevel::QoS0).await;
         self.publish("hello", QoSLevel::QoS0, b"Hello, world").await;
     }
 
     fn on_disconnect(&mut self) {}
 
-    async fn on_message(&self) {
-        log::info!("on message()");
+    async fn on_message(&self, buf: &Vec<u8>) {
+        log::info!("on message(): {:x?}", &buf);
     }
 }

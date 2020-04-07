@@ -5,6 +5,9 @@
 use super::error::Error;
 use std::io;
 
+/// Packet identifier
+pub type PacketId = u16;
+
 /// Convert native data types to network byte stream.
 pub trait ToNetPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize>;
@@ -19,13 +22,49 @@ pub trait FromNetPacket: Sized {
 pub enum PacketType {
     Unknown = 0,
 
-    /// Request to connect to broker.
+    /// Request to connect to broker
     ConnectCmd = 1,
 
-    /// Broker reply to connect request.
+    /// Broker reply to connect request
     ConnectAck = 2,
 
+    /// Publish message
     Publish = 3,
+
+    /// Publish acknowledgement
+    PubAck = 4,
+
+    /// Publish received
+    PubRecv = 5,
+
+    /// Publish release
+    PubRel = 6,
+
+    /// Publish complete
+    PubCompl = 7,
+
+    /// Client subscribe request
+    Subscribe = 8,
+
+    /// Subscribe acknowledgement
+    SubAck = 9,
+
+    /// Unsubscribe request
+    UnSubscribe = 10,
+
+    /// Unsubscribe acknowledgement
+    UnSubAck = 11,
+
+    /// Client ping request
+    PingReq = 12,
+
+    /// Server ping response
+    PingResp = 13,
+
+    /// Client is disconnecting
+    Disconnect = 14,
+
+    Reserved = 15,
 }
 
 impl From<u8> for PacketType {
@@ -35,6 +74,19 @@ impl From<u8> for PacketType {
             1 => PacketType::ConnectCmd,
             2 => PacketType::ConnectAck,
             3 => PacketType::Publish,
+            4 => PacketType::PubAck,
+            5 => PacketType::PubRecv,
+            6 => PacketType::PubRel,
+            7 => PacketType::PubCompl,
+            8 => PacketType::Publish,
+            9 => PacketType::PubAck,
+            10 => PacketType::UnSubscribe,
+            11 => PacketType::UnSubAck,
+            12 => PacketType::PingReq,
+            13 => PacketType::PingResp,
+            14 => PacketType::Disconnect,
+            15 => PacketType::Reserved,
+
             _ => PacketType::Unknown,
         }
     }
@@ -55,6 +107,7 @@ pub enum PacketFlags {
         qos: QoSLevel,
         retain: bool,
     },
+    Subscribe,
 }
 
 impl Default for PacketFlags {
@@ -104,6 +157,7 @@ impl ToNetPacket for FixedHeader {
                 let retain = if retain { 0b0000_0001 } else { 0b0000_0000 };
                 dup + qos + retain
             }
+            PacketFlags::Subscribe => 0b0000_0010,
         };
         let flags = packet_type + packet_flags;
         v.push(flags);
@@ -139,4 +193,10 @@ pub enum QoSLevel {
     QoS0 = 0,
     QoS1 = 1,
     QoS2 = 2,
+}
+
+impl Default for QoSLevel {
+    fn default() -> Self {
+        QoSLevel::QoS0
+    }
 }
