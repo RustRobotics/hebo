@@ -4,34 +4,26 @@
 
 use super::{
     base::*, connect_options::*, connect_packet::ConnectPacket, publish_packet::PublishPacket,
+    subscribe_packet::SubscribePacket,
 };
 use std::cell::RefCell;
 use std::fmt::Debug;
+use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
-
-pub trait AsyncDelegate: Debug {
-    fn on_connect(&self, client: &AsyncClient);
-    fn on_message(&self, buf: &[u8]);
-}
 
 #[derive(Debug)]
 pub struct AsyncClient {
     connect_options: ConnectOptions,
-    socket: RefCell<TcpStream>,
-    delegate: Option<Box<dyn AsyncDelegate>>,
+    socket: Arc<RefCell<TcpStream>>,
 }
 
 impl AsyncClient {
-    pub async fn new(
-        connect_options: ConnectOptions,
-        delegate: Option<Box<dyn AsyncDelegate>>,
-    ) -> AsyncClient {
+    pub async fn new(connect_options: ConnectOptions) -> AsyncClient {
         let socket = TcpStream::connect(connect_options.address()).await.unwrap();
         let mut client = AsyncClient {
             connect_options,
-            socket: RefCell::new(socket),
-            delegate,
+            socket: Arc::new(RefCell::new(socket)),
         };
 
         let conn_packet = ConnectPacket::new();
@@ -53,21 +45,20 @@ impl AsyncClient {
                 continue;
             }
 
-            self.recv_router(&mut buf);
+            self.recv_router(&mut buf).await;
 
             buf.clear();
         }
     }
 
-    fn recv_router(&mut self, buf: &mut [u8]) {
+    async fn recv_router(&mut self, buf: &mut [u8]) {
         match FixedHeader::from_net(&buf) {
             Ok(fixed_header) => {
                 log::info!("fixed header: {:?}", fixed_header);
                 match fixed_header.packet_type {
-                    PacketType::ConnectAck => {
-                        self.on_connect();
-                    }
-                    _ => (),
+                    PacketType::ConnectAck => self.on_connect().await,
+                    PacketType::Publish => self.on_message().await,
+                    t => log::info!("Unhandled msg: {:?}", t),
                 }
             }
             Err(err) => log::warn!("err: {:?}", err),
@@ -82,22 +73,31 @@ impl AsyncClient {
     }
 
     pub async fn publish(&self, topic: &str, qos: QoSLevel, data: &[u8]) {
-        let mut msg_packet = PublishPacket::new(topic.as_bytes());
-        msg_packet.set_message(data).unwrap();
         log::info!("Send publish packet");
-        self.send(msg_packet).await;
+        let mut packet = PublishPacket::new(topic.as_bytes());
+        packet.set_message(data).unwrap();
+        self.send(packet).await;
+    }
+
+    pub fn subscribe(&self, topic: &str, qos: QoSLevel) {
+        log::info!("subscribe to: %s", topic);
+        let mut packet = SubscribePacket::new(topic, qos);
+        let mut buf = Vec::new();
+        packet.to_net(&mut buf).unwrap();
+        self.socket.borrow_mut().write_all(&buf).await.unwrap();
     }
 
     pub async fn disconnect(&mut self) {}
 
-    pub fn on_connect(&mut self) {
-        match self.delegate {
-            Some(ref d) => d.on_connect(self),
-            _ => (),
-        }
+    async fn on_connect(&self) {
+        log::info!("On connect()");
+        self.subscribe("hello", QoSLevel::QoS0);
+        self.publish("hello", QoSLevel::QoS0, b"Hello, world").await;
     }
 
-    pub fn on_disconnect(&mut self) {}
+    fn on_disconnect(&mut self) {}
 
-    pub fn on_message(&mut self) {}
+    async fn on_message(&self) {
+        log::info!("on message()");
+    }
 }

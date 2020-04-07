@@ -2,8 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use ruo::async_client::AsyncDelegate;
 use ruo::{AsyncClient, ConnectOptions, QoSLevel};
+use std::sync::Arc;
 
 #[derive(Debug)]
 struct Delegate {}
@@ -12,10 +12,8 @@ impl Delegate {
     pub fn new() -> Delegate {
         Delegate {}
     }
-}
 
-impl AsyncDelegate for Delegate {
-    fn on_connect(&self, client: &AsyncClient) {
+    async fn on_connect(&self, client: &AsyncClient) {
         log::info!("on_connect()");
         client
             .publish("hello", QoSLevel::QoS0, b"Hello, world")
@@ -35,7 +33,6 @@ async fn main() {
 
     let addr = "127.0.0.1:1883";
     let options = ConnectOptions::new(addr).unwrap();
-    let delegate = Box::new(Delegate::new());
-    let mut client = AsyncClient::new(options, Some(delegate)).await;
+    let mut client = AsyncClient::new(options).await;
     client.start().await;
 }
