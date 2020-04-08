@@ -3,9 +3,7 @@
 // in the LICENSE file.
 
 use super::base::*;
-use super::error::Error;
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
-use std::io::{self, Write};
+use std::io;
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct PingPacket;

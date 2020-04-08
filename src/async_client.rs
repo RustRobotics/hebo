@@ -8,26 +8,35 @@ use super::connect_packet::ConnectPacket;
 use super::ping_packet::PingPacket;
 use super::publish_packet::PublishPacket;
 use super::subscribe_packet::SubscribePacket;
-use std::cell::RefCell;
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::time::interval;
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Hash, PartialEq)]
+enum StreamStatus {
+    Invalid,
+    Connecting,
+    Connected,
+    Disconnecting,
+    Disconnected,
+}
+
+#[derive(Debug)]
 pub struct AsyncClient {
     connect_options: ConnectOptions,
-    socket: Arc<Mutex<RefCell<TcpStream>>>,
+    socket: TcpStream,
+    status: StreamStatus,
 }
 
 impl AsyncClient {
     pub async fn new(connect_options: ConnectOptions) -> AsyncClient {
         let socket = TcpStream::connect(connect_options.address()).await.unwrap();
-        let client = AsyncClient {
+        let mut client = AsyncClient {
             connect_options,
-            socket: Arc::new(Mutex::new(RefCell::new(socket))),
+            socket: socket,
+            status: StreamStatus::Connecting,
         };
 
         let conn_packet = ConnectPacket::new();
@@ -42,21 +51,22 @@ impl AsyncClient {
 
         let mut buf: Vec<u8> = Vec::with_capacity(1024);
         log::info!("reader loop");
+        // FIXME(Shaohua): Fix panic when keep_alive is 0
+        let mut timer = interval(*self.connect_options.keep_alive());
+
         loop {
-            let n_recv = self
-                .socket
-                .lock()
-                .unwrap()
-                .borrow_mut()
-                .read_buf(&mut buf)
-                .await
-                .unwrap();
-            if n_recv == 0 {
-                continue;
+            tokio::select! {
+                Ok(n_recv) = self.socket.read_buf(&mut buf) => {
+                    if n_recv > 0 {
+                        self.recv_router(&mut buf).await;
+                        buf.clear();
+                    }
+                }
+                _ = timer.tick() => {
+                    log::info!("tick()");
+                    self.ping().await;
+                },
             }
-            //log::info!("n_recv: {:?}", n_recv);
-            self.recv_router(&mut buf).await;
-            buf.clear();
         }
     }
 
@@ -69,6 +79,7 @@ impl AsyncClient {
                     PacketType::Publish => self.on_message(&buf).await,
                     PacketType::PubAck => log::info!("PubAck: {:x?}", &buf),
                     PacketType::SubAck => log::info!("SubAck: {:x?}", &buf),
+                    PacketType::PingResp => self.on_ping_resp().await,
                     t => log::info!("Unhandled msg: {:?}", t),
                 }
             }
@@ -76,56 +87,47 @@ impl AsyncClient {
         }
     }
 
-    async fn send<P: ToNetPacket>(&self, packet: P) {
+    async fn send<P: ToNetPacket>(&mut self, packet: P) {
         let mut buf = Vec::new();
         packet.to_net(&mut buf).unwrap();
-        if let Ok(socket_cell) = self.socket.lock() {
-            let mut socket = socket_cell.borrow_mut();
-            socket.write_all(&buf).await.unwrap();
-        }
+        self.socket.write_all(&buf).await.unwrap();
     }
 
-    pub async fn publish(&self, topic: &str, qos: QoSLevel, data: &[u8]) {
+    pub async fn publish(&mut self, topic: &str, qos: QoSLevel, data: &[u8]) {
         log::info!("Send publish packet");
         let packet = PublishPacket::new(topic, qos, data);
         self.send(packet).await;
     }
 
-    pub async fn subscribe(&self, topic: &str, qos: QoSLevel) {
+    pub async fn subscribe(&mut self, topic: &str, qos: QoSLevel) {
         log::info!("subscribe to: {}", topic);
         let packet = SubscribePacket::new(topic, qos);
         self.send(packet).await;
     }
 
-    pub async fn disconnect(&mut self) {}
+    pub async fn disconnect(&mut self) {
+        if self.status == StreamStatus::Connected {
+            self.status = StreamStatus::Disconnecting;
+        }
+    }
 
-    async fn on_connect(&self) {
+    async fn on_connect(&mut self) {
         log::info!("On connect()");
+        self.status = StreamStatus::Connected;
         self.subscribe("hello", QoSLevel::QoS0).await;
         self.publish("hello", QoSLevel::QoS0, b"Hello, world").await;
-
-        self.start_timer();
     }
 
-    fn start_timer(&self) {
-        let client = self.clone();
-        tokio::spawn(async move {
-            log::info!("client: {:?}", client);
-            let mut timer = interval(Duration::from_secs(3));
-            loop {
-                log::info!("tick()");
-                timer.tick().await;
-                client.ping().await;
-            }
-        });
+    async fn ping(&mut self) {
+        if self.status == StreamStatus::Connected {
+            let packet = PingPacket::new();
+            self.send(packet).await;
+        }
     }
 
-    async fn ping(&self) {
-        let packet = PingPacket::new();
-        self.send(packet).await;
+    fn on_disconnect(&mut self) {
+        self.status = StreamStatus::Disconnected;
     }
-
-    //fn on_disconnect(&mut self) {}
 
     async fn on_message(&self, buf: &Vec<u8>) {
         match PublishPacket::from_net(buf) {
@@ -135,5 +137,10 @@ impl AsyncClient {
             }
             Err(err) => log::warn!("Failed to parse publish msg: {:?}", err),
         }
+    }
+
+    async fn on_ping_resp(&self) {
+        log::info!("on ping resp");
+        // TODO(Shaohua): Reset reconnect timer.
     }
 }

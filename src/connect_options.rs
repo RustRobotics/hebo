@@ -2,9 +2,9 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::time::Duration;
-use std::net::{ToSocketAddrs, SocketAddr};
 use std::io;
+use std::net::{SocketAddr, ToSocketAddrs};
+use std::time::Duration;
 
 #[derive(Clone, Debug)]
 pub struct HttpProxy {
@@ -29,8 +29,7 @@ pub enum Proxy {
     Socks5(Socks5Proxy),
 }
 
-pub trait Authentication {
-}
+pub trait Authentication {}
 
 #[derive(Clone, Debug)]
 pub struct UsernameAuth {
@@ -38,14 +37,14 @@ pub struct UsernameAuth {
     pub password: String,
 }
 
-impl Authentication for UsernameAuth {
-}
+impl Authentication for UsernameAuth {}
 
 #[derive(Clone, Debug)]
 pub struct ConnectOptions {
     address: SocketAddr,
     client_id: String,
     keep_alive: Duration,
+    connect_timeout: Duration,
     proxy: Proxy,
 }
 
@@ -54,6 +53,7 @@ impl Default for ConnectOptions {
         ConnectOptions {
             address: SocketAddr::from(([127, 0, 0, 1], 1883)),
             client_id: String::new(),
+            connect_timeout: Duration::from_secs(10),
             keep_alive: Duration::from_secs(30),
             proxy: Proxy::None,
         }
@@ -82,13 +82,22 @@ impl ConnectOptions {
         &self.client_id
     }
 
+    pub fn set_connect_timeout(&mut self, connect_timeout: Duration) -> &mut Self {
+        self.connect_timeout = connect_timeout;
+        self
+    }
+
+    pub fn connect_timeout(&self) -> &Duration {
+        &self.connect_timeout
+    }
+
     pub fn set_keepalive(&mut self, keep_alive: Duration) -> &mut Self {
         self.keep_alive = keep_alive;
         self
     }
 
-    pub fn keep_alive(&self) -> Duration {
-        self.keep_alive
+    pub fn keep_alive(&self) -> &Duration {
+        &self.keep_alive
     }
 
     pub fn set_proxy(&mut self, proxy: Proxy) -> &mut Self {
@@ -100,10 +109,9 @@ impl ConnectOptions {
         &self.proxy
     }
 
-    pub fn set_auth(&mut self, ) -> &mut Self {
+    pub fn set_auth(&mut self) -> &mut Self {
         self
     }
 
-    pub fn auth(&self) {
-    }
+    pub fn auth(&self) {}
 }
