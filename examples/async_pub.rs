@@ -11,6 +11,7 @@ async fn main() {
 
     let addr = "127.0.0.1:1883";
     let options = ConnectOptions::new(addr).unwrap();
+    log::info!("options: {:?}", options);
     let mut client = AsyncClient::new(options).await;
     client.start().await;
 }

@@ -2,6 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use super::utils::random_string;
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::time::Duration;
@@ -52,7 +53,7 @@ impl Default for ConnectOptions {
     fn default() -> Self {
         ConnectOptions {
             address: SocketAddr::from(([127, 0, 0, 1], 1883)),
-            client_id: String::new(),
+            client_id: random_string(8),
             connect_timeout: Duration::from_secs(10),
             keep_alive: Duration::from_secs(30),
             proxy: Proxy::None,

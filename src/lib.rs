@@ -12,6 +12,7 @@ pub mod ping_packet;
 pub mod publish_packet;
 pub mod subscribe_packet;
 mod sync_stream;
+pub mod utils;
 
 pub use async_client::AsyncClient;
 pub use base::*;
