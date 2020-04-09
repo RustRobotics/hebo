@@ -23,7 +23,7 @@ pub enum PacketType {
     Unknown = 0,
 
     /// Request to connect to broker
-    ConnectCmd = 1,
+    Connect = 1,
 
     /// Broker reply to connect request
     ConnectAck = 2,
@@ -67,11 +67,18 @@ pub enum PacketType {
     Reserved = 15,
 }
 
+impl Into<u8> for PacketType {
+    fn into(self) -> u8 {
+        (self as u8 & 0b0000_1111) << 4
+    }
+}
+
 impl From<u8> for PacketType {
     fn from(flag: u8) -> Self {
-        match flag {
+        let packet_type = (flag & 0b1111_0000) >> 4;
+        match packet_type {
             0 => PacketType::Unknown,
-            1 => PacketType::ConnectCmd,
+            1 => PacketType::Connect,
             2 => PacketType::ConnectAck,
             3 => PacketType::Publish,
             4 => PacketType::PubAck,
@@ -94,26 +101,116 @@ impl From<u8> for PacketType {
 
 impl Default for PacketType {
     fn default() -> Self {
-        PacketType::ConnectCmd
+        PacketType::Connect
     }
 }
 
 /// Packet flags
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum PacketFlags {
-    Reserved,
+    /// Request to connect to broker
+    Connect,
+
+    /// Broker reply to connect request
+    ConnectAck,
+
+    /// Publish message
     Publish {
         dup: bool,
         qos: QoSLevel,
         retain: bool,
     },
+
+    /// Publish acknowledgement
+    PubAck,
+
+    /// Publish received
+    PubRecv,
+
+    /// Publish release
+    PubRel,
+
+    /// Publish complete
+    PubCompl,
+
+    /// Client subscribe request
     Subscribe,
+
+    /// Subscribe acknowledgement
+    SubAck,
+
+    /// Unsubscribe request
+    UnSubscribe,
+
+    /// Unsubscribe acknowledgement
+    UnSubAck,
+
+    /// Client ping request
     PingReq,
+
+    /// Server ping response
+    PingResp,
+
+    /// Client is disconnecting
+    Disconnect,
+}
+
+impl Into<u8> for PacketFlags {
+    fn into(self) -> u8 {
+        match self {
+            Self::Connect => 0,
+            Self::ConnectAck => 0,
+            Self::Publish { dup, qos, retain } => {
+                let dup = if dup { 0b0000_10000 } else { 0b0000_0000 };
+                let qos = match qos {
+                    QoSLevel::QoS0 => 0b0000_0000,
+                    QoSLevel::QoS1 => 0b0000_0010,
+                    QoSLevel::QoS2 => 0b0000_0100,
+                };
+
+                let retain = if retain { 0b0000_0001 } else { 0b0000_0000 };
+                dup | qos | retain
+            }
+            Self::PubAck => 0,
+            Self::PubRecv => 0,
+            Self::PubRel => 0b0000_0010,
+            Self::PubCompl => 0,
+            Self::Subscribe => 0b0000_0010,
+            Self::SubAck => 0,
+            Self::UnSubscribe => 0b0000_0010,
+            Self::UnSubAck => 0,
+            Self::PingReq => 0,
+            Self::PingResp => 0,
+            Self::Disconnect => 0,
+        }
+    }
 }
 
 impl Default for PacketFlags {
     fn default() -> Self {
-        PacketFlags::Reserved
+        PacketFlags::Connect
+    }
+}
+
+impl PacketFlags {
+    pub fn from_u8(packet_type: PacketType, flag: u8) -> PacketFlags {
+        let flag = flag & 0b0000_1111;
+        match packet_type {
+            PacketType::Publish => {
+                let dup = (flag & 0b0000_1000) == 0b0000_1000;
+                let retain = (flag & 0b0000_0001) == 0b0000_0001;
+                let qos = match (flag & 0b0000_0110) {
+                    0b0000_0000 => QoSLevel::QoS0,
+                    0b0000_0010 => QoSLevel::QoS1,
+                    0b0000_0100 => QoSLevel::QoS2,
+                    // TODO(Shaohua): Handle qos error
+                    _ => QoSLevel::QoS0,
+                };
+
+                PacketFlags::Publish { dup, qos, retain }
+            }
+            _ => Self::default(),
+        }
     }
 }
 
@@ -129,12 +226,10 @@ impl FromNetPacket for FixedHeader {
         if buf.len() == 0 {
             return Err(Error::PacketEmpty);
         }
-        let flags = buf[0];
-        let packet_type = ((flags & 0b1111_0000) >> 4).into();
-        let packet_flags = match flags & 0b0000_1111 {
-            0 => PacketFlags::Reserved,
-            _ => return Err(Error::InvalidFixedHeader),
-        };
+        let flag = buf[0];
+        // TODO(Shaohua): Handle invalid packet type.
+        let packet_type = PacketType::from(flag);
+        let packet_flags = PacketFlags::from_u8(packet_type, flag);
         Ok(FixedHeader {
             packet_type,
             packet_flags,
@@ -144,25 +239,9 @@ impl FromNetPacket for FixedHeader {
 
 impl ToNetPacket for FixedHeader {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
-        let packet_type = (self.packet_type as u8 & 0b0000_1111) << 4;
-        let packet_flags = match self.packet_flags {
-            PacketFlags::Reserved => 0b0000_0000,
-            PacketFlags::Publish { dup, qos, retain } => {
-                let dup = if dup { 0b0000_10000 } else { 0b0000_0000 };
-                let qos = match qos {
-                    QoSLevel::QoS0 => 0b0000_0000,
-                    QoSLevel::QoS1 => 0b0000_0010,
-                    QoSLevel::QoS2 => 0b0000_0100,
-                };
-
-                let retain = if retain { 0b0000_0001 } else { 0b0000_0000 };
-                dup + qos + retain
-            }
-            PacketFlags::Subscribe => 0b0000_0010,
-            PacketFlags::PingReq => 0b0000_0000,
-        };
-        let flags = packet_type + packet_flags;
-        v.push(flags);
+        let packet_type: u8 = self.packet_type.into();
+        let packet_flags: u8 = self.packet_flags.into();
+        v.push(packet_type | packet_flags);
 
         Ok(1)
     }
