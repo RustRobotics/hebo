@@ -5,7 +5,7 @@
 use ruo::{
     Client,
     ConnectOptions,
-    QoSLevel,
+    QoS,
 };
 
 fn main() {
@@ -15,5 +15,5 @@ fn main() {
     let addr = "127.0.0.1:1883";
     let options = ConnectOptions::new(addr).unwrap();
     let mut client = Client::connect(options).unwrap();
-    client.publish("hello", QoSLevel::QoS0, b"Hello, world");
+    client.publish("hello", QoS::AtMostOnce, b"Hello, world");
 }

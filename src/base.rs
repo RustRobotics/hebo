@@ -32,28 +32,28 @@ pub enum PacketType {
     Publish = 3,
 
     /// Publish acknowledgement
-    PubAck = 4,
+    PublishAck = 4,
 
     /// Publish received
-    PubRecv = 5,
+    PubReceived = 5,
 
     /// Publish release
-    PubRel = 6,
+    PubRelease = 6,
 
     /// Publish complete
-    PubCompl = 7,
+    PubComplete = 7,
 
     /// Client subscribe request
     Subscribe = 8,
 
     /// Subscribe acknowledgement
-    SubAck = 9,
+    SubscribeAck = 9,
 
     /// Unsubscribe request
     Unsubscribe = 10,
 
     /// Unsubscribe acknowledgement
-    UnsubAck = 11,
+    UnsubscribeAck = 11,
 
     /// Client ping request
     PingReq = 12,
@@ -81,14 +81,14 @@ impl From<u8> for PacketType {
             1 => PacketType::Connect,
             2 => PacketType::ConnectAck,
             3 => PacketType::Publish,
-            4 => PacketType::PubAck,
-            5 => PacketType::PubRecv,
-            6 => PacketType::PubRel,
-            7 => PacketType::PubCompl,
+            4 => PacketType::PublishAck,
+            5 => PacketType::PubReceived,
+            6 => PacketType::PubRelease,
+            7 => PacketType::PubComplete,
             8 => PacketType::Subscribe,
-            9 => PacketType::SubAck,
+            9 => PacketType::SubscribeAck,
             10 => PacketType::Unsubscribe,
-            11 => PacketType::UnsubAck,
+            11 => PacketType::UnsubscribeAck,
             12 => PacketType::PingReq,
             13 => PacketType::PingResp,
             14 => PacketType::Disconnect,
@@ -117,33 +117,33 @@ pub enum PacketFlags {
     /// Publish message
     Publish {
         dup: bool,
-        qos: QoSLevel,
+        qos: QoS,
         retain: bool,
     },
 
     /// Publish acknowledgement
-    PubAck,
+    PublishAck,
 
     /// Publish received
-    PubRecv,
+    PubReceived,
 
     /// Publish release
-    PubRel,
+    PubRelease,
 
     /// Publish complete
-    PubCompl,
+    PubComplete,
 
     /// Client subscribe request
     Subscribe,
 
     /// Subscribe acknowledgement
-    SubAck,
+    SubscribeAck,
 
     /// Unsubscribe request
     Unsubscribe,
 
     /// Unsubscribe acknowledgement
-    UnsubAck,
+    UnsubscribeAck,
 
     /// Client ping request
     PingReq,
@@ -158,30 +158,30 @@ pub enum PacketFlags {
 impl Into<u8> for PacketFlags {
     fn into(self) -> u8 {
         match self {
-            Self::Connect => 0,
-            Self::ConnectAck => 0,
-            Self::Publish { dup, qos, retain } => {
+            PacketFlags::Connect => 0,
+            PacketFlags::ConnectAck => 0,
+            PacketFlags::Publish { dup, qos, retain } => {
                 let dup = if dup { 0b0000_10000 } else { 0b0000_0000 };
                 let qos = match qos {
-                    QoSLevel::QoS0 => 0b0000_0000,
-                    QoSLevel::QoS1 => 0b0000_0010,
-                    QoSLevel::QoS2 => 0b0000_0100,
+                    QoS::AtMostOnce => 0b0000_0000,
+                    QoS::AtLeastOnce => 0b0000_0010,
+                    QoS::ExactOnce => 0b0000_0100,
                 };
 
                 let retain = if retain { 0b0000_0001 } else { 0b0000_0000 };
                 dup | qos | retain
             }
-            Self::PubAck => 0,
-            Self::PubRecv => 0,
-            Self::PubRel => 0b0000_0010,
-            Self::PubCompl => 0,
-            Self::Subscribe => 0b0000_0010,
-            Self::SubAck => 0,
-            Self::Unsubscribe => 0b0000_0010,
-            Self::UnsubAck => 0,
-            Self::PingReq => 0,
-            Self::PingResp => 0,
-            Self::Disconnect => 0,
+            PacketFlags::PublishAck => 0,
+            PacketFlags::PubReceived => 0,
+            PacketFlags::PubRelease => 0b0000_0010,
+            PacketFlags::PubComplete => 0,
+            PacketFlags::Subscribe => 0b0000_0010,
+            PacketFlags::SubscribeAck => 0,
+            PacketFlags::Unsubscribe => 0b0000_0010,
+            PacketFlags::UnsubscribeAck => 0,
+            PacketFlags::PingReq => 0,
+            PacketFlags::PingResp => 0,
+            PacketFlags::Disconnect => 0,
         }
     }
 }
@@ -200,16 +200,16 @@ impl PacketFlags {
                 let dup = (flag & 0b0000_1000) == 0b0000_1000;
                 let retain = (flag & 0b0000_0001) == 0b0000_0001;
                 let qos = match flag & 0b0000_0110 {
-                    0b0000_0000 => QoSLevel::QoS0,
-                    0b0000_0010 => QoSLevel::QoS1,
-                    0b0000_0100 => QoSLevel::QoS2,
+                    0b0000_0000 => QoS::AtMostOnce,
+                    0b0000_0010 => QoS::AtLeastOnce,
+                    0b0000_0100 => QoS::ExactOnce,
                     // TODO(Shaohua): Handle qos error
-                    _ => QoSLevel::QoS0,
+                    _ => QoS::AtMostOnce,
                 };
 
                 PacketFlags::Publish { dup, qos, retain }
             }
-            _ => Self::default(),
+            _ => PacketFlags::default(),
         }
     }
 }
@@ -270,14 +270,19 @@ impl ToNetPacket for Version {
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum QoSLevel {
-    QoS0 = 0,
-    QoS1 = 1,
-    QoS2 = 2,
+pub enum QoS {
+    /// At most once delivery.
+    AtMostOnce = 0,
+
+    /// At least once delivery.
+    AtLeastOnce = 1,
+
+    /// Exactly once delivery.
+    ExactOnce = 2,
 }
 
-impl Default for QoSLevel {
+impl Default for QoS {
     fn default() -> Self {
-        QoSLevel::QoS0
+        QoS::AtMostOnce
     }
 }

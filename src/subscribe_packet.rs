@@ -9,7 +9,7 @@ use std::io::{Result, Write};
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribePacket {
     topic: Vec<u8>,
-    qos: QoSLevel,
+    qos: QoS,
     packet_id: PacketId,
 }
 
@@ -43,7 +43,7 @@ impl ToNetPacket for SubscribePacket {
 }
 
 impl SubscribePacket {
-    pub fn new(topic: &str, qos: QoSLevel, packet_id: PacketId) -> SubscribePacket {
+    pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> SubscribePacket {
         SubscribePacket {
             topic: Vec::from(topic),
             qos,

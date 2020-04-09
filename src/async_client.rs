@@ -89,9 +89,9 @@ impl AsyncClient {
                 match fixed_header.packet_type {
                     PacketType::ConnectAck => self.on_connect().await,
                     PacketType::Publish => self.on_message(&buf).await,
-                    PacketType::PubAck => log::info!("PubAck: {:x?}", &buf),
-                    PacketType::SubAck => self.sub_ack(&buf),
-                    PacketType::UnsubAck => self.unsub_ack(&buf),
+                    PacketType::PublishAck => log::info!("PubAck: {:x?}", &buf),
+                    PacketType::SubscribeAck => self.subscribe_ack(&buf),
+                    PacketType::UnsubscribeAck => self.unsubscribe_ack(&buf),
                     PacketType::PingResp => self.on_ping_resp().await,
                     t => log::info!("Unhandled msg: {:?}", t),
                 }
@@ -106,10 +106,10 @@ impl AsyncClient {
         self.socket.write_all(&buf).await.unwrap();
     }
 
-    pub async fn publish(&mut self, topic: &str, qos: QoSLevel, data: &[u8]) {
+    pub async fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) {
         log::info!("Send publish packet");
         let mut packet = PublishPacket::new(topic, qos, data);
-        if qos != QoSLevel::QoS0 {
+        if qos != QoS::AtMostOnce {
             let packet_id = self.next_packet_id();
             packet.set_packet_id(packet_id);
             // TODO(Shaohua): Tuning memory usage.
@@ -118,7 +118,7 @@ impl AsyncClient {
         self.send(packet).await;
     }
 
-    pub async fn subscribe(&mut self, topic: &str, qos: QoSLevel) {
+    pub async fn subscribe(&mut self, topic: &str, qos: QoS) {
         log::info!("subscribe to: {}", topic);
         let packet_id = self.next_packet_id();
         self.topics.insert(topic.to_string(), packet_id);
@@ -146,8 +146,8 @@ impl AsyncClient {
     async fn on_connect(&mut self) {
         log::info!("On connect()");
         self.status = StreamStatus::Connected;
-        self.subscribe("hello", QoSLevel::QoS0).await;
-        self.publish("hello", QoSLevel::QoS0, b"Hello, world").await;
+        self.subscribe("hello", QoS::AtMostOnce).await;
+        self.publish("hello", QoS::AtMostOnce, b"Hello, world").await;
     }
 
     async fn ping(&mut self) {
@@ -176,11 +176,11 @@ impl AsyncClient {
         // TODO(Shaohua): Reset reconnect timer.
     }
 
-    fn sub_ack(&mut self, buf: &[u8]) {
+    fn subscribe_ack(&mut self, buf: &[u8]) {
         // TODO(Shaohua): Parse packet_id and remove from vector.
     }
 
-    fn unsub_ack(&mut self, buf: &[u8]) {
+    fn unsubscribe_ack(&mut self, buf: &[u8]) {
     }
 
     fn next_packet_id(&mut self) -> PacketId {

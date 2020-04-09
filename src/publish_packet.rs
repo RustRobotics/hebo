@@ -56,7 +56,7 @@ impl ToNetPacket for PublishPacket {
 }
 
 impl PublishPacket {
-    pub fn new(topic: &str, qos: QoSLevel, msg: &[u8]) -> PublishPacket {
+    pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> PublishPacket {
         let fixed_header = FixedHeader {
             packet_type: PacketType::Publish,
             packet_flags: PacketFlags::Publish {

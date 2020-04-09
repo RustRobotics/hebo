@@ -12,7 +12,7 @@ pub struct ConnectFlags {
     pub username: bool,
     pub password: bool,
     pub retain: bool,
-    pub qos: QoSLevel,
+    pub qos: QoS,
     pub will: bool,
     pub clean_session: bool,
     pub reserved: bool,
@@ -24,7 +24,7 @@ impl Default for ConnectFlags {
             username: false,
             password: false,
             retain: false,
-            qos: QoSLevel::QoS0,
+            qos: QoS::AtMostOnce,
             will: false,
             clean_session: true,
             reserved: false,
@@ -52,9 +52,9 @@ impl ToNetPacket for ConnectFlags {
             };
 
             let qoa = match self.qos {
-                QoSLevel::QoS0 => 0b0000_0000,
-                QoSLevel::QoS1 => 0b0000_1000,
-                QoSLevel::QoS2 => 0b0001_0000,
+                QoS::AtMostOnce => 0b0000_0000,
+                QoS::AtLeastOnce => 0b0000_1000,
+                QoS::ExactOnce => 0b0001_0000,
             };
 
             let will = if self.will { 0b0000_0100 } else { 0b0000_0000 };
