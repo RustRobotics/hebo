@@ -9,6 +9,7 @@ use super::ping_packet::PingPacket;
 use super::publish_packet::PublishPacket;
 use super::subscribe_packet::SubscribePacket;
 use super::disconnect_packet::DisconnectPacket;
+use super::unsubscribe_packet::UnsubscribePacket;
 use std::fmt::Debug;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -31,6 +32,7 @@ pub struct AsyncClient {
     socket: TcpStream,
     status: StreamStatus,
     topics: HashMap<String, PacketId>,
+    packet_id: PacketId,
 }
 
 impl AsyncClient {
@@ -41,6 +43,7 @@ impl AsyncClient {
             socket: socket,
             status: StreamStatus::Connecting,
             topics: HashMap::new(),
+            packet_id: 1,
         };
 
         let conn_packet = ConnectPacket::new();
@@ -104,9 +107,16 @@ impl AsyncClient {
 
     pub async fn subscribe(&mut self, topic: &str, qos: QoSLevel) {
         log::info!("subscribe to: {}", topic);
-        let packet_id = 42;
+        let packet_id = self.next_packet_id();
         self.topics.insert(topic.to_string(), packet_id);
         let packet = SubscribePacket::new(topic, qos, packet_id);
+        self.send(packet).await;
+    }
+
+    pub async fn unsubscribe(&mut self, topics: &[&str]) {
+        log::info!("unsubscribe to: {:?}", topics);
+        let packet_id = self.next_packet_id();
+        let packet = UnsubscribePacket::new(topics, packet_id);
         self.send(packet).await;
     }
 
@@ -114,7 +124,7 @@ impl AsyncClient {
         if self.status == StreamStatus::Connected {
             self.status = StreamStatus::Disconnecting;
             let packet = DisconnectPacket::new();
-            self.send(packet);
+            self.send(packet).await;
         }
     }
 
@@ -149,5 +159,14 @@ impl AsyncClient {
     async fn on_ping_resp(&self) {
         log::info!("on ping resp");
         // TODO(Shaohua): Reset reconnect timer.
+    }
+
+    fn next_packet_id(&mut self) -> PacketId {
+        if self.packet_id == u16::MAX {
+            self.packet_id = 1;
+        } else {
+            self.packet_id += 1;
+        }
+        self.packet_id
     }
 }

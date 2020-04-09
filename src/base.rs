@@ -50,10 +50,10 @@ pub enum PacketType {
     SubAck = 9,
 
     /// Unsubscribe request
-    UnSubscribe = 10,
+    Unsubscribe = 10,
 
     /// Unsubscribe acknowledgement
-    UnSubAck = 11,
+    UnsubAck = 11,
 
     /// Client ping request
     PingReq = 12,
@@ -87,8 +87,8 @@ impl From<u8> for PacketType {
             7 => PacketType::PubCompl,
             8 => PacketType::Subscribe,
             9 => PacketType::SubAck,
-            10 => PacketType::UnSubscribe,
-            11 => PacketType::UnSubAck,
+            10 => PacketType::Unsubscribe,
+            11 => PacketType::UnsubAck,
             12 => PacketType::PingReq,
             13 => PacketType::PingResp,
             14 => PacketType::Disconnect,
@@ -140,10 +140,10 @@ pub enum PacketFlags {
     SubAck,
 
     /// Unsubscribe request
-    UnSubscribe,
+    Unsubscribe,
 
     /// Unsubscribe acknowledgement
-    UnSubAck,
+    UnsubAck,
 
     /// Client ping request
     PingReq,
@@ -177,8 +177,8 @@ impl Into<u8> for PacketFlags {
             Self::PubCompl => 0,
             Self::Subscribe => 0b0000_0010,
             Self::SubAck => 0,
-            Self::UnSubscribe => 0b0000_0010,
-            Self::UnSubAck => 0,
+            Self::Unsubscribe => 0b0000_0010,
+            Self::UnsubAck => 0,
             Self::PingReq => 0,
             Self::PingResp => 0,
             Self::Disconnect => 0,
@@ -199,7 +199,7 @@ impl PacketFlags {
             PacketType::Publish => {
                 let dup = (flag & 0b0000_1000) == 0b0000_1000;
                 let retain = (flag & 0b0000_0001) == 0b0000_0001;
-                let qos = match (flag & 0b0000_0110) {
+                let qos = match flag & 0b0000_0110 {
                     0b0000_0000 => QoSLevel::QoS0,
                     0b0000_0010 => QoSLevel::QoS1,
                     0b0000_0100 => QoSLevel::QoS2,
