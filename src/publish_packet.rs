@@ -11,6 +11,7 @@ use std::io::{self, Write};
 // TODO(Shaohua): Replace with slice
 pub struct PublishPacket {
     fixed_header: FixedHeader,
+    packet_id: PacketId,
     topic: String,
     msg: Vec<u8>,
 }
@@ -32,6 +33,8 @@ impl FromNetPacket for PublishPacket {
             fixed_header,
             topic,
             msg,
+            // TODO(Shaohua): Parse packet id
+            packet_id: 0,
         })
     }
 }
@@ -66,7 +69,17 @@ impl PublishPacket {
             fixed_header,
             topic: topic.to_string(),
             msg: msg.to_vec(),
+            packet_id: 0,
         }
+    }
+
+    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+        self.packet_id = packet_id;
+        self
+    }
+
+    pub fn packet_id(&self) -> PacketId {
+        self.packet_id
     }
 
     pub fn topic(&self) -> &str {

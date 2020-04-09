@@ -33,6 +33,9 @@ pub struct AsyncClient {
     status: StreamStatus,
     topics: HashMap<String, PacketId>,
     packet_id: PacketId,
+    subscribing_packets: Vec<SubscribePacket>,
+    unsubscribing_packets: Vec<UnsubscribePacket>,
+    publishing_packets: Vec<PublishPacket>,
 }
 
 impl AsyncClient {
@@ -44,6 +47,9 @@ impl AsyncClient {
             status: StreamStatus::Connecting,
             topics: HashMap::new(),
             packet_id: 1,
+            subscribing_packets: Vec::new(),
+            unsubscribing_packets: Vec::new(),
+            publishing_packets: Vec::new(),
         };
 
         let conn_packet = ConnectPacket::new();
@@ -84,7 +90,8 @@ impl AsyncClient {
                     PacketType::ConnectAck => self.on_connect().await,
                     PacketType::Publish => self.on_message(&buf).await,
                     PacketType::PubAck => log::info!("PubAck: {:x?}", &buf),
-                    PacketType::SubAck => log::info!("SubAck: {:x?}", &buf),
+                    PacketType::SubAck => self.sub_ack(&buf),
+                    PacketType::UnsubAck => self.unsub_ack(&buf),
                     PacketType::PingResp => self.on_ping_resp().await,
                     t => log::info!("Unhandled msg: {:?}", t),
                 }
@@ -101,7 +108,13 @@ impl AsyncClient {
 
     pub async fn publish(&mut self, topic: &str, qos: QoSLevel, data: &[u8]) {
         log::info!("Send publish packet");
-        let packet = PublishPacket::new(topic, qos, data);
+        let mut packet = PublishPacket::new(topic, qos, data);
+        if qos != QoSLevel::QoS0 {
+            let packet_id = self.next_packet_id();
+            packet.set_packet_id(packet_id);
+            // TODO(Shaohua): Tuning memory usage.
+            self.publishing_packets.push(packet.clone());
+        };
         self.send(packet).await;
     }
 
@@ -110,6 +123,7 @@ impl AsyncClient {
         let packet_id = self.next_packet_id();
         self.topics.insert(topic.to_string(), packet_id);
         let packet = SubscribePacket::new(topic, qos, packet_id);
+        self.subscribing_packets.push(packet.clone());
         self.send(packet).await;
     }
 
@@ -117,6 +131,7 @@ impl AsyncClient {
         log::info!("unsubscribe to: {:?}", topics);
         let packet_id = self.next_packet_id();
         let packet = UnsubscribePacket::new(topics, packet_id);
+        self.unsubscribing_packets.push(packet.clone());
         self.send(packet).await;
     }
 
@@ -159,6 +174,13 @@ impl AsyncClient {
     async fn on_ping_resp(&self) {
         log::info!("on ping resp");
         // TODO(Shaohua): Reset reconnect timer.
+    }
+
+    fn sub_ack(&mut self, buf: &[u8]) {
+        // TODO(Shaohua): Parse packet_id and remove from vector.
+    }
+
+    fn unsub_ack(&mut self, buf: &[u8]) {
     }
 
     fn next_packet_id(&mut self) -> PacketId {
