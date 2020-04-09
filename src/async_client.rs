@@ -8,11 +8,13 @@ use super::connect_packet::ConnectPacket;
 use super::ping_packet::PingPacket;
 use super::publish_packet::PublishPacket;
 use super::subscribe_packet::SubscribePacket;
+use super::disconnect_packet::DisconnectPacket;
 use std::fmt::Debug;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::time::interval;
+use std::collections::HashMap;
 
 #[derive(Debug, Hash, PartialEq)]
 enum StreamStatus {
@@ -28,6 +30,7 @@ pub struct AsyncClient {
     connect_options: ConnectOptions,
     socket: TcpStream,
     status: StreamStatus,
+    topics: HashMap<String, PacketId>,
 }
 
 impl AsyncClient {
@@ -37,6 +40,7 @@ impl AsyncClient {
             connect_options,
             socket: socket,
             status: StreamStatus::Connecting,
+            topics: HashMap::new(),
         };
 
         let conn_packet = ConnectPacket::new();
@@ -63,7 +67,6 @@ impl AsyncClient {
                     }
                 }
                 _ = timer.tick() => {
-                    log::info!("tick()");
                     self.ping().await;
                 },
             }
@@ -101,13 +104,17 @@ impl AsyncClient {
 
     pub async fn subscribe(&mut self, topic: &str, qos: QoSLevel) {
         log::info!("subscribe to: {}", topic);
-        let packet = SubscribePacket::new(topic, qos);
+        let packet_id = 42;
+        self.topics.insert(topic.to_string(), packet_id);
+        let packet = SubscribePacket::new(topic, qos, packet_id);
         self.send(packet).await;
     }
 
     pub async fn disconnect(&mut self) {
         if self.status == StreamStatus::Connected {
             self.status = StreamStatus::Disconnecting;
+            let packet = DisconnectPacket::new();
+            self.send(packet);
         }
     }
 

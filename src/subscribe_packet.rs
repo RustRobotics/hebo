@@ -43,12 +43,11 @@ impl ToNetPacket for SubscribePacket {
 }
 
 impl SubscribePacket {
-    // TODO(Shaohua): Add packet_id to param.
-    pub fn new(topic: &str, qos: QoSLevel) -> SubscribePacket {
+    pub fn new(topic: &str, qos: QoSLevel, packet_id: PacketId) -> SubscribePacket {
         SubscribePacket {
             topic: Vec::from(topic),
-            qos: qos,
-            packet_id: 23290,
+            qos,
+            packet_id,
         }
     }
 }
