@@ -7,3 +7,6 @@
 - [ ] websocket
 - [ ] json encoding
 - [ ] protobuf encoding
+- [ ] network proxy
+- [ ] disconnect
+- [ ] jwt

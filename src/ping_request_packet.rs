@@ -6,15 +6,15 @@ use super::base::*;
 use std::io;
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
-pub struct PingPacket;
+pub struct PingRequestPacket();
 
-impl PingPacket {
-    pub fn new() -> PingPacket {
-        PingPacket
+impl PingRequestPacket {
+    pub fn new() -> PingRequestPacket {
+        PingRequestPacket()
     }
 }
 
-impl ToNetPacket for PingPacket {
+impl ToNetPacket for PingRequestPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
 
@@ -23,8 +23,8 @@ impl ToNetPacket for PingPacket {
             packet_flags: PacketFlags::PingReq,
         };
         fixed_header.to_net(v)?;
-        let msg_len = 0; // Payload is empty
-        v.push(msg_len);
+        let remaining_len = 0; // Payload is empty
+        v.push(remaining_len);
 
         Ok(v.len() - old_len)
     }

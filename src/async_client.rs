@@ -7,7 +7,7 @@ use super::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 use super::connect_options::*;
 use super::connect_packet::ConnectPacket;
 use super::disconnect_packet::DisconnectPacket;
-use super::ping_packet::PingPacket;
+use super::ping_request_packet::PingRequestPacket;
 use super::publish_ack_packet::PublishAckPacket;
 use super::publish_packet::PublishPacket;
 use super::subscribe_ack_packet::SubscribeAckPacket;
@@ -26,6 +26,7 @@ enum StreamStatus {
     Invalid,
     Connecting,
     Connected,
+    ConnectFailed,
     Disconnecting,
     Disconnected,
 }
@@ -82,6 +83,7 @@ impl AsyncClient {
                     }
                 }
                 _ = timer.tick() => {
+                    log::info!("tick()");
                     self.ping().await;
                 },
             }
@@ -161,18 +163,19 @@ impl AsyncClient {
 
     async fn on_connect(&mut self) {
         log::info!("On connect()");
-        self.status = StreamStatus::Connected;
         self.subscribe("hello", QoS::AtMostOnce).await;
         self.publish("hello", QoS::AtMostOnce, b"Hello, world")
             .await;
-        self.subscribe("hello2", QoS::AtLeastOnce).await;
-        self.publish("hello2", QoS::AtLeastOnce, b"Hello, qos1")
-            .await;
+        //self.subscribe("hello2", QoS::AtLeastOnce).await;
+        //self.publish("hello2", QoS::AtLeastOnce, b"Hello, qos1")
+        //    .await;
     }
 
     async fn ping(&mut self) {
+        log::info!("ping()");
         if self.status == StreamStatus::Connected {
-            let packet = PingPacket::new();
+            log::info!("Send ping packet");
+            let packet = PingRequestPacket::new();
             self.send(packet).await;
         }
     }
@@ -202,9 +205,13 @@ impl AsyncClient {
         match ConnectAckPacket::from_net(&buf) {
             Ok(packet) => match packet.return_code() {
                 ConnectReturnCode::Accepted => {
+                    self.status = StreamStatus::Connected;
                     self.on_connect().await;
                 }
-                _ => log::warn!("Failed to connect to server, {:?}", packet.return_code()),
+                _ => {
+                    log::warn!("Failed to connect to server, {:?}", packet.return_code());
+                    self.status = StreamStatus::ConnectFailed;
+                }
             },
             Err(err) => log::error!("Invalid ConnectAckPacket: {:?}", buf),
         }
