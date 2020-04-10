@@ -5,6 +5,7 @@
 pub mod async_client;
 mod base;
 mod client;
+pub mod connect_ack_packet;
 mod connect_options;
 pub mod connect_packet;
 pub mod disconnect_packet;

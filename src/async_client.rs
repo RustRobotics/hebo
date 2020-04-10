@@ -3,23 +3,23 @@
 // in the LICENSE file.
 
 use super::base::*;
+use super::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 use super::connect_options::*;
 use super::connect_packet::ConnectPacket;
-use super::ping_packet::PingPacket;
-use super::publish_packet::PublishPacket;
-use super::publish_ack_packet::PublishAckPacket;
-use super::subscribe_packet::SubscribePacket;
-use super::subscribe_ack_packet::SubscribeAckPacket;
 use super::disconnect_packet::DisconnectPacket;
-use super::unsubscribe_packet::UnsubscribePacket;
+use super::ping_packet::PingPacket;
+use super::publish_ack_packet::PublishAckPacket;
+use super::publish_packet::PublishPacket;
+use super::subscribe_ack_packet::SubscribeAckPacket;
+use super::subscribe_packet::SubscribePacket;
 use super::unsubscribe_ack_packet::UnsubscribeAckPacket;
-use super::publish_ack_packet;
+use super::unsubscribe_packet::UnsubscribePacket;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::time::interval;
-use std::collections::HashMap;
 
 #[derive(Debug, Hash, PartialEq)]
 enum StreamStatus {
@@ -93,7 +93,7 @@ impl AsyncClient {
             Ok(fixed_header) => {
                 //log::info!("fixed header: {:?}", fixed_header);
                 match fixed_header.packet_type {
-                    PacketType::ConnectAck => self.on_connect().await,
+                    PacketType::ConnectAck => self.connect_ack(&buf).await,
                     PacketType::Publish => self.on_message(&buf).await,
                     PacketType::PublishAck => self.publish_ack(&buf),
                     PacketType::SubscribeAck => self.subscribe_ack(&buf),
@@ -120,13 +120,15 @@ impl AsyncClient {
                 let packet_id = self.next_packet_id();
                 packet.set_packet_id(packet_id);
                 // TODO(Shaohua): Tuning memory usage.
-                self.publishing_qos1_packets.insert(packet_id, packet.clone());
-            },
+                self.publishing_qos1_packets
+                    .insert(packet_id, packet.clone());
+            }
             QoS::ExactOnce => {
                 let packet_id = self.next_packet_id();
                 packet.set_packet_id(packet_id);
-                self.publishing_qos2_packets.insert(packet_id, packet.clone());
-            },
+                self.publishing_qos2_packets
+                    .insert(packet_id, packet.clone());
+            }
             _ => (),
         }
         self.send(packet).await;
@@ -161,9 +163,11 @@ impl AsyncClient {
         log::info!("On connect()");
         self.status = StreamStatus::Connected;
         self.subscribe("hello", QoS::AtMostOnce).await;
-        self.publish("hello", QoS::AtMostOnce, b"Hello, world").await;
+        self.publish("hello", QoS::AtMostOnce, b"Hello, world")
+            .await;
         self.subscribe("hello2", QoS::AtLeastOnce).await;
-        self.publish("hello2", QoS::AtLeastOnce, b"Hello, qos1").await;
+        self.publish("hello2", QoS::AtLeastOnce, b"Hello, qos1")
+            .await;
     }
 
     async fn ping(&mut self) {
@@ -193,6 +197,19 @@ impl AsyncClient {
         // TODO(Shaohua): Reset reconnect timer.
     }
 
+    async fn connect_ack(&mut self, buf: &[u8]) {
+        log::info!("connect_ack()");
+        match ConnectAckPacket::from_net(&buf) {
+            Ok(packet) => match packet.return_code() {
+                ConnectReturnCode::Accepted => {
+                    self.on_connect().await;
+                }
+                _ => log::warn!("Failed to connect to server, {:?}", packet.return_code()),
+            },
+            Err(err) => log::error!("Invalid ConnectAckPacket: {:?}", buf),
+        }
+    }
+
     fn publish_ack(&mut self, buf: &[u8]) {
         log::info!("publish_ack()");
         match PublishAckPacket::from_net(&buf) {
@@ -204,7 +221,7 @@ impl AsyncClient {
                 } else {
                     log::warn!("Failed to find PublishAckPacket: {}", packet_id);
                 }
-            },
+            }
             Err(err) => log::error!("Invalid PublishAckPacket: {:?}", buf),
         }
     }
@@ -221,11 +238,11 @@ impl AsyncClient {
                     }
                     log::info!("Topic `{}` subscription confirmed!", p.topic());
                     self.subscribing_packets.remove(&packet.packet_id());
-                    // TODO(Shaohua): Check qos value.
+                // TODO(Shaohua): Check qos value.
                 } else {
                     log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
                 }
-            },
+            }
             Err(err) => log::error!("Invalid SubscribeAckPacket: {:?}", buf),
         }
     }
@@ -241,7 +258,7 @@ impl AsyncClient {
                 } else {
                     log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
                 }
-            },
+            }
             Err(err) => log::error!("Invalid UnsubscribeAckPacket: {:?}", buf),
         }
     }
