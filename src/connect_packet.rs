@@ -136,6 +136,3 @@ impl ToNetPacket for ConnectPacket {
         Ok(v.len() - old_len)
     }
 }
-
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
-pub struct ConnectAckPacket {}

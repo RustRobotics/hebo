@@ -8,7 +8,7 @@ use std::io::{Result, Write};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribePacket {
-    topic: Vec<u8>,
+    topic: String,
     qos: QoS,
     packet_id: PacketId,
 }
@@ -34,7 +34,7 @@ impl ToNetPacket for SubscribePacket {
 
         // Payload
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;
-        v.write(&self.topic)?;
+        v.write(&self.topic.as_bytes())?;
         let qos: u8 = 0b0000_0011 & (self.qos as u8);
         v.push(qos);
 
@@ -45,9 +45,17 @@ impl ToNetPacket for SubscribePacket {
 impl SubscribePacket {
     pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> SubscribePacket {
         SubscribePacket {
-            topic: Vec::from(topic),
+            topic: topic.to_string(),
             qos,
             packet_id,
         }
+    }
+
+    pub fn topic(&self) -> &str {
+        &self.topic
+    }
+
+    pub fn packet_id(&self) -> PacketId {
+        self.packet_id
     }
 }
