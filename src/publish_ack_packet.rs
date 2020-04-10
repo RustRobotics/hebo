@@ -7,28 +7,19 @@ use super::error::Error;
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 use std::io::Write;
 
+/// Acknowledge packet for Publish message in QoS1.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
-pub struct SubscribeAckPacket {
-    qos: QoS,
-    failed: bool,
+pub struct PublishAckPacket {
     packet_id: PacketId,
 }
 
-impl SubscribeAckPacket {
-    pub fn qos(&self) -> QoS {
-        self.qos
-    }
-
-    pub fn failed(&self) -> bool {
-        self.failed
-    }
-
+impl PublishAckPacket {
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 }
 
-impl FromNetPacket for SubscribeAckPacket {
+impl FromNetPacket for PublishAckPacket {
     fn from_net(buf: &[u8]) -> Result<Self, Error> {
         if buf.len() == 0 {
             return Err(Error::PacketEmpty);
@@ -37,27 +28,11 @@ impl FromNetPacket for SubscribeAckPacket {
         let fixed_header = FixedHeader::from_net(buf)?;
         offset += 1;
         let remaining_len = buf[offset] as usize;
-        assert_eq!(remaining_len, 3);
+        assert_eq!(remaining_len, 2);
         offset += 1;
         let packet_id = BigEndian::read_u16(&buf[offset..offset + 2]) as PacketId;
         offset += 2;
-        let payload = buf[offset];
-        offset += 1;
 
-        let failed = payload & 0b1000_0000 == 0b1000_0000;
-        let qos = {
-            match payload & 0b0000_0011 {
-                0b0000_0010 => QoS::ExactOnce,
-                0b0000_0001 => QoS::AtLeastOnce,
-                0b0000_0000 => QoS::AtMostOnce,
-                _ => return Err(Error::InvalidQoS),
-            }
-        };
-
-        Ok(SubscribeAckPacket {
-            packet_id,
-            failed,
-            qos,
-        })
+        Ok(PublishAckPacket { packet_id })
     }
 }

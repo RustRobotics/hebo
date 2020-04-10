@@ -21,6 +21,7 @@ impl FromNetPacket for UnsubscribeAckPacket {
         let fixed_header = FixedHeader::from_net(buf)?;
         offset += 1;
         let remaining_len = buf[offset] as usize;
+        assert_eq!(remaining_len, 2);
         offset += 1;
         let packet_id = BigEndian::read_u16(&buf[offset..offset + 2]) as PacketId;
         offset += 2;

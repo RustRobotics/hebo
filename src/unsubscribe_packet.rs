@@ -26,7 +26,7 @@ impl UnsubscribePacket {
     }
 
     pub fn topics(&self) -> &[String] {
-        &self.topics()
+        &self.topics
     }
 }
 

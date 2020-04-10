@@ -7,11 +7,13 @@ use super::connect_options::*;
 use super::connect_packet::ConnectPacket;
 use super::ping_packet::PingPacket;
 use super::publish_packet::PublishPacket;
+use super::publish_ack_packet::PublishAckPacket;
 use super::subscribe_packet::SubscribePacket;
 use super::subscribe_ack_packet::SubscribeAckPacket;
 use super::disconnect_packet::DisconnectPacket;
 use super::unsubscribe_packet::UnsubscribePacket;
 use super::unsubscribe_ack_packet::UnsubscribeAckPacket;
+use super::publish_ack_packet;
 use std::fmt::Debug;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -37,7 +39,8 @@ pub struct AsyncClient {
     packet_id: PacketId,
     subscribing_packets: HashMap<PacketId, SubscribePacket>,
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
-    publishing_packets: HashMap<PacketId, PublishPacket>,
+    publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
+    publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
 }
 
 impl AsyncClient {
@@ -51,7 +54,8 @@ impl AsyncClient {
             packet_id: 1,
             subscribing_packets: HashMap::new(),
             unsubscribing_packets: HashMap::new(),
-            publishing_packets: HashMap::new(),
+            publishing_qos1_packets: HashMap::new(),
+            publishing_qos2_packets: HashMap::new(),
         };
 
         let conn_packet = ConnectPacket::new();
@@ -91,7 +95,7 @@ impl AsyncClient {
                 match fixed_header.packet_type {
                     PacketType::ConnectAck => self.on_connect().await,
                     PacketType::Publish => self.on_message(&buf).await,
-                    PacketType::PublishAck => log::info!("PublishAck: {:x?}", &buf),
+                    PacketType::PublishAck => self.publish_ack(&buf),
                     PacketType::SubscribeAck => self.subscribe_ack(&buf),
                     PacketType::UnsubscribeAck => self.unsubscribe_ack(&buf),
                     PacketType::PingResp => self.on_ping_resp().await,
@@ -111,12 +115,20 @@ impl AsyncClient {
     pub async fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) {
         log::info!("Send publish packet");
         let mut packet = PublishPacket::new(topic, qos, data);
-        if qos != QoS::AtMostOnce {
-            let packet_id = self.next_packet_id();
-            packet.set_packet_id(packet_id);
-            // TODO(Shaohua): Tuning memory usage.
-            self.publishing_packets.insert(packet_id, packet.clone());
-        };
+        match qos {
+            QoS::AtLeastOnce => {
+                let packet_id = self.next_packet_id();
+                packet.set_packet_id(packet_id);
+                // TODO(Shaohua): Tuning memory usage.
+                self.publishing_qos1_packets.insert(packet_id, packet.clone());
+            },
+            QoS::ExactOnce => {
+                let packet_id = self.next_packet_id();
+                packet.set_packet_id(packet_id);
+                self.publishing_qos2_packets.insert(packet_id, packet.clone());
+            },
+            _ => (),
+        }
         self.send(packet).await;
     }
 
@@ -179,6 +191,22 @@ impl AsyncClient {
         // TODO(Shaohua): Reset reconnect timer.
     }
 
+    fn publish_ack(&mut self, buf: &[u8]) {
+        log::info!("publish_ack()");
+        match PublishAckPacket::from_net(&buf) {
+            Ok(packet) => {
+                let packet_id = packet.packet_id();
+                if let Some(p) = self.publishing_qos1_packets.get(&packet_id) {
+                    log::info!("Topic `{}` publish confirmed!", p.topic());
+                    self.publishing_qos1_packets.remove(&packet.packet_id());
+                } else {
+                    log::warn!("Failed to find PublishAckPacket: {}", packet_id);
+                }
+            },
+            Err(err) => log::error!("Invalid PublishAckPacket: {:?}", buf),
+        }
+    }
+
     fn subscribe_ack(&mut self, buf: &[u8]) {
         log::info!("subscribe_ack()");
         // Parse packet_id and remove from vector.
@@ -196,7 +224,7 @@ impl AsyncClient {
                     log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
                 }
             },
-            Err(err) => log::error!("Invalid packet: {:?}", buf),
+            Err(err) => log::error!("Invalid SubscribeAckPacket: {:?}", buf),
         }
     }
 
@@ -212,7 +240,7 @@ impl AsyncClient {
                     log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
                 }
             },
-            Err(err) => log::error!("Invalid packet: {:?}", buf),
+            Err(err) => log::error!("Invalid UnsubscribeAckPacket: {:?}", buf),
         }
     }
 

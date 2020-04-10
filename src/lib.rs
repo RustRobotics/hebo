@@ -10,6 +10,7 @@ pub mod connect_packet;
 pub mod disconnect_packet;
 pub mod error;
 pub mod ping_packet;
+pub mod publish_ack_packet;
 pub mod publish_packet;
 pub mod subscribe_ack_packet;
 pub mod subscribe_packet;
