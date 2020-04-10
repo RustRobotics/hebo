@@ -5,7 +5,7 @@
 use super::base::*;
 use byteorder::{BigEndian, WriteBytesExt};
 use std::default::Default;
-use std::io::{Result, Write};
+use std::io::{self, Write};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct UnsubscribePacket {
@@ -20,10 +20,18 @@ impl UnsubscribePacket {
             packet_id,
         }
     }
+
+    pub fn packet_id(&self) -> PacketId {
+        self.packet_id
+    }
+
+    pub fn topics(&self) -> &[String] {
+        &self.topics()
+    }
 }
 
 impl ToNetPacket for UnsubscribePacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let fixed_header = FixedHeader {
             packet_type: PacketType::Unsubscribe,
             packet_flags: PacketFlags::Unsubscribe,

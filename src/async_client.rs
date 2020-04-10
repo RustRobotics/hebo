@@ -11,6 +11,7 @@ use super::subscribe_packet::SubscribePacket;
 use super::subscribe_ack_packet::SubscribeAckPacket;
 use super::disconnect_packet::DisconnectPacket;
 use super::unsubscribe_packet::UnsubscribePacket;
+use super::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use std::fmt::Debug;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -90,7 +91,7 @@ impl AsyncClient {
                 match fixed_header.packet_type {
                     PacketType::ConnectAck => self.on_connect().await,
                     PacketType::Publish => self.on_message(&buf).await,
-                    PacketType::PublishAck => log::info!("PubAck: {:x?}", &buf),
+                    PacketType::PublishAck => log::info!("PublishAck: {:x?}", &buf),
                     PacketType::SubscribeAck => self.subscribe_ack(&buf),
                     PacketType::UnsubscribeAck => self.unsubscribe_ack(&buf),
                     PacketType::PingResp => self.on_ping_resp().await,
@@ -163,6 +164,7 @@ impl AsyncClient {
     }
 
     async fn on_message(&self, buf: &Vec<u8>) {
+        log::info!("on_message()");
         match PublishPacket::from_net(buf) {
             Ok(packet) => {
                 log::info!("packet: {:?}", packet);
@@ -199,6 +201,19 @@ impl AsyncClient {
     }
 
     fn unsubscribe_ack(&mut self, buf: &[u8]) {
+        log::info!("unsubscribe_ack()");
+        match UnsubscribeAckPacket::from_net(&buf) {
+            Ok(packet) => {
+                let packet_id = packet.packet_id();
+                if let Some(p) = self.unsubscribing_packets.get(&packet_id) {
+                    log::info!("Topics `{:?}` unsubscription confirmed!", p.topics());
+                    self.unsubscribing_packets.remove(&packet.packet_id());
+                } else {
+                    log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
+                }
+            },
+            Err(err) => log::error!("Invalid packet: {:?}", buf),
+        }
     }
 
     fn next_packet_id(&mut self) -> PacketId {
