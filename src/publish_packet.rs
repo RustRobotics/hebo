@@ -10,7 +10,9 @@ use std::io::{self, Write};
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 // TODO(Shaohua): Replace with slice
 pub struct PublishPacket {
-    fixed_header: FixedHeader,
+    qos: QoS,
+    dup: bool,
+    retain: bool,
     packet_id: PacketId,
     topic: String,
     msg: Vec<u8>,
@@ -20,6 +22,16 @@ impl FromNetPacket for PublishPacket {
     fn from_net(v: &[u8]) -> Result<Self, Error> {
         let mut offset: usize = 0;
         let fixed_header = FixedHeader::from_net(v)?;
+        if fixed_header.packet_type != PacketType::Publish {
+            return Err(Error::InvalidFixedHeader);
+        }
+        let (dup, qos, retain) =
+            if let PacketFlags::Publish { dup, qos, retain } = fixed_header.packet_flags {
+                (dup, qos, retain)
+            } else {
+                return Err(Error::InvalidFixedHeader);
+            };
+
         offset += 1;
         let remaining_len = v[offset] as usize;
         offset += 1;
@@ -30,7 +42,9 @@ impl FromNetPacket for PublishPacket {
         let msg_len = remaining_len - topic_len - 2;
         let msg = v[offset..offset + msg_len].to_vec();
         Ok(PublishPacket {
-            fixed_header,
+            qos,
+            retain,
+            dup,
             topic,
             msg,
             // TODO(Shaohua): Parse packet id
@@ -42,13 +56,28 @@ impl FromNetPacket for PublishPacket {
 impl ToNetPacket for PublishPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
-        self.fixed_header.to_net(v)?;
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Publish,
+            packet_flags: PacketFlags::Publish {
+                dup: self.dup,
+                retain: self.retain,
+                qos: self.qos,
+            },
+        };
+        fixed_header.to_net(v)?;
         let msg_len = 2 // Topic length bytes
             + self.topic.len() // Topic length
             + self.msg.len(); // Message length
         v.push(msg_len as u8);
+
+        // Write variable header
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;
         v.write(&self.topic.as_bytes())?;
+        if self.qos() != QoS::AtMostOnce {
+            v.write_u16::<BigEndian>(self.packet_id())?;
+        }
+
+        // Write payload
         v.write(&self.msg)?;
 
         Ok(v.len() - old_len)
@@ -57,20 +86,34 @@ impl ToNetPacket for PublishPacket {
 
 impl PublishPacket {
     pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> PublishPacket {
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Publish,
-            packet_flags: PacketFlags::Publish {
-                dup: false,
-                qos: qos,
-                retain: false,
-            },
-        };
         PublishPacket {
-            fixed_header,
+            qos: qos,
+            dup: false,
+            retain: false,
             topic: topic.to_string(),
             msg: msg.to_vec(),
             packet_id: 0,
         }
+    }
+
+    pub fn set_retain(&mut self, retain: bool) {
+        self.retain = retain;
+    }
+
+    pub fn retain(&self) -> bool {
+        self.retain
+    }
+
+    pub fn set_dup(&mut self, dup: bool) {
+        self.dup = dup
+    }
+
+    pub fn dup(&self) -> bool {
+        self.dup
+    }
+
+    pub fn qos(&self) -> QoS {
+        self.qos
     }
 
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
