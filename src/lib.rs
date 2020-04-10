@@ -12,6 +12,7 @@ pub mod disconnect_packet;
 pub mod error;
 pub mod ping_packet;
 pub mod publish_ack_packet;
+pub mod publish_complete_packet;
 pub mod publish_packet;
 pub mod publish_received_packet;
 pub mod publish_release_packet;
