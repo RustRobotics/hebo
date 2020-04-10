@@ -13,6 +13,8 @@ pub mod error;
 pub mod ping_packet;
 pub mod publish_ack_packet;
 pub mod publish_packet;
+pub mod publish_received_packet;
+pub mod publish_release_packet;
 pub mod subscribe_ack_packet;
 pub mod subscribe_packet;
 mod sync_stream;
