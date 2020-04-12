@@ -14,7 +14,7 @@ pub trait ToNetPacket {
 }
 
 pub trait FromNetPacket: Sized {
-    fn from_net(buf: &[u8]) -> Result<Self, Error>;
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error>;
 }
 
 #[repr(u8)]
@@ -115,11 +115,7 @@ pub enum PacketFlags {
     ConnectAck,
 
     /// Publish message
-    Publish {
-        dup: bool,
-        qos: QoS,
-        retain: bool,
-    },
+    Publish { dup: bool, qos: QoS, retain: bool },
 
     /// Publish acknowledgement
     PublishAck,
@@ -222,11 +218,8 @@ pub struct FixedHeader {
 }
 
 impl FromNetPacket for FixedHeader {
-    fn from_net(buf: &[u8]) -> Result<Self, Error> {
-        if buf.len() == 0 {
-            return Err(Error::PacketEmpty);
-        }
-        let flag = buf[0];
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let flag = buf[*offset];
         // TODO(Shaohua): Handle invalid packet type.
         let packet_type = PacketType::from(flag);
         let packet_flags = PacketFlags::from_u8(packet_type, flag);

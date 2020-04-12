@@ -16,7 +16,6 @@ use super::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use super::unsubscribe_packet::UnsubscribePacket;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::time::interval;
@@ -91,7 +90,8 @@ impl AsyncClient {
     }
 
     async fn recv_router(&mut self, buf: &mut Vec<u8>) {
-        match FixedHeader::from_net(&buf) {
+        let mut offset = 0;
+        match FixedHeader::from_net(&buf, &mut offset) {
             Ok(fixed_header) => {
                 //log::info!("fixed header: {:?}", fixed_header);
                 match fixed_header.packet_type {
@@ -186,7 +186,8 @@ impl AsyncClient {
 
     async fn on_message(&self, buf: &Vec<u8>) {
         log::info!("on_message()");
-        match PublishPacket::from_net(buf) {
+        let mut offset = 0;
+        match PublishPacket::from_net(buf, &mut offset) {
             Ok(packet) => {
                 log::info!("packet: {:?}", packet);
                 log::info!("message: {:?}", std::str::from_utf8(packet.message()));
@@ -202,7 +203,8 @@ impl AsyncClient {
 
     async fn connect_ack(&mut self, buf: &[u8]) {
         log::info!("connect_ack()");
-        match ConnectAckPacket::from_net(&buf) {
+        let mut offset = 0;
+        match ConnectAckPacket::from_net(&buf, &mut offset) {
             Ok(packet) => match packet.return_code() {
                 ConnectReturnCode::Accepted => {
                     self.status = StreamStatus::Connected;
@@ -219,7 +221,8 @@ impl AsyncClient {
 
     fn publish_ack(&mut self, buf: &[u8]) {
         log::info!("publish_ack()");
-        match PublishAckPacket::from_net(&buf) {
+        let mut offset = 0;
+        match PublishAckPacket::from_net(&buf, &mut offset) {
             Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if let Some(p) = self.publishing_qos1_packets.get(&packet_id) {
@@ -236,7 +239,8 @@ impl AsyncClient {
     fn subscribe_ack(&mut self, buf: &[u8]) {
         log::info!("subscribe_ack()");
         // Parse packet_id and remove from vector.
-        match SubscribeAckPacket::from_net(&buf) {
+        let mut offset = 0;
+        match SubscribeAckPacket::from_net(&buf, &mut offset) {
             Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if let Some(p) = self.subscribing_packets.get(&packet_id) {
@@ -256,7 +260,8 @@ impl AsyncClient {
 
     fn unsubscribe_ack(&mut self, buf: &[u8]) {
         log::info!("unsubscribe_ack()");
-        match UnsubscribeAckPacket::from_net(&buf) {
+        let mut offset = 0;
+        match UnsubscribeAckPacket::from_net(&buf, &mut offset) {
             Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if let Some(p) = self.unsubscribing_packets.get(&packet_id) {

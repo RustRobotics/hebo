@@ -4,8 +4,7 @@
 
 use super::base::*;
 use super::error::Error;
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
-use std::io::Write;
+use byteorder::{BigEndian, ByteOrder};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribeAckPacket {
@@ -29,20 +28,16 @@ impl SubscribeAckPacket {
 }
 
 impl FromNetPacket for SubscribeAckPacket {
-    fn from_net(buf: &[u8]) -> Result<Self, Error> {
-        if buf.len() == 0 {
-            return Err(Error::PacketEmpty);
-        }
-        let mut offset = 0;
-        let fixed_header = FixedHeader::from_net(buf)?;
-        offset += 1;
-        let remaining_len = buf[offset] as usize;
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::from_net(buf, offset)?;
+        *offset += 1;
+        let remaining_len = buf[*offset] as usize;
         assert_eq!(remaining_len, 3);
-        offset += 1;
-        let packet_id = BigEndian::read_u16(&buf[offset..offset + 2]) as PacketId;
-        offset += 2;
-        let payload = buf[offset];
-        offset += 1;
+        *offset += 1;
+        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
+        *offset += 2;
+        let payload = buf[*offset];
+        *offset += 1;
 
         let failed = payload & 0b1000_0000 == 0b1000_0000;
         let qos = {

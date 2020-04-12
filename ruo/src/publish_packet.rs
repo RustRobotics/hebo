@@ -19,9 +19,8 @@ pub struct PublishPacket {
 }
 
 impl FromNetPacket for PublishPacket {
-    fn from_net(v: &[u8]) -> Result<Self, Error> {
-        let mut offset: usize = 0;
-        let fixed_header = FixedHeader::from_net(v)?;
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::from_net(buf, offset)?;
         if fixed_header.packet_type != PacketType::Publish {
             return Err(Error::InvalidFixedHeader);
         }
@@ -32,15 +31,15 @@ impl FromNetPacket for PublishPacket {
                 return Err(Error::InvalidFixedHeader);
             };
 
-        offset += 1;
-        let remaining_len = v[offset] as usize;
-        offset += 1;
-        let topic_len = BigEndian::read_u16(&v[offset..offset + 2]) as usize;
-        offset += 2;
-        let topic = String::from_utf8((&v[offset..offset + topic_len]).to_vec()).unwrap();
-        offset += topic_len;
+        *offset += 1;
+        let remaining_len = buf[*offset] as usize;
+        *offset += 1;
+        let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
+        *offset += 2;
+        let topic = String::from_utf8((&buf[*offset..*offset + topic_len]).to_vec()).unwrap();
+        *offset += topic_len;
         let msg_len = remaining_len - topic_len - 2;
-        let msg = v[offset..offset + msg_len].to_vec();
+        let msg = buf[*offset..*offset + msg_len].to_vec();
         Ok(PublishPacket {
             qos,
             retain,

@@ -3,9 +3,10 @@
 // in the LICENSE file.
 
 use super::base::*;
+use super::error::Error;
 use byteorder::{BigEndian, WriteBytesExt};
 use std::default::Default;
-use std::io::{Result, Write};
+use std::io::{self, Write};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct ConnectFlags {
@@ -33,7 +34,7 @@ impl Default for ConnectFlags {
 }
 
 impl ToNetPacket for ConnectFlags {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let flags = {
             let username = if self.username {
                 0b1000_0000
@@ -71,12 +72,28 @@ impl ToNetPacket for ConnectFlags {
                 0b0000_0000
             };
 
-            username + password + retian + qoa + will + clean_session + reserved
+            username | password | retian | qoa | will | clean_session | reserved
         };
         log::info!("connect flags: {:x?}", flags);
         v.push(flags);
 
         Ok(1)
+    }
+}
+
+impl FromNetPacket for ConnectFlags {
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let flags = buf[*offset];
+        *offset += 1;
+        Ok(ConnectFlags {
+            username: false,
+            password: false,
+            retain: false,
+            qos: QoS::AtMostOnce,
+            will: false,
+            clean_session: true,
+            reserved: false,
+        })
     }
 }
 
@@ -105,7 +122,7 @@ impl ConnectPacket {
         self.protocol_name.write(name).unwrap();
     }
 
-    pub fn set_client_id(&mut self, id: &[u8]) -> Result<usize> {
+    pub fn set_client_id(&mut self, id: &[u8]) -> io::Result<usize> {
         self.client_id.clear();
         self.client_id.write(id)
     }
@@ -122,7 +139,7 @@ impl ConnectPacket {
 }
 
 impl ToNetPacket for ConnectPacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
         self.fixed_header.to_net(v)?;
         v.push(self.msg_len());
@@ -134,5 +151,32 @@ impl ToNetPacket for ConnectPacket {
         v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
         v.write(&self.client_id)?;
         Ok(v.len() - old_len)
+    }
+}
+
+impl FromNetPacket for ConnectPacket {
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::from_net(buf, offset)?;
+        *offset += 1;
+        let remaining_len = buf[*offset] as usize;
+        assert_eq!(remaining_len, 2);
+        *offset += 1;
+        let ack_flags = buf[*offset];
+        let session_persistent = ack_flags & 0b0000_0001 == 0b0000_0001;
+        *offset += 1;
+        let connect_flags = ConnectFlags::from_net(buf, offset)?;
+        let keepalive = 0;
+        let client_id = Vec::new();
+        let version = Version::V311;
+
+        Ok(ConnectPacket {
+            fixed_header,
+            msg_len: 0,
+            protocol_name: Vec::new(),
+            version,
+            keepalive,
+            connect_flags,
+            client_id,
+        })
     }
 }

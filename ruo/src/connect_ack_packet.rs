@@ -4,8 +4,6 @@
 
 use super::base::*;
 use super::error::Error;
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
-use std::io::Write;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum ConnectReturnCode {
@@ -67,21 +65,17 @@ impl ConnectAckPacket {
 }
 
 impl FromNetPacket for ConnectAckPacket {
-    fn from_net(buf: &[u8]) -> Result<Self, Error> {
-        if buf.len() == 0 {
-            return Err(Error::PacketEmpty);
-        }
-        let mut offset = 0;
-        let fixed_header = FixedHeader::from_net(buf)?;
-        offset += 1;
-        let remaining_len = buf[offset] as usize;
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::from_net(buf, offset)?;
+        *offset += 1;
+        let remaining_len = buf[*offset] as usize;
         assert_eq!(remaining_len, 2);
-        offset += 1;
-        let ack_flags = buf[offset];
+        *offset += 1;
+        let ack_flags = buf[*offset];
         let session_persistent = ack_flags & 0b0000_0001 == 0b0000_0001;
-        offset += 1;
-        let return_code = ConnectReturnCode::from(buf[offset]);
-        offset += 1;
+        *offset += 1;
+        let return_code = ConnectReturnCode::from(buf[*offset]);
+        *offset += 1;
 
         Ok(ConnectAckPacket {
             return_code,

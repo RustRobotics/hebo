@@ -3,9 +3,8 @@
 // in the LICENSE file.
 
 use super::base::*;
-use byteorder::{BigEndian, WriteBytesExt};
 use std::default::Default;
-use std::io::{Result, Write};
+use std::io;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct DisconnectPacket {}
@@ -17,7 +16,7 @@ impl DisconnectPacket {
 }
 
 impl ToNetPacket for DisconnectPacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let fixed_header = FixedHeader {
             packet_type: PacketType::Disconnect,
             packet_flags: PacketFlags::Disconnect,

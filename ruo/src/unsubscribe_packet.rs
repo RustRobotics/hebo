@@ -3,9 +3,8 @@
 // in the LICENSE file.
 
 use super::base::*;
-use byteorder::{BigEndian, WriteBytesExt};
 use std::default::Default;
-use std::io::{self, Write};
+use std::io;
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct UnsubscribePacket {
