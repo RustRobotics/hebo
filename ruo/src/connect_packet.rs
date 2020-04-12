@@ -103,7 +103,7 @@ pub struct ConnectPacket {
     pub connect_flags: ConnectFlags,
     pub keepalive: u16,
     qos: QoS,
-    client_id: Vec<u8>,
+    client_id: String,
 }
 
 impl ConnectPacket {
@@ -115,9 +115,9 @@ impl ConnectPacket {
         }
     }
 
-    pub fn set_client_id(&mut self, id: &[u8]) -> Result<(), ClientIdError> {
+    pub fn set_client_id(&mut self, id: &str) -> Result<(), ClientIdError> {
         self.client_id.clear();
-        self.client_id.write(id);
+        self.client_id.push_str(id);
         Ok(())
     }
 
@@ -154,7 +154,7 @@ impl ToNetPacket for ConnectPacket {
         self.connect_flags.to_net(v)?;
         v.write_u16::<BigEndian>(self.keepalive)?;
         v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
-        v.write(&self.client_id)?;
+        v.write(&self.client_id.as_bytes())?;
         Ok(v.len() - old_len)
     }
 }
@@ -182,8 +182,7 @@ impl FromNetPacket for ConnectPacket {
         *offset += 2;
 
         // TODO(Shaohua): Parse payload
-        // TODO(Shaohua): Convert client id to String
-        let client_id = Vec::new();
+        let client_id = String::new();
         let qos = QoS::AtMostOnce;
 
         Ok(ConnectPacket {

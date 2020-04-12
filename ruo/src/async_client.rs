@@ -58,7 +58,8 @@ impl AsyncClient {
             publishing_qos2_packets: HashMap::new(),
         };
 
-        let conn_packet = ConnectPacket::new();
+        let mut conn_packet = ConnectPacket::new();
+        conn_packet.set_client_id(client.connect_options.client_id());
         client.send(conn_packet).await;
         log::info!("send conn packet");
 
