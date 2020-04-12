@@ -8,4 +8,5 @@ pub enum Error {
     InvalidFixedHeader,
     PacketEmpty,
     InvalidQoS,
+    InvalidProtocolLevel,
 }

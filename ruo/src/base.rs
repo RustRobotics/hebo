@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use super::error::Error;
+use std::convert::TryFrom;
 use std::io;
 
 /// Packet identifier
@@ -242,19 +243,32 @@ impl ToNetPacket for FixedHeader {
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum Version {
+pub enum ProtocolLevel {
     V31 = 3,
     V311 = 4,
     V5 = 5,
 }
 
-impl Default for Version {
+impl Default for ProtocolLevel {
     fn default() -> Self {
-        Version::V311
+        ProtocolLevel::V311
     }
 }
 
-impl ToNetPacket for Version {
+impl TryFrom<u8> for ProtocolLevel {
+    type Error = Error;
+
+    fn try_from(v: u8) -> Result<ProtocolLevel, Self::Error> {
+        match v {
+            3 => Ok(ProtocolLevel::V31),
+            4 => Ok(ProtocolLevel::V311),
+            5 => Ok(ProtocolLevel::V5),
+            _ => Err(Error::InvalidProtocolLevel),
+        }
+    }
+}
+
+impl ToNetPacket for ProtocolLevel {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         v.push(*self as u8);
         Ok(1)
@@ -277,5 +291,18 @@ pub enum QoS {
 impl Default for QoS {
     fn default() -> Self {
         QoS::AtMostOnce
+    }
+}
+
+impl TryFrom<u8> for QoS {
+    type Error = Error;
+
+    fn try_from(v: u8) -> Result<QoS, Self::Error> {
+        match v {
+            0 => Ok(QoS::AtMostOnce),
+            1 => Ok(QoS::AtLeastOnce),
+            2 => Ok(QoS::ExactOnce),
+            _ => Err(Error::InvalidQoS),
+        }
     }
 }

@@ -9,3 +9,20 @@ use rand::{thread_rng, Rng};
 pub fn random_string(len: usize) -> String {
     thread_rng().sample_iter(&Alphanumeric).take(len).collect()
 }
+
+#[derive(Debug)]
+pub enum ClientIdError {
+    /// no chars
+    IsEmpty,
+
+    /// Larger than 23 chars
+    TooLong,
+
+    /// Can only contain 0-9a-zA-Z
+    InvalidChars,
+}
+
+pub fn check_client_id(client_id: &str) -> Result<(), ClientIdError> {
+    // TODO(Shaohua): Add a regexp
+    Ok(())
+}
