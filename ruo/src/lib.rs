@@ -4,7 +4,6 @@
 
 pub mod async_client;
 pub mod base;
-mod client;
 pub mod connect_ack_packet;
 pub mod connect_options;
 pub mod connect_packet;
@@ -18,7 +17,6 @@ pub mod publish_received_packet;
 pub mod publish_release_packet;
 pub mod subscribe_ack_packet;
 pub mod subscribe_packet;
-mod sync_stream;
 pub mod unsubscribe_ack_packet;
 pub mod unsubscribe_packet;
 pub mod utils;
