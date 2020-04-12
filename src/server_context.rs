@@ -25,7 +25,7 @@ impl ServerContext {
         let (connection_tx, connection_rx) = mpsc::channel(10);
         let pipeline = Pipeline::new(server_tx, connection_rx);
         self.pipelines.push(pipeline);
-        let mut connection = ConnectionContext::new(socket, addr, connection_tx, server_rx);
+        let connection = ConnectionContext::new(socket, addr, connection_tx, server_rx);
         tokio::spawn(connection.run_loop());
     }
 }
