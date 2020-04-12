@@ -3,10 +3,10 @@
 // in the LICENSE file.
 
 pub mod async_client;
-mod base;
+pub mod base;
 mod client;
 pub mod connect_ack_packet;
-mod connect_options;
+pub mod connect_options;
 pub mod connect_packet;
 pub mod disconnect_packet;
 pub mod error;
@@ -22,8 +22,3 @@ mod sync_stream;
 pub mod unsubscribe_ack_packet;
 pub mod unsubscribe_packet;
 pub mod utils;
-
-pub use async_client::AsyncClient;
-pub use base::*;
-pub use client::Client;
-pub use connect_options::*;

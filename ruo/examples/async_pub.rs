@@ -2,7 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use ruo::{AsyncClient, ConnectOptions};
+use ruo::{async_client::AsyncClient, connect_options::ConnectOptions};
 
 #[tokio::main]
 async fn main() {
