@@ -2,8 +2,9 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use super::base::*;
-use super::error::Error;
+use crate::base::*;
+use crate::error::Error;
+use crate::utils::ClientIdError;
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 use std::convert::TryFrom;
 use std::default::Default;
@@ -98,10 +99,10 @@ impl FromNetPacket for ConnectFlags {
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct ConnectPacket {
     protocol_name: String,
-    pub fixed_header: FixedHeader,
     pub protocol_level: ProtocolLevel,
     pub connect_flags: ConnectFlags,
     pub keepalive: u16,
+    qos: QoS,
     client_id: Vec<u8>,
 }
 
@@ -114,16 +115,29 @@ impl ConnectPacket {
         }
     }
 
-    pub fn set_client_id(&mut self, id: &[u8]) -> io::Result<usize> {
+    pub fn set_client_id(&mut self, id: &[u8]) -> Result<(), ClientIdError> {
         self.client_id.clear();
-        self.client_id.write(id)
+        self.client_id.write(id);
+        Ok(())
+    }
+
+    pub fn set_qos(&mut self, qos: QoS) {
+        self.qos = qos;
+    }
+
+    fn qos(&self) -> QoS {
+        self.qos
     }
 }
 
 impl ToNetPacket for ConnectPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
-        self.fixed_header.to_net(v)?;
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Connect,
+            packet_flags: PacketFlags::Connect,
+        };
+        fixed_header.to_net(v)?;
 
         let remaining_len: u8 = 2 // protocol_name_len
             + self.protocol_name.len() as u8 // b"MQTT" protocol name
@@ -170,10 +184,11 @@ impl FromNetPacket for ConnectPacket {
         // TODO(Shaohua): Parse payload
         // TODO(Shaohua): Convert client id to String
         let client_id = Vec::new();
+        let qos = QoS::AtMostOnce;
 
         Ok(ConnectPacket {
             protocol_name,
-            fixed_header,
+            qos,
             protocol_level,
             keepalive,
             connect_flags,

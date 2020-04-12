@@ -2,7 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use super::utils::random_string;
+use crate::utils::random_string;
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::time::Duration;

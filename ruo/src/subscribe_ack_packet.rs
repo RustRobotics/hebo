@@ -2,8 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use super::base::*;
-use super::error::Error;
+use crate::base::*;
+use crate::error::Error;
 use byteorder::{BigEndian, ByteOrder};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
