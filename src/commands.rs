@@ -4,10 +4,13 @@
 
 #[derive(Debug)]
 pub enum ServerCommand {
-    Nil,
+    PublishPacket,
+    Subscribe,
 }
 
 #[derive(Debug)]
 pub enum ConnectionCommand {
-    Nil,
+    PublishPacket,
+    Subscribe,
+    Unsubscribe,
 }

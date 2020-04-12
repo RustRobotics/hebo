@@ -4,24 +4,21 @@
 
 use hebo::server_context::ServerContext;
 use std::io;
-use tokio::net::{TcpListener, TcpStream};
-
-async fn process_socket(socket: TcpStream) {
-    log::info!("process socket!");
-}
+use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    std::env::set_var("RUST_LOG", "log");
+    std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    let server = ServerContext::new();
+    let mut server = ServerContext::new();
     let mut listener = TcpListener::bind("127.0.0.1:1883").await?;
     loop {
+        log::info!("accept()");
         match listener.accept().await {
-            Ok((socket, _)) => {
-                // TODO(Shaohua): Spawn a sub task and create a ConnectContext
-                process_socket(socket).await;
+            Ok((socket, address)) => {
+                log::info!("remote address: {:?}", address);
+                server.new_connection(socket, address).await;
             }
             Err(err) => log::error!("Failed to accept incoming connection: {:?}", err),
         }

@@ -3,6 +3,9 @@
 // in the LICENSE file.
 
 use super::commands::{ConnectionCommand, ServerCommand};
+use super::connection_context::ConnectionContext;
+use std::net::SocketAddr;
+use tokio::net::TcpStream;
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
 #[derive(Debug)]
@@ -15,6 +18,15 @@ impl ServerContext {
         ServerContext {
             pipelines: Vec::new(),
         }
+    }
+
+    pub async fn new_connection(&mut self, socket: TcpStream, addr: SocketAddr) {
+        let (server_tx, server_rx) = mpsc::channel(10);
+        let (connection_tx, connection_rx) = mpsc::channel(10);
+        let pipeline = Pipeline::new(server_tx, connection_rx);
+        self.pipelines.push(pipeline);
+        let mut connection = ConnectionContext::new(socket, addr, connection_tx, server_rx);
+        tokio::spawn(connection.run_loop());
     }
 }
 
