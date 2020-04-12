@@ -1,0 +1,10 @@
+language: rust
+sudo: false
+
+script:
+  - cargo build --verbose -p client
+  - cargo test --verbose -p client
+
+rust:
+  - stable
+  - nightly

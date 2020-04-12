@@ -3,6 +3,7 @@ name = "hebo"
 version = "0.1.0"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2018"
+description = "Distributed MQTT broker"
 
 [dependencies]
 
