@@ -10,3 +10,4 @@
 - [ ] network proxy
 - [ ] disconnect
 - [ ] jwt
+- [ ] fix ping/pang msg tick

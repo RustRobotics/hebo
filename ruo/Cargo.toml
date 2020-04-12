@@ -1,0 +1,16 @@
+[package]
+name = "ruo"
+version = "0.1.0"
+authors = ["Xu Shaohua <shaohua@biofan.org>"]
+edition = "2018"
+
+[dependencies]
+byteorder = "1.3.4"
+tokio = { version = "0.2.16", features = ["full"] }
+log = "0.4.8"
+futures = "0.3.4"
+async-trait = "0.1.29"
+rand = "0.7.3"
+
+[dev-dependencies]
+env_logger = "0.7.1"

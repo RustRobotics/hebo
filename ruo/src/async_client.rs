@@ -166,9 +166,9 @@ impl AsyncClient {
         self.subscribe("hello", QoS::AtMostOnce).await;
         self.publish("hello", QoS::AtMostOnce, b"Hello, world")
             .await;
-        //self.subscribe("hello2", QoS::AtLeastOnce).await;
-        //self.publish("hello2", QoS::AtLeastOnce, b"Hello, qos1")
-        //    .await;
+        self.subscribe("hello2", QoS::AtLeastOnce).await;
+        self.publish("hello2", QoS::AtLeastOnce, b"Hello, qos1")
+            .await;
     }
 
     async fn ping(&mut self) {
