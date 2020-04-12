@@ -4,7 +4,6 @@
 
 use crate::base::*;
 use crate::error::Error;
-use crate::utils::ClientIdError;
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 use std::convert::TryFrom;
 use std::default::Default;
@@ -102,7 +101,6 @@ pub struct ConnectPacket {
     pub protocol_level: ProtocolLevel,
     pub connect_flags: ConnectFlags,
     pub keepalive: u16,
-    qos: QoS,
     client_id: String,
 }
 
@@ -115,18 +113,17 @@ impl ConnectPacket {
         }
     }
 
-    pub fn set_client_id(&mut self, id: &str) -> Result<(), ClientIdError> {
+    pub fn set_client_id(&mut self, id: &str) {
         self.client_id.clear();
         self.client_id.push_str(id);
-        Ok(())
     }
 
     pub fn set_qos(&mut self, qos: QoS) {
-        self.qos = qos;
+        self.connect_flags.qos = qos;
     }
 
     fn qos(&self) -> QoS {
-        self.qos
+        self.connect_flags.qos
     }
 }
 
@@ -181,13 +178,15 @@ impl FromNetPacket for ConnectPacket {
         let keepalive = BigEndian::read_u16(&buf[*offset..*offset + 2]);
         *offset += 2;
 
-        // TODO(Shaohua): Parse payload
-        let client_id = String::new();
-        let qos = QoS::AtMostOnce;
+        let client_id_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
+        *offset += 2;
+        let client_id = String::from_utf8_lossy(&buf[*offset..*offset + client_id_len]).to_string();
+        *offset += client_id_len;
+
+        // TODO(Shaohua): Read username and password
 
         Ok(ConnectPacket {
             protocol_name,
-            qos,
             protocol_level,
             keepalive,
             connect_flags,
