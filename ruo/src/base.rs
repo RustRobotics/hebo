@@ -35,13 +35,13 @@ pub enum PacketType {
     PublishAck = 4,
 
     /// Publish received
-    PubReceived = 5,
+    PublishReceived = 5,
 
     /// Publish release
-    PubRelease = 6,
+    PublishRelease = 6,
 
     /// Publish complete
-    PubComplete = 7,
+    PublishComplete = 7,
 
     /// Client subscribe request
     Subscribe = 8,
@@ -82,9 +82,9 @@ impl From<u8> for PacketType {
             2 => PacketType::ConnectAck,
             3 => PacketType::Publish,
             4 => PacketType::PublishAck,
-            5 => PacketType::PubReceived,
-            6 => PacketType::PubRelease,
-            7 => PacketType::PubComplete,
+            5 => PacketType::PublishReceived,
+            6 => PacketType::PublishRelease,
+            7 => PacketType::PublishComplete,
             8 => PacketType::Subscribe,
             9 => PacketType::SubscribeAck,
             10 => PacketType::Unsubscribe,
@@ -121,13 +121,13 @@ pub enum PacketFlags {
     PublishAck,
 
     /// Publish received
-    PubReceived,
+    PublishReceived,
 
     /// Publish release
-    PubRelease,
+    PublishRelease,
 
     /// Publish complete
-    PubComplete,
+    PublishComplete,
 
     /// Client subscribe request
     Subscribe,
@@ -168,9 +168,9 @@ impl Into<u8> for PacketFlags {
                 dup | qos | retain
             }
             PacketFlags::PublishAck => 0,
-            PacketFlags::PubReceived => 0,
-            PacketFlags::PubRelease => 0b0000_0010,
-            PacketFlags::PubComplete => 0,
+            PacketFlags::PublishReceived => 0,
+            PacketFlags::PublishRelease => 0b0000_0010,
+            PacketFlags::PublishComplete => 0,
             PacketFlags::Subscribe => 0b0000_0010,
             PacketFlags::SubscribeAck => 0,
             PacketFlags::Unsubscribe => 0b0000_0010,

@@ -30,6 +30,7 @@ impl SubscribeAckPacket {
 impl FromNetPacket for SubscribeAckPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
+        assert_eq!(fixed_header.packet_type, PacketType::SubscribeAck);
         *offset += 1;
         let remaining_len = buf[*offset] as usize;
         assert_eq!(remaining_len, 3);
