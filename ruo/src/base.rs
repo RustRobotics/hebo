@@ -221,6 +221,8 @@ pub struct FixedHeader {
 impl FromNetPacket for FixedHeader {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let flag = buf[*offset];
+        *offset += 1;
+
         // TODO(Shaohua): Handle invalid packet type.
         let packet_type = PacketType::from(flag);
         let packet_flags = PacketFlags::from_u8(packet_type, flag);

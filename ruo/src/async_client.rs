@@ -216,7 +216,7 @@ impl AsyncClient {
                     self.status = StreamStatus::ConnectFailed;
                 }
             },
-            Err(err) => log::error!("Invalid ConnectAckPacket: {:?}", buf),
+            Err(err) => log::error!("Invalid ConnectAckPacket: {:?}, {:?}", buf, err),
         }
     }
 
@@ -233,7 +233,7 @@ impl AsyncClient {
                     log::warn!("Failed to find PublishAckPacket: {}", packet_id);
                 }
             }
-            Err(err) => log::error!("Invalid PublishAckPacket: {:?}", buf),
+            Err(err) => log::error!("Invalid PublishAckPacket: {:?}, {:?}", buf, err),
         }
     }
 
@@ -255,7 +255,7 @@ impl AsyncClient {
                     log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
                 }
             }
-            Err(err) => log::error!("Invalid SubscribeAckPacket: {:?}", buf),
+            Err(err) => log::error!("Invalid SubscribeAckPacket: {:?}, {:?}", buf, err),
         }
     }
 
@@ -272,7 +272,7 @@ impl AsyncClient {
                     log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
                 }
             }
-            Err(err) => log::error!("Invalid UnsubscribeAckPacket: {:?}", buf),
+            Err(err) => log::error!("Invalid UnsubscribeAckPacket: {:?}, {:?}", buf, err),
         }
     }
 

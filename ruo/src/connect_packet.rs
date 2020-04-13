@@ -164,8 +164,11 @@ impl FromNetPacket for ConnectPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::Connect);
-        *offset += 1;
+
         let remaining_len = buf[*offset] as usize;
+        if buf.len() - *offset < remaining_len {
+            return Err(Error::InvalidRemainingLength);
+        }
         *offset += 1;
 
         let protocol_name_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;

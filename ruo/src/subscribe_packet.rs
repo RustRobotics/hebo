@@ -3,8 +3,10 @@
 // in the LICENSE file.
 
 use crate::base::*;
-use byteorder::{BigEndian, WriteBytesExt};
-use std::io::{Result, Write};
+use crate::error::Error;
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use std::convert::TryFrom;
+use std::io::{self, Write};
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribePacket {
@@ -13,8 +15,37 @@ pub struct SubscribePacket {
     packet_id: PacketId,
 }
 
+impl FromNetPacket for SubscribePacket {
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<SubscribePacket, Error> {
+        let fixed_header = FixedHeader::from_net(buf, offset)?;
+        assert_eq!(fixed_header.packet_type, PacketType::Subscribe);
+
+        let remaining_len = buf[*offset] as usize;
+        if buf.len() - *offset < remaining_len {
+            return Err(Error::InvalidRemainingLength);
+        }
+        *offset += 1;
+
+        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]);
+        *offset += 2;
+
+        let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
+        let topic = String::from_utf8_lossy(&buf[*offset..*offset + topic_len]).to_string();
+
+        let qos_flag = buf[*offset];
+        *offset += 1;
+        let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
+
+        Ok(SubscribePacket {
+            packet_id,
+            topic,
+            qos,
+        })
+    }
+}
+
 impl ToNetPacket for SubscribePacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize> {
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
 
         let fixed_header = FixedHeader {

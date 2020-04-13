@@ -22,7 +22,7 @@ impl FromNetPacket for PublishAckPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PublishAck);
-        *offset += 1;
+
         let remaining_len = buf[*offset] as usize;
         assert_eq!(remaining_len, 2);
         *offset += 1;

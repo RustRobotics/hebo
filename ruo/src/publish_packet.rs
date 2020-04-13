@@ -31,7 +31,6 @@ impl FromNetPacket for PublishPacket {
                 return Err(Error::InvalidFixedHeader);
             };
 
-        *offset += 1;
         let remaining_len = buf[*offset] as usize;
         *offset += 1;
         let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
