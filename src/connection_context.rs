@@ -142,6 +142,9 @@ impl ConnectionContext {
                 let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
                 self.send(publish_ack_packet).await;
                 // TODO(Shaohua): Send PublishAck if qos == 0
+                if let Err(err) = self.sender.send(ConnectionCommand::Publish(packet)).await {
+                    log::warn!("pubish() failed to send packet to server, {:?}", err);
+                }
             }
             Err(err) => log::warn!("Failed to parse publish packet: {:?}, {:?}", err, buf),
         }
