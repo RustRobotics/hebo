@@ -57,10 +57,10 @@ pub enum PacketType {
     UnsubscribeAck = 11,
 
     /// Client ping request
-    PingReq = 12,
+    PingRequest = 12,
 
     /// Server ping response
-    PingResp = 13,
+    PingResponse = 13,
 
     /// Client is disconnecting
     Disconnect = 14,
@@ -90,8 +90,8 @@ impl From<u8> for PacketType {
             9 => PacketType::SubscribeAck,
             10 => PacketType::Unsubscribe,
             11 => PacketType::UnsubscribeAck,
-            12 => PacketType::PingReq,
-            13 => PacketType::PingResp,
+            12 => PacketType::PingRequest,
+            13 => PacketType::PingResponse,
             14 => PacketType::Disconnect,
             15 => PacketType::Reserved,
 
@@ -143,10 +143,10 @@ pub enum PacketFlags {
     UnsubscribeAck,
 
     /// Client ping request
-    PingReq,
+    PingRequest,
 
     /// Server ping response
-    PingResp,
+    PingResponse,
 
     /// Client is disconnecting
     Disconnect,
@@ -176,8 +176,8 @@ impl Into<u8> for PacketFlags {
             PacketFlags::SubscribeAck => 0,
             PacketFlags::Unsubscribe => 0b0000_0010,
             PacketFlags::UnsubscribeAck => 0,
-            PacketFlags::PingReq => 0,
-            PacketFlags::PingResp => 0,
+            PacketFlags::PingRequest => 0,
+            PacketFlags::PingResponse => 0,
             PacketFlags::Disconnect => 0,
         }
     }

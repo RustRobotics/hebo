@@ -101,7 +101,7 @@ impl AsyncClient {
                     PacketType::PublishAck => self.publish_ack(&buf),
                     PacketType::SubscribeAck => self.subscribe_ack(&buf),
                     PacketType::UnsubscribeAck => self.unsubscribe_ack(&buf),
-                    PacketType::PingResp => self.on_ping_resp().await,
+                    PacketType::PingResponse => self.on_ping_resp().await,
                     t => log::info!("Unhandled msg: {:?}", t),
                 }
             }

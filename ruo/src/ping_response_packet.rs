@@ -7,21 +7,21 @@ use crate::error::Error;
 use std::io;
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
-pub struct PingRequestPacket();
+pub struct PingResponsePacket();
 
-impl PingRequestPacket {
-    pub fn new() -> PingRequestPacket {
-        PingRequestPacket()
+impl PingResponsePacket {
+    pub fn new() -> PingResponsePacket {
+        PingResponsePacket()
     }
 }
 
-impl ToNetPacket for PingRequestPacket {
+impl ToNetPacket for PingResponsePacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
 
         let fixed_header = FixedHeader {
-            packet_type: PacketType::PingRequest,
-            packet_flags: PacketFlags::PingRequest,
+            packet_type: PacketType::PingResponse,
+            packet_flags: PacketFlags::PingResponse,
         };
         fixed_header.to_net(v)?;
         let remaining_len = 0; // Payload is empty
@@ -31,16 +31,16 @@ impl ToNetPacket for PingRequestPacket {
     }
 }
 
-impl FromNetPacket for PingRequestPacket {
+impl FromNetPacket for PingResponsePacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
-        assert_eq!(fixed_header.packet_type, PacketType::PingRequest);
+        assert_eq!(fixed_header.packet_type, PacketType::PingResponse);
         *offset += 1;
 
         let remaining_len = buf[*offset] as usize;
         *offset += 1;
         assert_eq!(remaining_len, 0);
 
-        Ok(PingRequestPacket())
+        Ok(PingResponsePacket())
     }
 }
