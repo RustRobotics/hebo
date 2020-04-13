@@ -2,8 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use super::commands::{ConnectionCommand, ServerCommand};
-use super::connection_context::ConnectionContext;
+use crate::commands::{ConnectionCommand, ServerCommand};
+use crate::connection_context::ConnectionContext;
 use std::net::SocketAddr;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{self, Receiver, Sender};
