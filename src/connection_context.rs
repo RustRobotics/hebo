@@ -75,6 +75,9 @@ impl ConnectionContext {
                 _ = timer.tick() => {
                     log::info!("tick()");
                 },
+                Some(cmd) = self.receiver.recv() => {
+                    self.cmd_router(cmd).await;
+                },
             }
         }
     }
@@ -182,5 +185,18 @@ impl ConnectionContext {
             }
             Err(err) => log::warn!("Failed to parse subscribe packet: {:?}, {:?}", err, buf),
         }
+    }
+
+    async fn cmd_router(&mut self, cmd: ServerCommand) {
+        match cmd {
+            ServerCommand::Publish(packet) => {
+                self.server_publish(packet).await;
+            }
+        }
+    }
+
+    async fn server_publish(&mut self, packet: PublishPacket) {
+        log::info!("server publish: {:?}", packet);
+        self.send(packet).await;
     }
 }

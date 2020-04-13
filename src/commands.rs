@@ -10,7 +10,6 @@ pub type ConnectionId = u64;
 #[derive(Clone, Debug)]
 pub enum ServerCommand {
     Publish(PublishPacket),
-    Subscribe(SubscribePacket),
 }
 
 #[derive(Debug)]
