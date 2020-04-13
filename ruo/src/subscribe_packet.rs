@@ -89,4 +89,8 @@ impl SubscribePacket {
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
     }
+
+    pub fn qos(&self) -> QoS {
+        self.qos
+    }
 }

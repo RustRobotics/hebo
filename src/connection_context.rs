@@ -3,11 +3,15 @@
 // in the LICENSE file.
 
 use crate::commands::{ConnectionCommand, ServerCommand};
-use ruo::base::{FixedHeader, FromNetPacket, PacketType, QoS, ToNetPacket};
+use ruo::base::{FixedHeader, FromNetPacket, PacketType, ToNetPacket};
 use ruo::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 use ruo::connect_packet::ConnectPacket;
 use ruo::ping_request_packet::PingRequestPacket;
 use ruo::ping_response_packet::PingResponsePacket;
+use ruo::publish_ack_packet::PublishAckPacket;
+use ruo::publish_packet::PublishPacket;
+use ruo::subscribe_ack_packet::SubscribeAckPacket;
+use ruo::subscribe_packet::SubscribePacket;
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -77,7 +81,7 @@ impl ConnectionContext {
     }
 
     async fn recv_router(&mut self, buf: &[u8]) {
-        let mut offset = 0;
+        let mut offset: usize = 0;
         match FixedHeader::from_net(&buf, &mut offset) {
             Ok(fixed_header) => {
                 //log::info!("fixed header: {:?}", fixed_header);
@@ -85,6 +89,7 @@ impl ConnectionContext {
                     PacketType::Connect => self.connect(&buf).await,
                     PacketType::PingRequest => self.ping(&buf).await,
                     PacketType::Publish => self.publish(&buf).await,
+                    PacketType::Subscribe => self.subscribe(&buf).await,
                     t => log::warn!("Unhandled msg: {:?}", t),
                 }
             }
@@ -111,7 +116,7 @@ impl ConnectionContext {
         log::info!("ping()");
         let mut offset = 0;
         match PingRequestPacket::from_net(&buf, &mut offset) {
-            Ok(packet) => {
+            Ok(_packet) => {
                 log::info!("Will send ping response packet");
                 let ping_resp_packet = PingResponsePacket::new();
                 self.send(ping_resp_packet).await;
@@ -122,7 +127,7 @@ impl ConnectionContext {
 
     async fn publish(&mut self, buf: &[u8]) {
         log::info!("publish()");
-        let mut offset = 0;
+        let mut offset: usize = 0;
         match PublishPacket::from_net(&buf, &mut offset) {
             Ok(packet) => {
                 let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
@@ -130,6 +135,20 @@ impl ConnectionContext {
                 // TODO(Shaohua): Send PublishAck if qos == 0
             }
             Err(err) => log::warn!("Failed to parse publish packet: {:?}, {:?}", err, buf),
+        }
+    }
+
+    async fn subscribe(&mut self, buf: &[u8]) {
+        log::info!("subscribe()");
+        let mut offset: usize = 0;
+        match SubscribePacket::from_net(&buf, &mut offset) {
+            Ok(packet) => {
+                let failed = false;
+                let subscribe_ack_packet =
+                    SubscribeAckPacket::new(packet.qos(), failed, packet.packet_id());
+                self.send(subscribe_ack_packet).await;
+            }
+            Err(err) => log::warn!("Failed to parse subscribe packet: {:?}, {:?}", err, buf),
         }
     }
 }

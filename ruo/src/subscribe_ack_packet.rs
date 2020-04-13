@@ -15,6 +15,14 @@ pub struct SubscribeAckPacket {
 }
 
 impl SubscribeAckPacket {
+    pub fn new(qos: QoS, failed: bool, packet_id: PacketId) -> SubscribeAckPacket {
+        SubscribeAckPacket {
+            qos,
+            failed,
+            packet_id,
+        }
+    }
+
     pub fn qos(&self) -> QoS {
         self.qos
     }
