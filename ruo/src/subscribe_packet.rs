@@ -30,6 +30,7 @@ impl FromNetPacket for SubscribePacket {
         *offset += 2;
 
         let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
+        *offset += 2;
         let topic = String::from_utf8_lossy(&buf[*offset..*offset + topic_len]).to_string();
 
         let qos_flag = buf[*offset];
