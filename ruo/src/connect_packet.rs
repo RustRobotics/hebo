@@ -118,6 +118,10 @@ impl ConnectPacket {
         self.client_id.push_str(id);
     }
 
+    pub fn client_id(&self) -> &str {
+        &self.client_id
+    }
+
     pub fn set_qos(&mut self, qos: QoS) {
         self.connect_flags.qos = qos;
     }

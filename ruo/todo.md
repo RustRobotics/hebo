@@ -11,3 +11,4 @@
 - [ ] disconnect
 - [ ] jwt
 - [ ] fix ping/pang msg tick
+- [ ] tuning error handling

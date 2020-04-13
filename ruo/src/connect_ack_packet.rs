@@ -4,6 +4,7 @@
 
 use crate::base::*;
 use crate::error::Error;
+use std::io;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum ConnectReturnCode {
@@ -55,6 +56,13 @@ pub struct ConnectAckPacket {
 }
 
 impl ConnectAckPacket {
+    pub fn new(return_code: ConnectReturnCode, session_persistent: bool) -> ConnectAckPacket {
+        ConnectAckPacket {
+            return_code,
+            session_persistent,
+        }
+    }
+
     pub fn return_code(&self) -> ConnectReturnCode {
         self.return_code
     }
@@ -82,5 +90,29 @@ impl FromNetPacket for ConnectAckPacket {
             return_code,
             session_persistent,
         })
+    }
+}
+
+impl ToNetPacket for ConnectAckPacket {
+    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        let old_len = buf.len();
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::ConnectAck,
+            packet_flags: PacketFlags::ConnectAck,
+        };
+        fixed_header.to_net(buf)?;
+
+        let remaining_len = 2;
+        buf.push(remaining_len);
+
+        let ack_flags = if self.session_persistent {
+            0b0000_0001
+        } else {
+            0
+        };
+        buf.push(ack_flags);
+        buf.push(self.return_code as u8);
+
+        Ok(buf.len() - old_len)
     }
 }
