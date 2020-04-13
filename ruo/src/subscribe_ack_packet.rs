@@ -4,7 +4,8 @@
 
 use crate::base::*;
 use crate::error::Error;
-use byteorder::{BigEndian, ByteOrder};
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use std::io;
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribeAckPacket {
@@ -55,5 +56,30 @@ impl FromNetPacket for SubscribeAckPacket {
             failed,
             qos,
         })
+    }
+}
+
+impl ToNetPacket for SubscribeAckPacket {
+    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        let old_len = buf.len();
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::SubscribeAck,
+            packet_flags: PacketFlags::SubscribeAck,
+        };
+        fixed_header.to_net(buf)?;
+
+        let remaining_len: u8 = 3;
+        buf.push(remaining_len);
+
+        buf.write_u16::<BigEndian>(self.packet_id).unwrap();
+
+        let flag = if self.failed {
+            0b1000_0000
+        } else {
+            self.qos as u8
+        };
+        buf.push(flag);
+
+        Ok(buf.len() - old_len)
     }
 }
