@@ -2,15 +2,20 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-#[derive(Debug)]
+use ruo::publish_packet::PublishPacket;
+use ruo::subscribe_packet::SubscribePacket;
+
+pub type ConnectionId = u64;
+
+#[derive(Clone, Debug)]
 pub enum ServerCommand {
-    PublishPacket,
-    Subscribe,
+    Publish(PublishPacket),
+    Subscribe(SubscribePacket),
 }
 
 #[derive(Debug)]
 pub enum ConnectionCommand {
-    PublishPacket,
-    Subscribe,
+    Publish(PublishPacket),
+    Subscribe(ConnectionId, SubscribePacket),
     Unsubscribe,
 }

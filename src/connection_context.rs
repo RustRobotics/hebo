@@ -2,7 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use crate::commands::{ConnectionCommand, ServerCommand};
+use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use ruo::base::{FixedHeader, FromNetPacket, PacketType, ToNetPacket};
 use ruo::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 use ruo::connect_packet::ConnectPacket;
@@ -33,6 +33,7 @@ enum Status {
 pub struct ConnectionContext {
     stream: TcpStream,
     remote_address: SocketAddr,
+    connection_id: ConnectionId,
     sender: Sender<ConnectionCommand>,
     receiver: Receiver<ServerCommand>,
     status: Status,
@@ -43,12 +44,14 @@ impl ConnectionContext {
     pub fn new(
         stream: TcpStream,
         remote_address: SocketAddr,
+        connection_id: ConnectionId,
         sender: Sender<ConnectionCommand>,
         receiver: Receiver<ServerCommand>,
     ) -> ConnectionContext {
         ConnectionContext {
             remote_address,
             stream,
+            connection_id,
             sender,
             receiver,
             status: Status::Invalid,
@@ -146,7 +149,20 @@ impl ConnectionContext {
         let mut offset: usize = 0;
         match SubscribePacket::from_net(&buf, &mut offset) {
             Ok(packet) => {
-                let failed = false;
+                let failed;
+                if let Err(err) = self
+                    .sender
+                    .send(ConnectionCommand::Subscribe(
+                        self.connection_id,
+                        packet.clone(),
+                    ))
+                    .await
+                {
+                    failed = true;
+                    log::warn!("Failed to send subscribe command to server: {:?}", err);
+                } else {
+                    failed = false;
+                }
                 let subscribe_ack_packet =
                     SubscribeAckPacket::new(packet.qos(), failed, packet.packet_id());
                 self.send(subscribe_ack_packet).await;
