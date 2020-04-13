@@ -6,6 +6,8 @@ use crate::commands::{ConnectionCommand, ServerCommand};
 use ruo::base::{FixedHeader, FromNetPacket, PacketType, QoS, ToNetPacket};
 use ruo::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 use ruo::connect_packet::ConnectPacket;
+use ruo::ping_request_packet::PingRequestPacket;
+use ruo::ping_response_packet::PingResponsePacket;
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -81,6 +83,7 @@ impl ConnectionContext {
                 //log::info!("fixed header: {:?}", fixed_header);
                 match fixed_header.packet_type {
                     PacketType::Connect => self.connect(&buf).await,
+                    PacketType::PingRequest => self.ping(&buf).await,
                     t => log::warn!("Unhandled msg: {:?}", t),
                 }
             }
@@ -97,10 +100,22 @@ impl ConnectionContext {
                 // TODO(Shaohua): Check connection status first.
                 let packet = ConnectAckPacket::new(ConnectReturnCode::Accepted, true);
                 self.send(packet).await;
+                self.status = Status::Connected;
             }
-            Err(err) => {
-                log::warn!("Failed to parse connect packet: {:?}, {:?}", err, buf);
+            Err(err) => log::warn!("Failed to parse connect packet: {:?}, {:?}", err, buf),
+        }
+    }
+
+    async fn ping(&mut self, buf: &[u8]) {
+        log::info!("ping()");
+        let mut offset = 0;
+        match PingRequestPacket::from_net(&buf, &mut offset) {
+            Ok(packet) => {
+                log::info!("Will send ping response packet");
+                let packet = PingResponsePacket::new();
+                self.send(packet).await;
             }
+            Err(err) => log::warn!("Failed to parse ping packet: {:?}, {:?}", err, buf),
         }
     }
 }
