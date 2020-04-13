@@ -14,6 +14,10 @@ pub struct PublishAckPacket {
 }
 
 impl PublishAckPacket {
+    pub fn new(packet_id: PacketId) -> PublishAckPacket {
+        PublishAckPacket { packet_id }
+    }
+
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
     }

@@ -84,6 +84,7 @@ impl ConnectionContext {
                 match fixed_header.packet_type {
                     PacketType::Connect => self.connect(&buf).await,
                     PacketType::PingRequest => self.ping(&buf).await,
+                    PacketType::Publish => self.publish(&buf).await,
                     t => log::warn!("Unhandled msg: {:?}", t),
                 }
             }
@@ -112,10 +113,23 @@ impl ConnectionContext {
         match PingRequestPacket::from_net(&buf, &mut offset) {
             Ok(packet) => {
                 log::info!("Will send ping response packet");
-                let packet = PingResponsePacket::new();
-                self.send(packet).await;
+                let ping_resp_packet = PingResponsePacket::new();
+                self.send(ping_resp_packet).await;
             }
             Err(err) => log::warn!("Failed to parse ping packet: {:?}, {:?}", err, buf),
+        }
+    }
+
+    async fn publish(&mut self, buf: &[u8]) {
+        log::info!("publish()");
+        let mut offset = 0;
+        match PublishPacket::from_net(&buf, &mut offset) {
+            Ok(packet) => {
+                let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
+                self.send(publish_ack_packet).await;
+                // TODO(Shaohua): Send PublishAck if qos == 0
+            }
+            Err(err) => log::warn!("Failed to parse publish packet: {:?}, {:?}", err, buf),
         }
     }
 }

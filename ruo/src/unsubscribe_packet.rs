@@ -29,6 +29,8 @@ impl UnsubscribePacket {
     }
 }
 
+// TODO(Shaohua): Impl FromNetPacket
+
 impl ToNetPacket for UnsubscribePacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let fixed_header = FixedHeader {
