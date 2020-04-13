@@ -3,6 +3,8 @@
 // in the LICENSE file.
 
 use crate::base::*;
+use crate::error::Error;
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 use std::default::Default;
 use std::io;
 
@@ -29,7 +31,24 @@ impl UnsubscribePacket {
     }
 }
 
-// TODO(Shaohua): Impl FromNetPacket
+impl FromNetPacket for UnsubscribePacket {
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<UnsubscribePacket, Error> {
+        let fixed_header = FixedHeader::from_net(buf, offset)?;
+        assert_eq!(fixed_header.packet_type, PacketType::PublishAck);
+
+        let _remaining_len = buf[*offset] as usize;
+
+        *offset += 1;
+        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
+        *offset += 2;
+
+        // TODO(Shaohua): Parse topics
+        Ok(UnsubscribePacket {
+            packet_id,
+            topics: Vec::new(),
+        })
+    }
+}
 
 impl ToNetPacket for UnsubscribePacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {

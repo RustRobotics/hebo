@@ -46,6 +46,10 @@ impl ToNetPacket for UnsubscribeAckPacket {
 }
 
 impl UnsubscribeAckPacket {
+    pub fn new(packet_id: PacketId) -> UnsubscribeAckPacket {
+        UnsubscribeAckPacket { packet_id }
+    }
+
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
     }

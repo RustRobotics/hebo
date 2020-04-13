@@ -12,6 +12,8 @@ use ruo::publish_ack_packet::PublishAckPacket;
 use ruo::publish_packet::PublishPacket;
 use ruo::subscribe_ack_packet::SubscribeAckPacket;
 use ruo::subscribe_packet::SubscribePacket;
+use ruo::unsubscribe_ack_packet::UnsubscribeAckPacket;
+use ruo::unsubscribe_packet::UnsubscribePacket;
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -90,6 +92,7 @@ impl ConnectionContext {
                     PacketType::PingRequest => self.ping(&buf).await,
                     PacketType::Publish => self.publish(&buf).await,
                     PacketType::Subscribe => self.subscribe(&buf).await,
+                    PacketType::Unsubscribe => self.unsubscribe(&buf).await,
                     t => log::warn!("Unhandled msg: {:?}", t),
                 }
             }
@@ -147,6 +150,19 @@ impl ConnectionContext {
                 let subscribe_ack_packet =
                     SubscribeAckPacket::new(packet.qos(), failed, packet.packet_id());
                 self.send(subscribe_ack_packet).await;
+            }
+            Err(err) => log::warn!("Failed to parse subscribe packet: {:?}, {:?}", err, buf),
+        }
+    }
+
+    async fn unsubscribe(&mut self, buf: &[u8]) {
+        log::info!("unsubscribe()");
+        let mut offset: usize = 0;
+        match UnsubscribePacket::from_net(&buf, &mut offset) {
+            Ok(packet) => {
+                // TODO(Shaohua): Send msg to command channel
+                let unsubscribe_ack_packet = UnsubscribeAckPacket::new(packet.packet_id());
+                self.send(unsubscribe_ack_packet).await;
             }
             Err(err) => log::warn!("Failed to parse subscribe packet: {:?}, {:?}", err, buf),
         }
