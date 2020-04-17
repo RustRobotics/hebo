@@ -22,7 +22,6 @@ use tokio::time::interval;
 
 #[derive(Debug, Hash, PartialEq)]
 enum StreamStatus {
-    Invalid,
     Connecting,
     Connected,
     ConnectFailed,
@@ -48,7 +47,7 @@ impl AsyncClient {
         let socket = TcpStream::connect(connect_options.address()).await.unwrap();
         let mut client = AsyncClient {
             connect_options,
-            socket: socket,
+            socket,
             status: StreamStatus::Connecting,
             topics: HashMap::new(),
             packet_id: 1,
@@ -83,7 +82,7 @@ impl AsyncClient {
                     }
                 }
                 _ = timer.tick() => {
-                    log::info!("tick()");
+                    //log::info!("tick()");
                     self.ping().await;
                 },
             }
@@ -160,6 +159,7 @@ impl AsyncClient {
             let packet = DisconnectPacket::new();
             self.send(packet).await;
         }
+        self.on_disconnect();
     }
 
     async fn on_connect(&mut self) {
@@ -185,7 +185,7 @@ impl AsyncClient {
         self.status = StreamStatus::Disconnected;
     }
 
-    async fn on_message(&self, buf: &Vec<u8>) {
+    async fn on_message(&self, buf: &[u8]) {
         log::info!("on_message()");
         let mut offset = 0;
         match PublishPacket::from_net(buf, &mut offset) {

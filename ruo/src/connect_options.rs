@@ -65,7 +65,7 @@ impl ConnectOptions {
     pub fn new<A: ToSocketAddrs>(address: A) -> io::Result<ConnectOptions> {
         let mut addrs = address.to_socket_addrs()?;
         Ok(ConnectOptions {
-            address: addrs.nth(0).unwrap(),
+            address: addrs.next().unwrap(),
             ..Self::default()
         })
     }

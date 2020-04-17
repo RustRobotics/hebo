@@ -70,13 +70,13 @@ impl ToNetPacket for PublishPacket {
 
         // Write variable header
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;
-        v.write(&self.topic.as_bytes())?;
+        v.write_all(&self.topic.as_bytes())?;
         if self.qos() != QoS::AtMostOnce {
             v.write_u16::<BigEndian>(self.packet_id())?;
         }
 
         // Write payload
-        v.write(&self.msg)?;
+        v.write_all(&self.msg)?;
 
         Ok(v.len() - old_len)
     }
@@ -85,7 +85,7 @@ impl ToNetPacket for PublishPacket {
 impl PublishPacket {
     pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> PublishPacket {
         PublishPacket {
-            qos: qos,
+            qos,
             dup: false,
             retain: false,
             topic: topic.to_string(),

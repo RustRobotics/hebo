@@ -125,10 +125,6 @@ impl ConnectPacket {
     pub fn set_qos(&mut self, qos: QoS) {
         self.connect_flags.qos = qos;
     }
-
-    fn qos(&self) -> QoS {
-        self.connect_flags.qos
-    }
 }
 
 impl ToNetPacket for ConnectPacket {
@@ -150,12 +146,12 @@ impl ToNetPacket for ConnectPacket {
 
         v.push(remaining_len);
         v.write_u16::<BigEndian>(self.protocol_name.len() as u16)?;
-        v.write(&self.protocol_name.as_bytes())?;
+        v.write_all(&self.protocol_name.as_bytes())?;
         self.protocol_level.to_net(v)?;
         self.connect_flags.to_net(v)?;
         v.write_u16::<BigEndian>(self.keepalive)?;
         v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
-        v.write(&self.client_id.as_bytes())?;
+        v.write_all(&self.client_id.as_bytes())?;
         Ok(v.len() - old_len)
     }
 }

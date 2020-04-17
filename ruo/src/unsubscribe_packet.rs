@@ -4,7 +4,7 @@
 
 use crate::base::*;
 use crate::error::Error;
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use byteorder::{BigEndian, ByteOrder};
 use std::default::Default;
 use std::io;
 

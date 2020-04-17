@@ -22,7 +22,7 @@ pub enum ClientIdError {
     InvalidChars,
 }
 
-pub fn check_client_id(client_id: &str) -> Result<(), ClientIdError> {
+pub fn check_client_id(_client_id: &str) -> Result<(), ClientIdError> {
     // TODO(Shaohua): Add a regexp
     Ok(())
 }

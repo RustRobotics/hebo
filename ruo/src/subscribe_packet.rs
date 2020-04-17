@@ -46,31 +46,31 @@ impl FromNetPacket for SubscribePacket {
 }
 
 impl ToNetPacket for SubscribePacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
-        let old_len = v.len();
+    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        let old_len = buf.len();
 
         let fixed_header = FixedHeader {
             packet_type: PacketType::Subscribe,
             packet_flags: PacketFlags::Subscribe,
         };
-        fixed_header.to_net(v)?;
+        fixed_header.to_net(buf)?;
 
         let msg_len = 2 // Variable length
             + 2 // Payload length
             + self.topic.len() // Topic length
             + 1; // Requested QoS
-        v.push(msg_len as u8);
+        buf.push(msg_len as u8);
 
         // Variable header
-        v.write_u16::<BigEndian>(self.packet_id).unwrap();
+        buf.write_u16::<BigEndian>(self.packet_id).unwrap();
 
         // Payload
-        v.write_u16::<BigEndian>(self.topic.len() as u16)?;
-        v.write(&self.topic.as_bytes())?;
+        buf.write_u16::<BigEndian>(self.topic.len() as u16)?;
+        buf.write_all(&self.topic.as_bytes())?;
         let qos: u8 = 0b0000_0011 & (self.qos as u8);
-        v.push(qos);
+        buf.push(qos);
 
-        Ok(v.len() - old_len)
+        Ok(buf.len() - old_len)
     }
 }
 
