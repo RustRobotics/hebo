@@ -25,7 +25,6 @@ use tokio::time::interval;
 enum Status {
     Invalid,
     Connected,
-    Disconnecting,
     Disconnected,
 }
 
@@ -99,6 +98,7 @@ impl ConnectionContext {
                     PacketType::Publish => self.publish(&buf).await,
                     PacketType::Subscribe => self.subscribe(&buf).await,
                     PacketType::Unsubscribe => self.unsubscribe(&buf).await,
+                    PacketType::Disconnect => self.disconnect(&buf).await,
                     t => log::warn!("Unhandled msg: {:?}", t),
                 }
             }
@@ -188,6 +188,12 @@ impl ConnectionContext {
             }
             Err(err) => log::warn!("Failed to parse subscribe packet: {:?}, {:?}", err, buf),
         }
+    }
+
+    async fn disconnect(&mut self, _buf: &[u8]) {
+        log::info!("disconnect");
+        self.status = Status::Disconnected;
+        // TODO(Shaohua): Send disconnect to server to unsubscribe any topics.
     }
 
     async fn cmd_router(&mut self, cmd: ServerCommand) {

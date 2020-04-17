@@ -81,10 +81,13 @@ impl ServerContext {
 
     fn on_subscribe(&mut self, connection_id: ConnectionId, packet: SubscribePacket) {
         // TODO(Shaohua): Consider adding qos
-        self.pipelines
-            .iter_mut()
-            .find(|pipeline| pipeline.connection_id == connection_id)
-            .and_then(|pipeline| Some(pipeline.topics.push(packet.topic().to_string())));
+
+        for pipeline in self.pipelines.iter_mut() {
+            if pipeline.connection_id == connection_id {
+                pipeline.topics.push(packet.topic().to_string());
+                break;
+            }
+        }
     }
 
     async fn on_publish(&mut self, packet: PublishPacket) {
