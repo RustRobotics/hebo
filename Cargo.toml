@@ -6,13 +6,15 @@ edition = "2018"
 description = "Distributed MQTT broker"
 
 [dependencies]
+codec = { path = "codec" }
+
 tokio = { version = "0.2.16", features = ["full"] }
 log = "0.4.8"
 env_logger = "0.7.1"
 futures = "0.3.4"
-ruo = { path = "ruo" }
 
 [workspace]
 members = [
+	"codec",
 	"ruo"
 ]

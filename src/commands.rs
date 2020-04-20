@@ -2,8 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use ruo::publish_packet::PublishPacket;
-use ruo::subscribe_packet::SubscribePacket;
+use codec::publish_packet::PublishPacket;
+use codec::subscribe_packet::SubscribePacket;
 
 pub type ConnectionId = u64;
 
