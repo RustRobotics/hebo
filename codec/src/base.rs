@@ -220,6 +220,20 @@ impl PacketFlags {
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct RemainingLength(pub u32);
 
+impl RemainingLength {
+    pub fn len(&self) -> usize {
+        if self.0 > 0x7fffff {
+            4
+        } else if self.0 > 0x7fff {
+            3
+        } else if self.0 > 0x7f {
+            2
+        } else {
+            1
+        }
+    }
+}
+
 impl FromNetPacket for RemainingLength {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let b1 = buf[*offset];
@@ -257,9 +271,28 @@ impl FromNetPacket for RemainingLength {
 
 impl ToNetPacket for RemainingLength {
     fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
-        buf.push(1);
-        // TODO(Shaohua): to big endian
-        Ok(1)
+        if self.0 > 0x7fffffff {
+            return Err(io::Error::from(io::ErrorKind::InvalidData));
+        }
+        if self.0 > 0x7fffff {
+            buf.push(((self.0 & 0xff000000) >> 24) as u8);
+            buf.push(((self.0 & 0xff0000) >> 16) as u8);
+            buf.push(((self.0 & 0xff00) >> 8) as u8);
+            buf.push((self.0 & 0xff) as u8);
+            Ok(4)
+        } else if self.0 > 0x7fff {
+            buf.push(((self.0 & 0xff0000) >> 16) as u8);
+            buf.push(((self.0 & 0xff00) >> 8) as u8);
+            buf.push((self.0 & 0xff) as u8);
+            Ok(3)
+        } else if self.0 > 0x7f {
+            buf.push(((self.0 & 0xff00) >> 8) as u8);
+            buf.push((self.0 & 0xff) as u8);
+            Ok(2)
+        } else {
+            buf.push((self.0 & 0xff) as u8);
+            Ok(1)
+        }
     }
 }
 
@@ -301,10 +334,10 @@ impl ToNetPacket for FixedHeader {
         let packet_type: u8 = self.packet_type.into();
         let packet_flags: u8 = self.packet_flags.into();
         v.push(packet_type | packet_flags);
-        self.remaining_length.to_net(v);
+        self.remaining_length.to_net(v)?;
 
         // TODO(Shaohua): Calc length.
-        Ok(1)
+        Ok(1 + self.remaining_length.len())
     }
 }
 
@@ -337,5 +370,34 @@ impl TryFrom<u8> for QoS {
             2 => Ok(QoS::ExactOnce),
             _ => Err(Error::InvalidQoS),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use byteorder::{BigEndian, ByteOrder};
+
+    use crate::base::ToNetPacket;
+
+    use super::RemainingLength;
+
+    #[test]
+    fn test_remaining_length() {
+        let remaining_len = RemainingLength(0x77);
+        let mut buf = Vec::with_capacity(4);
+        let ret = remaining_len.to_net(&mut buf);
+        assert!(ret.is_ok());
+        assert_eq!(ret.unwrap(), 1);
+        buf.clear();
+
+        let remaining_len = RemainingLength(0x70ff);
+        let ret = remaining_len.to_net(&mut buf);
+        assert_eq!(ret.unwrap(), 2);
+        assert_eq!(buf[0], 0x70);
+
+        buf.push(0);
+        buf.push(0);
+        BigEndian::write_u32(&mut buf, 0x70ff);
+        assert_eq!(buf[2], 0x70);
     }
 }
