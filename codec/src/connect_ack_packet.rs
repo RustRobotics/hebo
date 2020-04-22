@@ -99,11 +99,9 @@ impl ToNetPacket for ConnectAckPacket {
         let fixed_header = FixedHeader {
             packet_type: PacketType::ConnectAck,
             packet_flags: PacketFlags::ConnectAck,
+            remaining_length: RemainingLength(2),
         };
         fixed_header.to_net(buf)?;
-
-        let remaining_len = 2;
-        buf.push(remaining_len);
 
         let ack_flags = if self.session_persistent {
             0b0000_0001

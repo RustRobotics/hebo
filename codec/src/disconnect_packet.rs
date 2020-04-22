@@ -21,6 +21,7 @@ impl ToNetPacket for DisconnectPacket {
         let fixed_header = FixedHeader {
             packet_type: PacketType::Disconnect,
             packet_flags: PacketFlags::Disconnect,
+            remaining_length: RemainingLength(0),  // No payload
         };
         fixed_header.to_net(v)
     }

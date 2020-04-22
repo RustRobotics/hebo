@@ -34,13 +34,10 @@ impl ToNetPacket for UnsubscribeAckPacket {
         let fixed_header = FixedHeader {
             packet_type: PacketType::UnsubscribeAck,
             packet_flags: PacketFlags::UnsubscribeAck,
+            remaining_length: RemainingLength(2),
         };
         fixed_header.to_net(buf)?;
-
-        let remaining_len = 2;
-        buf.push(remaining_len);
         buf.write_u16::<BigEndian>(self.packet_id)?;
-
         Ok(buf.len() - old_len)
     }
 }

@@ -49,17 +49,16 @@ impl ToNetPacket for SubscribePacket {
     fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
 
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Subscribe,
-            packet_flags: PacketFlags::Subscribe,
-        };
-        fixed_header.to_net(buf)?;
-
-        let msg_len = 2 // Variable length
+        let remaining_length = 2 // Variable length
             + 2 // Payload length
             + self.topic.len() // Topic length
             + 1; // Requested QoS
-        buf.push(msg_len as u8);
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Subscribe,
+            packet_flags: PacketFlags::Subscribe,
+            remaining_length: RemainingLength(remaining_length as u32),
+        };
+        fixed_header.to_net(buf)?;
 
         // Variable header
         buf.write_u16::<BigEndian>(self.packet_id).unwrap();

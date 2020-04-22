@@ -55,6 +55,7 @@ impl ToNetPacket for UnsubscribePacket {
         let fixed_header = FixedHeader {
             packet_type: PacketType::Unsubscribe,
             packet_flags: PacketFlags::Unsubscribe,
+            remaining_length: RemainingLength(0),
         };
         // TODO(Shaohua): Add variable header and payload
         fixed_header.to_net(v)

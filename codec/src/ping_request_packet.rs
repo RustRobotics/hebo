@@ -17,17 +17,12 @@ impl PingRequestPacket {
 
 impl ToNetPacket for PingRequestPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
-        let old_len = v.len();
-
         let fixed_header = FixedHeader {
             packet_type: PacketType::PingRequest,
             packet_flags: PacketFlags::PingRequest,
+            remaining_length: RemainingLength(0), // Payload is empty
         };
-        fixed_header.to_net(v)?;
-        let remaining_len = 0; // Payload is empty
-        v.push(remaining_len);
-
-        Ok(v.len() - old_len)
+        fixed_header.to_net(v)
     }
 }
 

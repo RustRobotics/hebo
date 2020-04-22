@@ -54,6 +54,10 @@ impl FromNetPacket for PublishPacket {
 impl ToNetPacket for PublishPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
+
+        let remaining_length = 2 // Topic length bytes
+            + self.topic.len() // Topic length
+            + self.msg.len(); // Message length
         let fixed_header = FixedHeader {
             packet_type: PacketType::Publish,
             packet_flags: PacketFlags::Publish {
@@ -61,12 +65,9 @@ impl ToNetPacket for PublishPacket {
                 retain: self.retain,
                 qos: self.qos,
             },
+            remaining_length: RemainingLength(remaining_length as u32),
         };
         fixed_header.to_net(v)?;
-        let msg_len = 2 // Topic length bytes
-            + self.topic.len() // Topic length
-            + self.msg.len(); // Message length
-        v.push(msg_len as u8);
 
         // Write variable header
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;

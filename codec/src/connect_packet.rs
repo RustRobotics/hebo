@@ -9,6 +9,40 @@ use std::convert::TryFrom;
 use std::default::Default;
 use std::io::{self, Write};
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub enum ProtocolLevel {
+    V31 = 3,
+    V311 = 4,
+    V5 = 5,
+}
+
+impl Default for ProtocolLevel {
+    fn default() -> Self {
+        ProtocolLevel::V311
+    }
+}
+
+impl TryFrom<u8> for ProtocolLevel {
+    type Error = Error;
+
+    fn try_from(v: u8) -> Result<ProtocolLevel, Self::Error> {
+        match v {
+            3 => Ok(ProtocolLevel::V31),
+            4 => Ok(ProtocolLevel::V311),
+            5 => Ok(ProtocolLevel::V5),
+            _ => Err(Error::InvalidProtocolLevel),
+        }
+    }
+}
+
+impl ToNetPacket for ProtocolLevel {
+    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+        v.push(*self as u8);
+        Ok(1)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct ConnectFlags {
     pub username: bool,
@@ -130,21 +164,21 @@ impl ConnectPacket {
 impl ToNetPacket for ConnectPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Connect,
-            packet_flags: PacketFlags::Connect,
-        };
-        fixed_header.to_net(v)?;
-
-        let remaining_len: u8 = 2 // protocol_name_len
-            + self.protocol_name.len() as u8 // b"MQTT" protocol name
+        let remaining_length: u32 = 2 // protocol_name_len
+            + self.protocol_name.len() as u32 // b"MQTT" protocol name
             + 1 // protocol_level
             + 1 // connect_flags
             + 2 // keepalive
             + 2 // client_id_len
-            + self.client_id.len() as u8;
+            + self.client_id.len() as u32;
 
-        v.push(remaining_len);
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Connect,
+            packet_flags: PacketFlags::Connect,
+            remaining_length: RemainingLength(remaining_length),
+        };
+        fixed_header.to_net(v)?;
+
         v.write_u16::<BigEndian>(self.protocol_name.len() as u16)?;
         v.write_all(&self.protocol_name.as_bytes())?;
         self.protocol_level.to_net(v)?;
@@ -160,12 +194,6 @@ impl FromNetPacket for ConnectPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::Connect);
-
-        let remaining_len = buf[*offset] as usize;
-        if buf.len() - *offset < remaining_len {
-            return Err(Error::InvalidRemainingLength);
-        }
-        *offset += 1;
 
         let protocol_name_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
         *offset += 2;

@@ -2,10 +2,12 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use std::io;
+
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+
 use crate::base::*;
 use crate::error::Error;
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
-use std::io;
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct PublishCompletePacket {
@@ -40,13 +42,10 @@ impl ToNetPacket for PublishCompletePacket {
         let fixed_header = FixedHeader {
             packet_type: PacketType::PublishComplete,
             packet_flags: PacketFlags::PublishComplete,
+            remaining_length: RemainingLength(2),
         };
         fixed_header.to_net(buf)?;
-
-        let remaining_len = 2;
-        buf.push(remaining_len);
         buf.write_u16::<BigEndian>(self.packet_id)?;
-
         Ok(buf.len() - old_len)
     }
 }

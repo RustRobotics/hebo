@@ -73,12 +73,9 @@ impl ToNetPacket for SubscribeAckPacket {
         let fixed_header = FixedHeader {
             packet_type: PacketType::SubscribeAck,
             packet_flags: PacketFlags::SubscribeAck,
+            remaining_length: RemainingLength(3),
         };
         fixed_header.to_net(buf)?;
-
-        let remaining_len: u8 = 3;
-        buf.push(remaining_len);
-
         buf.write_u16::<BigEndian>(self.packet_id).unwrap();
 
         let flag = if self.failed {

@@ -40,13 +40,10 @@ impl ToNetPacket for PublishReleasePacket {
         let fixed_header = FixedHeader {
             packet_type: PacketType::PublishRelease,
             packet_flags: PacketFlags::PublishRelease,
+            remaining_length: RemainingLength(2),
         };
         fixed_header.to_net(buf)?;
-
-        let remaining_len = 2;
-        buf.push(remaining_len);
         buf.write_u16::<BigEndian>(self.packet_id)?;
-
         Ok(buf.len() - old_len)
     }
 }

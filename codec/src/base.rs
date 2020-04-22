@@ -2,9 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use crate::error::Error;
 use std::convert::TryFrom;
 use std::io;
+
+use crate::error::Error;
+use crate::error::Error::InvalidRemainingLength;
 
 /// Packet identifier
 pub type PacketId = u16;
@@ -211,11 +213,68 @@ impl PacketFlags {
     }
 }
 
-/// Header flags of a mqtt packet.
+/// `Remaining Length` uses variable length encoding method. The 7th bit
+/// in a byte is used to indicate are bytes are available. And the maximum number
+/// of bytes in the `Remaining Length` field is 4 bytes. The maximum value is
+/// `0xFF 0xFF 0xFF 0x7F`, `256MB`.
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
+pub struct RemainingLength(pub u32);
+
+impl FromNetPacket for RemainingLength {
+    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let b1 = buf[*offset];
+        *offset += 1;
+        let mut val = b1 as u32;
+
+        if b1 > 0x7f {
+            let b2 = buf[*offset];
+            *offset += 1;
+            val = val << 8 | b2 as u32;
+
+            if b2 > 0x7f {
+                let b3 = buf[*offset];
+                *offset += 1;
+                val = val << 8 | b3 as u32;
+
+                if b3 > 0x7f {
+                    let b4 = buf[*offset];
+                    *offset += 1;
+                    val = val << 8 | b4 as u32;
+
+                    if b4 > 0x7f {
+                        return Err(InvalidRemainingLength);
+                    }
+                }
+            }
+        }
+        if buf.len() - *offset < val as usize {
+            Err(Error::InvalidRemainingLength)
+        } else {
+            Ok(RemainingLength(val))
+        }
+    }
+}
+
+impl ToNetPacket for RemainingLength {
+    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        buf.push(1);
+        // TODO(Shaohua): to big endian
+        Ok(1)
+    }
+}
+
+/// Fixed header part of a mqtt control packet. It consists of as least two bytes.
+///  7 6 5 4 3 2 1 0
+/// +-------+-------+
+/// | Type  | Flags |
+/// +-------+-------+
+/// | Remaining Len |
+/// +-------+-------+
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct FixedHeader {
     pub packet_type: PacketType,
     pub packet_flags: PacketFlags,
+    pub remaining_length: RemainingLength,
 }
 
 impl FromNetPacket for FixedHeader {
@@ -226,9 +285,13 @@ impl FromNetPacket for FixedHeader {
         // TODO(Shaohua): Handle invalid packet type.
         let packet_type = PacketType::from(flag);
         let packet_flags = PacketFlags::from_u8(packet_type, flag);
+
+        let remaining_length = RemainingLength::from_net(buf, offset)?;
+
         Ok(FixedHeader {
             packet_type,
             packet_flags,
+            remaining_length,
         })
     }
 }
@@ -238,41 +301,9 @@ impl ToNetPacket for FixedHeader {
         let packet_type: u8 = self.packet_type.into();
         let packet_flags: u8 = self.packet_flags.into();
         v.push(packet_type | packet_flags);
+        self.remaining_length.to_net(v);
 
-        Ok(1)
-    }
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum ProtocolLevel {
-    V31 = 3,
-    V311 = 4,
-    V5 = 5,
-}
-
-impl Default for ProtocolLevel {
-    fn default() -> Self {
-        ProtocolLevel::V311
-    }
-}
-
-impl TryFrom<u8> for ProtocolLevel {
-    type Error = Error;
-
-    fn try_from(v: u8) -> Result<ProtocolLevel, Self::Error> {
-        match v {
-            3 => Ok(ProtocolLevel::V31),
-            4 => Ok(ProtocolLevel::V311),
-            5 => Ok(ProtocolLevel::V5),
-            _ => Err(Error::InvalidProtocolLevel),
-        }
-    }
-}
-
-impl ToNetPacket for ProtocolLevel {
-    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
-        v.push(*self as u8);
+        // TODO(Shaohua): Calc length.
         Ok(1)
     }
 }
