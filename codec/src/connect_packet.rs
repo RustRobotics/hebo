@@ -58,11 +58,36 @@ impl ToNetPacket for ProtocolLevel {
 /// ```
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct ConnectFlags {
+    /// `username` field specifies whether `username` shall be presented in the Payload.
     pub username: bool,
+
+    /// `password` field specifies whether `password` shall be presented in the Payload.
+    /// If `username` field is false, then this field shall be false too.
     pub password: bool,
+
+    /// `retain` field specifies if the Will Message is to be Retained when it is published.
+    /// If the `will` field is false, then the `retain` field msut be false.
     pub retain: bool,
+
+    /// QoS level to be used in the Will Message.
     pub qos: QoS,
+
     pub will: bool,
+
+    /// To control how to handle Session State.
+    /// If `clean_sessions` is true, the Client and Server must discard any previous Session State
+    /// and start a new once until end of Disconnect. So that State data cannot be reused in subsequent
+    /// connections.
+    ///
+    /// Client side of Session State consists of:
+    /// * QoS 1 and QoS 2 messages which have been sent to server but not be acknowledged yet.
+    /// * QoS 2 messages which have been received from server but have not been fully acknowledged yet.
+    ///
+    /// Server side of Session State consists of:
+    /// * Client subscriptions
+    /// * QoS 1 and QoS 2 messages which have been sent to subscribed Clients, but have not been acknowledged yet.
+    /// * QoS 1 and QoS 2 messages pending transmission to the Client.
+    /// * QoS 2 messages which have been received from the Clients, but have not been fully acknowledged yet.
     pub clean_session: bool,
 }
 
@@ -158,6 +183,7 @@ pub struct ConnectPacket {
     /// Payload is `client_id`.
     /// `client_id` is generated in client side. Normally it can be `device_id` or just
     /// randomly generated string.
+    /// `client_id` is used to identify client connections in server. Session is based on this field.
     client_id: String,
 }
 
