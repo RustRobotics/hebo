@@ -2,10 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use crate::base::*;
-use crate::error::Error;
 use std::default::Default;
 use std::io;
+
+use crate::base::*;
+use crate::error::Error;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct DisconnectPacket {}

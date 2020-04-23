@@ -2,9 +2,10 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use std::io;
+
 use crate::base::*;
 use crate::error::Error;
-use std::io;
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct PingResponsePacket();

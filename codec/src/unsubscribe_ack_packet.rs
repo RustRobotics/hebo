@@ -2,10 +2,12 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use std::io;
+
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+
 use crate::base::*;
 use crate::error::Error;
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
-use std::io;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct UnsubscribeAckPacket {

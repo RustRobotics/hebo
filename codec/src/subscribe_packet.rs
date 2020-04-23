@@ -2,11 +2,13 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use crate::base::*;
-use crate::error::Error;
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 use std::convert::TryFrom;
 use std::io::{self, Write};
+
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+
+use crate::base::*;
+use crate::error::Error;
 
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribePacket {
