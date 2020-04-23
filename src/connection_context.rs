@@ -67,7 +67,7 @@ impl ConnectionContext {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
                     if n_recv > 0 {
                         log::info!("n_recv: {}", n_recv);
-                        self.recv_router(&buf).await;
+                        self.handle_client_packet(&buf).await;
                         buf.clear();
                     }
                 }
@@ -87,7 +87,7 @@ impl ConnectionContext {
         self.stream.write(&buf).await.unwrap();
     }
 
-    async fn recv_router(&mut self, buf: &[u8]) {
+    async fn handle_client_packet(&mut self, buf: &[u8]) {
         let mut offset: usize = 0;
         match FixedHeader::from_net(&buf, &mut offset) {
             Ok(fixed_header) => {
@@ -113,6 +113,7 @@ impl ConnectionContext {
             Ok(packet) => {
                 self.client_id = packet.client_id().to_string();
                 // TODO(Shaohua): Check connection status first.
+                // TODO(Shaohua): If this client is already connected, send disconnect packet.
                 let packet = ConnectAckPacket::new(ConnectReturnCode::Accepted, true);
                 self.send(packet).await;
                 self.status = Status::Connected;

@@ -2,13 +2,15 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use crate::base::*;
-use crate::error::Error;
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 use std::io::{self, Write};
 
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+
+use crate::base::*;
+use crate::error::Error;
+
+/// `packet_id` field is useless if QoS is 0.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
-// TODO(Shaohua): Replace with slice
 pub struct PublishPacket {
     qos: QoS,
     dup: bool,
@@ -30,6 +32,7 @@ impl FromNetPacket for PublishPacket {
             } else {
                 return Err(Error::InvalidFixedHeader);
             };
+        // TODO(Shaohua): Parse packet id
 
         let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
         *offset += 2;

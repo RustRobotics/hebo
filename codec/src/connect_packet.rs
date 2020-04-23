@@ -2,13 +2,19 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use crate::base::*;
-use crate::error::Error;
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 use std::convert::TryFrom;
 use std::default::Default;
 use std::io::{self, Write};
 
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+
+use crate::base::*;
+use crate::error::Error;
+
+/// Current version of MQTT protocol can be:
+/// * 3.1
+/// * 3.1.1
+/// * 5.0
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum ProtocolLevel {
@@ -43,6 +49,13 @@ impl ToNetPacket for ProtocolLevel {
     }
 }
 
+/// Structure of `ConnectFlags` is:
+/// ```txt
+///         7               6              5          4-3          2            1             0
+/// +---------------+---------------+-------------+----------+-----------+---------------+----------+
+/// | Username Flag | Password Flag | Will Retain | Will QoS | Will Flag | Clean Session | Reserved |
+/// +---------------+---------------+-------------+----------+-----------+---------------+----------+
+/// ```
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct ConnectFlags {
     pub username: bool,
@@ -129,12 +142,22 @@ impl FromNetPacket for ConnectFlags {
     }
 }
 
+/// `ConnectPacket` consists of three parts:
+/// * FixedHeader
+/// * VariableHeader
+/// * Payload
+/// Note that fixed header part is same in all packets so that we just ignore it.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct ConnectPacket {
+    /// Protocol name can only be `MQTT` in specification.
     protocol_name: String,
     pub protocol_level: ProtocolLevel,
     pub connect_flags: ConnectFlags,
-    pub keepalive: u16,
+    pub keep_alive: u16,
+
+    /// Payload is `client_id`.
+    /// `client_id` is generated in client side. Normally it can be `device_id` or just
+    /// randomly generated string.
     client_id: String,
 }
 
@@ -142,9 +165,13 @@ impl ConnectPacket {
     pub fn new() -> ConnectPacket {
         ConnectPacket {
             protocol_name: "MQTT".to_string(),
-            keepalive: 60,
+            keep_alive: 60,
             ..ConnectPacket::default()
         }
+    }
+
+    pub fn protocol_name(&self) -> &str {
+        &self.protocol_name
     }
 
     pub fn set_client_id(&mut self, id: &str) {
@@ -164,28 +191,33 @@ impl ConnectPacket {
 impl ToNetPacket for ConnectPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
-        let remaining_length: u32 = 2 // protocol_name_len
-            + self.protocol_name.len() as u32 // b"MQTT" protocol name
+        let remaining_length = 2 // protocol_name_len
+            + self.protocol_name.len() // b"MQTT" protocol name
             + 1 // protocol_level
             + 1 // connect_flags
-            + 2 // keepalive
+            + 2 // keep_alive
             + 2 // client_id_len
-            + self.client_id.len() as u32;
+            + self.client_id.len();
 
         let fixed_header = FixedHeader {
             packet_type: PacketType::Connect,
             packet_flags: PacketFlags::Connect,
-            remaining_length: RemainingLength(remaining_length),
+            remaining_length: RemainingLength(remaining_length as u32),
         };
+        // Write fixed header
         fixed_header.to_net(v)?;
 
+        // Write variable header
         v.write_u16::<BigEndian>(self.protocol_name.len() as u16)?;
         v.write_all(&self.protocol_name.as_bytes())?;
         self.protocol_level.to_net(v)?;
         self.connect_flags.to_net(v)?;
-        v.write_u16::<BigEndian>(self.keepalive)?;
+        v.write_u16::<BigEndian>(self.keep_alive)?;
+
+        // Write payload
         v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
         v.write_all(&self.client_id.as_bytes())?;
+
         Ok(v.len() - old_len)
     }
 }
@@ -206,7 +238,7 @@ impl FromNetPacket for ConnectPacket {
 
         let connect_flags = ConnectFlags::from_net(buf, offset)?;
 
-        let keepalive = BigEndian::read_u16(&buf[*offset..*offset + 2]);
+        let keep_alive = BigEndian::read_u16(&buf[*offset..*offset + 2]);
         *offset += 2;
 
         let client_id_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
@@ -219,7 +251,7 @@ impl FromNetPacket for ConnectPacket {
         Ok(ConnectPacket {
             protocol_name,
             protocol_level,
-            keepalive,
+            keep_alive,
             connect_flags,
             client_id,
         })
