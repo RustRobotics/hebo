@@ -236,36 +236,30 @@ impl RemainingLength {
 
 impl FromNetPacket for RemainingLength {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let b1 = buf[*offset];
-        *offset += 1;
-        let mut val = b1 as u32;
-
-        if b1 > 0x7f {
-            let b2 = buf[*offset];
+        let mut byte: u32;
+        let mut value: u32 = 0;
+        let mut multiplier = 1;
+        loop {
+            byte = buf[*offset] as u32;
             *offset += 1;
-            val = val << 8 | b2 as u32;
+            value += (byte & 127) * multiplier;
+            multiplier *= 128;
 
-            if b2 > 0x7f {
-                let b3 = buf[*offset];
-                *offset += 1;
-                val = val << 8 | b3 as u32;
+            if multiplier > 128 * 128 * 128 * 128 {
+                return Err(InvalidRemainingLength);
+            }
 
-                if b3 > 0x7f {
-                    let b4 = buf[*offset];
-                    *offset += 1;
-                    val = val << 8 | b4 as u32;
-
-                    if b4 > 0x7f {
-                        return Err(InvalidRemainingLength);
-                    }
-                }
+            if (byte & 128) == 0 {
+                break;
             }
         }
-        if buf.len() - *offset < val as usize {
-            Err(Error::InvalidRemainingLength)
-        } else {
-            Ok(RemainingLength(val))
-        }
+
+        // if buf.len() - *offset < val as usize {
+        //     Err(Error::InvalidRemainingLength)
+        // } else {
+        //     Ok(RemainingLength(val))
+        // }
+        Ok(RemainingLength(value))
     }
 }
 
@@ -274,25 +268,19 @@ impl ToNetPacket for RemainingLength {
         if self.0 > 0x7fffffff {
             return Err(io::Error::from(io::ErrorKind::InvalidData));
         }
-        if self.0 > 0x7fffff {
-            buf.push(((self.0 & 0xff000000) >> 24) as u8);
-            buf.push(((self.0 & 0xff0000) >> 16) as u8);
-            buf.push(((self.0 & 0xff00) >> 8) as u8);
-            buf.push((self.0 & 0xff) as u8);
-            Ok(4)
-        } else if self.0 > 0x7fff {
-            buf.push(((self.0 & 0xff0000) >> 16) as u8);
-            buf.push(((self.0 & 0xff00) >> 8) as u8);
-            buf.push((self.0 & 0xff) as u8);
-            Ok(3)
-        } else if self.0 > 0x7f {
-            buf.push(((self.0 & 0xff00) >> 8) as u8);
-            buf.push((self.0 & 0xff) as u8);
-            Ok(2)
-        } else {
-            buf.push((self.0 & 0xff) as u8);
-            Ok(1)
+
+        let mut n = self.0;
+        let mut count = 0;
+        while n > 0 {
+            let mut m = n % 128;
+            count += 1;
+            n /= 128;
+            if n > 0 {
+                m = m | 128;
+            }
+            buf.push(m as u8);
         }
+        Ok(count)
     }
 }
 
@@ -375,29 +363,59 @@ impl TryFrom<u8> for QoS {
 
 #[cfg(test)]
 mod tests {
-    use byteorder::{BigEndian, ByteOrder};
-
-    use crate::base::ToNetPacket;
-
+    use crate::base::{ToNetPacket, FromNetPacket};
     use super::RemainingLength;
 
     #[test]
-    fn test_remaining_length() {
-        let remaining_len = RemainingLength(0x77);
+    fn test_remaining_length_encode() {
         let mut buf = Vec::with_capacity(4);
-        let ret = remaining_len.to_net(&mut buf);
-        assert!(ret.is_ok());
-        assert_eq!(ret.unwrap(), 1);
+
+        let remaining_len = RemainingLength(126);
+        let _ = remaining_len.to_net(&mut buf);
+        assert_eq!(&buf, &[0x7e]);
         buf.clear();
 
-        let remaining_len = RemainingLength(0x70ff);
-        let ret = remaining_len.to_net(&mut buf);
-        assert_eq!(ret.unwrap(), 2);
-        assert_eq!(buf[0], 0x70);
+        let remaining_len = RemainingLength(146);
+        let _ = remaining_len.to_net(&mut buf);
+        assert_eq!(&buf, &[0x92, 0x01]);
+        buf.clear();
 
-        buf.push(0);
-        buf.push(0);
-        BigEndian::write_u32(&mut buf, 0x70ff);
-        assert_eq!(buf[2], 0x70);
+        let remaining_len = RemainingLength(16_385);
+        let _ret = remaining_len.to_net(&mut buf);
+        assert_eq!(&buf, &[0x81, 0x80, 0x01]);
+        buf.clear();
+
+        let remaining_len = RemainingLength(2_097_152);
+        let _ret = remaining_len.to_net(&mut buf);
+        assert_eq!(&buf, &[0x80, 0x80, 0x80, 0x01]);
+        buf.clear();
+    }
+
+    #[test]
+    fn test_remaining_length_decode() {
+        let buf = [0x7e];
+        let mut offset = 0;
+        let ret = RemainingLength::from_net(&buf, &mut offset);
+        assert_eq!(ret.unwrap().0, 126);
+
+        let buf = [0x92, 0x01];
+        let mut offset = 0;
+        let ret = RemainingLength::from_net(&buf, &mut offset);
+        assert_eq!(ret.unwrap().0, 146);
+
+        let buf = [0x81, 0x80, 0x01];
+        let mut offset = 0;
+        let ret = RemainingLength::from_net(&buf, &mut offset);
+        assert_eq!(ret.unwrap().0, 16_385);
+
+        let buf = [0x81, 0x80, 0x80, 0x01];
+        let mut offset = 0;
+        let ret = RemainingLength::from_net(&buf, &mut offset);
+        assert_eq!(ret.unwrap().0, 2_097_153);
+
+        let buf = [0xff, 0xff, 0xff, 0x7f];
+        let mut offset = 0;
+        let ret = RemainingLength::from_net(&buf, &mut offset);
+        assert_eq!(ret.unwrap().0, 268_435_455);
     }
 }
