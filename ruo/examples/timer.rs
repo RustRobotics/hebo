@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use std::time::Duration;
+
 use tokio::time::interval;
 
 #[tokio::main]

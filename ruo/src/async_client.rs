@@ -2,7 +2,13 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use crate::connect_options::*;
+use std::collections::HashMap;
+use std::fmt::Debug;
+
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpStream;
+use tokio::time::interval;
+
 use codec::base::*;
 use codec::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 use codec::connect_packet::ConnectPacket;
@@ -14,11 +20,8 @@ use codec::subscribe_ack_packet::SubscribeAckPacket;
 use codec::subscribe_packet::SubscribePacket;
 use codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use codec::unsubscribe_packet::UnsubscribePacket;
-use std::collections::HashMap;
-use std::fmt::Debug;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
-use tokio::time::interval;
+
+use crate::connect_options::*;
 
 #[derive(Debug, Hash, PartialEq)]
 enum StreamStatus {
