@@ -2,8 +2,9 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use hebo::server_context::ServerContext;
 use std::io;
+
+use hebo::server_context::ServerContext;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
