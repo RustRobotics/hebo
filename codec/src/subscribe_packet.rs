@@ -20,12 +20,6 @@ impl FromNetPacket for SubscribePacket {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::Subscribe);
 
-        let remaining_len = buf[*offset] as usize;
-        if buf.len() - *offset < remaining_len {
-            return Err(Error::InvalidRemainingLength);
-        }
-        *offset += 1;
-
         let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]);
         *offset += 2;
 

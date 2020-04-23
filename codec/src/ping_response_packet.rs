@@ -30,11 +30,6 @@ impl FromNetPacket for PingResponsePacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PingResponse);
-
-        let remaining_len = buf[*offset] as usize;
-        *offset += 1;
-        assert_eq!(remaining_len, 0);
-
         Ok(PingResponsePacket())
     }
 }

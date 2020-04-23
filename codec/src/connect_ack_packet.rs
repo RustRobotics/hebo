@@ -77,9 +77,6 @@ impl FromNetPacket for ConnectAckPacket {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::ConnectAck);
 
-        let remaining_len = buf[*offset] as usize;
-        assert_eq!(remaining_len, 2);
-        *offset += 1;
         let ack_flags = buf[*offset];
         let session_persistent = ack_flags & 0b0000_0001 == 0b0000_0001;
         *offset += 1;
