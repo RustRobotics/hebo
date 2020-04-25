@@ -67,11 +67,20 @@ pub struct ConnectFlags {
 
     /// `retain` field specifies if the Will Message is to be Retained when it is published.
     /// If the `will` field is false, then the `retain` field msut be false.
-    pub retain: bool,
+    pub will_retain: bool,
 
     /// QoS level to be used in the Will Message.
-    pub qos: QoS,
+    pub will_qos: QoS,
 
+    /// If this field is set to true, a Will Message will be stored on the Server side when
+    /// Client connected, and this message must be sent back when Client connection
+    /// is closed abnormally unless it is deleted by the Server on receipt of a Disconnect Packet.
+    ///
+    /// This Will Message is used mainly to handle errors:
+    /// * I/O error or network error
+    /// * Keep alive timeout
+    /// * network disconnected without Disconnect Packet
+    /// * protocol error
     pub will: bool,
 
     /// To control how to handle Session State.
@@ -96,8 +105,8 @@ impl Default for ConnectFlags {
         ConnectFlags {
             username: false,
             password: false,
-            retain: false,
-            qos: QoS::AtMostOnce,
+            will_retain: false,
+            will_qos: QoS::AtMostOnce,
             will: false,
             clean_session: true,
         }
@@ -117,13 +126,13 @@ impl ToNetPacket for ConnectFlags {
             } else {
                 0b0000_0000
             };
-            let retian = if self.retain {
+            let will_retian = if self.will_retain {
                 0b0010_0000
             } else {
                 0b0000_0000
             };
 
-            let qos = match self.qos {
+            let will_qos = match self.will_qos {
                 QoS::AtMostOnce => 0b0000_0000,
                 QoS::AtLeastOnce => 0b0000_1000,
                 QoS::ExactOnce => 0b0001_0000,
@@ -137,7 +146,7 @@ impl ToNetPacket for ConnectFlags {
                 0b0000_0000
             };
 
-            username | password | retian | qos | will | clean_session
+            username | password | will_retian | will_qos | will | clean_session
         };
         log::info!("connect flags: {:x?}", flags);
         v.push(flags);
@@ -151,16 +160,16 @@ impl FromNetPacket for ConnectFlags {
         let flags = buf[*offset];
         let username = flags & 0b1000_0000 == 0b1000_0000;
         let password = flags & 0b0100_0000 == 0b0100_0000;
-        let retain = flags & 0b0010_0000 == 0b0010_0000;
-        let qos = QoS::try_from((flags & 0b0001_1000) >> 3)?;
+        let will_retain = flags & 0b0010_0000 == 0b0010_0000;
+        let will_qos = QoS::try_from((flags & 0b0001_1000) >> 3)?;
         let will = flags & 0b0000_0100 == 0b0000_0100;
         let clean_session = flags & 0b0000_0010 == 0b0000_0010;
         *offset += 1;
         Ok(ConnectFlags {
             username,
             password,
-            retain,
-            qos,
+            will_retain,
+            will_qos,
             will,
             clean_session,
         })
@@ -178,13 +187,40 @@ pub struct ConnectPacket {
     protocol_name: String,
     pub protocol_level: ProtocolLevel,
     pub connect_flags: ConnectFlags,
+
+    /// Time interval between two packets in seconds.
+    /// Client must send PingRequest Packet before exceeding this interval.
+    /// If this value is not zero and time exceeds after last packet, the Server
+    /// will disconnect the network.
+    ///
+    /// If this value is zero, the Server is not required to disconnect the network.
     pub keep_alive: u16,
 
     /// Payload is `client_id`.
     /// `client_id` is generated in client side. Normally it can be `device_id` or just
     /// randomly generated string.
     /// `client_id` is used to identify client connections in server. Session is based on this field.
+    /// It must be valid UTF-8 string, length shall be between 1 and 23 bytes.
+    /// It can only contain the characters: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    /// If `client_id` is invalid, the Server will reply ConnectAck Packet with return code
+    /// 0x02(Identifier rejected).
     client_id: String,
+
+    /// If the `will` flag is true in `connect_flags`, then `will_topic` field must be set.
+    /// It will be used as the topic of Will Message.
+    will_topic: String,
+
+    /// If the `will` flag is true in `connect_flags`, then `will_message` field must be set.
+    /// It will be used as the payload of Will Message.
+    will_message: Vec<u8>,
+
+    /// If the `username` flag is true in `connect_flags`, then `username` field must be set.
+    /// It is a valid UTF-8 string.
+    username: String,
+
+    /// If the `password` flag is true in `connect_flags`, then `password` field must be set.
+    /// It consists of 0 to 64k bytes of binary data.
+    password: Vec<u8>,
 }
 
 impl ConnectPacket {
@@ -200,9 +236,26 @@ impl ConnectPacket {
         &self.protocol_name
     }
 
-    pub fn set_client_id(&mut self, id: &str) {
+    pub fn validate_client_id(id: &str) -> Result<(), Error> {
+        if id.len() < 1 || id.len() > 23 {
+            return Err(Error::InvalidClientId);
+        }
+        for byte in id.bytes() {
+            if !((byte >= b'0' && byte <= b'9')
+                || (byte >= b'a' && byte <= b'z')
+                || (byte >= b'A' && byte <= b'Z'))
+            {
+                return Err(Error::InvalidClientId);
+            }
+        }
+        Ok(())
+    }
+
+    pub fn set_client_id(&mut self, id: &str) -> Result<(), Error> {
         self.client_id.clear();
+        ConnectPacket::validate_client_id(id)?;
         self.client_id.push_str(id);
+        Ok(())
     }
 
     pub fn client_id(&self) -> &str {
@@ -210,7 +263,7 @@ impl ConnectPacket {
     }
 
     pub fn set_qos(&mut self, qos: QoS) {
-        self.connect_flags.qos = qos;
+        self.connect_flags.will_qos = qos;
     }
 }
 

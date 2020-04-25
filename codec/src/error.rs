@@ -9,6 +9,7 @@ pub enum Error {
     PacketEmpty,
     InvalidQoS,
     InvalidProtocolLevel,
+    InvalidClientId,
 
     /// Length of buffer - offset < remaining length.
     InvalidRemainingLength,
