@@ -349,14 +349,26 @@ impl ConnectPacket {
 impl ToNetPacket for ConnectPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
-        // FIXME(Shaohua): username/password/topic/message are ignored.
-        let remaining_length = 2 // protocol_name_len
+
+        let mut remaining_length = 2 // protocol_name_len
             + self.protocol_name.len() // b"MQTT" protocol name
             + 1 // protocol_level
             + 1 // connect_flags
             + 2 // keep_alive
             + 2 // client_id_len
             + self.client_id.len();
+
+        // Check username/password/topic/message.
+        if self.connect_flags.will {
+            remaining_length += 2 + self.will_topic.len();
+            remaining_length += 2 + self.will_message.len();
+        }
+        if self.connect_flags.username {
+            remaining_length += 2 + self.username.len();
+        }
+        if self.connect_flags.password {
+            remaining_length += 2 + self.password.len();
+        }
 
         let fixed_header = FixedHeader {
             packet_type: PacketType::Connect,
