@@ -12,6 +12,9 @@ pub enum Error {
     /// Protocol level is not in `3.1`, `3.1.1` or `5.0`.
     InvalidProtocolLevel,
 
+    /// Protocol name must be "MQTT".
+    InvalidProtoclName,
+
     /// ClientId is empty or its length exceeds 23.
     /// Or contains invalid characters.
     InvalidClientId,

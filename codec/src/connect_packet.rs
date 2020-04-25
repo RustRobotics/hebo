@@ -11,6 +11,8 @@ use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 use crate::base::*;
 use crate::error::Error;
 
+const PROTOCOL_NAME: &str = "MQTT";
+
 /// Current version of MQTT protocol can be:
 /// * 3.1
 /// * 3.1.1
@@ -266,7 +268,7 @@ pub struct ConnectPacket {
 impl ConnectPacket {
     pub fn new(client_id: &str) -> ConnectPacket {
         ConnectPacket {
-            protocol_name: "MQTT".to_string(),
+            protocol_name: PROTOCOL_NAME.to_string(),
             keep_alive: 60,
             client_id: client_id.to_string(),
             ..ConnectPacket::default()
@@ -403,6 +405,9 @@ impl FromNetPacket for ConnectPacket {
         *offset += 2;
         let protocol_name = to_utf8_string(buf, *offset, *offset + protocol_name_len)?;
         *offset += protocol_name_len;
+        if &protocol_name != PROTOCOL_NAME {
+            return Err(Error::InvalidProtoclName);
+        }
 
         let protocol_level = ProtocolLevel::try_from(buf[*offset])?;
         *offset += 1;
