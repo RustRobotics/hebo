@@ -204,6 +204,7 @@ impl FromNetPacket for ConnectFlags {
 /// | will topic string          |
 /// +----------------------------+
 /// | will message length        |
+/// | ...                        |
 /// |                            |
 /// +----------------------------+
 /// | will message bytes         |
@@ -343,6 +344,7 @@ impl ConnectPacket {
 impl ToNetPacket for ConnectPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
+        // FIXME(Shaohua): username/password/topic/message are ignored.
         let remaining_length = 2 // protocol_name_len
             + self.protocol_name.len() // b"MQTT" protocol name
             + 1 // protocol_level
@@ -372,6 +374,8 @@ impl ToNetPacket for ConnectPacket {
         if self.connect_flags.will {
             v.write_u16::<BigEndian>(self.will_topic.len() as u16)?;
             v.write_all(&self.will_topic.as_bytes())?;
+
+            // FIXME(Shaohua): message length is invalid here.
             v.write_u16::<BigEndian>(self.will_message.len() as u16)?;
             v.write_all(&self.will_message)?;
         }
@@ -413,10 +417,47 @@ impl FromNetPacket for ConnectPacket {
         *offset += client_id_len;
 
         // TODO(Shaohua): Read username and password
-        let will_topic = String::new();
-        let will_message = Vec::new();
-        let username = String::new();
-        let password = Vec::new();
+        let will_topic = if connect_flags.will {
+            let will_topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
+            *offset += 2;
+            let will_topic =
+                String::from_utf8_lossy(&buf[*offset..*offset + will_topic_len]).to_string();
+            *offset += will_topic_len;
+            will_topic
+        } else {
+            String::new()
+        };
+        let will_message = if connect_flags.will {
+            // FIXME(Shaohua): Read variant msg length
+            let will_message_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
+            *offset += 2;
+            let will_message = buf[*offset..*offset + will_message_len].to_vec();
+            *offset += will_message_len;
+            will_message
+        } else {
+            Vec::new()
+        };
+
+        let username = if connect_flags.username {
+            let username_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
+            *offset += 2;
+            let username =
+                String::from_utf8_lossy(&buf[*offset..*offset + username_len]).to_string();
+            *offset += username_len;
+            username
+        } else {
+            String::new()
+        };
+
+        let password = if connect_flags.password {
+            let password_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
+            *offset += 2;
+            let password = buf[*offset..*offset + password_len].to_vec();
+            *offset += password_len;
+            password
+        } else {
+            Vec::new()
+        };
 
         Ok(ConnectPacket {
             protocol_name,

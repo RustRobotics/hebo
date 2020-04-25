@@ -31,6 +31,16 @@ enum Status {
     Disconnected,
 }
 
+/// ConnectionContext represents a client connection.
+/// All the status of this client is mantinaed in this struct.
+///
+// TODO(Shaohua): Handle Session State
+// TODO(Shaohua): Handle Clean Session operation
+// TODO(Shaohua): Hanle Will Message
+// TODO(Shaohua): Disconnect the network if ClientId is inuse
+// TODO(Shaohua): Disconnect the network if Connect Packet is invalid
+// TODO(Shaohua): Disconnect the network if Connect Packet is not received within a reasonable
+// amount of time.
 #[derive(Debug)]
 pub struct ConnectionContext {
     stream: TcpStream,

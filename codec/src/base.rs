@@ -6,7 +6,6 @@ use std::convert::TryFrom;
 use std::io;
 
 use crate::error::Error;
-use crate::error::Error::InvalidRemainingLength;
 
 /// Packet identifier
 pub type PacketId = u16;
@@ -246,7 +245,7 @@ impl FromNetPacket for RemainingLength {
             multiplier *= 128;
 
             if multiplier > 128 * 128 * 128 * 128 {
-                return Err(InvalidRemainingLength);
+                return Err(Error::InvalidRemainingLength);
             }
 
             if (byte & 128) == 0 {
@@ -363,8 +362,8 @@ impl TryFrom<u8> for QoS {
 
 #[cfg(test)]
 mod tests {
-    use crate::base::{ToNetPacket, FromNetPacket};
     use super::RemainingLength;
+    use crate::base::{FromNetPacket, ToNetPacket};
 
     #[test]
     fn test_remaining_length_encode() {
