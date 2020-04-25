@@ -7,8 +7,12 @@ use std::io;
 use crate::base::*;
 use crate::error::Error;
 
+/// If the Server sends a ConnectAck packet with non-zero return code, it MUST
+/// close the network connection.
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum ConnectReturnCode {
+    /// Connection accepted.
     Accepted = 0,
 
     /// The server do not support the level of the MQTT protocol requested by the Client.
@@ -50,17 +54,48 @@ impl From<u8> for ConnectReturnCode {
     }
 }
 
+/// The first packet sent to the Client from the Server must be ConnectAckPacket.
+/// If the Client does not receive ConnectAckPacket in a reasonable time, it MUST
+/// close the network connection.
+///
+/// Basic packet structure:
+/// ```txt
+///  7                       0
+/// +-------------------------+
+/// | Fixed header            |
+/// |                         |
+/// +-------------------------+
+/// | Ack flags               |
+/// +-------------------------+
+/// | Return code             |
+/// +-------------------------+
+/// ```
+///
+/// This packet does not contain payload.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct ConnectAckPacket {
+    /// Acknowledge flags is the first byte in variable header.
+    /// Session Present flag is set in bit 0 of Ack flags, bits 7-1 are reserved.
+    ///
+    /// If CleanSession flag in ConnectPacket is true, then this flag must be false
+    /// and return code is set to zero.
+    ///
+    /// If CleanSession flag in ConnectPacket is false, and the Server have stored
+    /// SessionState with the same ClientId, then this field is set to true, indicating
+    /// that there is already a session state value present on the Server side.
+    ///
+    /// If return code is not zero, then this flag MUST be false.
+    session_present: bool,
+
+    /// Byte 2 in the connection return code.
     return_code: ConnectReturnCode,
-    session_persistent: bool,
 }
 
 impl ConnectAckPacket {
-    pub fn new(return_code: ConnectReturnCode, session_persistent: bool) -> ConnectAckPacket {
+    pub fn new(session_present: bool, return_code: ConnectReturnCode) -> ConnectAckPacket {
         ConnectAckPacket {
+            session_present,
             return_code,
-            session_persistent,
         }
     }
 
@@ -68,8 +103,8 @@ impl ConnectAckPacket {
         self.return_code
     }
 
-    pub fn session_persistent(&self) -> bool {
-        self.session_persistent
+    pub fn session_present(&self) -> bool {
+        self.session_present
     }
 }
 
@@ -79,14 +114,14 @@ impl FromNetPacket for ConnectAckPacket {
         assert_eq!(fixed_header.packet_type, PacketType::ConnectAck);
 
         let ack_flags = buf[*offset];
-        let session_persistent = ack_flags & 0b0000_0001 == 0b0000_0001;
+        let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
         *offset += 1;
         let return_code = ConnectReturnCode::from(buf[*offset]);
         *offset += 1;
 
         Ok(ConnectAckPacket {
+            session_present,
             return_code,
-            session_persistent,
         })
     }
 }
@@ -101,11 +136,7 @@ impl ToNetPacket for ConnectAckPacket {
         };
         fixed_header.to_net(buf)?;
 
-        let ack_flags = if self.session_persistent {
-            0b0000_0001
-        } else {
-            0
-        };
+        let ack_flags = if self.session_present { 0b0000_0001 } else { 0 };
         buf.push(ack_flags);
         buf.push(self.return_code as u8);
 

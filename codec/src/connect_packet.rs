@@ -186,40 +186,42 @@ impl FromNetPacket for ConnectFlags {
 ///
 /// Basic struct of ConnectPacket is as below:
 /// ```txt
-/// 7                            0
+///  7                          0
 /// +----------------------------+
-/// | protocol level             |
-/// +----------------------------+
-/// | connect flags              |
-/// +----------------------------+
-/// | keep alive                 |
+/// | Fixed header               |
 /// |                            |
 /// +----------------------------+
-/// | client id length           |
+/// | Protocol level             |
+/// +----------------------------+
+/// | Connect flags              |
+/// +----------------------------+
+/// | Keep alive                 |
 /// |                            |
 /// +----------------------------+
-/// | client id string           |
-/// +----------------------------+
-/// | will topic length          |
+/// | Client id length           |
 /// |                            |
 /// +----------------------------+
-/// | will topic string          |
+/// | Client id string ...       |
 /// +----------------------------+
-/// | will message length        |
-/// | ...                        |
+/// | Will topic length          |
 /// |                            |
 /// +----------------------------+
-/// | will message bytes         |
+/// | Will topic string ...      |
 /// +----------------------------+
-/// | username length            |
+/// | Will message length        |
 /// |                            |
 /// +----------------------------+
-/// | username string            |
+/// | Will message bytes ...     |
 /// +----------------------------+
-/// | password length            |
+/// | Username length            |
 /// |                            |
 /// +----------------------------+
-/// | password bytes             |
+/// | Username string ...        |
+/// +----------------------------+
+/// | Password length            |
+/// |                            |
+/// +----------------------------+
+/// | Password bytes ...         |
 /// +----------------------------+
 /// ```
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
