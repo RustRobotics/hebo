@@ -181,6 +181,46 @@ impl FromNetPacket for ConnectFlags {
 /// * VariableHeader
 /// * Payload
 /// Note that fixed header part is same in all packets so that we just ignore it.
+///
+/// Basic struct of ConnectPacket is as below:
+/// ```txt
+/// 7                            0
+/// +----------------------------+
+/// | protocol level             |
+/// +----------------------------+
+/// | connect flags              |
+/// +----------------------------+
+/// | keep alive                 |
+/// |                            |
+/// +----------------------------+
+/// | client id length           |
+/// |                            |
+/// +----------------------------+
+/// | client id string           |
+/// +----------------------------+
+/// | will topic length          |
+/// |                            |
+/// +----------------------------+
+/// | will topic string          |
+/// +----------------------------+
+/// | will message length        |
+/// |                            |
+/// +----------------------------+
+/// | will message bytes         |
+/// +----------------------------+
+/// | username length            |
+/// |                            |
+/// +----------------------------+
+/// | username string            |
+/// +----------------------------+
+/// | password length            |
+/// |                            |
+/// +----------------------------+
+/// | password bytes             |
+/// +----------------------------+
+/// ```
+///
+// TODO(shaohua): UTF-8 string MUST NOT contain null characters
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
@@ -329,8 +369,20 @@ impl ToNetPacket for ConnectPacket {
         // Write payload
         v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
         v.write_all(&self.client_id.as_bytes())?;
-
-        // TODO(Shaohua): Write username and password.
+        if self.connect_flags.will {
+            v.write_u16::<BigEndian>(self.will_topic.len() as u16)?;
+            v.write_all(&self.will_topic.as_bytes())?;
+            v.write_u16::<BigEndian>(self.will_message.len() as u16)?;
+            v.write_all(&self.will_message)?;
+        }
+        if self.connect_flags.username {
+            v.write_u16::<BigEndian>(self.username.len() as u16)?;
+            v.write_all(&self.username.as_bytes())?;
+        }
+        if self.connect_flags.password {
+            v.write_u16::<BigEndian>(self.password.len() as u16)?;
+            v.write_all(&self.password)?;
+        }
 
         Ok(v.len() - old_len)
     }
