@@ -4,7 +4,9 @@
 
 use std::io;
 
-use crate::base::*;
+use crate::base::{
+    FixedHeader, FromNetPacket, PacketFlags, PacketType, RemainingLength, ToNetPacket,
+};
 use crate::error::Error;
 
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
