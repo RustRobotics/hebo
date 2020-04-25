@@ -224,10 +224,11 @@ pub struct ConnectPacket {
 }
 
 impl ConnectPacket {
-    pub fn new() -> ConnectPacket {
+    pub fn new(client_id: &str) -> ConnectPacket {
         ConnectPacket {
             protocol_name: "MQTT".to_string(),
             keep_alive: 60,
+            client_id: client_id.to_string(),
             ..ConnectPacket::default()
         }
     }
@@ -265,6 +266,38 @@ impl ConnectPacket {
     pub fn set_qos(&mut self, qos: QoS) {
         self.connect_flags.will_qos = qos;
     }
+
+    pub fn set_username(&mut self, username: &str) {
+        self.username = username.to_string();
+    }
+
+    pub fn username(&self) -> &str {
+        &self.username
+    }
+
+    pub fn set_password(&mut self, password: &[u8]) {
+        self.password = password.to_vec();
+    }
+
+    pub fn password(&self) -> &[u8] {
+        &self.password
+    }
+
+    pub fn set_will_topic(&mut self, topic: &str) {
+        self.will_topic = topic.to_string();
+    }
+
+    pub fn will_topic(&self) -> &str {
+        &self.will_topic
+    }
+
+    pub fn set_will_message(&mut self, message: &[u8]) {
+        self.will_message = message.to_vec();
+    }
+
+    pub fn will_message(&self) -> &[u8] {
+        &self.will_message
+    }
 }
 
 impl ToNetPacket for ConnectPacket {
@@ -297,6 +330,8 @@ impl ToNetPacket for ConnectPacket {
         v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
         v.write_all(&self.client_id.as_bytes())?;
 
+        // TODO(Shaohua): Write username and password.
+
         Ok(v.len() - old_len)
     }
 }
@@ -326,6 +361,10 @@ impl FromNetPacket for ConnectPacket {
         *offset += client_id_len;
 
         // TODO(Shaohua): Read username and password
+        let will_topic = String::new();
+        let will_message = Vec::new();
+        let username = String::new();
+        let password = Vec::new();
 
         Ok(ConnectPacket {
             protocol_name,
@@ -333,6 +372,10 @@ impl FromNetPacket for ConnectPacket {
             keep_alive,
             connect_flags,
             client_id,
+            will_topic,
+            will_message,
+            username,
+            password,
         })
     }
 }
