@@ -220,8 +220,6 @@ impl FromNetPacket for ConnectFlags {
 /// | password bytes             |
 /// +----------------------------+
 /// ```
-///
-// TODO(shaohua): UTF-8 string MUST NOT contain null characters
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
@@ -253,6 +251,7 @@ pub struct ConnectPacket {
 
     /// If the `will` flag is true in `connect_flags`, then `will_message` field must be set.
     /// It will be used as the payload of Will Message.
+    /// It consists of 0 to 64k bytes of binary data.
     will_message: Vec<u8>,
 
     /// If the `username` flag is true in `connect_flags`, then `username` field must be set.
@@ -272,10 +271,6 @@ impl ConnectPacket {
             client_id: client_id.to_string(),
             ..ConnectPacket::default()
         }
-    }
-
-    pub fn protocol_name(&self) -> &str {
-        &self.protocol_name
     }
 
     pub fn validate_client_id(id: &str) -> Result<(), Error> {
@@ -308,32 +303,40 @@ impl ConnectPacket {
         self.connect_flags.will_qos = qos;
     }
 
-    pub fn set_username(&mut self, username: &str) {
+    pub fn set_username(&mut self, username: &str) -> Result<(), Error> {
+        validate_utf8_string(username)?;
         self.username = username.to_string();
+        Ok(())
     }
 
     pub fn username(&self) -> &str {
         &self.username
     }
 
-    pub fn set_password(&mut self, password: &[u8]) {
+    pub fn set_password(&mut self, password: &[u8]) -> Result<(), Error> {
+        validate_two_bytes_data(password)?;
         self.password = password.to_vec();
+        Ok(())
     }
 
     pub fn password(&self) -> &[u8] {
         &self.password
     }
 
-    pub fn set_will_topic(&mut self, topic: &str) {
+    pub fn set_will_topic(&mut self, topic: &str) -> Result<(), Error> {
+        validate_utf8_string(topic)?;
         self.will_topic = topic.to_string();
+        Ok(())
     }
 
     pub fn will_topic(&self) -> &str {
         &self.will_topic
     }
 
-    pub fn set_will_message(&mut self, message: &[u8]) {
+    pub fn set_will_message(&mut self, message: &[u8]) -> Result<(), Error> {
+        validate_two_bytes_data(message)?;
         self.will_message = message.to_vec();
+        Ok(())
     }
 
     pub fn will_message(&self) -> &[u8] {
@@ -375,7 +378,6 @@ impl ToNetPacket for ConnectPacket {
             v.write_u16::<BigEndian>(self.will_topic.len() as u16)?;
             v.write_all(&self.will_topic.as_bytes())?;
 
-            // FIXME(Shaohua): message length is invalid here.
             v.write_u16::<BigEndian>(self.will_message.len() as u16)?;
             v.write_all(&self.will_message)?;
         }
@@ -399,8 +401,7 @@ impl FromNetPacket for ConnectPacket {
 
         let protocol_name_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
         *offset += 2;
-        let protocol_name =
-            String::from_utf8_lossy(&buf[*offset..*offset + protocol_name_len]).to_string();
+        let protocol_name = to_utf8_string(buf, *offset, *offset + protocol_name_len)?;
         *offset += protocol_name_len;
 
         let protocol_level = ProtocolLevel::try_from(buf[*offset])?;
@@ -413,22 +414,19 @@ impl FromNetPacket for ConnectPacket {
 
         let client_id_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
         *offset += 2;
-        let client_id = String::from_utf8_lossy(&buf[*offset..*offset + client_id_len]).to_string();
+        let client_id = to_utf8_string(buf, *offset, *offset + client_id_len)?;
         *offset += client_id_len;
 
-        // TODO(Shaohua): Read username and password
         let will_topic = if connect_flags.will {
             let will_topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
             *offset += 2;
-            let will_topic =
-                String::from_utf8_lossy(&buf[*offset..*offset + will_topic_len]).to_string();
+            let will_topic = to_utf8_string(buf, *offset, *offset + will_topic_len)?;
             *offset += will_topic_len;
             will_topic
         } else {
             String::new()
         };
         let will_message = if connect_flags.will {
-            // FIXME(Shaohua): Read variant msg length
             let will_message_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
             *offset += 2;
             let will_message = buf[*offset..*offset + will_message_len].to_vec();
@@ -441,8 +439,7 @@ impl FromNetPacket for ConnectPacket {
         let username = if connect_flags.username {
             let username_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
             *offset += 2;
-            let username =
-                String::from_utf8_lossy(&buf[*offset..*offset + username_len]).to_string();
+            let username = to_utf8_string(buf, *offset, *offset + username_len)?;
             *offset += username_len;
             username
         } else {
