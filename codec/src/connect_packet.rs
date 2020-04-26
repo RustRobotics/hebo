@@ -295,45 +295,46 @@ impl ConnectPacket {
         Ok(())
     }
 
-    pub fn set_client_id(&mut self, id: &str) -> Result<(), Error> {
+    pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, Error> {
         self.client_id.clear();
         ConnectPacket::validate_client_id(id)?;
         self.client_id.push_str(id);
-        Ok(())
+        Ok(self)
     }
 
     pub fn client_id(&self) -> &str {
         &self.client_id
     }
 
-    pub fn set_qos(&mut self, qos: QoS) {
+    pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
         self.connect_flags.will_qos = qos;
+        self
     }
 
-    pub fn set_username(&mut self, username: &str) -> Result<(), Error> {
+    pub fn set_username(&mut self, username: &str) -> Result<&mut Self, Error> {
         validate_utf8_string(username)?;
         self.username = username.to_string();
-        Ok(())
+        Ok(self)
     }
 
     pub fn username(&self) -> &str {
         &self.username
     }
 
-    pub fn set_password(&mut self, password: &[u8]) -> Result<(), Error> {
+    pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, Error> {
         validate_two_bytes_data(password)?;
         self.password = password.to_vec();
-        Ok(())
+        Ok(self)
     }
 
     pub fn password(&self) -> &[u8] {
         &self.password
     }
 
-    pub fn set_will_topic(&mut self, topic: &str) -> Result<(), Error> {
+    pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, Error> {
         validate_utf8_string(topic)?;
         self.will_topic = topic.to_string();
-        Ok(())
+        Ok(self)
     }
 
     pub fn will_topic(&self) -> &str {
