@@ -6,9 +6,27 @@ use std::io;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use crate::base::*;
+use crate::base::{
+    FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, RemainingLength, ToNetPacket,
+};
 use crate::error::Error;
 
+/// Response to a Publish packet with QoS 2. It is the third packet of the QoS 2 protocol
+/// exchange.
+///
+/// Packet structre is:
+/// ```txt
+///  7                     0
+/// +-----------------------+
+/// | Fixed header          |
+/// |                       |
+/// +-----------------------+
+/// | Packet id             |
+/// |                       |
+/// +-----------------------+
+/// ```
+///
+/// This packet does not contain payload part.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct PublishReleasePacket {
     packet_id: PacketId,
@@ -24,6 +42,7 @@ impl FromNetPacket for PublishReleasePacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PublishRelease);
+        assert_eq!(fixed_header.remaining_length.0, 2);
 
         let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
         *offset += 2;
