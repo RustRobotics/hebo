@@ -40,7 +40,12 @@ impl Default for SubscribeAck {
 /// | Packet id                 |
 /// |                           |
 /// +---------------------------+
-/// | Ack 0
+/// | Ack 0                     |
+/// +---------------------------+
+/// | Ack 1                     |
+/// +---------------------------+
+/// | Ack N ...                 |
+/// +---------------------------+
 /// ```
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribeAckPacket {
