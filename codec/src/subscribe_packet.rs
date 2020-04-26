@@ -7,14 +7,61 @@ use std::io::{self, Write};
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use crate::base::*;
+use crate::base::{
+    to_utf8_string, FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, QoS,
+    RemainingLength, ToNetPacket,
+};
 use crate::error::Error;
 
+/// Topic/QoS pair.
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+pub struct SubscribeTopic {
+    /// Subscribed `topic` contain wildcard characters to match interested topics with patterns.
+    pub topic: String,
+
+    /// Maximum level of QoS of packet the Server can send to the Client.
+    pub qos: QoS,
+}
+
+/// Subscribe packet is sent from the Client to the Server to subscribe one or more topics.
+/// This packet also specifies the maximum QoS with which the Server can send Application
+/// message to the Client.
+///
+/// Basic struct of this packet:
+///
+/// ```txt
+/// +----------------------------+
+/// | Fixed header               |
+/// |                            |
+/// +----------------------------+
+/// | Packet Id                  |
+/// |                            |
+/// +----------------------------+
+/// | Topic 0 length             |
+/// |                            |
+/// +----------------------------+
+/// | Topic 0 ...                |
+/// +----------------------------+
+/// | Topic 0 QoS                |
+/// +----------------------------+
+/// | Topic 1 length             |
+/// |                            |
+/// +----------------------------+
+/// | Topic 1 ...                |
+/// +----------------------------+
+/// | Tpoic 1 QoS                |
+/// +----------------------------+
+/// | ...                        |
+/// +----------------------------+
+/// ```
+///
+/// Each topic name is followed by associated QoS flag.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribePacket {
-    topic: String,
-    qos: QoS,
     packet_id: PacketId,
+
+    /// A list of topic the Client subscribes to.
+    topics: Vec<SubscribeTopic>,
 }
 
 impl FromNetPacket for SubscribePacket {
@@ -25,19 +72,24 @@ impl FromNetPacket for SubscribePacket {
         let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]);
         *offset += 2;
 
-        let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-        *offset += 2;
-        let topic = String::from_utf8_lossy(&buf[*offset..*offset + topic_len]).to_string();
+        let mut topics = Vec::new();
+        let mut remaining_length = 2;
 
-        let qos_flag = buf[*offset];
-        *offset += 1;
-        let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
+        // Parse topic/qos list.
+        while remaining_length < fixed_header.remaining_length.0 {
+            let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
+            *offset += 2;
+            remaining_length += 2;
+            let topic = to_utf8_string(buf, *offset, *offset + topic_len)?;
+            let qos_flag = buf[*offset];
+            *offset += 1;
+            remaining_length += 1;
+            let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
 
-        Ok(SubscribePacket {
-            packet_id,
-            topic,
-            qos,
-        })
+            topics.push(SubscribeTopic { topic, qos });
+        }
+
+        Ok(SubscribePacket { packet_id, topics })
     }
 }
 
@@ -45,10 +97,13 @@ impl ToNetPacket for SubscribePacket {
     fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
 
-        let remaining_length = 2 // Variable length
-            + 2 // Payload length
-            + self.topic.len() // Topic length
-            + 1; // Requested QoS
+        let mut remaining_length = 2; // Variable length
+        for topic in &self.topics {
+            remaining_length += 2 // Topic length bytes
+                + topic.topic.len() // Topic
+                + 1; // Requested QoS
+        }
+
         let fixed_header = FixedHeader {
             packet_type: PacketType::Subscribe,
             packet_flags: PacketFlags::Subscribe,
@@ -57,13 +112,15 @@ impl ToNetPacket for SubscribePacket {
         fixed_header.to_net(buf)?;
 
         // Variable header
-        buf.write_u16::<BigEndian>(self.packet_id).unwrap();
+        buf.write_u16::<BigEndian>(self.packet_id)?;
 
         // Payload
-        buf.write_u16::<BigEndian>(self.topic.len() as u16)?;
-        buf.write_all(&self.topic.as_bytes())?;
-        let qos: u8 = 0b0000_0011 & (self.qos as u8);
-        buf.push(qos);
+        for topic in &self.topics {
+            buf.write_u16::<BigEndian>(topic.topic.len() as u16)?;
+            buf.write_all(&topic.topic.as_bytes())?;
+            let qos: u8 = 0b0000_0011 & (topic.qos as u8);
+            buf.push(qos);
+        }
 
         Ok(buf.len() - old_len)
     }
@@ -72,21 +129,19 @@ impl ToNetPacket for SubscribePacket {
 impl SubscribePacket {
     pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> SubscribePacket {
         SubscribePacket {
-            topic: topic.to_string(),
-            qos,
             packet_id,
+            topics: vec![SubscribeTopic {
+                topic: topic.to_string(),
+                qos,
+            }],
         }
-    }
-
-    pub fn topic(&self) -> &str {
-        &self.topic
     }
 
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
-    pub fn qos(&self) -> QoS {
-        self.qos
+    pub fn topics(&self) -> &[SubscribeTopic] {
+        &self.topics
     }
 }
