@@ -6,35 +6,66 @@ use std::io;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use crate::base::*;
+use crate::base::{
+    FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, QoS, RemainingLength,
+    ToNetPacket,
+};
 use crate::error::Error;
 
+/// Reply to each subscribed topic.
+#[repr(u8)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub enum SubscribeAck {
+    /// Maximum level of QoS the Server granted for this topic.
+    QoS(QoS),
+
+    /// This subscription if failed or not.
+    Failed,
+}
+
+impl Default for SubscribeAck {
+    fn default() -> Self {
+        SubscribeAck::Failed
+    }
+}
+
+/// Reply to Subscribe packet.
+///
+/// Basic structure of packet is:
+/// ```txt
+/// +---------------------------+
+/// | Fixed header              |
+/// |                           |
+/// +---------------------------+
+/// | Packet id                 |
+/// |                           |
+/// +---------------------------+
+/// | Ack 0
+/// ```
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribeAckPacket {
-    qos: QoS,
-    failed: bool,
+    /// `packet_id` field is identical in Subscribe packet.
     packet_id: PacketId,
+
+    /// A list of acknowledgement to subscribed topics.
+    /// The order of acknowledgement match the order of topic in Subscribe packet.
+    acknowledgements: Vec<SubscribeAck>,
 }
 
 impl SubscribeAckPacket {
-    pub fn new(qos: QoS, failed: bool, packet_id: PacketId) -> SubscribeAckPacket {
+    pub fn new(ack: SubscribeAck, packet_id: PacketId) -> SubscribeAckPacket {
         SubscribeAckPacket {
-            qos,
-            failed,
             packet_id,
+            acknowledgements: vec![ack],
         }
-    }
-
-    pub fn qos(&self) -> QoS {
-        self.qos
-    }
-
-    pub fn failed(&self) -> bool {
-        self.failed
     }
 
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
+    }
+
+    pub fn acknowledgements(&self) -> &[SubscribeAck] {
+        &self.acknowledgements
     }
 }
 
@@ -45,23 +76,26 @@ impl FromNetPacket for SubscribeAckPacket {
 
         let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
         *offset += 2;
-        let payload = buf[*offset];
-        *offset += 1;
 
-        let failed = payload & 0b1000_0000 == 0b1000_0000;
-        let qos = {
-            match payload & 0b0000_0011 {
-                0b0000_0010 => QoS::ExactOnce,
-                0b0000_0001 => QoS::AtLeastOnce,
-                0b0000_0000 => QoS::AtMostOnce,
+        let mut acknowledgements = Vec::new();
+        let mut remaining_length = 2;
+
+        while remaining_length < fixed_header.remaining_length.0 {
+            let payload = buf[*offset];
+            *offset += 1;
+            remaining_length += 1;
+            match payload & 0b1000_0011 {
+                0b1000_0000 => acknowledgements.push(SubscribeAck::Failed),
+                0b0000_0010 => acknowledgements.push(SubscribeAck::QoS(QoS::ExactOnce)),
+                0b0000_0001 => acknowledgements.push(SubscribeAck::QoS(QoS::AtLeastOnce)),
+                0b0000_0000 => acknowledgements.push(SubscribeAck::QoS(QoS::AtMostOnce)),
                 _ => return Err(Error::InvalidQoS),
             }
-        };
+        }
 
         Ok(SubscribeAckPacket {
             packet_id,
-            failed,
-            qos,
+            acknowledgements,
         })
     }
 }
@@ -77,12 +111,15 @@ impl ToNetPacket for SubscribeAckPacket {
         fixed_header.to_net(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id).unwrap();
 
-        let flag = if self.failed {
-            0b1000_0000
-        } else {
-            self.qos as u8
-        };
-        buf.push(flag);
+        for ack in &self.acknowledgements {
+            let flag = {
+                match *ack {
+                    SubscribeAck::Failed => 0b1000_0000,
+                    SubscribeAck::QoS(qos) => qos as u8,
+                }
+            };
+            buf.push(flag);
+        }
 
         Ok(buf.len() - old_len)
     }
