@@ -6,10 +6,26 @@ use std::io;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use crate::base::*;
+use crate::base::{
+    FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, RemainingLength, ToNetPacket,
+};
 use crate::error::Error;
 
-/// Acknowledge packet for Publish message in QoS1.
+/// Acknowledge packet for Publish message in QoS 1.
+///
+/// Basic packet structure:
+/// ```txt
+///  7                  0
+/// +--------------------+
+/// | Fixed header       |
+/// |                    |
+/// +--------------------+
+/// | Packet id          |
+/// |                    |
+/// +--------------------+
+/// ```
+///
+/// This type of packet does not contain payload.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct PublishAckPacket {
     packet_id: PacketId,
@@ -29,6 +45,7 @@ impl FromNetPacket for PublishAckPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PublishAck);
+        assert_eq!(fixed_header.remaining_length.0, 2);
 
         let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
         *offset += 2;
