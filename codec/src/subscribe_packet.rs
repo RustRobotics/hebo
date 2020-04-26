@@ -56,8 +56,15 @@ pub struct SubscribeTopic {
 /// ```
 ///
 /// Each topic name is followed by associated QoS flag.
+///
+/// If a Server receives a Subscribe packet containing a Topic Filter that is identical
+/// to an existing Subscription's Topic Filter then it must completely replace existing
+/// Subscription with a new Subscription. The Topic Filter in the new Subscription will
+/// be identical to the previous Subscription, also QoS may be different. Any existing
+/// retained message will be re-sent to the new Subscrption.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribePacket {
+    /// `packet_id` is used by the Server to reply SubscribeAckPacket to the client.
     packet_id: PacketId,
 
     /// A list of topic the Client subscribes to.
@@ -87,6 +94,10 @@ impl FromNetPacket for SubscribePacket {
             let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
 
             topics.push(SubscribeTopic { topic, qos });
+        }
+
+        if topics.len() == 0 {
+            return Err(Error::EmptyTopic);
         }
 
         Ok(SubscribePacket { packet_id, topics })

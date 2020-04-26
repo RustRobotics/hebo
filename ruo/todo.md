@@ -1,6 +1,6 @@
 
 # TODO
-- [ ] parse variable remaining length
+- [x] parse variable remaining length
 - [ ] qos 2
 - [ ] auto reconnect
 - [ ] tls

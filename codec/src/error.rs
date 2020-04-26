@@ -7,6 +7,10 @@ pub enum Error {
     TcpConnectError,
     InvalidFixedHeader,
     PacketEmpty,
+
+    /// No topic is speicified in Subscribe packet.
+    EmptyTopic,
+
     InvalidQoS,
 
     /// Protocol level is not in `3.1`, `3.1.1` or `5.0`.
