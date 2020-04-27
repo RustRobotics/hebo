@@ -4,7 +4,9 @@
 
 use std::io;
 
-use crate::base::{FromNetPacket, PacketFlags, PacketType, RemainingLength, ToNetPacket};
+use crate::base::{
+    FixedHeader, FromNetPacket, PacketFlags, PacketType, RemainingLength, ToNetPacket,
+};
 use crate::error::Error;
 
 /// The PingResponse packet is sent to a Client from the Server to reply to PingRequest packet.
