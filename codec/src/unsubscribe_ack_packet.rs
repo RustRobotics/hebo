@@ -6,11 +6,30 @@ use std::io;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use crate::base::*;
+use crate::base::{
+    FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, RemainingLength, ToNetPacket,
+};
 use crate::error::Error;
 
+/// UnsubscribeAck packet is sent by the Server to the Client to confirm receipt of an
+/// Unsubscribe packet.
+///
+/// Basic struct of packet:
+/// ```txt
+///  7                       0
+/// +-------------------------+
+/// | Fixed header            |
+/// |                         |
+/// +-------------------------+
+/// | Packet id               |
+/// |                         |
+/// +-------------------------+
+/// ```
+///
+/// Note that this packet does not contain payload message.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct UnsubscribeAckPacket {
+    /// `packet_id` field is read from Unsubscribe packet.
     packet_id: PacketId,
 }
 
@@ -18,6 +37,7 @@ impl FromNetPacket for UnsubscribeAckPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<UnsubscribeAckPacket, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::UnsubscribeAck);
+        assert_eq!(fixed_header.remaining_length.0, 2);
 
         let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
         *offset += 2;
