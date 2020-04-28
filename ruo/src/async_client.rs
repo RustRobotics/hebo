@@ -147,10 +147,10 @@ impl AsyncClient {
         self.send(packet).await;
     }
 
-    pub async fn unsubscribe(&mut self, topics: &[&str]) {
-        log::info!("unsubscribe to: {:?}", topics);
+    pub async fn unsubscribe(&mut self, topic: &str) {
+        log::info!("unsubscribe to: {:?}", topic);
         let packet_id = self.next_packet_id();
-        let packet = UnsubscribePacket::new(topics, packet_id);
+        let packet = UnsubscribePacket::new(topic, packet_id);
         self.unsubscribing_packets.insert(packet_id, packet.clone());
         self.send(packet).await;
     }
@@ -247,12 +247,8 @@ impl AsyncClient {
             Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if let Some(p) = self.subscribing_packets.get(&packet_id) {
-                    if packet.failed() {
-                        log::warn!("Failed to subscribe: {}", p.topic());
-                    }
-                    log::info!("Topic `{}` subscription confirmed!", p.topic());
+                    log::info!("Subscription {:?} confirmed!", p.topics());
                     self.subscribing_packets.remove(&packet.packet_id());
-                // TODO(Shaohua): Check qos value.
                 } else {
                     log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
                 }
