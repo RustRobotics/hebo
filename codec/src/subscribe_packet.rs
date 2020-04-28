@@ -155,4 +155,8 @@ impl SubscribePacket {
     pub fn topics(&self) -> &[SubscribeTopic] {
         &self.topics
     }
+
+    pub fn mut_topics(self) -> Vec<SubscribeTopic> {
+        self.topics
+    }
 }
