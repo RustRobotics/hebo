@@ -17,7 +17,7 @@ use codec::ping_request_packet::PingRequestPacket;
 use codec::ping_response_packet::PingResponsePacket;
 use codec::publish_ack_packet::PublishAckPacket;
 use codec::publish_packet::PublishPacket;
-use codec::subscribe_ack_packet::SubscribeAckPacket;
+use codec::subscribe_ack_packet::{SubscribeAck, SubscribeAckPacket};
 use codec::subscribe_packet::SubscribePacket;
 use codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use codec::unsubscribe_packet::UnsubscribePacket;
@@ -127,7 +127,7 @@ impl ConnectionContext {
                 self.client_id = packet.client_id().to_string();
                 // TODO(Shaohua): Check connection status first.
                 // TODO(Shaohua): If this client is already connected, send disconnect packet.
-                let packet = ConnectAckPacket::new(ConnectReturnCode::Accepted, true);
+                let packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
                 self.send(packet).await;
                 self.status = Status::Connected;
             }
@@ -169,7 +169,7 @@ impl ConnectionContext {
         let mut offset: usize = 0;
         match SubscribePacket::from_net(&buf, &mut offset) {
             Ok(packet) => {
-                let failed;
+                let ack;
                 if let Err(err) = self
                     .sender
                     .send(ConnectionCommand::Subscribe(
@@ -178,13 +178,12 @@ impl ConnectionContext {
                     ))
                     .await
                 {
-                    failed = true;
+                    ack = SubscribeAck::Failed;
                     log::warn!("Failed to send subscribe command to server: {:?}", err);
                 } else {
-                    failed = false;
+                    ack = SubscribeAck::QoS(packet.topics()[0].qos);
                 }
-                let subscribe_ack_packet =
-                    SubscribeAckPacket::new(packet.qos(), failed, packet.packet_id());
+                let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
                 self.send(subscribe_ack_packet).await;
             }
             Err(err) => log::warn!("Failed to parse subscribe packet: {:?}, {:?}", err, buf),

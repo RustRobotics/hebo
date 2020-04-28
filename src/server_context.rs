@@ -9,7 +9,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
 use codec::publish_packet::PublishPacket;
-use codec::subscribe_packet::SubscribePacket;
+use codec::subscribe_packet::{SubscribePacket, SubscribeTopic};
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::connection_context::ConnectionContext;
@@ -83,11 +83,9 @@ impl ServerContext {
     }
 
     fn on_subscribe(&mut self, connection_id: ConnectionId, packet: SubscribePacket) {
-        // TODO(Shaohua): Consider adding qos
-
         for pipeline in self.pipelines.iter_mut() {
             if pipeline.connection_id == connection_id {
-                pipeline.topics.push(packet.topic().to_string());
+                pipeline.topics.extend(packet.mut_topics());
                 break;
             }
         }
@@ -106,15 +104,15 @@ impl ServerContext {
     }
 }
 
-fn topic_match(topics: &[String], topic: &str) -> bool {
+fn topic_match(topics: &[SubscribeTopic], topic: &str) -> bool {
     // TODO(Shaohua): Create a topic parsing tree
-    topics.iter().any(|t| t == topic)
+    topics.iter().any(|t| t.topic == topic)
 }
 
 #[derive(Debug)]
 pub struct Pipeline {
     server_tx: Sender<ServerCommand>,
-    topics: Vec<String>,
+    topics: Vec<SubscribeTopic>,
     connection_id: ConnectionId,
 }
 
