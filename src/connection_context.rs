@@ -181,6 +181,7 @@ impl ConnectionContext {
                     ack = SubscribeAck::Failed;
                     log::warn!("Failed to send subscribe command to server: {:?}", err);
                 } else {
+                    // TODO(Shaohua): Handle all of topics.
                     ack = SubscribeAck::QoS(packet.topics()[0].qos);
                 }
                 let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
