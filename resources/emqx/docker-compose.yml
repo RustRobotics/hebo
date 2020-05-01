@@ -7,10 +7,10 @@ services:
       - 8083:8083
       - 8084:8084
       - 8883:8883
+      - 8081:8081
+      - 18083:18083
+      - 11883:11883
     volumes:
-      - ./ca:/emqx/ca:ro
-    environment:
-      - EMQX_LISTNER__WSS__EXTERNAL__CACERTFILE=/emqx/ca/root-ca.pem
-      - EMQX_LISTNER__WSS__EXTERNAL__CERTFILE=/emqx/ca/cert.pem
-      - EMQX_LISTNER__WSS__EXTERNAL__KEYFILE=/emqx/ca/privkey.pem
+      - ./certs:/opt/emqx/etc/certs:ro
+      - ./emqx.conf:/opt/emqx/etc/emqx.conf
     restart: always
