@@ -47,7 +47,7 @@ pub struct AsyncClient {
 impl AsyncClient {
     pub async fn new(connect_options: ConnectOptions) -> AsyncClient {
         let stream = Stream::new(connect_options.address(), connect_options.connect_type()).await.unwrap();
-        let mut client = AsyncClient {
+        let client = AsyncClient {
             connect_options,
             stream,
             status: StreamStatus::Connecting,
@@ -58,10 +58,6 @@ impl AsyncClient {
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
         };
-
-        let conn_packet = ConnectPacket::new(client.connect_options.client_id());
-        client.send(conn_packet).await;
-        log::info!("send conn packet");
 
         client
     }
@@ -74,16 +70,21 @@ impl AsyncClient {
         // FIXME(Shaohua): Fix panic when keep_alive is 0
         let mut timer = interval(*self.connect_options.keep_alive());
 
+        let conn_packet = ConnectPacket::new(self.connect_options.client_id());
+        self.send(conn_packet).await;
+        log::info!("send conn packet");
+
         loop {
             tokio::select! {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
+                    // log::info!("n_recv: {}", n_recv);
                     if n_recv > 0 {
                         self.recv_router(&mut buf).await;
                         buf.clear();
                     }
                 }
                 _ = timer.tick() => {
-                    //log::info!("tick()");
+                    log::info!("tick()");
                     self.ping().await;
                 },
             }

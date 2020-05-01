@@ -153,7 +153,6 @@ impl ToNetPacket for ConnectFlags {
 
             username | password | will_retian | will_qos | will | clean_session
         };
-        log::info!("connect flags: {:x?}", flags);
         v.push(flags);
 
         Ok(1)
