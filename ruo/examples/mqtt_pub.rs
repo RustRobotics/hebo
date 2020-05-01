@@ -9,8 +9,8 @@ async fn main() {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    let addr = "127.0.0.1:1883";
-    let options = ConnectOptions::new(addr).unwrap();
+    let address = "127.0.0.1:1883";
+    let options = ConnectOptions::new(address).unwrap();
     log::info!("options: {:?}", options);
     let mut client = AsyncClient::new(options).await;
     client.start().await;

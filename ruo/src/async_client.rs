@@ -46,7 +46,7 @@ pub struct AsyncClient {
 
 impl AsyncClient {
     pub async fn new(connect_options: ConnectOptions) -> AsyncClient {
-        let stream = Stream::new_tcp(connect_options.address()).await.unwrap();
+        let stream = Stream::new(connect_options.address(), connect_options.connect_type()).await.unwrap();
         let mut client = AsyncClient {
             connect_options,
             stream,
