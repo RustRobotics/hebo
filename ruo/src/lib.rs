@@ -4,3 +4,4 @@
 
 pub mod async_client;
 pub mod connect_options;
+pub mod stream;

@@ -5,8 +5,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
 use tokio::time::interval;
 
 use codec::base::*;
@@ -22,6 +20,7 @@ use codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use codec::unsubscribe_packet::UnsubscribePacket;
 
 use crate::connect_options::*;
+use crate::stream::Stream;
 
 #[derive(Debug, Hash, PartialEq)]
 enum StreamStatus {
@@ -35,7 +34,7 @@ enum StreamStatus {
 #[derive(Debug)]
 pub struct AsyncClient {
     connect_options: ConnectOptions,
-    socket: TcpStream,
+    stream: Stream,
     status: StreamStatus,
     topics: HashMap<String, PacketId>,
     packet_id: PacketId,
@@ -47,10 +46,10 @@ pub struct AsyncClient {
 
 impl AsyncClient {
     pub async fn new(connect_options: ConnectOptions) -> AsyncClient {
-        let socket = TcpStream::connect(connect_options.address()).await.unwrap();
+        let stream = Stream::new_tcp(connect_options.address()).await.unwrap();
         let mut client = AsyncClient {
             connect_options,
-            socket,
+            stream,
             status: StreamStatus::Connecting,
             topics: HashMap::new(),
             packet_id: 1,
@@ -77,7 +76,7 @@ impl AsyncClient {
 
         loop {
             tokio::select! {
-                Ok(n_recv) = self.socket.read_buf(&mut buf) => {
+                Ok(n_recv) = self.stream.read_buf(&mut buf) => {
                     if n_recv > 0 {
                         self.recv_router(&mut buf).await;
                         buf.clear();
@@ -113,7 +112,7 @@ impl AsyncClient {
     async fn send<P: ToNetPacket>(&mut self, packet: P) {
         let mut buf = Vec::new();
         packet.to_net(&mut buf).unwrap();
-        self.socket.write_all(&buf).await.unwrap();
+        self.stream.write_all(&buf).await.unwrap();
     }
 
     pub async fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) {
