@@ -3,5 +3,14 @@ services:
   ruo-emqx:
     image: emqx/emqx
     ports:
-      - 127.0.0.1:1883:1883
+      - 1883:1883
+      - 8083:8083
+      - 8084:8084
+      - 8883:8883
+    volumes:
+      - ./ca:/emqx/ca:ro
+    environment:
+      - EMQX_LISTNER__WSS__EXTERNAL__CACERTFILE=/emqx/ca/root-ca.pem
+      - EMQX_LISTNER__WSS__EXTERNAL__CERTFILE=/emqx/ca/cert.pem
+      - EMQX_LISTNER__WSS__EXTERNAL__KEYFILE=/emqx/ca/privkey.pem
     restart: always
