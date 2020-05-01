@@ -31,7 +31,6 @@ enum StreamStatus {
     Disconnected,
 }
 
-#[derive(Debug)]
 pub struct AsyncClient {
     connect_options: ConnectOptions,
     stream: Stream,
@@ -169,9 +168,9 @@ impl AsyncClient {
         self.subscribe("hello", QoS::AtMostOnce).await;
         self.publish("hello", QoS::AtMostOnce, b"Hello, world")
             .await;
-        self.subscribe("hello2", QoS::AtLeastOnce).await;
-        self.publish("hello2", QoS::AtLeastOnce, b"Hello, qos1")
-            .await;
+        // self.subscribe("hello2", QoS::AtLeastOnce).await;
+        // self.publish("hello2", QoS::AtLeastOnce, b"Hello, qos1")
+        //     .await;
     }
 
     async fn ping(&mut self) {
@@ -264,7 +263,7 @@ impl AsyncClient {
             Ok(packet) => {
                 let packet_id = packet.packet_id();
                 if let Some(p) = self.unsubscribing_packets.get(&packet_id) {
-                    log::info!("Topics `{:?}` unsubscription confirmed!", p.topics());
+                    log::info!("Topics `{:?}` unsubscribe confirmed!", p.topics());
                     self.unsubscribing_packets.remove(&packet.packet_id());
                 } else {
                     log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);

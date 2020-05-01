@@ -7,24 +7,28 @@ use std::io;
 use std::io::Read;
 use std::net::SocketAddr;
 
+use futures_util::sink::SinkExt;
+use futures_util::stream::StreamExt;
 use native_tls::Certificate;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio_tls::TlsStream;
+use tokio_tungstenite::{tungstenite::protocol::Message, WebSocketStream};
 
-use crate::connect_options::{ConnectType, MqttsConnect, TlsType};
+use crate::connect_options::{ConnectType, MqttsConnect, TlsType, WsConnect};
 
-#[derive(Debug)]
 pub enum Stream {
     Mqtt(TcpStream),
     Mqtts(TlsStream<TcpStream>),
+    Ws(WebSocketStream<TcpStream>),
 }
 
 impl Stream {
     pub async fn new(address: &SocketAddr, connect_type: &ConnectType) -> io::Result<Stream> {
         match connect_type {
             ConnectType::Mqtt(_) => Stream::new_mqtt(address).await,
-            ConnectType::Mqtts(mqtts) => Stream::new_mqtts(address, mqtts).await,
+            ConnectType::Mqtts(mqtts_connect) => Stream::new_mqtts(address, mqtts_connect).await,
+            ConnectType::Ws(ws_connect) => Stream::new_ws(address, ws_connect).await,
             _ => unimplemented!(),
         }
     }
@@ -52,10 +56,28 @@ impl Stream {
         Ok(Stream::Mqtts(socket))
     }
 
+    async fn new_ws(address: &SocketAddr, ws_connect: &WsConnect) -> io::Result<Stream> {
+        let ws_url = format!("ws://{}{}", address, &ws_connect.path);
+        log::info!("ws_url: {:?}", ws_url);
+        // TODO(Shaohua): Handle error.
+        let socket = TcpStream::connect(address).await?;
+        let (ws_stream, _) = tokio_tungstenite::client_async(ws_url, socket).await.unwrap();
+        Ok(Stream::Ws(ws_stream))
+    }
+
     pub async fn read_buf(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
         match self {
             Stream::Mqtt(socket) => socket.read_buf(buf).await,
             Stream::Mqtts(tls_socket) => tls_socket.read(buf).await,
+            Stream::Ws(ws) => {
+                log::info!("read ws buf()");
+                // TODO(Shaohua): Read with current buffer.
+                let msg = ws.next().await.expect("fuck");
+                buf.extend(msg.unwrap().into_data());
+                log::info!("end of buf!");
+
+                Ok(0)
+            }
         }
     }
 
@@ -65,7 +87,14 @@ impl Stream {
             Stream::Mqtts(tls_socket) => {
                 log::info!("write_all(): {:x?}", buf);
                 tls_socket.write_all(buf).await
-            },
+            }
+            Stream::Ws(ws) => {
+                log::info!("write ws msg: {:x?}", buf);
+                let msg = Message::binary(buf);
+                // TODO(Shaohua): Handle error type
+                ws.send(msg).await.unwrap();
+                Ok(())
+            }
         }
     }
 }
