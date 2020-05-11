@@ -70,6 +70,7 @@ impl AsyncClient {
         let mut timer = interval(*self.connect_options.keep_alive());
 
         let conn_packet = ConnectPacket::new(self.connect_options.client_id());
+        println!("connect packet client id: {}", conn_packet.client_id());
         self.send(conn_packet).await;
         log::info!("send conn packet");
 

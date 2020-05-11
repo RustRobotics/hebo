@@ -72,24 +72,32 @@ impl Stream {
             Stream::Ws(ws) => {
                 log::info!("read ws buf()");
                 // TODO(Shaohua): Read with current buffer.
-                let msg = ws.next().await.expect("fuck");
-                buf.extend(msg.unwrap().into_data());
-                log::info!("end of buf!");
-
-                Ok(0)
+                if let Some(msg) = ws.next().await {
+                    // FIXME(Shaohua): Close frame issue.
+                    let msg = msg.unwrap();
+                    let data = msg.into_data();
+                    let data_len = data.len();
+                    buf.extend(data);
+                    log::info!("end of buf!");
+                    Ok(data_len)
+                } else {
+                    Ok(0)
+                }
             }
         }
     }
 
     pub async fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
+        log::info!("write_all(): {:?}", buf);
+
         match self {
-            Stream::Mqtt(socket) => socket.write_all(buf).await,
+            Stream::Mqtt(socket) => {
+                socket.write_all(buf).await
+            }
             Stream::Mqtts(tls_socket) => {
-                log::info!("write_all(): {:x?}", buf);
                 tls_socket.write_all(buf).await
             }
             Stream::Ws(ws) => {
-                log::info!("write ws msg: {:x?}", buf);
                 let msg = Message::binary(buf);
                 // TODO(Shaohua): Handle error type
                 ws.send(msg).await.unwrap();
