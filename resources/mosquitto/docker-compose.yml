@@ -10,6 +10,6 @@ services:
       - 8883:8883
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - ./ca:/mosquitto/ca:ro
+      - ./certs:/mosquitto/certs:ro
       - ./data:/mosquitto/data
 
