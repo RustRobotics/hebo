@@ -145,3 +145,19 @@ impl ToNetPacket for ConnectAckPacket {
         Ok(buf.len() - old_len)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::connect_ack_packet::ConnectAckPacket;
+    use crate::base::FromNetPacket;
+
+    #[test]
+    fn test_from_net() {
+        let buf: Vec<u8> = vec![0x20, 0x02, 0x00, 0x00];
+        let mut offset = 0;
+        let packet = ConnectAckPacket::from_net(&buf, &mut offset);
+        assert!(packet.is_ok());
+        let packet = packet.unwrap();
+        assert_eq!(packet.session_present, false);
+    }
+}
