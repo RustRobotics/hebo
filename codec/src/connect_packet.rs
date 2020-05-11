@@ -9,8 +9,8 @@ use std::io::{self, Write};
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use crate::base::{
-    to_utf8_string, validate_two_bytes_data, validate_utf8_string, FixedHeader, FromNetPacket,
-    PacketFlags, PacketType, QoS, RemainingLength, ToNetPacket,
+    FixedHeader, FromNetPacket, PacketFlags, PacketType, QoS,
+    RemainingLength, to_utf8_string, ToNetPacket, validate_two_bytes_data, validate_utf8_string,
 };
 use crate::error::Error;
 
@@ -489,5 +489,21 @@ impl FromNetPacket for ConnectPacket {
             username,
             password,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::base::FromNetPacket;
+    use crate::connect_packet::ConnectPacket;
+
+    #[test]
+    fn test_from_net() {
+        let buf : Vec<u8> = vec![16, 20, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 8, 119, 118, 80, 84, 88, 99, 67, 119];
+        let mut offset = 0;
+        let packet = ConnectPacket::from_net(&buf, &mut offset);
+        assert!(packet.is_ok());
+        let packet = packet.unwrap();
+        assert_eq!(packet.client_id(), "wvPTXcCw");
     }
 }
