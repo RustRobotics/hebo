@@ -22,7 +22,7 @@ async fn main() {
             cert_pem: OsString::from(&args[2]),
             private_key_pem: OsString::from(&args[3]),
         }),
-        domain: "example.org".to_string(),
+        domain: "broker.biofan.org".to_string(),
     }));
     log::info!("options: {:?}", options);
     let mut client = AsyncClient::new(options).await;
