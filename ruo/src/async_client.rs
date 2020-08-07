@@ -2,6 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+#![feature(type_alias_impl_trait)]
+
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -31,6 +33,8 @@ enum StreamStatus {
     Disconnected,
 }
 
+type NullFuture = impl std::future::Future<Output = ()>;
+
 pub struct AsyncClient {
     connect_options: ConnectOptions,
     stream: Stream,
@@ -41,6 +45,7 @@ pub struct AsyncClient {
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
     publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
+    on_connect_cb: Option<dyn Fn() -> dyn std::future::Future<Output=()>>,
 }
 
 impl AsyncClient {
@@ -56,6 +61,7 @@ impl AsyncClient {
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
+            on_connect_cb: None,
         };
 
         client
@@ -164,14 +170,16 @@ impl AsyncClient {
         self.on_disconnect();
     }
 
+    pub fn set_on_connect(&mut self, f: impl Fn() -> dyn std::future::Future<Output=()>) {
+        self.on_connect_cb = Some(f);
+    }
+
     async fn on_connect(&mut self) {
         log::info!("On connect()");
-        self.subscribe("hello", QoS::AtMostOnce).await;
-        self.publish("hello", QoS::AtMostOnce, b"Hello, world")
-            .await;
-        // self.subscribe("hello2", QoS::AtLeastOnce).await;
-        // self.publish("hello2", QoS::AtLeastOnce, b"Hello, qos1")
-        //     .await;
+        if self.on_connect_cb.is_some() {
+            (self.on_connect_cb.unwrap())
+                (self).await;
+        }
     }
 
     async fn ping(&mut self) {
@@ -281,5 +289,9 @@ impl AsyncClient {
             self.packet_id += 1;
         }
         self.packet_id
+    }
+
+    pub fn connect_option(&self) -> &ConnectOptions {
+        return &self.connect_options;
     }
 }
