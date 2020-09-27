@@ -96,7 +96,7 @@ impl FromNetPacket for SubscribePacket {
             topics.push(SubscribeTopic { topic, qos });
         }
 
-        if topics.len() == 0 {
+        if topics.is_empty() {
             return Err(Error::EmptyTopic);
         }
 
