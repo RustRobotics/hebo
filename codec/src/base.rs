@@ -221,6 +221,7 @@ pub struct RemainingLength(pub u32);
 
 impl RemainingLength {
     pub fn len(&self) -> usize {
+        // TODO(Shaohua): Imply is_empty()
         if self.0 > 0x7fffff {
             4
         } else if self.0 > 0x7fff {
@@ -275,7 +276,7 @@ impl ToNetPacket for RemainingLength {
             count += 1;
             n /= 128;
             if n > 0 {
-                m = m | 128;
+                m |= 128;
             }
             buf.push(m as u8);
         }

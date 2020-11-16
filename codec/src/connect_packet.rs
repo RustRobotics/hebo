@@ -9,8 +9,8 @@ use std::io::{self, Write};
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use crate::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketType, QoS,
-    RemainingLength, to_utf8_string, ToNetPacket, validate_two_bytes_data, validate_utf8_string,
+    to_utf8_string, validate_two_bytes_data, validate_utf8_string, FixedHeader, FromNetPacket,
+    PacketFlags, PacketType, QoS, RemainingLength, ToNetPacket,
 };
 use crate::error::Error;
 
@@ -280,7 +280,7 @@ impl ConnectPacket {
     }
 
     pub fn validate_client_id(id: &str) -> Result<(), Error> {
-        if id.len() < 1 || id.len() > 23 {
+        if id.is_empty() || id.len() > 23 {
             return Err(Error::InvalidClientId);
         }
         for byte in id.bytes() {
@@ -422,7 +422,7 @@ impl FromNetPacket for ConnectPacket {
         *offset += 2;
         let protocol_name = to_utf8_string(buf, *offset, *offset + protocol_name_len)?;
         *offset += protocol_name_len;
-        if &protocol_name != PROTOCOL_NAME {
+        if protocol_name != PROTOCOL_NAME {
             return Err(Error::InvalidProtoclName);
         }
 
@@ -499,7 +499,9 @@ mod tests {
 
     #[test]
     fn test_from_net() {
-        let buf : Vec<u8> = vec![16, 20, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 8, 119, 118, 80, 84, 88, 99, 67, 119];
+        let buf: Vec<u8> = vec![
+            16, 20, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 8, 119, 118, 80, 84, 88, 99, 67, 119,
+        ];
         let mut offset = 0;
         let packet = ConnectPacket::from_net(&buf, &mut offset);
         assert!(packet.is_ok());

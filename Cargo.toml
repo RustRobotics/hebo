@@ -5,13 +5,17 @@ authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2018"
 description = "Distributed MQTT broker"
 
+[[bin]]
+name = "hebo"
+path = "src/bin/hebo.rs"
+
 [dependencies]
 codec = { path = "codec" }
 
-tokio = { version = "0.2.21", features = ["full"] }
-log = "0.4.8"
 env_logger = "0.7.1"
 futures = "0.3.5"
+log = "0.4.11"
+tokio = { version = "0.2.22", features = ["full"] }
 
 [workspace]
 members = [
