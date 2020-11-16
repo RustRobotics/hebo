@@ -2,13 +2,6 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-#![feature(type_alias_impl_trait)]
-
-use std::collections::HashMap;
-use std::fmt::Debug;
-
-use tokio::time::interval;
-
 use codec::base::*;
 use codec::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 use codec::connect_packet::ConnectPacket;
@@ -20,6 +13,11 @@ use codec::subscribe_ack_packet::SubscribeAckPacket;
 use codec::subscribe_packet::SubscribePacket;
 use codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use codec::unsubscribe_packet::UnsubscribePacket;
+use std::collections::HashMap;
+use std::fmt::Debug;
+use std::future::Future;
+use std::pin::Pin;
+use tokio::time::interval;
 
 use crate::connect_options::*;
 use crate::stream::Stream;
@@ -33,8 +31,6 @@ enum StreamStatus {
     Disconnected,
 }
 
-type NullFuture = impl std::future::Future<Output = ()>;
-
 pub struct AsyncClient {
     connect_options: ConnectOptions,
     stream: Stream,
@@ -45,12 +41,17 @@ pub struct AsyncClient {
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
     publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
-    on_connect_cb: Option<dyn Fn() -> dyn std::future::Future<Output=()>>,
+    on_connect_callback: Box<dyn Fn(&mut Self) -> Future<Output = ()>>,
 }
 
 impl AsyncClient {
-    pub async fn new(connect_options: ConnectOptions) -> AsyncClient {
-        let stream = Stream::new(connect_options.address(), connect_options.connect_type()).await.unwrap();
+    pub async fn new(
+        connect_options: ConnectOptions,
+        on_connect_callback: Box<dyn Fn(&mut Self) -> Future<Output = ()>>,
+    ) -> AsyncClient {
+        let stream = Stream::new(connect_options.address(), connect_options.connect_type())
+            .await
+            .unwrap();
         let client = AsyncClient {
             connect_options,
             stream,
@@ -61,7 +62,7 @@ impl AsyncClient {
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
-            on_connect_cb: None,
+            on_connect_callback,
         };
 
         client
@@ -170,16 +171,9 @@ impl AsyncClient {
         self.on_disconnect();
     }
 
-    pub fn set_on_connect(&mut self, f: impl Fn() -> dyn std::future::Future<Output=()>) {
-        self.on_connect_cb = Some(f);
-    }
-
     async fn on_connect(&mut self) {
         log::info!("On connect()");
-        if self.on_connect_cb.is_some() {
-            (self.on_connect_cb.unwrap())
-                (self).await;
-        }
+        (*self.on_connect_callback)(self).await;
     }
 
     async fn ping(&mut self) {
@@ -219,7 +213,7 @@ impl AsyncClient {
             Ok(packet) => match packet.return_code() {
                 ConnectReturnCode::Accepted => {
                     self.status = StreamStatus::Connected;
-                    self.on_connect().await;
+                    self.on_connect();
                 }
                 _ => {
                     log::warn!("Failed to connect to server, {:?}", packet.return_code());
