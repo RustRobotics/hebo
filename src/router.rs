@@ -2,7 +2,5 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-pub mod commands;
-pub mod connection_context;
-pub mod router;
-pub mod server_context;
+#[derive(Debug)]
+pub struct Router {}

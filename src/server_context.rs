@@ -36,7 +36,7 @@ impl ServerContext {
     }
 
     pub async fn run_loop(&mut self) -> io::Result<()> {
-        let mut listener = TcpListener::bind(&self.address).await?;
+        let listener = TcpListener::bind(&self.address).await?;
         loop {
             tokio::select! {
                 Ok((socket, address)) = listener.accept() => {
