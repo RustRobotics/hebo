@@ -1,10 +1,11 @@
 // Copyright (c) 2020 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
-// Use of this source is governed by General Public License that can be found
+// Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
 use codec::base::QoS;
 use ruo::client::Client;
 use ruo::connect_options::ConnectOptions;
+
 fn on_connect(client: &mut Client) {
     log::info!(
         "[on_connect] client id: {}",

@@ -1,5 +1,5 @@
 // Copyright (c) 2020 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
-// Use of this source is governed by General Public License that can be found
+// Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
 use codec::base::*;
@@ -61,22 +61,19 @@ impl Client {
     }
 
     pub fn start(&mut self) {
-        log::info!("client.start()");
-
-        let mut buf: Vec<u8> = vec![0; 1024];
-        log::info!("reader loop");
-
         let conn_packet = ConnectPacket::new(self.connect_options.client_id());
         println!("connect packet client id: {}", conn_packet.client_id());
         self.send(conn_packet);
-        log::info!("send conn packet");
+        let mut buf = Vec::with_capacity(1024);
 
         loop {
+            buf.resize(buf.capacity(), 0);
             if let Ok(n_recv) = self.stream.read_buf(&mut buf) {
                 if n_recv > 0 {
                     self.recv_router(&mut buf);
                     buf.clear();
                 } else if n_recv == 0 {
+                    log::warn!("n_recv is 0");
                     break;
                 }
             }

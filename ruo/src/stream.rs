@@ -1,9 +1,8 @@
 // Copyright (c) 2020 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
-// Use of this source is governed by General Public License that can be found
+// Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io::Read;
-use std::io::{self, Write};
+use std::io::{self, Write, Read};
 use std::net::SocketAddr;
 use std::net::TcpStream;
 use std::time::Duration;
@@ -42,9 +41,13 @@ impl Stream {
         Ok(Stream::Mqtt(socket))
     }
 
-    pub fn read_buf(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+    pub fn read_buf(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         match self {
-            Stream::Mqtt(socket) => socket.read(buf),
+            Stream::Mqtt(socket) => {
+                // let reference = std::io::Read::by_ref(socket);
+                // reference.take(buf.capacity() as u64).read_to_end(buf)
+                socket.read(buf)
+            },
         }
     }
 
