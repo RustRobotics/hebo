@@ -76,6 +76,8 @@ impl Client {
                 if n_recv > 0 {
                     self.recv_router(&mut buf);
                     buf.clear();
+                } else if n_recv == 0 {
+                    break;
                 }
             }
         }
