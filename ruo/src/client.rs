@@ -1,5 +1,5 @@
 // Copyright (c) 2020 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
-// Use of this source is governed by Affero General Public License that can be found
+// Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
 use codec::base::*;
@@ -14,10 +14,6 @@ use codec::subscribe_packet::SubscribePacket;
 use codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use codec::unsubscribe_packet::UnsubscribePacket;
 use std::collections::HashMap;
-use std::fmt::Debug;
-use std::future::Future;
-use std::pin::Pin;
-use tokio::time::interval;
 
 use crate::connect_options::*;
 use crate::stream::Stream;
@@ -31,9 +27,7 @@ enum StreamStatus {
     Disconnected,
 }
 
-type FutureConnectCb = dyn Fn(&AsyncClient) -> Future<Output = ()>;
-
-pub struct AsyncClient {
+pub struct Client {
     connect_options: ConnectOptions,
     stream: Stream,
     status: StreamStatus,
@@ -43,15 +37,14 @@ pub struct AsyncClient {
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
     publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
-    connect_cb: Option<Box<FutureConnectCb>>,
+    connect_cb: Option<fn(&mut Self)>,
 }
 
-impl AsyncClient {
-    pub async fn new(connect_options: ConnectOptions) -> AsyncClient {
-        let stream = Stream::new(connect_options.address(), connect_options.connect_type())
-            .await
-            .unwrap();
-        let client = AsyncClient {
+impl Client {
+    pub fn new(connect_options: ConnectOptions, connect_cb: Option<fn(&mut Self)>) -> Client {
+        let stream =
+            Stream::new(connect_options.address(), connect_options.connect_type()).unwrap();
+        let client = Client {
             connect_options,
             stream,
             status: StreamStatus::Connecting,
@@ -61,58 +54,46 @@ impl AsyncClient {
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
-            connect_cb: None,
+            connect_cb,
         };
 
         client
     }
 
-    pub fn set_connect_callback(&mut self, callback: Box<FutureConnectCb>) {
-        self.connect_cb = Some(callback);
-    }
-
-    pub async fn start(&mut self) {
+    pub fn start(&mut self) {
         log::info!("client.start()");
 
         let mut buf: Vec<u8> = Vec::with_capacity(1024);
         log::info!("reader loop");
-        // FIXME(Shaohua): Fix panic when keep_alive is 0
-        let mut timer = interval(*self.connect_options.keep_alive());
 
         let conn_packet = ConnectPacket::new(self.connect_options.client_id());
         println!("connect packet client id: {}", conn_packet.client_id());
-        self.send(conn_packet).await;
+        self.send(conn_packet);
         log::info!("send conn packet");
 
         loop {
-            tokio::select! {
-                Ok(n_recv) = self.stream.read_buf(&mut buf) => {
-                    // log::info!("n_recv: {}", n_recv);
-                    if n_recv > 0 {
-                        self.recv_router(&mut buf).await;
-                        buf.clear();
-                    }
+            if let Ok(n_recv) = self.stream.read_buf(&mut buf) {
+                //log::info!("n_recv: {}", n_recv);
+                if n_recv > 0 {
+                    self.recv_router(&mut buf);
+                    buf.clear();
                 }
-                _ = timer.tick() => {
-                    log::info!("tick()");
-                    self.ping().await;
-                },
             }
         }
     }
 
-    async fn recv_router(&mut self, buf: &mut Vec<u8>) {
+    fn recv_router(&mut self, buf: &mut Vec<u8>) {
         let mut offset = 0;
         match FixedHeader::from_net(&buf, &mut offset) {
             Ok(fixed_header) => {
                 //log::info!("fixed header: {:?}", fixed_header);
                 match fixed_header.packet_type {
-                    PacketType::ConnectAck => self.connect_ack(&buf).await,
-                    PacketType::Publish => self.on_message(&buf).await,
+                    PacketType::ConnectAck => self.connect_ack(&buf),
+                    PacketType::Publish => self.on_message(&buf),
                     PacketType::PublishAck => self.publish_ack(&buf),
                     PacketType::SubscribeAck => self.subscribe_ack(&buf),
                     PacketType::UnsubscribeAck => self.unsubscribe_ack(&buf),
-                    PacketType::PingResponse => self.on_ping_resp().await,
+                    PacketType::PingResponse => self.on_ping_resp(),
                     t => log::info!("Unhandled msg: {:?}", t),
                 }
             }
@@ -120,13 +101,13 @@ impl AsyncClient {
         }
     }
 
-    async fn send<P: ToNetPacket>(&mut self, packet: P) {
+    fn send<P: ToNetPacket>(&mut self, packet: P) {
         let mut buf = Vec::new();
         packet.to_net(&mut buf).unwrap();
-        self.stream.write_all(&buf).await.unwrap();
+        self.stream.write_all(&buf).unwrap();
     }
 
-    pub async fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) {
+    pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) {
         log::info!("Send publish packet");
         let mut packet = PublishPacket::new(topic, qos, data);
         match qos {
@@ -145,48 +126,48 @@ impl AsyncClient {
             }
             _ => (),
         }
-        self.send(packet).await;
+        self.send(packet);
     }
 
-    pub async fn subscribe(&mut self, topic: &str, qos: QoS) {
+    pub fn subscribe(&mut self, topic: &str, qos: QoS) {
         log::info!("subscribe to: {}", topic);
         let packet_id = self.next_packet_id();
         self.topics.insert(topic.to_string(), packet_id);
         let packet = SubscribePacket::new(topic, qos, packet_id);
         self.subscribing_packets.insert(packet_id, packet.clone());
-        self.send(packet).await;
+        self.send(packet);
     }
 
-    pub async fn unsubscribe(&mut self, topic: &str) {
+    pub fn unsubscribe(&mut self, topic: &str) {
         log::info!("unsubscribe to: {:?}", topic);
         let packet_id = self.next_packet_id();
         let packet = UnsubscribePacket::new(topic, packet_id);
         self.unsubscribing_packets.insert(packet_id, packet.clone());
-        self.send(packet).await;
+        self.send(packet);
     }
 
-    pub async fn disconnect(&mut self) {
+    pub fn disconnect(&mut self) {
         if self.status == StreamStatus::Connected {
             self.status = StreamStatus::Disconnecting;
             let packet = DisconnectPacket::new();
-            self.send(packet).await;
+            self.send(packet);
         }
         self.on_disconnect();
     }
 
-    async fn on_connect(&self) {
+    fn on_connect(&mut self) {
         log::info!("On connect()");
         if let Some(cb) = &self.connect_cb {
-            cb(self).await;
+            cb(self);
         }
     }
 
-    async fn ping(&mut self) {
+    fn ping(&mut self) {
         log::info!("ping()");
         if self.status == StreamStatus::Connected {
             log::info!("Send ping packet");
             let packet = PingRequestPacket::new();
-            self.send(packet).await;
+            self.send(packet);
         }
     }
 
@@ -194,7 +175,7 @@ impl AsyncClient {
         self.status = StreamStatus::Disconnected;
     }
 
-    async fn on_message(&self, buf: &[u8]) {
+    fn on_message(&self, buf: &[u8]) {
         log::info!("on_message()");
         let mut offset = 0;
         match PublishPacket::from_net(buf, &mut offset) {
@@ -206,19 +187,19 @@ impl AsyncClient {
         }
     }
 
-    async fn on_ping_resp(&self) {
+    fn on_ping_resp(&self) {
         log::info!("on ping resp");
         // TODO(Shaohua): Reset reconnect timer.
     }
 
-    async fn connect_ack(&mut self, buf: &[u8]) {
+    fn connect_ack(&mut self, buf: &[u8]) {
         log::info!("connect_ack()");
         let mut offset = 0;
         match ConnectAckPacket::from_net(&buf, &mut offset) {
             Ok(packet) => match packet.return_code() {
                 ConnectReturnCode::Accepted => {
                     self.status = StreamStatus::Connected;
-                    self.on_connect().await;
+                    self.on_connect();
                 }
                 _ => {
                     log::warn!("Failed to connect to server, {:?}", packet.return_code());

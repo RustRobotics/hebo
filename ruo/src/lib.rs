@@ -2,8 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-#![feature(type_alias_impl_trait)]
-
-pub mod async_client;
+//pub mod async_client;
+pub mod client;
 pub mod connect_options;
 pub mod stream;
