@@ -6,12 +6,21 @@ use std::io::Read;
 use std::io::{self, Write};
 use std::net::SocketAddr;
 use std::net::TcpStream;
+use std::time::Duration;
 
 use crate::connect_options::ConnectType;
 
 #[derive(Debug)]
 pub enum Stream {
     Mqtt(TcpStream),
+}
+
+impl Drop for Stream {
+    fn drop(&mut self) {
+        match self {
+            Stream::Mqtt(socket) => drop(socket),
+        }
+    }
 }
 
 impl Stream {
@@ -24,6 +33,12 @@ impl Stream {
 
     fn new_mqtt(address: &SocketAddr) -> io::Result<Stream> {
         let socket = TcpStream::connect(address)?;
+        socket
+            .set_read_timeout(Some(Duration::from_secs(20)))
+            .unwrap();
+        socket
+            .set_write_timeout(Some(Duration::from_secs(20)))
+            .unwrap();
         Ok(Stream::Mqtt(socket))
     }
 

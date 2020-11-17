@@ -63,7 +63,7 @@ impl Client {
     pub fn start(&mut self) {
         log::info!("client.start()");
 
-        let mut buf: Vec<u8> = Vec::with_capacity(1024);
+        let mut buf: Vec<u8> = vec![0; 1024];
         log::info!("reader loop");
 
         let conn_packet = ConnectPacket::new(self.connect_options.client_id());
@@ -73,7 +73,6 @@ impl Client {
 
         loop {
             if let Ok(n_recv) = self.stream.read_buf(&mut buf) {
-                //log::info!("n_recv: {}", n_recv);
                 if n_recv > 0 {
                     self.recv_router(&mut buf);
                     buf.clear();
