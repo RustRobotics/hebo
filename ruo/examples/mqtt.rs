@@ -24,6 +24,6 @@ fn main() {
     let address = "127.0.0.1:1883";
     let options = ConnectOptions::new(address).unwrap();
     log::info!("options: {:?}", options);
-    let mut client = Client::new(options, Some(on_connect));
+    let mut client = Client::new(options, Some(on_connect), None);
     client.start();
 }

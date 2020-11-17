@@ -27,6 +27,9 @@ enum StreamStatus {
     Disconnected,
 }
 
+type ConnectCallback = fn(&mut Client);
+type MessageCallback = fn(&mut Client, &PublishPacket);
+
 pub struct Client {
     connect_options: ConnectOptions,
     stream: Stream,
@@ -37,11 +40,16 @@ pub struct Client {
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
     publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
-    connect_cb: Option<fn(&mut Self)>,
+    on_connect_cb: Option<ConnectCallback>,
+    on_message_cb: Option<MessageCallback>,
 }
 
 impl Client {
-    pub fn new(connect_options: ConnectOptions, connect_cb: Option<fn(&mut Self)>) -> Client {
+    pub fn new(
+        connect_options: ConnectOptions,
+        on_connect_cb: Option<ConnectCallback>,
+        on_message_cb: Option<MessageCallback>,
+    ) -> Client {
         let stream =
             Stream::new(connect_options.address(), connect_options.connect_type()).unwrap();
         let client = Client {
@@ -54,7 +62,8 @@ impl Client {
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
-            connect_cb,
+            on_connect_cb,
+            on_message_cb,
         };
 
         client
@@ -84,7 +93,7 @@ impl Client {
         let mut offset = 0;
         match FixedHeader::from_net(&buf, &mut offset) {
             Ok(fixed_header) => {
-                //log::info!("fixed header: {:?}", fixed_header);
+                log::info!("fixed header: {:?}", fixed_header);
                 match fixed_header.packet_type {
                     PacketType::ConnectAck => self.connect_ack(&buf),
                     PacketType::Publish => self.on_message(&buf),
@@ -155,7 +164,7 @@ impl Client {
 
     fn on_connect(&mut self) {
         log::info!("On connect()");
-        if let Some(cb) = &self.connect_cb {
+        if let Some(cb) = &self.on_connect_cb {
             cb(self);
         }
     }
@@ -173,13 +182,15 @@ impl Client {
         self.status = StreamStatus::Disconnected;
     }
 
-    fn on_message(&self, buf: &[u8]) {
+    fn on_message(&mut self, buf: &[u8]) {
         log::info!("on_message()");
         let mut offset = 0;
         match PublishPacket::from_net(buf, &mut offset) {
             Ok(packet) => {
                 log::info!("packet: {:?}", packet);
-                log::info!("message: {:?}", std::str::from_utf8(packet.message()));
+                if let Some(cb) = &self.on_message_cb {
+                    cb(self, &packet);
+                }
             }
             Err(err) => log::warn!("Failed to parse publish msg: {:?}", err),
         }
