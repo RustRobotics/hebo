@@ -78,9 +78,9 @@ impl ConnectionContext {
             tokio::select! {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
                     if n_recv > 0 {
-                        log::info!("n_recv: {}", n_recv);
-                        // TODO(Shaohua): Handle errors
-                        let _result = self.handle_client_packet(&buf).await;
+                        if let Err(err) = self.handle_client_packet(&buf).await {
+                            log::error!("handle_client_packet() failed: {:?}", err);
+                        }
                         buf.clear();
                     }
                 }
@@ -110,17 +110,47 @@ impl ConnectionContext {
         let fixed_header = FixedHeader::from_net(&buf, &mut offset)?;
 
         match fixed_header.packet_type {
-            PacketType::Connect => self.connect(&buf).await,
-            PacketType::PingRequest => self.ping(&buf).await,
-            PacketType::Publish => self.publish(&buf).await,
-            PacketType::Subscribe => self.subscribe(&buf).await,
-            PacketType::Unsubscribe => self.unsubscribe(&buf).await,
-            PacketType::Disconnect => self.disconnect(&buf).await,
+            PacketType::Connect => {
+                if let Err(err) = self.connect(&buf).await {
+                    log::warn!("connect() failed! {:?}", err);
+                    return Err(err);
+                }
+            }
+            PacketType::PingRequest => {
+                if let Err(err) = self.ping(&buf).await {
+                    log::warn!("ping() failed! {:?}", err);
+                    return Err(err);
+                }
+            }
+            PacketType::Publish => {
+                if let Err(err) = self.publish(&buf).await {
+                    log::warn!("publish() failed! {:?}", err);
+                    return Err(err);
+                }
+            }
+            PacketType::Subscribe => {
+                if let Err(err) = self.subscribe(&buf).await {
+                    log::warn!("subscribe() failed! {:?}", err);
+                    return Err(err);
+                }
+            }
+            PacketType::Unsubscribe => {
+                if let Err(err) = self.unsubscribe(&buf).await {
+                    log::warn!("unsubscribe() failed! {:?}", err);
+                    return Err(err);
+                }
+            }
+            PacketType::Disconnect => {
+                if let Err(err) = self.disconnect(&buf).await {
+                    log::warn!("disconnect() failed! {:?}", err);
+                    return Err(err);
+                }
+            }
             t => {
                 log::warn!("Unhandled msg: {:?}", t);
-                return Ok(());
             }
         }
+        return Ok(());
     }
 
     async fn connect(&mut self, buf: &[u8]) -> error::Result<()> {
