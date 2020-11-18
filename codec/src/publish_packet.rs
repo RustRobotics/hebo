@@ -102,7 +102,7 @@ impl FromNetPacket for PublishPacket {
 
         let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
         *offset += 2;
-        let topic = String::from_utf8((&buf[*offset..*offset + topic_len]).to_vec()).unwrap();
+        let topic = String::from_utf8((&buf[*offset..*offset + topic_len]).to_vec())?;
         *offset += topic_len;
 
         // Parse packet id

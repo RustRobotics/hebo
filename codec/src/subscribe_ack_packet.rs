@@ -114,7 +114,7 @@ impl ToNetPacket for SubscribeAckPacket {
             remaining_length: RemainingLength(3),
         };
         fixed_header.to_net(buf)?;
-        buf.write_u16::<BigEndian>(self.packet_id).unwrap();
+        buf.write_u16::<BigEndian>(self.packet_id)?;
 
         for ack in &self.acknowledgements {
             let flag = {
