@@ -19,14 +19,17 @@ fn on_connect(client: &mut Client) {
     );
 
     // self.subscribe("hello", QoS::AtMostOnce).await;
-    client.subscribe("device/42/geometry", QoS::AtMostOnce);
+    // client.subscribe("device/42/geometry", QoS::AtMostOnce);
     let mut rect = Geometry::new();
     rect.set_x(1);
     rect.set_y(4);
     rect.set_width(960);
     rect.set_height(720);
     let buf: Vec<u8> = rect.write_to_bytes().unwrap();
-    client.publish("device/42/geometry", QoS::AtMostOnce, &buf);
+    loop {
+        log::info!("Publish now");
+        client.publish("device/42/geometry", QoS::AtMostOnce, &buf);
+    }
 }
 
 fn on_message(_client: &mut Client, packet: &PublishPacket) {
@@ -52,6 +55,6 @@ fn main() {
     let address = "127.0.0.1:1883";
     let options = ConnectOptions::new(address).unwrap();
     log::info!("options: {:?}", options);
-    let mut client = Client::new(options, Some(on_connect), Some(on_message));
+    let mut client = Client::new(options, Some(on_connect), Some(on_message)).unwrap();
     client.start();
 }
