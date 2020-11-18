@@ -14,6 +14,7 @@ use codec::subscribe_packet::SubscribePacket;
 use codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use codec::unsubscribe_packet::UnsubscribePacket;
 use std::collections::HashMap;
+use std::io;
 
 use crate::connect_options::*;
 use crate::stream::Stream;
@@ -49,9 +50,9 @@ impl Client {
         connect_options: ConnectOptions,
         on_connect_cb: Option<ConnectCallback>,
         on_message_cb: Option<MessageCallback>,
-    ) -> Client {
+    ) -> io::Result<Client> {
         let stream =
-            Stream::new(connect_options.address(), connect_options.connect_type()).unwrap();
+            Stream::new(connect_options.address(), connect_options.connect_type())?;
         let client = Client {
             connect_options,
             stream,
@@ -66,13 +67,13 @@ impl Client {
             on_message_cb,
         };
 
-        client
+        Ok(client)
     }
 
-    pub fn start(&mut self) {
+    pub fn start(&mut self) -> io::Result<()> {
         let conn_packet = ConnectPacket::new(self.connect_options.client_id());
         println!("connect packet client id: {}", conn_packet.client_id());
-        self.send(conn_packet);
+        self.send(conn_packet)?;
         let mut buf = Vec::with_capacity(1024);
 
         loop {
@@ -87,6 +88,8 @@ impl Client {
                 }
             }
         }
+
+        Ok(())
     }
 
     fn recv_router(&mut self, buf: &mut Vec<u8>) {
@@ -108,13 +111,13 @@ impl Client {
         }
     }
 
-    fn send<P: ToNetPacket>(&mut self, packet: P) {
+    fn send<P: ToNetPacket>(&mut self, packet: P) -> io::Result<()> {
         let mut buf = Vec::new();
-        packet.to_net(&mut buf).unwrap();
-        self.stream.write_all(&buf).unwrap();
+        packet.to_net(&mut buf)?;
+        self.stream.write_all(&buf)
     }
 
-    pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) {
+    pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> io::Result<()> {
         log::info!("Send publish packet");
         let mut packet = PublishPacket::new(topic, qos, data);
         match qos {
@@ -133,48 +136,50 @@ impl Client {
             }
             _ => (),
         }
-        self.send(packet);
+        self.send(packet)
     }
 
-    pub fn subscribe(&mut self, topic: &str, qos: QoS) {
+    pub fn subscribe(&mut self, topic: &str, qos: QoS) -> io::Result<()> {
         log::info!("subscribe to: {}", topic);
         let packet_id = self.next_packet_id();
         self.topics.insert(topic.to_string(), packet_id);
         let packet = SubscribePacket::new(topic, qos, packet_id);
         self.subscribing_packets.insert(packet_id, packet.clone());
-        self.send(packet);
+        self.send(packet)
     }
 
-    pub fn unsubscribe(&mut self, topic: &str) {
-        log::info!("unsubscribe to: {:?}", topic);
+    pub fn unsubscribe(&mut self, topic: &str) -> io::Result<()> {
         let packet_id = self.next_packet_id();
         let packet = UnsubscribePacket::new(topic, packet_id);
         self.unsubscribing_packets.insert(packet_id, packet.clone());
-        self.send(packet);
+        self.send(packet)
     }
 
-    pub fn disconnect(&mut self) {
+    pub fn disconnect(&mut self) -> io::Result<()> {
         if self.status == StreamStatus::Connected {
             self.status = StreamStatus::Disconnecting;
             let packet = DisconnectPacket::new();
-            self.send(packet);
+            self.send(packet)?;
         }
         self.on_disconnect();
+        Ok(())
     }
 
     fn on_connect(&mut self) {
-        log::info!("On connect()");
         if let Some(cb) = &self.on_connect_cb {
             cb(self);
         }
     }
 
-    fn ping(&mut self) {
+    fn ping(&mut self) -> io::Result<()> {
         log::info!("ping()");
         if self.status == StreamStatus::Connected {
             log::info!("Send ping packet");
             let packet = PingRequestPacket::new();
-            self.send(packet);
+            self.send(packet)
+        } else {
+            // TODO(Shaohua): Return Error
+            Ok(())
         }
     }
 

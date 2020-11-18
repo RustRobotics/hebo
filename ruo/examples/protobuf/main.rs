@@ -18,8 +18,7 @@ fn on_connect(client: &mut Client) {
         client.connect_option().client_id()
     );
 
-    // self.subscribe("hello", QoS::AtMostOnce).await;
-    // client.subscribe("device/42/geometry", QoS::AtMostOnce);
+    // client.subscribe("device/42/geometry", QoS::AtMostOnce).unwrap();
     let mut rect = Geometry::new();
     rect.set_x(1);
     rect.set_y(4);
@@ -28,7 +27,7 @@ fn on_connect(client: &mut Client) {
     let buf: Vec<u8> = rect.write_to_bytes().unwrap();
     loop {
         log::info!("Publish now");
-        client.publish("device/42/geometry", QoS::AtMostOnce, &buf);
+        client.publish("device/42/geometry", QoS::AtMostOnce, &buf).unwrap();
     }
 }
 
@@ -56,5 +55,5 @@ fn main() {
     let options = ConnectOptions::new(address).unwrap();
     log::info!("options: {:?}", options);
     let mut client = Client::new(options, Some(on_connect), Some(on_message)).unwrap();
-    client.start();
+    client.start().unwrap();
 }

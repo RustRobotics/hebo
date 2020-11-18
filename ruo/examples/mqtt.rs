@@ -13,8 +13,8 @@ fn on_connect(client: &mut Client) {
     );
 
     // self.subscribe("hello", QoS::AtMostOnce).await;
-    client.subscribe("hello", QoS::AtMostOnce);
-    client.publish("hello", QoS::AtMostOnce, b"Hello, world");
+    client.subscribe("hello", QoS::AtMostOnce).unwrap();
+    client.publish("hello", QoS::AtMostOnce, b"Hello, world").unwrap();
 }
 
 fn main() {
@@ -24,6 +24,6 @@ fn main() {
     let address = "127.0.0.1:1883";
     let options = ConnectOptions::new(address).unwrap();
     log::info!("options: {:?}", options);
-    let mut client = Client::new(options, Some(on_connect), None);
-    client.start();
+    let mut client = Client::new(options, Some(on_connect), None).unwrap();
+    client.start().unwrap();
 }

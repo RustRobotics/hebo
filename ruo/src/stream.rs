@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io::{self, Write, Read};
+use std::io::{self, Read, Write};
 use std::net::SocketAddr;
 use std::net::TcpStream;
 use std::time::Duration;
@@ -32,12 +32,8 @@ impl Stream {
 
     fn new_mqtt(address: &SocketAddr) -> io::Result<Stream> {
         let socket = TcpStream::connect(address)?;
-        socket
-            .set_read_timeout(Some(Duration::from_secs(20)))
-            .unwrap();
-        socket
-            .set_write_timeout(Some(Duration::from_secs(20)))
-            .unwrap();
+        socket.set_read_timeout(Some(Duration::from_secs(20)))?;
+        socket.set_write_timeout(Some(Duration::from_secs(20)))?;
         Ok(Stream::Mqtt(socket))
     }
 
@@ -47,13 +43,11 @@ impl Stream {
                 // let reference = std::io::Read::by_ref(socket);
                 // reference.take(buf.capacity() as u64).read_to_end(buf)
                 socket.read(buf)
-            },
+            }
         }
     }
 
     pub fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
-        log::info!("write_all(): {:?}", buf);
-
         match self {
             Stream::Mqtt(socket) => socket.write_all(buf),
         }
