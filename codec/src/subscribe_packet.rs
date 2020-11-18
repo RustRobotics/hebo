@@ -85,12 +85,13 @@ impl FromNetPacket for SubscribePacket {
         // Parse topic/qos list.
         while remaining_length < fixed_header.remaining_length.0 {
             let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-            log::info!("topic_len: {}, remaining_length: {}, total len: {}",
-                       topic_len, remaining_length, fixed_header.remaining_length.0);
             *offset += 2;
             remaining_length += 2;
-            remaining_length += topic_len as u32;
+
             let topic = to_utf8_string(buf, *offset, *offset + topic_len)?;
+            remaining_length += topic_len as u32;
+            *offset += topic_len;
+
             let qos_flag = buf[*offset];
             *offset += 1;
             remaining_length += 1;

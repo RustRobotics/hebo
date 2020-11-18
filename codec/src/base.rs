@@ -438,6 +438,9 @@ pub fn validate_utf8_string(s: &str) -> Result<(), Error> {
 
 /// Convert range of bytes to valid UTF-8 string.
 pub fn to_utf8_string(buf: &[u8], start: usize, end: usize) -> Result<String, Error> {
+    if end > buf.len() {
+        return Err(Error::InvalidString);
+    }
     let s = String::from_utf8((&buf[start..end]).to_vec())?;
     validate_utf8_string(&s)?;
     Ok(s)
