@@ -9,6 +9,7 @@ use codec::publish_packet::PublishPacket;
 use protobuf::Message;
 use ruo::client::Client;
 use ruo::connect_options::ConnectOptions;
+use std::time::Instant;
 
 use protos::geometry::Geometry;
 
@@ -26,12 +27,16 @@ fn on_connect(client: &mut Client) {
     rect.set_height(720);
     let buf: Vec<u8> = rect.write_to_bytes().unwrap();
     let mut count = 0;
+    let now = Instant::now();
     loop {
         count += 1;
-        log::info!("Publish #{}", count);
-        client
-            .publish("device/42/geometry", QoS::AtMostOnce, &buf)
-            .unwrap();
+        if count % 10_000 == 0 {
+            log::info!("Publish #{}", count);
+            log::info!("time: {:?}", now.elapsed().as_millis());
+        }
+        if let Err(err) = client.publish("device/42/geometry", QoS::AtMostOnce, &buf) {
+            log::error!("Publish failed, {:?}", err);
+        }
     }
 }
 
