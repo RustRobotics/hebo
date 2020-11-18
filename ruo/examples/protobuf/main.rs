@@ -9,9 +9,11 @@ use codec::publish_packet::PublishPacket;
 use protobuf::Message;
 use ruo::client::Client;
 use ruo::connect_options::ConnectOptions;
-use std::time::Instant;
+use ruo::error;
 
 use protos::geometry::Geometry;
+
+const GEOMETRY_TOPIC: &'static str = "/device/42/geometry";
 
 fn on_connect(client: &mut Client) {
     log::info!(
@@ -19,36 +21,33 @@ fn on_connect(client: &mut Client) {
         client.connect_option().client_id()
     );
 
-    // client.subscribe("device/42/geometry", QoS::AtMostOnce).unwrap();
+    client.subscribe(GEOMETRY_TOPIC, QoS::AtMostOnce).unwrap();
+    publish_geometry(client);
+}
+
+fn publish_geometry(client: &mut Client) {
+    log::info!("publish geometry");
     let mut rect = Geometry::new();
     rect.set_x(1);
     rect.set_y(4);
     rect.set_width(960);
     rect.set_height(720);
     let buf: Vec<u8> = rect.write_to_bytes().unwrap();
-    let mut count = 0;
-    let now = Instant::now();
-    loop {
-        count += 1;
-        if count % 10_000 == 0 {
-            log::info!("Publish #{}", count);
-            log::info!("time: {:?}", now.elapsed().as_millis());
-        }
-        if let Err(err) = client.publish("device/42/geometry", QoS::AtMostOnce, &buf) {
-            log::error!("Publish failed, {:?}", err);
-        }
+    if let Err(err) = client.publish(GEOMETRY_TOPIC, QoS::AtMostOnce, &buf) {
+        log::error!("Publish failed, {:?}", err);
     }
 }
 
-fn on_message(_client: &mut Client, packet: &PublishPacket) {
-    log::info!(
-        "Got message: {:?}, topic: {}",
-        packet.message(),
-        packet.topic()
-    );
+fn on_message(client: &mut Client, packet: &PublishPacket) {
+    //log::info!(
+    //    "Got message: {:?}, topic: {}",
+    //    packet.message(),
+    //    packet.topic()
+    //);
     match protobuf::parse_from_bytes::<Geometry>(packet.message()) {
         Ok(geometry) => {
             log::info!("geometry: {:?}", geometry);
+            publish_geometry(client);
         }
         Err(err) => {
             log::error!("Failed to parse pub msg: {:?}", err);
@@ -56,13 +55,13 @@ fn on_message(_client: &mut Client, packet: &PublishPacket) {
     }
 }
 
-fn main() {
+fn main() -> error::Result<()> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
     let address = "127.0.0.1:1883";
     let options = ConnectOptions::new(address).unwrap();
     log::info!("options: {:?}", options);
-    let mut client = Client::new(options, Some(on_connect), Some(on_message)).unwrap();
-    client.start().unwrap();
+    let mut client = Client::new(options, Some(on_connect), Some(on_message))?;
+    client.start()
 }

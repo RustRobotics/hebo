@@ -14,9 +14,9 @@ use codec::subscribe_packet::SubscribePacket;
 use codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use codec::unsubscribe_packet::UnsubscribePacket;
 use std::collections::HashMap;
-use std::io;
 
 use crate::connect_options::*;
+use crate::error;
 use crate::stream::Stream;
 
 #[derive(Debug, Hash, PartialEq)]
@@ -50,7 +50,7 @@ impl Client {
         connect_options: ConnectOptions,
         on_connect_cb: Option<ConnectCallback>,
         on_message_cb: Option<MessageCallback>,
-    ) -> io::Result<Client> {
+    ) -> error::Result<Client> {
         let stream = Stream::new(connect_options.address(), connect_options.connect_type())?;
         let client = Client {
             connect_options,
@@ -69,7 +69,7 @@ impl Client {
         Ok(client)
     }
 
-    pub fn start(&mut self) -> io::Result<()> {
+    pub fn start(&mut self) -> error::Result<()> {
         let conn_packet = ConnectPacket::new(self.connect_options.client_id());
         println!("connect packet client id: {}", conn_packet.client_id());
         self.send(conn_packet)?;
@@ -91,32 +91,31 @@ impl Client {
         Ok(())
     }
 
-    fn recv_router(&mut self, buf: &mut Vec<u8>) {
+    fn recv_router(&mut self, buf: &mut Vec<u8>) -> error::Result<()> {
         let mut offset = 0;
-        match FixedHeader::from_net(&buf, &mut offset) {
-            Ok(fixed_header) => {
-                log::info!("fixed header: {:?}", fixed_header);
-                match fixed_header.packet_type {
-                    PacketType::ConnectAck => self.connect_ack(&buf),
-                    PacketType::Publish => self.on_message(&buf),
-                    PacketType::PublishAck => self.publish_ack(&buf),
-                    PacketType::SubscribeAck => self.subscribe_ack(&buf),
-                    PacketType::UnsubscribeAck => self.unsubscribe_ack(&buf),
-                    PacketType::PingResponse => self.on_ping_resp(),
-                    t => log::info!("Unhandled msg: {:?}", t),
-                }
+        let fixed_header = FixedHeader::from_net(&buf, &mut offset)?;
+        log::info!("fixed header: {:?}", fixed_header);
+        match fixed_header.packet_type {
+            PacketType::ConnectAck => self.connect_ack(&buf),
+            PacketType::Publish => self.on_message(&buf),
+            PacketType::PublishAck => self.publish_ack(&buf),
+            PacketType::SubscribeAck => self.subscribe_ack(&buf),
+            PacketType::UnsubscribeAck => self.unsubscribe_ack(&buf),
+            PacketType::PingResponse => self.on_ping_resp(),
+            t => {
+                log::info!("Unhandled msg: {:?}", t);
+                Ok(())
             }
-            Err(err) => log::warn!("err: {:?}", err),
         }
     }
 
-    fn send<P: ToNetPacket>(&mut self, packet: P) -> io::Result<()> {
+    fn send<P: ToNetPacket>(&mut self, packet: P) -> error::Result<()> {
         let mut buf = Vec::new();
         packet.to_net(&mut buf)?;
-        self.stream.write_all(&buf)
+        self.stream.write_all(&buf).map_err(|err| err.into())
     }
 
-    pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> io::Result<()> {
+    pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> error::Result<()> {
         let mut packet = PublishPacket::new(topic, qos, data);
         match qos {
             QoS::AtLeastOnce => {
@@ -137,7 +136,7 @@ impl Client {
         self.send(packet)
     }
 
-    pub fn subscribe(&mut self, topic: &str, qos: QoS) -> io::Result<()> {
+    pub fn subscribe(&mut self, topic: &str, qos: QoS) -> error::Result<()> {
         log::info!("subscribe to: {}", topic);
         let packet_id = self.next_packet_id();
         self.topics.insert(topic.to_string(), packet_id);
@@ -146,14 +145,14 @@ impl Client {
         self.send(packet)
     }
 
-    pub fn unsubscribe(&mut self, topic: &str) -> io::Result<()> {
+    pub fn unsubscribe(&mut self, topic: &str) -> error::Result<()> {
         let packet_id = self.next_packet_id();
         let packet = UnsubscribePacket::new(topic, packet_id);
         self.unsubscribing_packets.insert(packet_id, packet.clone());
         self.send(packet)
     }
 
-    pub fn disconnect(&mut self) -> io::Result<()> {
+    pub fn disconnect(&mut self) -> error::Result<()> {
         if self.status == StreamStatus::Connected {
             self.status = StreamStatus::Disconnecting;
             let packet = DisconnectPacket::new();
@@ -169,7 +168,7 @@ impl Client {
         }
     }
 
-    fn ping(&mut self) -> io::Result<()> {
+    fn ping(&mut self) -> error::Result<()> {
         log::info!("ping()");
         if self.status == StreamStatus::Connected {
             log::info!("Send ping packet");
@@ -185,93 +184,81 @@ impl Client {
         self.status = StreamStatus::Disconnected;
     }
 
-    fn on_message(&mut self, buf: &[u8]) {
+    fn on_message(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("on_message()");
         let mut offset = 0;
-        match PublishPacket::from_net(buf, &mut offset) {
-            Ok(packet) => {
-                log::info!("packet: {:?}", packet);
-                if let Some(cb) = &self.on_message_cb {
-                    cb(self, &packet);
-                }
-            }
-            Err(err) => log::warn!("Failed to parse publish msg: {:?}", err),
+        let packet = PublishPacket::from_net(buf, &mut offset)?;
+        log::info!("packet: {:?}", packet);
+        if let Some(cb) = &self.on_message_cb {
+            cb(self, &packet);
         }
+        Ok(())
     }
 
-    fn on_ping_resp(&self) {
+    fn on_ping_resp(&self) -> error::Result<()> {
         log::info!("on ping resp");
         // TODO(Shaohua): Reset reconnect timer.
+        Ok(())
     }
 
-    fn connect_ack(&mut self, buf: &[u8]) {
+    fn connect_ack(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("connect_ack()");
         let mut offset = 0;
-        match ConnectAckPacket::from_net(&buf, &mut offset) {
-            Ok(packet) => match packet.return_code() {
-                ConnectReturnCode::Accepted => {
-                    self.status = StreamStatus::Connected;
-                    self.on_connect();
-                }
-                _ => {
-                    log::warn!("Failed to connect to server, {:?}", packet.return_code());
-                    self.status = StreamStatus::ConnectFailed;
-                }
-            },
-            Err(err) => log::error!("Invalid ConnectAckPacket: {:?}, {:?}", buf, err),
+        let packet = ConnectAckPacket::from_net(&buf, &mut offset)?;
+        match packet.return_code() {
+            ConnectReturnCode::Accepted => {
+                self.status = StreamStatus::Connected;
+                self.on_connect();
+            }
+            _ => {
+                log::warn!("Failed to connect to server, {:?}", packet.return_code());
+                self.status = StreamStatus::ConnectFailed;
+            }
         }
+        Ok(())
     }
 
-    fn publish_ack(&mut self, buf: &[u8]) {
+    fn publish_ack(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("publish_ack()");
         let mut offset = 0;
-        match PublishAckPacket::from_net(&buf, &mut offset) {
-            Ok(packet) => {
-                let packet_id = packet.packet_id();
-                if let Some(p) = self.publishing_qos1_packets.get(&packet_id) {
-                    log::info!("Topic `{}` publish confirmed!", p.topic());
-                    self.publishing_qos1_packets.remove(&packet.packet_id());
-                } else {
-                    log::warn!("Failed to find PublishAckPacket: {}", packet_id);
-                }
-            }
-            Err(err) => log::error!("Invalid PublishAckPacket: {:?}, {:?}", buf, err),
+        let packet = PublishAckPacket::from_net(&buf, &mut offset)?;
+        let packet_id = packet.packet_id();
+        if let Some(p) = self.publishing_qos1_packets.get(&packet_id) {
+            log::info!("Topic `{}` publish confirmed!", p.topic());
+            self.publishing_qos1_packets.remove(&packet.packet_id());
+        } else {
+            log::warn!("Failed to find PublishAckPacket: {}", packet_id);
         }
+        Ok(())
     }
 
-    fn subscribe_ack(&mut self, buf: &[u8]) {
+    fn subscribe_ack(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("subscribe_ack()");
         // Parse packet_id and remove from vector.
         let mut offset = 0;
-        match SubscribeAckPacket::from_net(&buf, &mut offset) {
-            Ok(packet) => {
-                let packet_id = packet.packet_id();
-                if let Some(p) = self.subscribing_packets.get(&packet_id) {
-                    log::info!("Subscription {:?} confirmed!", p.topics());
-                    self.subscribing_packets.remove(&packet.packet_id());
-                } else {
-                    log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
-                }
-            }
-            Err(err) => log::error!("Invalid SubscribeAckPacket: {:?}, {:?}", buf, err),
+        let packet = SubscribeAckPacket::from_net(&buf, &mut offset)?;
+        let packet_id = packet.packet_id();
+        if let Some(p) = self.subscribing_packets.get(&packet_id) {
+            log::info!("Subscription {:?} confirmed!", p.topics());
+            self.subscribing_packets.remove(&packet.packet_id());
+        } else {
+            log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
         }
+        Ok(())
     }
 
-    fn unsubscribe_ack(&mut self, buf: &[u8]) {
+    fn unsubscribe_ack(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("unsubscribe_ack()");
         let mut offset = 0;
-        match UnsubscribeAckPacket::from_net(&buf, &mut offset) {
-            Ok(packet) => {
-                let packet_id = packet.packet_id();
-                if let Some(p) = self.unsubscribing_packets.get(&packet_id) {
-                    log::info!("Topics `{:?}` unsubscribe confirmed!", p.topics());
-                    self.unsubscribing_packets.remove(&packet.packet_id());
-                } else {
-                    log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
-                }
-            }
-            Err(err) => log::error!("Invalid UnsubscribeAckPacket: {:?}, {:?}", buf, err),
+        let packet = UnsubscribeAckPacket::from_net(&buf, &mut offset)?;
+        let packet_id = packet.packet_id();
+        if let Some(p) = self.unsubscribing_packets.get(&packet_id) {
+            log::info!("Topics `{:?}` unsubscribe confirmed!", p.topics());
+            self.unsubscribing_packets.remove(&packet.packet_id());
+        } else {
+            log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
         }
+        Ok(())
     }
 
     fn next_packet_id(&mut self) -> PacketId {
