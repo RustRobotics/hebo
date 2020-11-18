@@ -423,7 +423,7 @@ impl FromNetPacket for ConnectPacket {
         let protocol_name = to_utf8_string(buf, *offset, *offset + protocol_name_len)?;
         *offset += protocol_name_len;
         if protocol_name != PROTOCOL_NAME {
-            return Err(Error::InvalidProtoclName);
+            return Err(Error::InvalidProtocolName);
         }
 
         let protocol_level = ProtocolLevel::try_from(buf[*offset])?;

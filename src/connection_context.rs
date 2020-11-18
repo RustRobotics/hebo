@@ -2,14 +2,6 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::net::SocketAddr;
-use std::time::Duration;
-
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
-use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::time::interval;
-
 use codec::base::{FixedHeader, FromNetPacket, PacketType, ToNetPacket};
 use codec::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 use codec::connect_packet::ConnectPacket;
@@ -21,8 +13,15 @@ use codec::subscribe_ack_packet::{SubscribeAck, SubscribeAckPacket};
 use codec::subscribe_packet::SubscribePacket;
 use codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
 use codec::unsubscribe_packet::UnsubscribePacket;
+use std::net::SocketAddr;
+use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpStream;
+use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::time::interval;
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
+use crate::error;
 
 #[derive(Debug)]
 enum Status {
@@ -36,7 +35,7 @@ enum Status {
 ///
 // TODO(Shaohua): Handle Session State
 // TODO(Shaohua): Handle Clean Session operation
-// TODO(Shaohua): Hanle Will Message
+// TODO(Shaohua): Handle Will Message
 // TODO(Shaohua): Disconnect the network if ClientId is inuse
 // TODO(Shaohua): Disconnect the network if Connect Packet is invalid
 // TODO(Shaohua): Disconnect the network if Connect Packet is not received within a reasonable
@@ -94,120 +93,99 @@ impl ConnectionContext {
         }
     }
 
-    async fn send<P: ToNetPacket>(&mut self, packet: P) {
+    async fn send<P: ToNetPacket>(&mut self, packet: P) -> error::Result<()> {
         let mut buf = Vec::new();
         packet.to_net(&mut buf).unwrap();
-        self.stream.write(&buf).await.unwrap();
+        self.stream.write(&buf).await
     }
 
-    async fn handle_client_packet(&mut self, buf: &[u8]) {
+    async fn handle_client_packet(&mut self, buf: &[u8]) -> error::Result<()> {
         let mut offset: usize = 0;
-        match FixedHeader::from_net(&buf, &mut offset) {
-            Ok(fixed_header) => {
-                //log::info!("fixed header: {:?}", fixed_header);
-                match fixed_header.packet_type {
-                    PacketType::Connect => self.connect(&buf).await,
-                    PacketType::PingRequest => self.ping(&buf).await,
-                    PacketType::Publish => self.publish(&buf).await,
-                    PacketType::Subscribe => self.subscribe(&buf).await,
-                    PacketType::Unsubscribe => self.unsubscribe(&buf).await,
-                    PacketType::Disconnect => self.disconnect(&buf).await,
-                    t => log::warn!("Unhandled msg: {:?}", t),
-                }
+        let fixed_header = FixedHeader::from_net(&buf, &mut offset)?;
+
+        match fixed_header.packet_type {
+            PacketType::Connect => self.connect(&buf).await,
+            PacketType::PingRequest => self.ping(&buf).await,
+            PacketType::Publish => self.publish(&buf).await,
+            PacketType::Subscribe => self.subscribe(&buf).await,
+            PacketType::Unsubscribe => self.unsubscribe(&buf).await,
+            PacketType::Disconnect => self.disconnect(&buf).await,
+            t => {
+                log::warn!("Unhandled msg: {:?}", t);
+                panic!();
+                return Ok(());
             }
-            Err(err) => log::warn!("err: {:?}", err),
         }
     }
 
-    async fn connect(&mut self, buf: &[u8]) {
+    async fn connect(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("connect()");
         let mut offset = 0;
-        match ConnectPacket::from_net(&buf, &mut offset) {
-            Ok(packet) => {
-                self.client_id = packet.client_id().to_string();
-                // TODO(Shaohua): Check connection status first.
-                // TODO(Shaohua): If this client is already connected, send disconnect packet.
-                let packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
-                self.send(packet).await;
-                self.status = Status::Connected;
-            }
-            Err(err) => log::warn!("Failed to parse connect packet: {:?}, {:?}", err, buf),
-        }
+        let packet = ConnectPacket::from_net(&buf, &mut offset)?;
+        self.client_id = packet.client_id().to_string();
+        // TODO(Shaohua): Check connection status first.
+        // TODO(Shaohua): If this client is already connected, send disconnect packet.
+        let packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
+        self.status = Status::Connected;
+        self.send(packet).await.map(|_size| ())
     }
 
-    async fn ping(&mut self, buf: &[u8]) {
+    async fn ping(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("ping()");
         let mut offset = 0;
-        match PingRequestPacket::from_net(&buf, &mut offset) {
-            Ok(_packet) => {
-                log::info!("Will send ping response packet");
-                let ping_resp_packet = PingResponsePacket::new();
-                self.send(ping_resp_packet).await;
-            }
-            Err(err) => log::warn!("Failed to parse ping packet: {:?}, {:?}", err, buf),
-        }
+        let packet = PingRequestPacket::from_net(&buf, &mut offset)?;
+        log::info!("Will send ping response packet");
+        let ping_resp_packet = PingResponsePacket::new();
+        self.send(ping_resp_packet).await
     }
 
-    async fn publish(&mut self, buf: &[u8]) {
+    async fn publish(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("publish()");
         let mut offset: usize = 0;
-        match PublishPacket::from_net(&buf, &mut offset) {
-            Ok(packet) => {
-                let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
-                self.send(publish_ack_packet).await;
-                // TODO(Shaohua): Send PublishAck if qos == 0
-                if let Err(err) = self.sender.send(ConnectionCommand::Publish(packet)).await {
-                    log::warn!("pubish() failed to send packet to server, {:?}", err);
-                }
-            }
-            Err(err) => log::warn!("Failed to parse publish packet: {:?}, {:?}", err, buf),
-        }
+        let packet = PublishPacket::from_net(&buf, &mut offset)?;
+        let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
+        self.send(publish_ack_packet).await?;
+        // TODO(Shaohua): Send PublishAck if qos == 0
+        self.sender.send(ConnectionCommand::Publish(packet)).await
     }
 
-    async fn subscribe(&mut self, buf: &[u8]) {
+    async fn subscribe(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("subscribe()");
         let mut offset: usize = 0;
-        match SubscribePacket::from_net(&buf, &mut offset) {
-            Ok(packet) => {
-                let ack;
-                if let Err(err) = self
-                    .sender
-                    .send(ConnectionCommand::Subscribe(
-                        self.connection_id,
-                        packet.clone(),
-                    ))
-                    .await
-                {
-                    ack = SubscribeAck::Failed;
-                    log::warn!("Failed to send subscribe command to server: {:?}", err);
-                } else {
-                    // TODO(Shaohua): Handle all of topics.
-                    ack = SubscribeAck::QoS(packet.topics()[0].qos);
-                }
-                let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
-                self.send(subscribe_ack_packet).await;
-            }
-            Err(err) => log::warn!("Failed to parse subscribe packet: {:?}, {:?}", err, buf),
+        let packet = SubscribePacket::from_net(&buf, &mut offset)?;
+        let ack;
+        if let Err(err) = self
+            .sender
+            .send(ConnectionCommand::Subscribe(
+                self.connection_id,
+                packet.clone(),
+            ))
+            .await
+        {
+            ack = SubscribeAck::Failed;
+            log::warn!("Failed to send subscribe command to server: {:?}", err);
+        } else {
+            // TODO(Shaohua): Handle all of topics.
+            ack = SubscribeAck::QoS(packet.topics()[0].qos);
         }
+        let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
+        self.send(subscribe_ack_packet).await
     }
 
-    async fn unsubscribe(&mut self, buf: &[u8]) {
+    async fn unsubscribe(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("unsubscribe()");
         let mut offset: usize = 0;
-        match UnsubscribePacket::from_net(&buf, &mut offset) {
-            Ok(packet) => {
-                // TODO(Shaohua): Send msg to command channel
-                let unsubscribe_ack_packet = UnsubscribeAckPacket::new(packet.packet_id());
-                self.send(unsubscribe_ack_packet).await;
-            }
-            Err(err) => log::warn!("Failed to parse subscribe packet: {:?}, {:?}", err, buf),
-        }
+        let packet = UnsubscribePacket::from_net(&buf, &mut offset)?;
+        // TODO(Shaohua): Send msg to command channel
+        let unsubscribe_ack_packet = UnsubscribeAckPacket::new(packet.packet_id());
+        self.send(unsubscribe_ack_packet).await
     }
 
-    async fn disconnect(&mut self, _buf: &[u8]) {
+    async fn disconnect(&mut self, _buf: &[u8]) -> error::Result<()> {
         log::info!("disconnect");
         self.status = Status::Disconnected;
         // TODO(Shaohua): Send disconnect to server to unsubscribe any topics.
+        Ok(())
     }
 
     async fn cmd_router(&mut self, cmd: ServerCommand) {
@@ -218,8 +196,8 @@ impl ConnectionContext {
         }
     }
 
-    async fn server_publish(&mut self, packet: PublishPacket) {
+    async fn server_publish(&mut self, packet: PublishPacket) -> error::Result<()> {
         log::info!("server publish: {:?}", packet);
-        self.send(packet).await;
+        self.send(packet).await
     }
 }
