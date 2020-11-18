@@ -51,8 +51,7 @@ impl Client {
         on_connect_cb: Option<ConnectCallback>,
         on_message_cb: Option<MessageCallback>,
     ) -> io::Result<Client> {
-        let stream =
-            Stream::new(connect_options.address(), connect_options.connect_type())?;
+        let stream = Stream::new(connect_options.address(), connect_options.connect_type())?;
         let client = Client {
             connect_options,
             stream,
@@ -118,7 +117,6 @@ impl Client {
     }
 
     pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> io::Result<()> {
-        log::info!("Send publish packet");
         let mut packet = PublishPacket::new(topic, qos, data);
         match qos {
             QoS::AtLeastOnce => {

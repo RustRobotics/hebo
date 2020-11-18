@@ -8,6 +8,7 @@ use std::io;
 pub enum Error {
     IoError(io::Error),
     CodecError(codec::Error),
+    SendError,
 }
 
 impl From<io::Error> for Error {

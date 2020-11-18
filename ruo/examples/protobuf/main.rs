@@ -25,9 +25,13 @@ fn on_connect(client: &mut Client) {
     rect.set_width(960);
     rect.set_height(720);
     let buf: Vec<u8> = rect.write_to_bytes().unwrap();
+    let mut count = 0;
     loop {
-        log::info!("Publish now");
-        client.publish("device/42/geometry", QoS::AtMostOnce, &buf).unwrap();
+        count += 1;
+        log::info!("Publish #{}", count);
+        client
+            .publish("device/42/geometry", QoS::AtMostOnce, &buf)
+            .unwrap();
     }
 }
 

@@ -79,7 +79,8 @@ impl ConnectionContext {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
                     if n_recv > 0 {
                         log::info!("n_recv: {}", n_recv);
-                        self.handle_client_packet(&buf).await;
+                        // TODO(Shaohua): Handle errors
+                        let _result = self.handle_client_packet(&buf).await;
                         buf.clear();
                     }
                 }
@@ -87,7 +88,8 @@ impl ConnectionContext {
                     log::info!("tick()");
                 },
                 Some(cmd) = self.receiver.recv() => {
-                    self.cmd_router(cmd).await;
+                    // TODO(Shaohua): Handle errors
+                    let _result = self.cmd_router(cmd).await;
                 },
             }
         }
@@ -96,7 +98,11 @@ impl ConnectionContext {
     async fn send<P: ToNetPacket>(&mut self, packet: P) -> error::Result<()> {
         let mut buf = Vec::new();
         packet.to_net(&mut buf).unwrap();
-        self.stream.write(&buf).await
+        self.stream
+            .write(&buf)
+            .await
+            .map(drop)
+            .map_err(|err| err.into())
     }
 
     async fn handle_client_packet(&mut self, buf: &[u8]) -> error::Result<()> {
@@ -112,7 +118,6 @@ impl ConnectionContext {
             PacketType::Disconnect => self.disconnect(&buf).await,
             t => {
                 log::warn!("Unhandled msg: {:?}", t);
-                panic!();
                 return Ok(());
             }
         }
@@ -133,7 +138,7 @@ impl ConnectionContext {
     async fn ping(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("ping()");
         let mut offset = 0;
-        let packet = PingRequestPacket::from_net(&buf, &mut offset)?;
+        let _packet = PingRequestPacket::from_net(&buf, &mut offset)?;
         log::info!("Will send ping response packet");
         let ping_resp_packet = PingResponsePacket::new();
         self.send(ping_resp_packet).await
@@ -146,7 +151,11 @@ impl ConnectionContext {
         let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
         self.send(publish_ack_packet).await?;
         // TODO(Shaohua): Send PublishAck if qos == 0
-        self.sender.send(ConnectionCommand::Publish(packet)).await
+        self.sender
+            .send(ConnectionCommand::Publish(packet))
+            .await
+            .map(drop)
+            .map_err(|_err| error::Error::SendError)
     }
 
     async fn subscribe(&mut self, buf: &[u8]) -> error::Result<()> {
@@ -188,12 +197,11 @@ impl ConnectionContext {
         Ok(())
     }
 
-    async fn cmd_router(&mut self, cmd: ServerCommand) {
+    async fn cmd_router(&mut self, cmd: ServerCommand) -> error::Result<()> {
         match cmd {
-            ServerCommand::Publish(packet) => {
-                self.server_publish(packet).await;
-            }
+            ServerCommand::Publish(packet) => self.server_publish(packet).await?,
         }
+        Ok(())
     }
 
     async fn server_publish(&mut self, packet: PublishPacket) -> error::Result<()> {
