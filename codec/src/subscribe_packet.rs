@@ -8,8 +8,8 @@ use std::io::{self, Write};
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use crate::base::{
-    to_utf8_string, FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, QoS,
-    RemainingLength, ToNetPacket,
+    is_valid_topic_filter, to_utf8_string, FixedHeader, FromNetPacket, PacketFlags, PacketId,
+    PacketType, QoS, RemainingLength, ToNetPacket,
 };
 use crate::error::Error;
 
@@ -91,6 +91,11 @@ impl FromNetPacket for SubscribePacket {
             let topic = to_utf8_string(buf, *offset, *offset + topic_len)?;
             remaining_length += topic_len as u32;
             *offset += topic_len;
+
+            // Check rules defined in MQTT chapter-4.7 Topic Name and Filters
+            if !is_valid_topic_filter(&topic) {
+                return Err(Error::InvalidTopicFilter);
+            }
 
             let qos_flag = buf[*offset];
             *offset += 1;
