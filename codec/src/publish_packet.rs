@@ -7,8 +7,8 @@ use std::io::{self, Write};
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use crate::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, QoS, RemainingLength,
-    ToNetPacket,
+    is_valid_topic_name, FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, QoS,
+    RemainingLength, ToNetPacket,
 };
 use crate::error::Error;
 
@@ -104,6 +104,11 @@ impl FromNetPacket for PublishPacket {
         *offset += 2;
         let topic = String::from_utf8((&buf[*offset..*offset + topic_len]).to_vec())?;
         *offset += topic_len;
+
+        // Topic name MUST NOT contain wildchard characters.
+        if !is_valid_topic_name(&topic) {
+            return Err(Error::InvalidTopicName);
+        }
 
         // Parse packet id
         let packet_id = if qos != QoS::AtMostOnce {

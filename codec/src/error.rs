@@ -29,6 +29,12 @@ pub enum Error {
     /// Invalid UTF-8 string.
     InvalidString,
 
+    /// Topic name might contain wildcard characters.
+    InvalidTopicName,
+
+    /// Violate topic filter rules.
+    InvalidTopicFilter,
+
     /// Length of buffer - offset < remaining length.
     InvalidRemainingLength,
 }
