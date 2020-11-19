@@ -401,9 +401,16 @@ pub fn validate_two_bytes_data(data: &[u8]) -> Result<(), Error> {
 /// use codec::base::is_valid_topic_name;
 /// let name = "sport/tennis/player/#";
 /// assert_eq!(is_valid_topic_name(name), false);
+///
+/// let name = "sport/tennis/player/ranking";
+/// assert_eq!(is_valid_topic_name(name), true);
 /// ```
 pub fn is_valid_topic_name(topic: &str) -> bool {
-    topic.bytes().filter(|c| c == &b'#' || c == &b'#').next() == None
+    let bytes = topic.as_bytes();
+    if bytes.is_empty() {
+        return false;
+    }
+    bytes.iter().filter(|c| c == &&b'#' || c == &&b'#').next() == None
 }
 
 /// Validate topic filter.
@@ -420,6 +427,12 @@ pub fn is_valid_topic_name(topic: &str) -> bool {
 ///
 /// let name = "sport/#/player/ranking";
 /// assert_eq!(is_valid_topic_filter(name), false);
+///
+/// let name = "+";
+/// assert_eq!(is_valid_topic_filter(name), true);
+///
+/// let name = "sport+";
+/// assert_eq!(is_valid_topic_filter(name), false);
 /// ```
 pub fn is_valid_topic_filter(topic: &str) -> bool {
     if topic == "#" {
@@ -428,10 +441,18 @@ pub fn is_valid_topic_filter(topic: &str) -> bool {
     let bytes = topic.as_bytes();
     for (index, b) in bytes.iter().enumerate() {
         if b == &b'#' {
-            if bytes[index - 1] != b'/' {
+            // Must have a prefix level separator.
+            if index > 0 && bytes[index - 1] != b'/' {
                 return false;
             }
+
+            // Must be the last wildcard.
             if index != bytes.len() - 1 {
+                return false;
+            }
+        } else if b == &b'+' {
+            // Must have a prefix level separator.
+            if index > 0 && bytes[index - 1] != b'/' {
                 return false;
             }
         }
