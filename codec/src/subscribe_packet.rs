@@ -16,11 +16,13 @@ use crate::error::Error;
 /// Topic/QoS pair.
 #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct SubscribeTopic {
-    /// Subscribed `topic` contain wildcard characters to match interested topics with patterns.
+    /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
     pub topic: String,
 
     /// Maximum level of QoS of packet the Server can send to the Client.
     pub qos: QoS,
+
+    pub topic_ref: Vec<&str>,
 }
 
 /// Subscribe packet is sent from the Client to the Server to subscribe one or more topics.

@@ -16,6 +16,7 @@ pub mod publish_received_packet;
 pub mod publish_release_packet;
 pub mod subscribe_ack_packet;
 pub mod subscribe_packet;
+pub mod topic;
 pub mod unsubscribe_ack_packet;
 pub mod unsubscribe_packet;
 pub mod utils;
