@@ -21,8 +21,6 @@ pub struct SubscribeTopic {
 
     /// Maximum level of QoS of packet the Server can send to the Client.
     pub qos: QoS,
-
-    pub topic_ref: Vec<&str>,
 }
 
 /// Subscribe packet is sent from the Client to the Server to subscribe one or more topics.

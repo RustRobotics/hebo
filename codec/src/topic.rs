@@ -5,5 +5,5 @@
 #[derive(Debug)]
 pub struct TopicName;
 
-#[dervie(Debug)]
+#[derive(Debug)]
 pub struct TopicFilter;
