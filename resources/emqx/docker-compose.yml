@@ -1,7 +1,7 @@
 version: "3.0"
 services:
   ruo-emqx:
-    image: emqx/emqx
+    image: emqx/emqx:latest
     ports:
       - 1883:1883
       - 8083:8083
