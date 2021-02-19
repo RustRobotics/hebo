@@ -8,5 +8,7 @@
     <file>MainWindow.qml</file>
     <file>NewConnectionWindow.qml</file>
     <file>SettingsWindow.qml</file>
+
+    <file>fonts/iconfont.ttf</file>
   </qresource>
 </RCC>

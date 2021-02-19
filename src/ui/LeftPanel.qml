@@ -24,35 +24,52 @@ Rectangle {
 
   Column {
     id: column;
+    anchors.horizontalCenter: parent.horizontalCenter;
+    spacing: 24;
+
+    FontLoader {
+      id: iconFont;
+      source: "fonts/iconfont.ttf";
+    }
 
     // Connections
     RoundButton {
       checked: true;
-      text: "\u2713";
+      text: "\ue64d";
+      font.pixelSize: 16;
+      font.family: iconFont.name;
     }
 
     // New connection
     RoundButton {
       checkable: true;
-      text: "\u2713";
+      text: "\ue64e";
+      font.pixelSize: 16;
+      font.family: iconFont.name;
     }
 
     // Log
     RoundButton {
       checkable: true;
-      text: "\u2713";
+      text: "\uea07";
+      font.pixelSize: 16;
+      font.family: iconFont.name;
     }
 
     // Info
     RoundButton {
       checkable: true;
-      text: "\uf6c8";
+      text: "\ue64f";
+      font.pixelSize: 16;
+      font.family: iconFont.name;
     }
 
     // Settings
     RoundButton {
       checkable: true;
-      text: "\u2713";
+      text: "\ue627";
+      font.pixelSize: 16;
+      font.family: iconFont.name;
     }
 
   }
