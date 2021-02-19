@@ -1,0 +1,7 @@
+Name: CuteLogger
+Version: master
+Home: https://github.com/dept2/CuteLogger
+Author: cyberbobs
+License: LGPL-2.1
+Description: Logger: simple, convinient and thread safe logger for Qt-based C++ apps
+Patches: Update deprecated QSet<>; Replace QTime with QElapsedTimer; Add console log color.
