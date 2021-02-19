@@ -1,6 +1,12 @@
 <!DOCTYPE RCC>
-  <RCC version="1.0">
-    <qresource prefix="/ui">
+<RCC version="1.0">
+  <qresource prefix="/ui">
+    <file>AboutWindow.qml</file>
+    <file>ConnectionsWindow.qml</file>
+    <file>LogWindow.qml</file>
+    <file>LeftPanel.qml</file>
     <file>MainWindow.qml</file>
+    <file>NewConnectionWindow.qml</file>
+    <file>SettingsWindow.qml</file>
   </qresource>
 </RCC>
