@@ -1,4 +1,4 @@
-find_package(Qt5 5.12 COMPONENTS Core Gui Network Svg Widgets REQUIRED)
+find_package(Qt5 5.12 COMPONENTS Core Gui Network Svg Qml Quick REQUIRED)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
@@ -9,3 +9,4 @@ add_subdirectory(third_party/CuteLogger)
 
 add_subdirectory(app)
 add_subdirectory(controllers)
+add_subdirectory(ui)

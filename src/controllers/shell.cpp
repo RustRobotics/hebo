@@ -5,11 +5,15 @@
 #include "controllers/shell.h"
 
 #include <QGuiApplication>
+#include <QQmlApplicationEngine>
+
+#include "ui/ui.h"
 
 namespace hebo {
 
 int runShell(int argc, char** argv) {
   QGuiApplication application(argc, argv);
+  QQmlApplicationEngine engine(kUiMainWindow);
 
   return QGuiApplication::exec();
 }
