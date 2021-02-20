@@ -41,6 +41,8 @@ Item {
 
     Text {
       text: "v1.5.2";
+      color: "#606060";
+      font.pixelSize: 18;
       horizontalAlignment: Qt.AlignHCenter;
       anchors.horizontalCenter: parent.horizontalCenter;
     }
@@ -50,19 +52,67 @@ Item {
 
       Button {
         text: qsTr("Check for Updates");
+
+        contentItem: Text {
+          color: "#34c388";
+          text: parent.text;
+        }
+
+        background: Rectangle {
+        }
+
+        MouseArea {
+          anchors.fill: parent;
+          hoverEnabled: true;
+          cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        }
       }
 
       Button {
         text: qsTr("Releases");
+
+        contentItem: Text {
+          color: "#34c388";
+          text: parent.text;
+        }
+
+        background: Rectangle {
+        }
+
+        MouseArea {
+          anchors.fill: parent;
+          hoverEnabled: true;
+          cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        }
       }
 
       Button {
         text: qsTr("Support");
+
+        contentItem: Text {
+          color: "#34c388";
+          text: parent.text;
+        }
+
+        background: Rectangle {
+        }
+
+        MouseArea {
+          anchors.fill: parent;
+          hoverEnabled: true;
+          cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        }
       }
+    }
+
+    Item {
+      width: parent.width;
+      height: 16;
     }
 
     Text {
       width: parent.width;
+      anchors.topMargin: 124;
       wrapMode: Text.WordWrap;
       textFormat: Text.StyledText;
       linkColor: "#34c388";
@@ -105,6 +155,11 @@ Item {
       }
     }
 
+    Item {
+      width: parent.width;
+      height: 24;
+    }
+
     Button {
       id: githubButton;
       anchors.horizontalCenter: parent.horizontalCenter;
@@ -115,21 +170,27 @@ Item {
 
         Text {
           text: "\ue62a";
-          color: "#fafafa";
-          font.pixelSize: 18;
+          color: "#fff";
+          font.pixelSize: 22;
           font.family: iconFont.name;
         }
 
         Text {
           text: githubButton.text;
-          color: "#fafafa";
-          font.pixelSize: 16;
+          color: "#fff";
+          font.pixelSize: 18;
         }
       }
 
       background: Rectangle {
         color: "#34c388";
         radius: 4;
+      }
+
+      MouseArea {
+        anchors.fill: parent;
+        hoverEnabled: true;
+        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
       }
     }
   }
@@ -177,6 +238,12 @@ Item {
       radius: 4;
       font.pixelSize: 20;
       font.family: iconFont.name;
+
+      MouseArea {
+        anchors.fill: parent;
+        hoverEnabled: true;
+        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+      }
     }
 
     // Slackware
@@ -185,6 +252,12 @@ Item {
       radius: 4;
       font.pixelSize: 20;
       font.family: iconFont.name;
+
+      MouseArea {
+        anchors.fill: parent;
+        hoverEnabled: true;
+        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+      }
     }
 
     // Reddit
@@ -193,6 +266,12 @@ Item {
       radius: 4;
       font.pixelSize: 20;
       font.family: iconFont.name;
+
+      MouseArea {
+        anchors.fill: parent;
+        hoverEnabled: true;
+        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+      }
     }
   }
 
