@@ -21,6 +21,11 @@ Item {
     }
   }
 
+  FontLoader {
+    id: iconFont;
+    source: "fonts/iconfont.ttf";
+  }
+
   Column {
     spacing: 10;
     width: 600;
@@ -58,7 +63,7 @@ Item {
       width: parent.width;
       wrapMode: Text.WordWrap;
       textFormat: Text.StyledText;
-      linkColor: "#34C388";
+      linkColor: "#34c388";
       font.underline: false;
       text: qsTr('To run MQTT Broker locally, <a href="https://biofan.org">EMQ X</a> is recommended. <a href="https://biofan.org">EMQ X</a> is a fully open source, highly scalable, highly available distributed MQTT 5.0 messaging broker for IoT, M2M and mobile applications.');
     }
@@ -77,7 +82,7 @@ Item {
       readOnly: true;
       focus: true;
       selectByMouse: true;
-      selectionColor: "#345EC3";
+      selectionColor: "#345ec3";
       selectedTextColor: "#fafafa";
       text: "docker run -d --name emqx -p 1883:1883 -p 8083:8083 -p 8883:8883 -p 8084:8084 -p 18083:18083 emqx/emqx";
 
@@ -87,7 +92,8 @@ Item {
 
       Keys.onPressed: {
         if (event.modifiers === Qt.ControlModifier && event.key === Qt.Key_C) {
-          console.log("Copy text to clipboard");
+          this.copy();
+          this.deselect();
         }
       }
 
@@ -97,6 +103,32 @@ Item {
       }
     }
 
-  }
+    Button {
+      id: githubButton;
+      anchors.horizontalCenter: parent.horizontalCenter;
+      text: qsTr("Follow us on Github");
+      padding: 10;
 
+      contentItem: RowLayout {
+
+        Text {
+          text: "\ue62a";
+          color: "#fafafa";
+          font.pixelSize: 18;
+          font.family: iconFont.name;
+        }
+
+        Text {
+          text: githubButton.text;
+          color: "#fafafa";
+          font.pixelSize: 16;
+        }
+      }
+
+      background: Rectangle {
+        color: "#34c388";
+        radius: 4;
+      }
+    }
+  }
 }
