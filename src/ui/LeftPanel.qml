@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 Rectangle {
+  id: root;
   color: "#333844";
   property int currentIndex: 0;
 
@@ -14,8 +15,7 @@ Rectangle {
     onClicked: function(button) {
       for (let i = 0; i < this.buttons.length; ++i) {
         if (button === this.buttons[i]) {
-          parent.currentIndex = i;
-          console.log("currentIndex:", parent.currentIndex);
+          root.currentIndex = i;
           break;
         }
       }
@@ -71,6 +71,5 @@ Rectangle {
       font.pixelSize: 16;
       font.family: iconFont.name;
     }
-
   }
 }
