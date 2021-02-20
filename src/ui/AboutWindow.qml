@@ -10,6 +10,7 @@ Item {
   Text {
     id: title;
     text: qsTr("About");
+    padding: 14;
     font {
       pixelSize: 18;
       weight: Font.Bold;
@@ -29,6 +30,7 @@ Item {
   Column {
     spacing: 10;
     width: 600;
+    anchors.top: title.bottom;
     anchors.horizontalCenter: parent.horizontalCenter;
 
     Image {
@@ -130,5 +132,50 @@ Item {
         radius: 4;
       }
     }
+  }
+
+  // Reddit
+  RoundButton {
+    id: redditButton;
+    anchors {
+      right: root.right;
+      rightMargin: 14;
+      bottom: root.bottom;
+      bottomMargin: 14;
+    }
+
+    text: "\ue7e4";
+    radius: 4;
+    font.pixelSize: 20;
+    font.family: iconFont.name;
+  }
+
+  // Slackware
+  RoundButton {
+    id: slackButton;
+    anchors {
+      bottom: redditButton.bottom;
+      right: redditButton.left;
+      rightMargin: 14;
+    }
+
+    text: "\ue641";
+    radius: 4;
+    font.pixelSize: 20;
+    font.family: iconFont.name;
+  }
+
+  // Twitter
+  RoundButton {
+    anchors {
+      bottom: redditButton.bottom;
+      right: slackButton.left;
+      rightMargin: 14;
+    }
+
+    text: "\ue6c7";
+    radius: 4;
+    font.pixelSize: 20;
+    font.family: iconFont.name;
   }
 }
