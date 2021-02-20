@@ -90,6 +90,7 @@ Item {
       linkColor: "#34c388";
       font.underline: false;
       text: qsTr('To run MQTT Broker locally, <a href="https://biofan.org">EMQ X</a> is recommended. <a href="https://biofan.org">EMQ X</a> is a fully open source, highly scalable, highly available distributed MQTT 5.0 messaging broker for IoT, M2M and mobile applications.');
+      onLinkActivated: Qt.openUrlExternally(link);
     }
 
     Text {
@@ -163,6 +164,7 @@ Item {
         anchors.fill: parent;
         hoverEnabled: true;
         cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        onClicked: Qt.openUrlExternally("https://github.com");
       }
     }
   }
@@ -192,6 +194,7 @@ Item {
       font.underline: false;
       font.pixelSize: 14;
       text: 'Copyright © 2021 <a href="https://biofan.org">EMQ X</a>';
+      onLinkActivated: Qt.openUrlExternally(link);
     }
   }
 
