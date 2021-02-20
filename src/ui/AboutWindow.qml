@@ -50,57 +50,29 @@ Item {
     Row {
       anchors.horizontalCenter: parent.horizontalCenter;
 
-      Button {
-        text: qsTr("Check for Updates");
+      Loader {
+        sourceComponent: textButton;
 
-        contentItem: Text {
-          color: "#34c388";
-          text: parent.text;
-        }
-
-        background: Rectangle {
-        }
-
-        MouseArea {
-          anchors.fill: parent;
-          hoverEnabled: true;
-          cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        onLoaded: {
+          item.text = qsTr("Check for Update");
         }
       }
 
-      Button {
-        text: qsTr("Releases");
+      Loader {
+        sourceComponent: textButton;
 
-        contentItem: Text {
-          color: "#34c388";
-          text: parent.text;
-        }
-
-        background: Rectangle {
-        }
-
-        MouseArea {
-          anchors.fill: parent;
-          hoverEnabled: true;
-          cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        onLoaded: {
+          item.text = qsTr("Releases");
+          item.link = "https://github.com";
         }
       }
 
-      Button {
-        text: qsTr("Support");
+      Loader {
+        sourceComponent: textButton;
 
-        contentItem: Text {
-          color: "#34c388";
-          text: parent.text;
-        }
-
-        background: Rectangle {
-        }
-
-        MouseArea {
-          anchors.fill: parent;
-          hoverEnabled: true;
-          cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        onLoaded: {
+          item.text = qsTr("Support");
+          item.link = "https://github.com";
         }
       }
     }
@@ -283,4 +255,30 @@ Item {
     }
   }
 
+  Component {
+    id: textButton;
+
+    Button {
+      property string link;
+
+      contentItem: Text {
+        color: "#34c388";
+        text: parent.text;
+      }
+
+      background: Rectangle {
+      }
+
+      MouseArea {
+        anchors.fill: parent;
+        hoverEnabled: true;
+        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        onClicked: {
+          if (!!parent.link) {
+            Qt.openUrlExternally(parent.link);
+          }
+        }
+      }
+    }
+  }
 }

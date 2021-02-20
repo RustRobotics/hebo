@@ -11,6 +11,9 @@
     <file>SettingsWindow.qml</file>
     <file>generate-qrc.py</file>
 
+    <file>components/qmldir</file>
+    <file>components/LinkIconButton.qml</file>
+
     <file>fonts/iconfont.ttf</file>
 
     <file>images/app-logo.png</file>
