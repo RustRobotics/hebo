@@ -1,14 +1,24 @@
 <!DOCTYPE RCC>
-<RCC version="1.0">
-  <qresource prefix="/ui">
+  <RCC version="1.0">
+    <qresource prefix="/ui">
     <file>AboutWindow.qml</file>
+    <file>CMakeLists.txt</file>
     <file>ConnectionsWindow.qml</file>
-    <file>LogWindow.qml</file>
     <file>LeftPanel.qml</file>
+    <file>LogWindow.qml</file>
     <file>MainWindow.qml</file>
     <file>NewConnectionWindow.qml</file>
     <file>SettingsWindow.qml</file>
+    <file>generate-qrc.py</file>
 
     <file>fonts/iconfont.ttf</file>
+
+    <file>images/app-logo.png</file>
+    <file>images/connections.png</file>
+    <file>images/emqx-logo.png</file>
+    <file>images/mqttx-dark.png</file>
+    <file>images/mqttx-light.png</file>
+    <file>images/wx_qr_code.png</file>
+
   </qresource>
 </RCC>
