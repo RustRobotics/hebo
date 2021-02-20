@@ -243,10 +243,11 @@ Item {
         anchors.fill: parent;
         hoverEnabled: true;
         cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        onClicked: Qt.openUrlExternally("https://twitter.com");
       }
     }
 
-    // Slackware
+    // Slack
     RoundButton {
       text: "\ue641";
       radius: 4;
@@ -257,6 +258,7 @@ Item {
         anchors.fill: parent;
         hoverEnabled: true;
         cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        onClicked: Qt.openUrlExternally("https://slack.com");
       }
     }
 
@@ -271,8 +273,8 @@ Item {
         anchors.fill: parent;
         hoverEnabled: true;
         cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        onClicked: Qt.openUrlExternally("https://reddit.com");
       }
     }
   }
-
 }
