@@ -233,53 +233,21 @@ Item {
     }
 
     // Twitter
-    Loader {
-      sourceComponent: imageButton;
-
-      onLoaded: {
-        item.text = "\ue6c7";
-        item.link = "https://twitter.com";
-      }
+    LinkIconButton {
+      text: "\ue6c7";
+      link: "https://twitter.com";
     }
 
     // Slack
-    Loader {
-      sourceComponent: imageButton;
-
-      onLoaded: {
-        item.text = "\ue641";
-        item.link = "https://slack.com";
-      }
+    LinkIconButton {
+      text: "\ue641";
+      link: "https://slack.com";
     }
 
     // Reddit
-    Loader {
-      sourceComponent: imageButton;
-
-      onLoaded: {
-        item.text = "\ue7e4";
-        item.link = "https://reddit.com";
-      }
-    }
-  }
-
-  // Custom reusable components
-  Component {
-    id: imageButton;
-
-    RoundButton {
-      property string link: "";
-
-      radius: 4;
-      font.pixelSize: 20;
-      font.family: iconFont.name;
-
-      MouseArea {
-        anchors.fill: parent;
-        hoverEnabled: true;
-        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-        onClicked: Qt.openUrlExternally(parent.link);
-      }
+    LinkIconButton {
+      text: "\ue7e4";
+      link: "https://reddit.com";
     }
   }
 
