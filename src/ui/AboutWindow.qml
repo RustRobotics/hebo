@@ -4,8 +4,6 @@ import QtQuick.Layouts 1.15
 
 Item {
   id: root;
-  width: 1024;
-  height: 754;
 
   Text {
     id: title;
