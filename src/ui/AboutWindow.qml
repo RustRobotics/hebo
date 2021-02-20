@@ -233,38 +233,43 @@ Item {
     }
 
     // Twitter
-    RoundButton {
-      text: "\ue6c7";
-      radius: 4;
-      font.pixelSize: 20;
-      font.family: iconFont.name;
+    Loader {
+      sourceComponent: imageButton;
 
-      MouseArea {
-        anchors.fill: parent;
-        hoverEnabled: true;
-        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-        onClicked: Qt.openUrlExternally("https://twitter.com");
+      onLoaded: {
+        item.text = "\ue6c7";
+        item.link = "https://twitter.com";
       }
     }
 
     // Slack
-    RoundButton {
-      text: "\ue641";
-      radius: 4;
-      font.pixelSize: 20;
-      font.family: iconFont.name;
+    Loader {
+      sourceComponent: imageButton;
 
-      MouseArea {
-        anchors.fill: parent;
-        hoverEnabled: true;
-        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-        onClicked: Qt.openUrlExternally("https://slack.com");
+      onLoaded: {
+        item.text = "\ue641";
+        item.link = "https://slack.com";
       }
     }
 
     // Reddit
+    Loader {
+      sourceComponent: imageButton;
+
+      onLoaded: {
+        item.text = "\ue7e4";
+        item.link = "https://reddit.com";
+      }
+    }
+  }
+
+  // Custom reusable components
+  Component {
+    id: imageButton;
+
     RoundButton {
-      text: "\ue7e4";
+      property string link: "";
+
       radius: 4;
       font.pixelSize: 20;
       font.family: iconFont.name;
@@ -273,8 +278,9 @@ Item {
         anchors.fill: parent;
         hoverEnabled: true;
         cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-        onClicked: Qt.openUrlExternally("https://reddit.com");
+        onClicked: Qt.openUrlExternally(parent.link);
       }
     }
   }
+
 }
