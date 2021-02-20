@@ -86,10 +86,9 @@ Item {
       width: parent.width;
       anchors.topMargin: 124;
       wrapMode: Text.WordWrap;
-      textFormat: Text.StyledText;
-      linkColor: "#34c388";
+      textFormat: Text.RichText;
       font.underline: false;
-      text: qsTr('To run MQTT Broker locally, <a href="https://biofan.org">EMQ X</a> is recommended. <a href="https://biofan.org">EMQ X</a> is a fully open source, highly scalable, highly available distributed MQTT 5.0 messaging broker for IoT, M2M and mobile applications.');
+      text: qsTr('To run MQTT Broker locally, <a href="https://biofan.org" style="text-decoration: none; color: #34c388;">EMQ X</a> is recommended. <a href="https://biofan.org" style="text-decoration: none; color: #34c388;">EMQ X</a> is a fully open source, highly scalable, highly available distributed MQTT 5.0 messaging broker for IoT, M2M and mobile applications.');
       onLinkActivated: Qt.openUrlExternally(link);
     }
 
@@ -189,11 +188,9 @@ Item {
 
     Text {
       anchors.verticalCenter: parent.verticalCenter
-      textFormat: Text.StyledText;
-      linkColor: "#34c388";
-      font.underline: false;
+      textFormat: Text.RichText;
       font.pixelSize: 14;
-      text: 'Copyright © 2021 <a href="https://biofan.org">EMQ X</a>';
+      text: 'Copyright © 2021 <a href="https://biofan.org" style="text-decoration: none; color: #34c388;">EMQ X</a>';
       onLinkActivated: Qt.openUrlExternally(link);
     }
   }
