@@ -134,9 +134,36 @@ Item {
     }
   }
 
-  // Reddit
-  RoundButton {
-    id: redditButton;
+  Row {
+    id: row
+    spacing: 6;
+
+    anchors {
+      left: root.left;
+      leftMargin: 14;
+      bottom: root.bottom;
+      bottomMargin: 14;
+    }
+
+    Image {
+      width: 42;
+      smooth: true;
+      fillMode: Image.PreserveAspectFit;
+      source: "images/emqx-logo.png";
+    }
+
+    Text {
+      anchors.verticalCenter: parent.verticalCenter
+      textFormat: Text.StyledText;
+      linkColor: "#34c388";
+      font.underline: false;
+      font.pixelSize: 14;
+      text: 'Copyright © 2021 <a href="https://biofan.org">EMQ X</a>';
+    }
+  }
+
+  Row {
+    spacing: 20;
     anchors {
       right: root.right;
       rightMargin: 14;
@@ -144,38 +171,29 @@ Item {
       bottomMargin: 14;
     }
 
-    text: "\ue7e4";
-    radius: 4;
-    font.pixelSize: 20;
-    font.family: iconFont.name;
-  }
-
-  // Slackware
-  RoundButton {
-    id: slackButton;
-    anchors {
-      bottom: redditButton.bottom;
-      right: redditButton.left;
-      rightMargin: 14;
+    // Twitter
+    RoundButton {
+      text: "\ue6c7";
+      radius: 4;
+      font.pixelSize: 20;
+      font.family: iconFont.name;
     }
 
-    text: "\ue641";
-    radius: 4;
-    font.pixelSize: 20;
-    font.family: iconFont.name;
-  }
-
-  // Twitter
-  RoundButton {
-    anchors {
-      bottom: redditButton.bottom;
-      right: slackButton.left;
-      rightMargin: 14;
+    // Slackware
+    RoundButton {
+      text: "\ue641";
+      radius: 4;
+      font.pixelSize: 20;
+      font.family: iconFont.name;
     }
 
-    text: "\ue6c7";
-    radius: 4;
-    font.pixelSize: 20;
-    font.family: iconFont.name;
+    // Reddit
+    RoundButton {
+      text: "\ue7e4";
+      radius: 4;
+      font.pixelSize: 20;
+      font.family: iconFont.name;
+    }
   }
+
 }
