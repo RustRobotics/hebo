@@ -75,6 +75,7 @@ Item {
       width: parent.width;
       padding: 14;
       readOnly: true;
+      focus: true;
       selectByMouse: true;
       selectionColor: "#345EC3";
       selectedTextColor: "#fafafa";
@@ -82,6 +83,12 @@ Item {
 
       background: Rectangle {
         color: "#e7e7e7";
+      }
+
+      Keys.onPressed: {
+        if (event.modifiers === Qt.ControlModifier && event.key === Qt.Key_C) {
+          console.log("Copy text to clipboard");
+        }
       }
 
       MouseArea {
