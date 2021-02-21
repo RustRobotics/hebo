@@ -48,30 +48,18 @@ Item {
     Row {
       anchors.horizontalCenter: parent.horizontalCenter;
 
-      Loader {
-        sourceComponent: textButton;
-
-        onLoaded: {
-          item.text = qsTr("Check for Update");
-        }
+      TextButton {
+        text: qsTr("Check for Update");
       }
 
-      Loader {
-        sourceComponent: textButton;
-
-        onLoaded: {
-          item.text = qsTr("Releases");
-          item.link = "https://github.com";
-        }
+      TextButton {
+        text: qsTr("Releases");
+        link: "https://github.com";
       }
 
-      Loader {
-        sourceComponent: textButton;
-
-        onLoaded: {
-          item.text = qsTr("Support");
-          item.link = "https://github.com";
-        }
+      TextButton {
+        text: qsTr("Support");
+        link: "https://github.com";
       }
     }
 
@@ -203,78 +191,58 @@ Item {
     }
 
     // Twitter
-    Loader {
-      sourceComponent: imageButton;
-
-      onLoaded: {
-        item.text = "\ue6c7";
-        item.link = "https://twitter.com";
-      }
+    ImageButton {
+      text: "\ue6c7";
+      link: "https://twitter.com";
     }
 
     // Slack
-    Loader {
-      sourceComponent: imageButton;
-
-      onLoaded: {
-        item.text = "\ue641";
-        item.link = "https://slack.com";
-      }
+    ImageButton {
+      text: "\ue641";
+      link: "https://slack.com";
     }
 
     // Reddit
-    Loader {
-      sourceComponent: imageButton;
-
-      onLoaded: {
-        item.text = "\ue7e4";
-        item.link = "https://reddit.com";
-      }
+    ImageButton {
+      text: "\ue7e4";
+      link: "https://reddit.com";
     }
   }
 
   // Custom reusable components
-  Component {
-    id: imageButton;
+  component ImageButton: RoundButton {
+    property string link: "";
 
-    RoundButton {
-      property string link: "";
+    radius: 4;
+    font.pixelSize: 20;
+    font.family: iconFont.name;
 
-      radius: 4;
-      font.pixelSize: 20;
-      font.family: iconFont.name;
-
-      MouseArea {
-        anchors.fill: parent;
-        hoverEnabled: true;
-        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-        onClicked: Qt.openUrlExternally(parent.link);
-      }
+    MouseArea {
+      anchors.fill: parent;
+      hoverEnabled: true;
+      cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+      onClicked: Qt.openUrlExternally(parent.link);
     }
   }
 
-  Component {
-    id: textButton;
+  component TextButton: Button {
+    property string link;
 
-    Button {
-      property string link;
+    contentItem: Text {
+      color: "#34c388";
+      text: parent.text;
+    }
 
-      contentItem: Text {
-        color: "#34c388";
-        text: parent.text;
-      }
+    background: Rectangle {
+    }
 
-      background: Rectangle {
-      }
-
-      MouseArea {
-        anchors.fill: parent;
-        hoverEnabled: true;
-        cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-        onClicked: {
-          if (!!parent.link) {
-            Qt.openUrlExternally(parent.link);
-          }
+    MouseArea {
+      anchors.fill: parent;
+      hoverEnabled: true;
+      cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+      onClicked: {
+        if (!!parent.link) {
+          Qt.openUrlExternally(parent.link);
         }
       }
     }
