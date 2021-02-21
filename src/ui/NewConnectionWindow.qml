@@ -31,48 +31,32 @@ Item {
     width: parent.width;
 
     // General
-    Loader {
-      sourceComponent: headLabel;
-
-      onLoaded: {
-        item.text = qsTr("General");
-      }
+    HeadLabel {
+      text: qsTr("General");
     }
 
     Grid {
       columns: 2;
       spacing: 10;
 
-      Loader {
-        sourceComponent: formLabel;
-        onLoaded: {
-          item.text = "Name";
-          item.required = true;
-        }
+      FormLabel {
+        text: "Name";
+        required: true;
       }
     }
   }
 
   // Local components
-  Component {
-    id: headLabel;
-
-    Text {
-      color: "#232422";
-      font.pixelSize: 16;
-      font.weight: Font.Bold;
-    }
+  component HeadLabel : Text {
+    color: "#232422";
+    font.pixelSize: 16;
+    font.weight: Font.Bold;
   }
 
-  Component {
-    id: formLabel;
-
-    Text {
-      property bool required: false;
-
-      color: "#212121";
-      font.pixelSize: 14;
-      horizontalAlignment: Text.AlignRight;
-    }
+  component FormLabel: Text {
+    property bool required: false;
+    color: "#212121";
+    font.pixelSize: 14;
+    horizontalAlignment: Text.AlignRight;
   }
 }
