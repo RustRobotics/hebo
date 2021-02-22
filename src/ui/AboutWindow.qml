@@ -4,8 +4,6 @@ import QtQuick.Layouts 1.15
 
 Item {
   id: root;
-  width: 1024;
-  height: 754;
 
   Text {
     id: title;
@@ -50,58 +48,18 @@ Item {
     Row {
       anchors.horizontalCenter: parent.horizontalCenter;
 
-      Button {
-        text: qsTr("Check for Updates");
-
-        contentItem: Text {
-          color: "#34c388";
-          text: parent.text;
-        }
-
-        background: Rectangle {
-        }
-
-        MouseArea {
-          anchors.fill: parent;
-          hoverEnabled: true;
-          cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-        }
+      TextButton {
+        text: qsTr("Check for Update");
       }
 
-      Button {
+      TextButton {
         text: qsTr("Releases");
-
-        contentItem: Text {
-          color: "#34c388";
-          text: parent.text;
-        }
-
-        background: Rectangle {
-        }
-
-        MouseArea {
-          anchors.fill: parent;
-          hoverEnabled: true;
-          cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-        }
+        link: "https://github.com";
       }
 
-      Button {
+      TextButton {
         text: qsTr("Support");
-
-        contentItem: Text {
-          color: "#34c388";
-          text: parent.text;
-        }
-
-        background: Rectangle {
-        }
-
-        MouseArea {
-          anchors.fill: parent;
-          hoverEnabled: true;
-          cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-        }
+        link: "https://github.com";
       }
     }
 
@@ -114,10 +72,10 @@ Item {
       width: parent.width;
       anchors.topMargin: 124;
       wrapMode: Text.WordWrap;
-      textFormat: Text.StyledText;
-      linkColor: "#34c388";
+      textFormat: Text.RichText;
       font.underline: false;
-      text: qsTr('To run MQTT Broker locally, <a href="https://biofan.org">EMQ X</a> is recommended. <a href="https://biofan.org">EMQ X</a> is a fully open source, highly scalable, highly available distributed MQTT 5.0 messaging broker for IoT, M2M and mobile applications.');
+      text: qsTr('To run MQTT Broker locally, <a href="https://biofan.org" style="text-decoration: none; color: #34c388;">EMQ X</a> is recommended. <a href="https://biofan.org" style="text-decoration: none; color: #34c388;">EMQ X</a> is a fully open source, highly scalable, highly available distributed MQTT 5.0 messaging broker for IoT, M2M and mobile applications.');
+      onLinkActivated: Qt.openUrlExternally(link);
     }
 
     Text {
@@ -191,6 +149,7 @@ Item {
         anchors.fill: parent;
         hoverEnabled: true;
         cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+        onClicked: Qt.openUrlExternally("https://github.com");
       }
     }
   }
@@ -215,11 +174,10 @@ Item {
 
     Text {
       anchors.verticalCenter: parent.verticalCenter
-      textFormat: Text.StyledText;
-      linkColor: "#34c388";
-      font.underline: false;
+      textFormat: Text.RichText;
       font.pixelSize: 14;
-      text: 'Copyright © 2021 <a href="https://biofan.org">EMQ X</a>';
+      text: 'Copyright © 2021 <a href="https://biofan.org" style="text-decoration: none; color: #34c388;">EMQ X</a>';
+      onLinkActivated: Qt.openUrlExternally(link);
     }
   }
 
@@ -233,22 +191,60 @@ Item {
     }
 
     // Twitter
-    LinkIconButton {
+    ImageButton {
       text: "\ue6c7";
       link: "https://twitter.com";
     }
 
     // Slack
-    LinkIconButton {
+    ImageButton {
       text: "\ue641";
       link: "https://slack.com";
     }
 
     // Reddit
-    LinkIconButton {
+    ImageButton {
       text: "\ue7e4";
       link: "https://reddit.com";
     }
   }
 
+  // Custom reusable components
+  component ImageButton: RoundButton {
+    property string link: "";
+
+    radius: 4;
+    font.pixelSize: 20;
+    font.family: iconFont.name;
+
+    MouseArea {
+      anchors.fill: parent;
+      hoverEnabled: true;
+      cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+      onClicked: Qt.openUrlExternally(parent.link);
+    }
+  }
+
+  component TextButton: Button {
+    property string link;
+
+    contentItem: Text {
+      color: "#34c388";
+      text: parent.text;
+    }
+
+    background: Rectangle {
+    }
+
+    MouseArea {
+      anchors.fill: parent;
+      hoverEnabled: true;
+      cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
+      onClicked: {
+        if (!!parent.link) {
+          Qt.openUrlExternally(parent.link);
+        }
+      }
+    }
+  }
 }
