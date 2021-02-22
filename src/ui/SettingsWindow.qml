@@ -60,13 +60,11 @@ Item {
             text: qsTr("Max retry connection");
           }
 
-          TextField {
-            focus: true;
-            validator: IntValidator {
-              top: 2^20;
-              bottom: 1;
-            }
-            text: "20";
+          NumberField {
+            id: maxRetryField;
+            minNumber: 0;
+            maxNumber: 1000;
+            number: 3;
           }
         }
       }

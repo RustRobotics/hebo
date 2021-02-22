@@ -35,12 +35,14 @@ Row {
 
   TextField {
     width: root.width - 24 * 2;
+    selectByMouse: true;
 
     text: root.number;
     validator: IntValidator {
       top: root.maxNumber;
       bottom: root.minNumber;
     }
+    onEditingFinished: root.number = parseInt(this.text);
 
     Keys.onUpPressed: root.plusNumber();
     Keys.onDownPressed: root.minusNumber();
