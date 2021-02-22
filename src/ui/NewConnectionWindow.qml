@@ -49,6 +49,7 @@ Item {
         Column {
           id: generalTab;
           padding: 10;
+          spacing: 10;
           width: parent.width;
 
           RowLayout {
@@ -87,6 +88,8 @@ Item {
 
             ComboBox {
               id: hostProtocol;
+              width: 94;
+              Layout.preferredWidth: 94;
               model: ["mqtt://", "mqttx://", "ws://", "wss://"];
             }
 
@@ -103,13 +106,11 @@ Item {
               required: true;
             }
 
-            TextField {
+            NumberField {
               id: portField;
-              focus: true;
-              validator: IntValidator {
-                top: 2^16;
-                bottom: 1;
-              }
+              maxNumber: 65535;
+              minNumber: 1;
+              number: 1883;
             }
           }
 
@@ -134,6 +135,7 @@ Item {
 
             TextField {
               id: passwordField;
+              echoMode: TextInput.Password;
             }
           }
 
@@ -164,6 +166,7 @@ Item {
         Column {
           id: advancedTab;
           padding: 10;
+          spacing: 10;
           width: parent.width;
 
           RowLayout {
@@ -244,6 +247,7 @@ Item {
         Column {
           id: lastWillTab;
           padding: 10;
+          spacing: 10;
           width: parent.width;
 
           RowLayout {
