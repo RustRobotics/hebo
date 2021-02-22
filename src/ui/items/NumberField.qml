@@ -12,6 +12,8 @@ Row {
   property int minNumber;
   property int number;
 
+  width: 168;
+
   function plusNumber() {
     if (number < maxNumber) {
       number += 1;

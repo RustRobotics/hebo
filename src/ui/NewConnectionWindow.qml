@@ -111,8 +111,6 @@ Item {
               maxNumber: 65535;
               minNumber: 1;
               number: 1883;
-              width: 128;
-              Layout.preferredWidth: width;
             }
           }
 
@@ -179,8 +177,11 @@ Item {
               required: true;
             }
 
-            TextField {
+            NumberField {
               id: connectionTimeoutField;
+              minNumber: 0;
+              maxNumber: 3600;
+              number: 20;
             }
           }
 
@@ -191,8 +192,11 @@ Item {
               text: qsTr("Keep Alive(s)");
             }
 
-            TextField {
+            NumberField {
               id: keepAliveField;
+              minNumber: 10;
+              maxNumber: 2^30;
+              number: 60;
             }
           }
 
