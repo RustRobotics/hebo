@@ -140,19 +140,94 @@ Item {
             text: qsTr("SSL/TLS");
           }
 
-          RadioButton {
-            id: enableTlsButton;
-            text: "true";
-          }
-
-          RadioButton {
-            id: disableTlsButton;
+          SwitchButtons {
+            id: tlsButton;
             checked: true;
-            text: "false";
           }
         }
       }
+    }  // generalTab
+
+    // Advanced
+    HeadLabel {
+      text: qsTr("Advanced");
     }
+
+    FormSection {
+      width: parent.width;
+      height: advancedTab.height;
+
+      Column {
+        id: advancedTab;
+        padding: 10;
+        width: parent.width;
+
+        RowLayout {
+          width: parent.width;
+
+          FormLabel {
+            text: qsTr("Connection Timeout(s)");
+            required: true;
+          }
+
+          TextField {
+            id: connectionTimeoutField;
+          }
+        }
+
+        RowLayout {
+          width: parent.width;
+
+          FormLabel {
+            text: qsTr("Keep Alive(s)");
+          }
+
+          TextField {
+            id: keepAliveField;
+          }
+        }
+
+        RowLayout {
+          width: parent.width;
+
+          FormLabel {
+            text: qsTr("Clean Session");
+          }
+
+          SwitchButtons {
+            id: cleanSessionButton;
+            checked: true;
+          }
+        }
+
+        RowLayout {
+          width: parent.width;
+
+          FormLabel {
+            text: qsTr("Auto Reconnect");
+          }
+
+          SwitchButtons {
+            id: autoReconnectButton;
+          }
+        }
+
+        RowLayout {
+          width: parent.width;
+
+          FormLabel {
+            text: qsTr("MQTT Version");
+          }
+
+          ComboBox {
+            id: mqttVersionBox;
+            model: ["3.1.1", "5.0",];
+          }
+        }
+      }
+    }  // advancedTab
+
+
   }
 
   // Local components
@@ -181,5 +256,21 @@ Item {
     Layout.maximumWidth: 256;
     Layout.leftMargin: 24;
     Layout.alignment: Qt.AlignVCenter;
+  }
+
+  component SwitchButtons: RowLayout {
+    property bool checked: false;
+
+    RadioButton {
+      id: enableCleanSessionButton;
+      checked: parent.checked;
+      text: "true";
+    }
+
+    RadioButton {
+      id: disableCleanSessionButton;
+      checked: !parent.checked;
+      text: "false";
+    }
   }
 }
