@@ -2,28 +2,20 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import "items"
+
 Item {
   id: root;
 
-  Text {
+  TitleLabel {
     id: title;
     text: qsTr("Settings");
-    padding: 14;
-    font {
-      pixelSize: 18;
-      weight: Font.Bold;
-    }
-
-    anchors {
-      left: parent.left;
-      top: parent.top;
-    }
   }
 
   ColumnLayout {
     spacing: 20;
     anchors.top: title.bottom;
-    width: 480;
+    width: 580;
     anchors.horizontalCenter: parent.horizontalCenter;
 
     HeadLabel {
@@ -119,15 +111,5 @@ Item {
     font.weight: Font.Medium;
     horizontalAlignment: Text.AlignLeft;
     Layout.topMargin: 8;
-  }
-
-  component FormLabel: Text {
-    color: "#212121";
-    font.pixelSize: 14;
-    horizontalAlignment: Text.AlignLeft;
-    Layout.minimumWidth: 256;
-    Layout.maximumWidth: 256;
-    Layout.leftMargin: 24;
-    Layout.alignment: Qt.AlignVCenter;
   }
 }
