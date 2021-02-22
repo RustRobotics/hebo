@@ -42,7 +42,6 @@ Item {
     Column {
       spacing: 10;
       width: 580;
-      anchors.centerIn: parent;
 
       // General
       HeadLabel {
@@ -297,12 +296,35 @@ Item {
 
             FormLabel {
               text: qsTr("Last-Will Payload");
+              Layout.alignment: Qt.AlignTop;
+              topPadding: 14;
             }
 
             ColumnLayout {
-              TextArea {
-                width: parent.width;
-                id: lastWillPayloadField;
+              width: parent.width;
+
+              ScrollView {
+                width: 390;
+                Layout.preferredWidth: 390;
+                height: 124;
+                Layout.preferredHeight: 124;
+
+                TextArea {
+                  id: lastWillPayloadField;
+                  readOnly: false;
+                  selectByMouse: true;
+                  selectByKeyboard: true;
+                  wrapMode: TextEdit.WrapAnywhere;
+                  text: "Hello, world";
+
+                  background: Rectangle {
+                    anchors.fill: parent;
+                    border {
+                      width: 1;
+                      color: "#e1e1e1";
+                    }
+                  }
+                }
               }
 
               RowLayout {
