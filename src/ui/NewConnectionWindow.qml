@@ -111,6 +111,8 @@ Item {
               maxNumber: 65535;
               minNumber: 1;
               number: 1883;
+              width: 128;
+              Layout.preferredWidth: width;
             }
           }
 

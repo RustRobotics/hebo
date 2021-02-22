@@ -12,33 +12,42 @@ Row {
   property int minNumber;
   property int number;
 
+  function plusNumber() {
+    if (number < maxNumber) {
+      number += 1;
+    }
+  }
+
+  function minusNumber() {
+    if (number > minNumber) {
+      number -= 1;
+    }
+  }
+
   Button {
     text: "-";
     width: 24;
     height: root.height;
-    onClicked: {
-      if (root.number > root.minNumber) {
-        root.number -= 1;
-      }
-    }
+    onClicked: root.minusNumber();
   }
 
   TextField {
+    width: root.width - 24 * 2;
+
     text: root.number;
     validator: IntValidator {
       top: root.maxNumber;
       bottom: root.minNumber;
     }
+
+    Keys.onUpPressed: root.plusNumber();
+    Keys.onDownPressed: root.minusNumber();
   }
 
   Button {
     text: "+";
     width: 24;
     height: root.height;
-    onClicked: {
-      if (root.number < root.maxNumber) {
-        root.number += 1;
-      }
-    }
+    onClicked: root.plusNumber();
   }
 }
