@@ -1,23 +1,19 @@
+// Copyright (c) 2021 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
+// Use of this source is governed by General Public License that can be found
+// in the LICENSE file.
+
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import "items"
+
 Item {
   id: root;
 
-  Text {
+  TitleLabel {
     id: title;
     text: qsTr("About");
-    padding: 14;
-    font {
-      pixelSize: 18;
-      weight: Font.Bold;
-    }
-
-    anchors {
-      left: parent.left;
-      top: parent.top;
-    }
   }
 
   FontLoader {
@@ -209,42 +205,4 @@ Item {
     }
   }
 
-  // Custom reusable components
-  component ImageButton: RoundButton {
-    property string link: "";
-
-    radius: 4;
-    font.pixelSize: 20;
-    font.family: iconFont.name;
-
-    MouseArea {
-      anchors.fill: parent;
-      hoverEnabled: true;
-      cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-      onClicked: Qt.openUrlExternally(parent.link);
-    }
-  }
-
-  component TextButton: Button {
-    property string link;
-
-    contentItem: Text {
-      color: "#34c388";
-      text: parent.text;
-    }
-
-    background: Rectangle {
-    }
-
-    MouseArea {
-      anchors.fill: parent;
-      hoverEnabled: true;
-      cursorShape: containsMouse ? Qt.PointingHandCursor : Qt.ArrowCursor;
-      onClicked: {
-        if (!!parent.link) {
-          Qt.openUrlExternally(parent.link);
-        }
-      }
-    }
-  }
 }
