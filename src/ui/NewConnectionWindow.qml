@@ -27,286 +27,303 @@ Item {
     source: "fonts/iconfont.ttf";
   }
 
-  Column {
-    anchors.top: title.bottom;
-    spacing: 10;
-    width: 680;
-    anchors.horizontalCenter: parent.horizontalCenter;
-
-    // General
-    HeadLabel {
-      text: qsTr("General");
+  ScrollView {
+    anchors {
+      top: title.bottom;
+      bottom: root.bottom;
     }
+    width: root.width;
+    topInset: 2;
+    rightInset: 14;
+    bottomInset: 10;
+    leftInset: 14;
+    padding: 18;
 
-    FormSection {
-      width: parent.width;
-      height: generalTab.height;
+    Column {
+      spacing: 10;
+      width: 580;
+      anchors.centerIn: parent;
 
-      Column {
-        id: generalTab;
-        padding: 10;
+      // General
+      HeadLabel {
+        text: qsTr("General");
+      }
+
+      FormSection {
         width: parent.width;
+        height: generalTab.height;
 
-        RowLayout {
+        Column {
+          id: generalTab;
+          padding: 10;
           width: parent.width;
 
-          FormLabel {
-            text: qsTr("Name");
-            required: true;
-          }
+          RowLayout {
+            width: parent.width;
 
-          TextField {
-            id: nameField;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Client ID");
-            required: true;
-          }
-
-          TextField {
-            id: clientIdField;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Host");
-            required: true;
-          }
-
-          ComboBox {
-            id: hostProtocol;
-            model: ["mqtt://", "mqttx://", "ws://", "wss://"];
-          }
-
-          TextField {
-            id: hostnameField;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Port");
-            required: true;
-          }
-
-          TextField {
-            id: portField;
-            focus: true;
-            validator: IntValidator {
-              top: 2^16;
-              bottom: 1;
+            FormLabel {
+              text: qsTr("Name");
+              required: true;
             }
-          }
-        }
 
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Username");
-          }
-
-          TextField {
-            id: usernameField;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Password");
-          }
-
-          TextField {
-            id: passwordField;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("SSL/TLS");
-          }
-
-          SwitchButtons {
-            id: tlsButton;
-            checked: true;
-          }
-        }
-      }
-    }  // generalTab
-
-    // Advanced
-    HeadLabel {
-      text: qsTr("Advanced");
-    }
-
-    FormSection {
-      width: parent.width;
-      height: advancedTab.height;
-
-      Column {
-        id: advancedTab;
-        padding: 10;
-        width: parent.width;
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Connection Timeout(s)");
-            required: true;
-          }
-
-          TextField {
-            id: connectionTimeoutField;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Keep Alive(s)");
-          }
-
-          TextField {
-            id: keepAliveField;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Clean Session");
-          }
-
-          SwitchButtons {
-            id: cleanSessionButton;
-            checked: true;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Auto Reconnect");
-          }
-
-          SwitchButtons {
-            id: autoReconnectButton;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("MQTT Version");
-          }
-
-          ComboBox {
-            id: mqttVersionBox;
-            model: ["3.1.1", "5.0",];
-          }
-        }
-      }
-    }  // advancedTab
-
-
-    // Last Will and Testament
-    HeadLabel {
-      text: qsTr("Last Will and Testament");
-    }
-
-    FormSection {
-      width: parent.width;
-      height: lastWillTab.height;
-
-      Column {
-        id: lastWillTab;
-        padding: 10;
-        width: parent.width;
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Last-Will Topic");
-          }
-
-          TextField {
-            id: lastWillField;
-          }
-        }
-
-        RowLayout {
-          width: parent.width;
-
-          FormLabel {
-            text: qsTr("Last-Will QoS");
+            TextField {
+              id: nameField;
+            }
           }
 
           RowLayout {
-            property int qos: 0;
+            width: parent.width;
 
-            RadioButton {
-              checked: parent.qos === 0;
-              text: "0";
+            FormLabel {
+              text: qsTr("Client ID");
+              required: true;
             }
 
-            RadioButton {
-              checked: parent.qos === 1;
-              text: "1";
+            TextField {
+              id: clientIdField;
+            }
+          }
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Host");
+              required: true;
             }
 
-            RadioButton {
-              checked: parent.qos === 2;
-              text: "2";
+            ComboBox {
+              id: hostProtocol;
+              model: ["mqtt://", "mqttx://", "ws://", "wss://"];
+            }
+
+            TextField {
+              id: hostnameField;
+            }
+          }
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Port");
+              required: true;
+            }
+
+            TextField {
+              id: portField;
+              focus: true;
+              validator: IntValidator {
+                top: 2^16;
+                bottom: 1;
+              }
+            }
+          }
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Username");
+            }
+
+            TextField {
+              id: usernameField;
+            }
+          }
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Password");
+            }
+
+            TextField {
+              id: passwordField;
+            }
+          }
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("SSL/TLS");
+            }
+
+            SwitchButtons {
+              id: tlsButton;
+              checked: true;
             }
           }
         }
+      }  // generalTab
 
-        RowLayout {
+      // Advanced
+      HeadLabel {
+        text: qsTr("Advanced");
+      }
+
+      FormSection {
+        width: parent.width;
+        height: advancedTab.height;
+
+        Column {
+          id: advancedTab;
+          padding: 10;
           width: parent.width;
 
-          FormLabel {
-            text: qsTr("Last-Will Payload");
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Connection Timeout(s)");
+              required: true;
+            }
+
+            TextField {
+              id: connectionTimeoutField;
+            }
           }
 
-          ColumnLayout {
-            TextArea {
-              width: parent.width;
-              id: lastWillPayloadField;
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Keep Alive(s)");
+            }
+
+            TextField {
+              id: keepAliveField;
+            }
+          }
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Clean Session");
+            }
+
+            SwitchButtons {
+              id: cleanSessionButton;
+              checked: true;
+            }
+          }
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Auto Reconnect");
+            }
+
+            SwitchButtons {
+              id: autoReconnectButton;
+            }
+          }
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("MQTT Version");
+            }
+
+            ComboBox {
+              id: mqttVersionBox;
+              model: ["3.1.1", "5.0",];
+            }
+          }
+        }
+      }  // advancedTab
+
+
+      // Last Will and Testament
+      HeadLabel {
+        text: qsTr("Last Will and Testament");
+      }
+
+      FormSection {
+        width: parent.width;
+        height: lastWillTab.height;
+
+        Column {
+          id: lastWillTab;
+          padding: 10;
+          width: parent.width;
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Last-Will Topic");
+            }
+
+            TextField {
+              id: lastWillField;
+            }
+          }
+
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Last-Will QoS");
             }
 
             RowLayout {
+              property int qos: 0;
+
               RadioButton {
-                text: "JSON";
+                checked: parent.qos === 0;
+                text: "0";
               }
 
               RadioButton {
-                text: "text";
+                checked: parent.qos === 1;
+                text: "1";
+              }
+
+              RadioButton {
+                checked: parent.qos === 2;
+                text: "2";
               }
             }
           }
-        }
 
-      }  // lastWillTab
+          RowLayout {
+            width: parent.width;
+
+            FormLabel {
+              text: qsTr("Last-Will Payload");
+            }
+
+            ColumnLayout {
+              TextArea {
+                width: parent.width;
+                id: lastWillPayloadField;
+              }
+
+              RowLayout {
+                id: lastWillPayloadFormat;
+                property string format: "text";
+
+                RadioButton {
+                  checked: parent.format === "json";
+                  text: "JSON";
+                }
+
+                RadioButton {
+                  checked: parent.format === "text";
+                  text: "text";
+                }
+              }
+            }
+          }
+
+        }  // lastWillTab
+      }
     }
   }
 
