@@ -228,6 +228,86 @@ Item {
     }  // advancedTab
 
 
+    // Last Will and Testament
+    HeadLabel {
+      text: qsTr("Last Will and Testament");
+    }
+
+    FormSection {
+      width: parent.width;
+      height: lastWillTab.height;
+
+      Column {
+        id: lastWillTab;
+        padding: 10;
+        width: parent.width;
+
+        RowLayout {
+          width: parent.width;
+
+          FormLabel {
+            text: qsTr("Last-Will Topic");
+          }
+
+          TextField {
+            id: lastWillField;
+          }
+        }
+
+        RowLayout {
+          width: parent.width;
+
+          FormLabel {
+            text: qsTr("Last-Will QoS");
+          }
+
+          RowLayout {
+            property int qos: 0;
+
+            RadioButton {
+              checked: parent.qos === 0;
+              text: "0";
+            }
+
+            RadioButton {
+              checked: parent.qos === 1;
+              text: "1";
+            }
+
+            RadioButton {
+              checked: parent.qos === 2;
+              text: "2";
+            }
+          }
+        }
+
+        RowLayout {
+          width: parent.width;
+
+          FormLabel {
+            text: qsTr("Last-Will Payload");
+          }
+
+          ColumnLayout {
+            TextArea {
+              width: parent.width;
+              id: lastWillPayloadField;
+            }
+
+            RowLayout {
+              RadioButton {
+                text: "JSON";
+              }
+
+              RadioButton {
+                text: "text";
+              }
+            }
+          }
+        }
+
+      }  // lastWillTab
+    }
   }
 
   // Local components
