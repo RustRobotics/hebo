@@ -1,3 +1,7 @@
+// Copyright (c) 2021 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
+// Use of this source is governed by General Public License that can be found
+// in the LICENSE file.
+
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -7,7 +11,7 @@ import "items"
 Item {
   id: root;
 
-  TitleLabel {
+  PageTitle {
     id: title;
     text: qsTr("Settings");
   }
@@ -18,7 +22,7 @@ Item {
     width: 580;
     anchors.horizontalCenter: parent.horizontalCenter;
 
-    HeadLabel {
+    SectionTitle {
       text: qsTr("General");
     }
 
@@ -68,7 +72,7 @@ Item {
       }
     }
 
-    HeadLabel {
+    SectionTitle {
       text: qsTr("Appearance");
     }
 
@@ -94,22 +98,5 @@ Item {
         }
       }
     }
-  }
-
-  component FormSection: Rectangle {
-    color: "#fafafa";
-    border {
-      color: "#e1e1e1";
-      width: 1;
-    }
-    radius: 4;
-  }
-
-  component HeadLabel: Text {
-    color: "#232422";
-    font.pixelSize: 16;
-    font.weight: Font.Medium;
-    horizontalAlignment: Text.AlignLeft;
-    Layout.topMargin: 8;
   }
 }

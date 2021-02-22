@@ -11,7 +11,7 @@ import "items"
 Item {
   id: root;
 
-  TitleLabel {
+  PageTitle {
     id: title;
     text: qsTr("About");
   }
