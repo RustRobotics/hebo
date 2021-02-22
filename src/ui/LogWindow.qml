@@ -6,23 +6,14 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-Rectangle {
-  id: root;
-  color: "#f9fafd";
+import "items"
 
-  Text {
+Item {
+  id: root;
+
+  PageTitle {
     id: title;
     text: qsTr("Log");
-    padding: 14;
-    font {
-      pixelSize: 18;
-      weight: Font.Bold;
-    }
-
-    anchors {
-      left: parent.left;
-      top: parent.top;
-    }
   }
 
   ScrollView {
@@ -38,7 +29,7 @@ Rectangle {
     padding: 18;
     background: Rectangle {
       antialiasing: true;
-      color: "#fff";
+      color: "#f9fafd";
       radius: 4;
       border {
         width: 1;

@@ -1,25 +1,19 @@
+// Copyright (c) 2021 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
+// Use of this source is governed by General Public License that can be found
+// in the LICENSE file.
+
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import "items"
+
 Item {
   id: root;
-  width: 1024;
-  height: 754;
 
-  Text {
+  PageTitle {
     id: title;
     text: qsTr("New Connection");
-    padding: 14;
-    font {
-      pixelSize: 18;
-      weight: Font.Bold;
-    }
-
-    anchors {
-      left: parent.left;
-      top: parent.top;
-    }
   }
 
   FontLoader {
@@ -44,7 +38,7 @@ Item {
       width: 580;
 
       // General
-      HeadLabel {
+      SectionTitle {
         text: qsTr("General");
       }
 
@@ -159,7 +153,7 @@ Item {
       }  // generalTab
 
       // Advanced
-      HeadLabel {
+      SectionTitle {
         text: qsTr("Advanced");
       }
 
@@ -239,7 +233,7 @@ Item {
 
 
       // Last Will and Testament
-      HeadLabel {
+      SectionTitle {
         text: qsTr("Last Will and Testament");
       }
 
@@ -346,50 +340,6 @@ Item {
 
         }  // lastWillTab
       }
-    }
-  }
-
-  // Local components
-  component HeadLabel : Text {
-    color: "#232422";
-    font.pixelSize: 16;
-    font.weight: Font.Bold;
-  }
-
-  component FormSection: Rectangle {
-    color: "#fafafa";
-    border {
-      color: "#e1e1e1";
-      width: 1;
-    }
-    radius: 4;
-  }
-
-  component FormLabel: Text {
-    property bool required: false;
-
-    color: "#212121";
-    font.pixelSize: 14;
-    horizontalAlignment: Text.AlignLeft;
-    Layout.minimumWidth: 256;
-    Layout.maximumWidth: 256;
-    Layout.leftMargin: 24;
-    Layout.alignment: Qt.AlignVCenter;
-  }
-
-  component SwitchButtons: RowLayout {
-    property bool checked: false;
-
-    RadioButton {
-      id: enableCleanSessionButton;
-      checked: parent.checked;
-      text: "true";
-    }
-
-    RadioButton {
-      id: disableCleanSessionButton;
-      checked: !parent.checked;
-      text: "false";
     }
   }
 }

@@ -6,14 +6,18 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-Text {
-  property bool required: false;
+RowLayout {
+  property bool checked: false;
 
-  color: "#212121";
-  font.pixelSize: 14;
-  horizontalAlignment: Text.AlignLeft;
-  Layout.minimumWidth: 256;
-  Layout.maximumWidth: 256;
-  Layout.leftMargin: 24;
-  Layout.alignment: Qt.AlignVCenter;
+  RadioButton {
+    id: enableCleanSessionButton;
+    checked: parent.checked;
+    text: "true";
+  }
+
+  RadioButton {
+    id: disableCleanSessionButton;
+    checked: !parent.checked;
+    text: "false";
+  }
 }
