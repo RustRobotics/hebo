@@ -165,7 +165,7 @@ Item {
 
             Hebo.SwitchButtons {
               id: tlsButton;
-              checked: true;
+              checked: false;
             }
           }
         }

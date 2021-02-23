@@ -27,6 +27,9 @@ class MqttClient : public QObject {
 
   void requestDisconnect();
 
+ protected:
+  void timerEvent(QTimerEvent* event) override;
+
  private slots:
   void doConnect(const ConnInfo& info);
 

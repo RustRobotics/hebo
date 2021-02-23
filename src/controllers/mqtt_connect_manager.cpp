@@ -12,7 +12,6 @@ MqttConnectManager::MqttConnectManager(QObject* parent) : QObject(parent) {
 }
 
 void MqttConnectManager::requestConnect() {
-  qDebug() << __func__ << conn_info_;
   auto* client = new MqttClient();
   client->requestConnect(conn_info_);
   this->clients_.append(client);
