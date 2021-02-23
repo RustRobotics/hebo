@@ -68,7 +68,13 @@ Item {
             id: maxRetryField;
             minNumber: 0;
             maxNumber: 1000;
-            number: 3;
+            number: settingsManager.retryConnections;
+
+            Binding {
+              target: settingsManager;
+              property: "retryConnections";
+              value: maxRetryField.number;
+            }
           }
         }
       }

@@ -12,6 +12,8 @@ namespace {
 constexpr const char* kAutoUpdate = "autoUpdate";
 constexpr const char* kLocale = "locale";
 constexpr const char* kDefaultLocale = "en_US";
+constexpr const char* kMaxRetry = "retryConnections";
+constexpr int kDefaultRetries = 3;
 
 }  // namespace
 
@@ -49,6 +51,16 @@ QStringList SettingsManager::availableLocales() const {
 void SettingsManager::setLocale(const QString& locale) {
   this->settings_->setValue(kLocale, locale);
   emit this->localeChanged(locale);
+}
+
+int SettingsManager::retryConnections() {
+  return this->settings_->value(kMaxRetry, kDefaultRetries).toInt();
+}
+
+void SettingsManager::setRetryConnections(int retries) {
+  qDebug() << __func__ << retries;
+  this->settings_->setValue(kMaxRetry, retries);
+  emit this->retryConnectionsChanged(retries);
 }
 
 }  // namespace hebo

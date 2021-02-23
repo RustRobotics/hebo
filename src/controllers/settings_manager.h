@@ -15,6 +15,8 @@ class SettingsManager : public QObject {
   Q_PROPERTY(bool autoUpdate READ autoUpdate WRITE setAutoUpdate NOTIFY autoUpdateChanged)
   Q_PROPERTY(QString locale READ locale WRITE setLocale NOTIFY localeChanged)
   Q_PROPERTY(QStringList availableLocales READ availableLocales);
+  Q_PROPERTY(int retryConnections READ retryConnections WRITE setRetryConnections
+             NOTIFY retryConnectionsChanged)
 
  public:
   explicit SettingsManager(QObject* parent = nullptr);
@@ -22,17 +24,26 @@ class SettingsManager : public QObject {
   bool sync();
 
   bool autoUpdate();
+
   QString locale();
+
   [[nodiscard]] QStringList availableLocales() const;
+
+  int retryConnections();
 
  public slots:
   void setAutoUpdate(bool enable);
+
   void setLocale(const QString& locale);
+
+  void setRetryConnections(int retries);
 
  signals:
   void autoUpdateChanged(bool enable);
 
   void localeChanged(const QString& locale);
+
+  void retryConnectionsChanged(int retries);
 
  private:
   QSettings* settings_;
