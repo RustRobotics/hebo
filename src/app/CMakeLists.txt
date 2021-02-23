@@ -12,7 +12,7 @@ target_link_libraries(hebo
     )
 
 add_executable(mqtt-client-demo
-    mqtt_client.cpp
+    mqtt_client_demo.cpp
     )
 target_link_libraries(mqtt-client-demo
     Qt5::Core
