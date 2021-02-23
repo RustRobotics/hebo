@@ -8,6 +8,7 @@
 #include <QObject>
 
 #include "mqtt/conn_info.h"
+#include "mqtt/mqtt_client.h"
 
 namespace hebo {
 
@@ -25,10 +26,11 @@ class MqttConnectManager : public QObject {
   void setConnectQoS(int qos) { conn_info_.qos = static_cast<QoS>(qos); }
   void setConnectCleanSession(bool clean) { conn_info_.clean_session = clean; }
 
-  void connect();
+  void requestConnect();
 
  private:
   ConnInfo conn_info_{};
+  QVector<MqttClient*> clients_{};
 };
 
 }  // namespace hebo

@@ -29,7 +29,7 @@ Item {
       connectManager.setConnectPort(portField.number);
       connectManager.setConnectQoS(qosField.qos);
       connectManager.setConnectCleanSession(cleanSessionButton.checked);
-      connectManager.connect();
+      connectManager.requestConnect();
     }
   }
 

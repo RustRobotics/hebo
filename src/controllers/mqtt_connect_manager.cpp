@@ -11,8 +11,11 @@ namespace hebo {
 MqttConnectManager::MqttConnectManager(QObject* parent) : QObject(parent) {
 }
 
-void MqttConnectManager::connect() {
-  qDebug() << __func__;
+void MqttConnectManager::requestConnect() {
+  qDebug() << __func__ << conn_info_;
+  auto* client = new MqttClient();
+  client->requestConnect(conn_info_);
+  this->clients_.append(client);
 }
 
 }  // namespace hebo
