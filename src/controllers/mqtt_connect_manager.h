@@ -7,12 +7,18 @@
 
 #include <QObject>
 
+#include "mqtt/conn_info.h"
+
 namespace hebo {
 
 class MqttConnectManager : public QObject {
   Q_OBJECT
  public:
   explicit MqttConnectManager(QObject* parent = nullptr);
+
+ public slots:
+  void newConnection(const QString& name);
+  void newConnection(const ConnInfo& conn_info);
 };
 
 }  // namespace hebo

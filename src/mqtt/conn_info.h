@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QMetaType>
 #include <QString>
+#include <QObject>
 
 namespace hebo {
 
@@ -17,23 +18,35 @@ enum class QoS : uint8_t {
   kExactOnce,
 };
 
-struct ConnInfo {
-  QString name{};
-  QString client_id{};
-  QString protocol{};
-  QString host{};
-  uint16_t port{};
-  QoS qos{QoS::kAtMostOnce};
-  QString username{};
-  QString password{};
-  bool with_tls{false};
-  bool clean_session;
+class ConnInfo : public QObject {
+  Q_OBJECT
+  Q_PROPERTY(QString name READ name WRITE setName)
+
+ public:
+  explicit ConnInfo(QObject* parent = nullptr);
+
+  const QString& name() const { return this->name_; }
+
+ public slots:
+  void setName(const QString& name) {
+    this->name_ = name;
+  };
+
+ private:
+  QString name_{};
+//  QString client_id{};
+//  QString protocol{};
+//  QString host{};
+//  uint16_t port{};
+//  QoS qos{QoS::kAtMostOnce};
+//  QString username{};
+//  QString password{};
+//  bool with_tls{false};
+//  bool clean_session;
 };
 
 QDebug operator<<(QDebug stream, const ConnInfo& info);
 
 }  // namespace hebo
-
-Q_DECLARE_METATYPE(hebo::ConnInfo);
 
 #endif  // HEBOUI_SRC_MQTT_CONN_INFO_H_

@@ -10,6 +10,7 @@
 #include <QThread>
 
 #include "controllers/log_manager.h"
+#include "controllers/mqtt_connect_manager.h"
 #include "controllers/settings_manager.h"
 #include "controllers/update_manager.h"
 
@@ -31,6 +32,7 @@ class MainController : public QObject {
   LogManager* log_manager_;
   UpdateManager* update_manager_;
   SettingsManager* settings_manager_;
+  MqttConnectManager* connect_manager_;
 };
 
 }  // namespace hebo

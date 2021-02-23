@@ -6,6 +6,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import HeboComponents 1.0
 import "items" as Hebo
 
 Item {
@@ -14,6 +15,19 @@ Item {
   Hebo.PageTitle {
     id: title;
     text: qsTr("New Connection");
+  }
+
+  Button {
+    text: "Connect";
+    anchors.top: root.top;
+    anchors.right: root.right;
+
+    onClicked: {
+      //connectManager.newConnection("hebo-client");
+      connectManager.newConnection(ConnInfo{
+        name: "local conn";
+      });
+    }
   }
 
   FontLoader {

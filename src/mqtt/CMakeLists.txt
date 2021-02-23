@@ -6,7 +6,7 @@ set(SOURCE
     mqtt_client.h
     )
 
-add_library(mqtt-static
+add_library(mqtt-static STATIC
     ${SOURCE}
     )
 target_link_libraries(mqtt-static

@@ -16,7 +16,8 @@ MainController::MainController(QObject* parent)
       updater_thread_(new QThread()),
       log_manager_(new LogManager(this)),
       update_manager_(new UpdateManager()),
-      settings_manager_(new SettingsManager(this)) {
+      settings_manager_(new SettingsManager(this)),
+      connect_manager_(new MqttConnectManager(this)) {
 
   update_manager_->moveToThread(updater_thread_);
   updater_thread_->start();
@@ -32,6 +33,7 @@ void MainController::showMainWindow() {
   context->setContextProperty("logManager", this->log_manager_);
   context->setContextProperty("updateManager", this->update_manager_);
   context->setContextProperty("settingsManager", this->settings_manager_);
+  context->setContextProperty("connectManager", this->connect_manager_);
 
   this->engine_->load(kUiMainWindow);
 }
