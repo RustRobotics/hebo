@@ -9,67 +9,72 @@ Rectangle {
 
   ButtonGroup {
     id: buttonGroup;
-    buttons: column.children;
     exclusive: true;
 
-    onClicked: function(button) {
-      for (let i = 0; i < this.buttons.length; ++i) {
-        if (button === this.buttons[i]) {
-          root.currentIndex = i;
-          break;
-        }
-      }
+    onClicked: root.currentIndex = button.index;
+  }
+
+  FontLoader {
+    id: iconFont;
+    source: "fonts/iconfont.ttf";
+  }
+
+  Column {
+    id: topButtons;
+    anchors{
+      horizontalCenter: parent.horizontalCenter;
+      top: root.top;
+      topMargin: 24;
+    }
+    spacing: 36;
+
+    // Connections
+    RoundFontButton {
+      checked: true;
+      index: 0;
+      text: "\ue64d";
+    }
+
+    // New connection
+    RoundFontButton {
+      index: 1;
+      text: "\ue64e";
+    }
+
+    // Log
+    RoundFontButton {
+      index: 2;
+      text: "\uea07";
     }
   }
 
   Column {
-    id: column;
-    anchors.horizontalCenter: parent.horizontalCenter;
-    spacing: 24;
-
-    FontLoader {
-      id: iconFont;
-      source: "fonts/iconfont.ttf";
+    id: bottomButtons;
+    anchors {
+      horizontalCenter: parent.horizontalCenter;
+      bottom: root.bottom;
+      bottomMargin: 24;
     }
-
-    // Connections
-    RoundButton {
-      checked: true;
-      text: "\ue64d";
-      font.pixelSize: 16;
-      font.family: iconFont.name;
-    }
-
-    // New connection
-    RoundButton {
-      checkable: true;
-      text: "\ue64e";
-      font.pixelSize: 16;
-      font.family: iconFont.name;
-    }
-
-    // Log
-    RoundButton {
-      checkable: true;
-      text: "\uea07";
-      font.pixelSize: 16;
-      font.family: iconFont.name;
-    }
+    spacing: 36;
 
     // Info
-    RoundButton {
-      checkable: true;
+    RoundFontButton {
+      index: 3;
       text: "\ue64f";
-      font.pixelSize: 16;
-      font.family: iconFont.name;
     }
 
     // Settings
-    RoundButton {
-      checkable: true;
+    RoundFontButton {
+      index: 4;
       text: "\ue627";
-      font.pixelSize: 16;
-      font.family: iconFont.name;
     }
+  }
+
+  component RoundFontButton: RoundButton {
+    property int index;
+    checkable: true;
+    font.pixelSize: 16;
+    font.family: iconFont.name;
+    ButtonGroup.group: buttonGroup;
   }
 }
