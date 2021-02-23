@@ -17,6 +17,8 @@ class SettingsManager : public QObject {
   Q_PROPERTY(QStringList availableLocales READ availableLocales);
   Q_PROPERTY(int retryConnections READ retryConnections WRITE setRetryConnections
              NOTIFY retryConnectionsChanged)
+  Q_PROPERTY(QStringList themeNames READ themeNames NOTIFY themeNamesChanged)
+  Q_PROPERTY(int themeId READ themeId WRITE setThemeId NOTIFY themeIdChanged)
 
  public:
   explicit SettingsManager(QObject* parent = nullptr);
@@ -27,9 +29,15 @@ class SettingsManager : public QObject {
 
   QString locale();
 
+  int retryConnections();
+
   [[nodiscard]] QStringList availableLocales() const;
 
-  int retryConnections();
+  [[nodiscard]] const QStringList& themeNames() const {
+    return this->theme_names_;
+  }
+
+  int themeId();
 
  public slots:
   void setAutoUpdate(bool enable);
@@ -38,6 +46,8 @@ class SettingsManager : public QObject {
 
   void setRetryConnections(int retries);
 
+  void setThemeId(int index);
+
  signals:
   void autoUpdateChanged(bool enable);
 
@@ -45,8 +55,14 @@ class SettingsManager : public QObject {
 
   void retryConnectionsChanged(int retries);
 
+  void themeNamesChanged(const QStringList& list);
+
+  void themeIdChanged(int themeId);
+
  private:
   QSettings* settings_;
+  QStringList theme_names_{};
+  QStringList themes_{};
 };
 
 }  // namespace hebo

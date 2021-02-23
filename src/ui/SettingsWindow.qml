@@ -100,8 +100,16 @@ Item {
           }
 
           ComboBox {
+            id: themeField;
             editable: false;
-            model: ["Light", "Dark", "Night",];
+            model: settingsManager.themeNames;
+            currentIndex: settingsManager.themeId;
+
+            Binding {
+              target: settingsManager;
+              property: "themeId";
+              value: themeField.currentIndex;
+            }
           }
         }
       }

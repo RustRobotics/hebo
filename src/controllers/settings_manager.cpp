@@ -15,11 +15,16 @@ constexpr const char* kDefaultLocale = "en_US";
 constexpr const char* kMaxRetry = "retryConnections";
 constexpr int kDefaultRetries = 3;
 
+constexpr const char* kTheme = "theme";
+constexpr const char* kDefaultTheme = "light";
+
 }  // namespace
 
 SettingsManager::SettingsManager(QObject* parent)
     : QObject(parent),
       settings_(new QSettings(this)) {
+  theme_names_ << tr("Light") << tr("Dark") << tr("Night");
+  themes_ << "light" << "dark" << "night";
 }
 
 bool SettingsManager::sync() {
@@ -43,8 +48,8 @@ QString SettingsManager::locale() {
 
 QStringList SettingsManager::availableLocales() const {
   return {
-    "en_US",
-    "zh_CN"
+      "en_US",
+      "zh_CN"
   };
 }
 
@@ -61,6 +66,20 @@ void SettingsManager::setRetryConnections(int retries) {
   qDebug() << __func__ << retries;
   this->settings_->setValue(kMaxRetry, retries);
   emit this->retryConnectionsChanged(retries);
+}
+
+int SettingsManager::themeId() {
+  const QString theme = this->settings_->value(kTheme, kDefaultTheme).toString();
+  const int index = this->themes_.indexOf(theme);
+  Q_ASSERT(index > -1);
+  return index;
+}
+
+void SettingsManager::setThemeId(int index) {
+  qDebug() << __func__ << index;
+  Q_ASSERT(index > -1 && index < this->themes_.length());
+  this->settings_->setValue(kTheme, this->themes_.at(index));
+  emit this->themeIdChanged(index);
 }
 
 }  // namespace hebo
