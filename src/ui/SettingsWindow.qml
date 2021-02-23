@@ -6,12 +6,12 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-import "items"
+import "items" as Hebo
 
 Item {
   id: root;
 
-  PageTitle {
+  Hebo.PageTitle {
     id: title;
     text: qsTr("Settings");
   }
@@ -22,11 +22,11 @@ Item {
     width: 580;
     anchors.horizontalCenter: parent.horizontalCenter;
 
-    SectionTitle {
+    Hebo.SectionTitle {
       text: qsTr("General");
     }
 
-    FormSection {
+    Hebo.FormSection {
       width: parent.width;
       height: generalTab.height;
 
@@ -36,7 +36,7 @@ Item {
         padding: 10;
 
         RowLayout {
-          FormLabel {
+          Hebo.FormLabel {
             text: qsTr("Language");
           }
 
@@ -47,20 +47,21 @@ Item {
         }
 
         RowLayout {
-          FormLabel {
+          Hebo.FormLabel {
             text: qsTr("Auto check update");
           }
 
           Switch {
+            id: autoCheckUpdateSwitch;
           }
         }
 
         RowLayout {
-          FormLabel {
+          Hebo.FormLabel {
             text: qsTr("Max retry connection");
           }
 
-          NumberField {
+          Hebo.NumberField {
             id: maxRetryField;
             minNumber: 0;
             maxNumber: 1000;
@@ -70,12 +71,12 @@ Item {
       }
     }
 
-    SectionTitle {
+    Hebo.SectionTitle {
       text: qsTr("Appearance");
     }
 
     // Appearance
-    FormSection {
+    Hebo.FormSection {
       width: parent.width;
       implicitHeight: appearanceTab.implicitHeight;
 
@@ -85,7 +86,7 @@ Item {
         padding: 10;
 
         RowLayout {
-          FormLabel {
+          Hebo.FormLabel {
             text: qsTr("Theme");
           }
 

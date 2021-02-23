@@ -6,12 +6,12 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-import "items"
+import "items" as Hebo
 
 Item {
   id: root;
 
-  PageTitle {
+  Hebo.PageTitle {
     id: title;
     text: qsTr("Log");
   }

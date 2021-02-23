@@ -6,12 +6,12 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-import "items"
+import "items" as Hebo
 
 Item {
   id: root;
 
-  PageTitle {
+  Hebo.PageTitle {
     id: title;
     text: qsTr("About");
   }
@@ -44,16 +44,16 @@ Item {
     Row {
       anchors.horizontalCenter: parent.horizontalCenter;
 
-      TextButton {
+      Hebo.TextButton {
         text: qsTr("Check for Update");
       }
 
-      TextButton {
+      Hebo.TextButton {
         text: qsTr("Releases");
         link: "https://github.com";
       }
 
-      TextButton {
+      Hebo.TextButton {
         text: qsTr("Support");
         link: "https://github.com";
       }
@@ -187,19 +187,19 @@ Item {
     }
 
     // Twitter
-    ImageButton {
+    Hebo.ImageButton {
       text: "\ue6c7";
       link: "https://twitter.com";
     }
 
     // Slack
-    ImageButton {
+    Hebo.ImageButton {
       text: "\ue641";
       link: "https://slack.com";
     }
 
     // Reddit
-    ImageButton {
+    Hebo.ImageButton {
       text: "\ue7e4";
       link: "https://reddit.com";
     }

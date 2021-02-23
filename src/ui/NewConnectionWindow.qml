@@ -6,12 +6,12 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-import "items"
+import "items" as Hebo
 
 Item {
   id: root;
 
-  PageTitle {
+  Hebo.PageTitle {
     id: title;
     text: qsTr("New Connection");
   }
@@ -38,11 +38,11 @@ Item {
       width: 580;
 
       // General
-      SectionTitle {
+      Hebo.SectionTitle {
         text: qsTr("General");
       }
 
-      FormSection {
+      Hebo.FormSection {
         width: parent.width;
         height: generalTab.height;
 
@@ -55,7 +55,7 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Name");
               required: true;
             }
@@ -68,7 +68,7 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Client ID");
               required: true;
             }
@@ -81,7 +81,7 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Host");
               required: true;
             }
@@ -101,12 +101,12 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Port");
               required: true;
             }
 
-            NumberField {
+            Hebo.NumberField {
               id: portField;
               maxNumber: 65535;
               minNumber: 1;
@@ -117,7 +117,7 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Username");
             }
 
@@ -129,7 +129,7 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Password");
             }
 
@@ -142,11 +142,11 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("SSL/TLS");
             }
 
-            SwitchButtons {
+            Hebo.SwitchButtons {
               id: tlsButton;
               checked: true;
             }
@@ -155,11 +155,11 @@ Item {
       }  // generalTab
 
       // Advanced
-      SectionTitle {
+      Hebo.SectionTitle {
         text: qsTr("Advanced");
       }
 
-      FormSection {
+      Hebo.FormSection {
         width: parent.width;
         height: advancedTab.height;
 
@@ -172,12 +172,12 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Connection Timeout(s)");
               required: true;
             }
 
-            NumberField {
+            Hebo.NumberField {
               id: connectionTimeoutField;
               minNumber: 0;
               maxNumber: 3600;
@@ -188,11 +188,11 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Keep Alive(s)");
             }
 
-            NumberField {
+            Hebo.NumberField {
               id: keepAliveField;
               minNumber: 10;
               maxNumber: 2^30;
@@ -203,11 +203,11 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Clean Session");
             }
 
-            SwitchButtons {
+            Hebo.SwitchButtons {
               id: cleanSessionButton;
               checked: true;
             }
@@ -216,11 +216,11 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Auto Reconnect");
             }
 
-            SwitchButtons {
+            Hebo.SwitchButtons {
               id: autoReconnectButton;
             }
           }
@@ -228,7 +228,7 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("MQTT Version");
             }
 
@@ -242,11 +242,11 @@ Item {
 
 
       // Last Will and Testament
-      SectionTitle {
+      Hebo.SectionTitle {
         text: qsTr("Last Will and Testament");
       }
 
-      FormSection {
+      Hebo.FormSection {
         width: parent.width;
         height: lastWillTab.height;
 
@@ -259,7 +259,7 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Last-Will Topic");
             }
 
@@ -271,7 +271,7 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Last-Will QoS");
             }
 
@@ -298,7 +298,7 @@ Item {
           RowLayout {
             width: parent.width;
 
-            FormLabel {
+            Hebo.FormLabel {
               text: qsTr("Last-Will Payload");
               Layout.alignment: Qt.AlignTop;
               topPadding: 14;
