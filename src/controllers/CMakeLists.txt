@@ -1,4 +1,6 @@
 set(SOURCES
+    log_manager.cpp
+    log_manager.h
     main_controller.cpp
     main_controller.h
     mqtt_connect_manager.cpp
