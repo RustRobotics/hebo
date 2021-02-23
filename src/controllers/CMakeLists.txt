@@ -5,6 +5,8 @@ set(SOURCES
     settings_manager.h
     shell.cpp
     shell.h
+    update_manager.cpp
+    update_manager.h
     )
 
 add_library(controllers-static STATIC
