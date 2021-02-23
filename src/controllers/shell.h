@@ -9,7 +9,7 @@ namespace hebo {
 
 int runShell(int argc, char** argv);
 
-void registerComponents();
+//void registerComponents();
 
 }  // namespace hebo
 

@@ -6,7 +6,6 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-import HeboComponents 1.0
 import "items" as Hebo
 
 Item {
@@ -23,10 +22,14 @@ Item {
     anchors.right: root.right;
 
     onClicked: {
-      //connectManager.newConnection("hebo-client");
-      connectManager.newConnection(ConnInfo{
-        name: "local conn";
-      });
+      connectManager.setConnectName(nameField.text);
+      connectManager.setConnectClientId(clientIdField.text);
+      connectManager.setConnectProtocol(hostProtocol.currentText);
+      connectManager.setConnectHost(hostnameField.text);
+      connectManager.setConnectPort(portField.number);
+      connectManager.setConnectQoS(qosField.qos);
+      connectManager.setConnectCleanSession(cleanSessionButton.checked);
+      connectManager.connect();
     }
   }
 
@@ -290,6 +293,7 @@ Item {
             }
 
             RowLayout {
+              id: qosField;
               property int qos: 0;
 
               RadioButton {

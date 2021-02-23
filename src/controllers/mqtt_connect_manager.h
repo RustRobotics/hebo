@@ -17,8 +17,18 @@ class MqttConnectManager : public QObject {
   explicit MqttConnectManager(QObject* parent = nullptr);
 
  public slots:
-  void newConnection(const QString& name);
-  void newConnection(const ConnInfo& conn_info);
+  void setConnectName(const QString& name) { conn_info_.name = name; };
+  void setConnectClientId(const QString& client_id) { conn_info_.client_id = client_id; }
+  void setConnectProtocol(const QString& protocol) { conn_info_.protocol = protocol; }
+  void setConnectHost(const QString& host) { conn_info_.host = host; }
+  void setConnectPort(int port) { conn_info_.port = port; }
+  void setConnectQoS(int qos) { conn_info_.qos = static_cast<QoS>(qos); }
+  void setConnectCleanSession(bool clean) { conn_info_.clean_session = clean; }
+
+  void connect();
+
+ private:
+  ConnInfo conn_info_{};
 };
 
 }  // namespace hebo

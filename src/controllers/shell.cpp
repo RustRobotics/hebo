@@ -9,7 +9,6 @@
 #include <QGuiApplication>
 
 #include "controllers/main_controller.h"
-#include "mqtt/conn_info.h"
 
 namespace hebo {
 
@@ -25,7 +24,6 @@ int runShell(int argc, char** argv) {
 
   QGuiApplication application(argc, argv);
   cuteLogger->registerAppender(new ConsoleAppender());
-  registerComponents();
 
   QScopedPointer<MainController> controller(new MainController());
   controller->showMainWindow();
@@ -33,11 +31,11 @@ int runShell(int argc, char** argv) {
   return QGuiApplication::exec();
 }
 
-void registerComponents() {
-  constexpr const char* kComponentName = "HeboComponents";
-  constexpr int kVersionMajor = 1;
-  constexpr int kVersionMinor = 0;
-  qmlRegisterType<ConnInfo>(kComponentName, kVersionMajor, kVersionMinor, "ConnInfo");
-}
+//void registerComponents() {
+//  constexpr const char* kComponentName = "HeboComponents";
+//  constexpr int kVersionMajor = 1;
+//  constexpr int kVersionMinor = 0;
+//  qmlRegisterType<ConnInfo>(kComponentName, kVersionMajor, kVersionMinor, "ConnInfo");
+//}
 
 }  // namespace hebo
