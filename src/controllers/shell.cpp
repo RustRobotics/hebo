@@ -4,6 +4,8 @@
 
 #include "controllers/shell.h"
 
+#include <ConsoleAppender.h>
+#include <Logger.h>
 #include <QGuiApplication>
 
 #include "controllers/main_controller.h"
@@ -11,7 +13,18 @@
 namespace hebo {
 
 int runShell(int argc, char** argv) {
+  QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+  QGuiApplication::setApplicationDisplayName("Hebo UI");
+  QGuiApplication::setApplicationName("HeboUi");
+  QGuiApplication::setApplicationVersion("0.1.0");
+  QGuiApplication::setDesktopFileName("hebo-ui");
+  QGuiApplication::setOrganizationDomain("biofan.org");
+  QGuiApplication::setOrganizationName("HeboUi");
+//  QGuiApplication::setWindowIcon(QIcon(kHeboUiIcon));
+
   QGuiApplication application(argc, argv);
+  cuteLogger->registerAppender(new ConsoleAppender());
+
   QScopedPointer<MainController> controller(new MainController());
   controller->showMainWindow();
 

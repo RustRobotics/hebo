@@ -52,7 +52,10 @@ Item {
           }
 
           Switch {
-            id: autoCheckUpdateSwitch;
+            checked: settingsManager.autoUpdate;
+            onToggled: {
+              settingsManager.autoUpdate = this.checked;
+            }
           }
         }
 

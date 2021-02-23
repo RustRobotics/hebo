@@ -23,7 +23,7 @@ class SettingsManager : public QObject {
 
   bool autoUpdate();
   QString locale();
-  QStringList availableLocales() const;
+  [[nodiscard]] QStringList availableLocales() const;
 
  public slots:
   void setAutoUpdate(bool enable);

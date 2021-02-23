@@ -4,6 +4,8 @@
 
 #include "controllers/settings_manager.h"
 
+#include <QDebug>
+
 namespace hebo {
 namespace {
 
@@ -28,6 +30,7 @@ bool SettingsManager::autoUpdate() {
 }
 
 void SettingsManager::setAutoUpdate(bool enable) {
+  qDebug() << __func__ << enable;
   this->settings_->setValue(kAutoUpdate, enable);
   emit this->autoUpdateChanged(enable);
 }
