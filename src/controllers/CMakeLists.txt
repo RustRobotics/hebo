@@ -1,9 +1,10 @@
 set(SOURCES
     main_controller.cpp
     main_controller.h
+    settings_manager.cpp
+    settings_manager.h
     shell.cpp
     shell.h
-
     )
 
 add_library(controllers-static STATIC

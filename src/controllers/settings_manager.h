@@ -1,0 +1,43 @@
+// Copyright (c) 2021 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
+// Use of this source is governed by General Public License that can be found
+// in the LICENSE file.
+
+#ifndef HEBOUI_SRC_CONTROLLERS_SETTINGS_MANAGER_H_
+#define HEBOUI_SRC_CONTROLLERS_SETTINGS_MANAGER_H_
+
+#include <QObject>
+#include <QSettings>
+
+namespace hebo {
+
+class SettingsManager : public QObject {
+  Q_OBJECT
+  Q_PROPERTY(bool autoUpdate READ autoUpdate WRITE setAutoUpdate NOTIFY autoUpdateChanged)
+  Q_PROPERTY(QString locale READ locale WRITE setLocale NOTIFY localeChanged)
+  Q_PROPERTY(QStringList availableLocales READ availableLocales);
+
+ public:
+  explicit SettingsManager(QObject* parent = nullptr);
+
+  bool sync();
+
+  bool autoUpdate();
+  QString locale();
+  QStringList availableLocales() const;
+
+ public slots:
+  void setAutoUpdate(bool enable);
+  void setLocale(const QString& locale);
+
+ signals:
+  void autoUpdateChanged(bool enable);
+
+  void localeChanged(const QString& locale);
+
+ private:
+  QSettings* settings_;
+};
+
+}  // namespace hebo
+
+#endif  // HEBOUI_SRC_CONTROLLERS_SETTINGS_MANAGER_H_
