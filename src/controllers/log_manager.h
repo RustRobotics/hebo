@@ -12,20 +12,18 @@ namespace hebo {
 // Make access to mqtt service log.
 class LogManager : public QObject {
   Q_OBJECT
-  Q_PROPERTY(int pages READ getPages NOTIFY pagesUpdated)
+  Q_PROPERTY(QString log READ getLog NOTIFY logUpdated)
 
  public:
   explicit LogManager(QObject* parent = nullptr);
 
-  [[nodiscard]] int getPages() const;
-
-  Q_INVOKABLE QString getLog(int page);
+  const QString& getLog();
 
  signals:
-  void pagesUpdated(int pages);
+  void logUpdated(const QString& log);
 
  private:
-  int total_pages_{};
+  QString log_{"Hello, rust"};
 };
 
 }  // namespace hebo

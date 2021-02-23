@@ -26,7 +26,6 @@ class MainController : public QObject {
  private:
   QQmlApplicationEngine* engine_{};
 
-  QThread* log_thread_;
   QThread* updater_thread_;
 
   LogManager* log_manager_;

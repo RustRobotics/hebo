@@ -60,10 +60,12 @@ Item {
         selectByMouse: true;
         selectByKeyboard: true;
         textFormat: TextEdit.PlainText;
-
-        text: "[2021-02-21 07:34:39] [INFO] APP init\n[2021-02-21 07:34:39] [INFO] APP init\n";
+        text: logManager.log;
       }
     }
+  }
 
+  Component.onCompleted: {
+    //logText.text = logManager.getLog(0);
   }
 }

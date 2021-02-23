@@ -7,16 +7,10 @@
 namespace hebo {
 
 LogManager::LogManager(QObject* parent) : QObject(parent) {
-
 }
 
-int LogManager::getPages() const {
-  return this->total_pages_;
-}
-
-QString LogManager::getLog(int page) {
-  Q_ASSERT(page < this->total_pages_);
-  return QString();
+const QString& LogManager::getLog() {
+  return this->log_;
 }
 
 }  // namespace hebo
