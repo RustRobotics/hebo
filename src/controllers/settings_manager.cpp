@@ -23,6 +23,8 @@ constexpr const char* kDefaultTheme = "light";
 SettingsManager::SettingsManager(QObject* parent)
     : QObject(parent),
       settings_(new QSettings(this)) {
+  locale_names_ << "English" << "简体中文";
+  locales_ << "en_US" << "zh_CN";
   theme_names_ << tr("Light") << tr("Dark") << tr("Night");
   themes_ << "light" << "dark" << "night";
 }
@@ -42,22 +44,6 @@ void SettingsManager::setAutoUpdate(bool enable) {
   emit this->autoUpdateChanged(enable);
 }
 
-QString SettingsManager::locale() {
-  return this->settings_->value(kLocale, kDefaultLocale).toString();
-}
-
-QStringList SettingsManager::availableLocales() const {
-  return {
-      "en_US",
-      "zh_CN"
-  };
-}
-
-void SettingsManager::setLocale(const QString& locale) {
-  this->settings_->setValue(kLocale, locale);
-  emit this->localeChanged(locale);
-}
-
 int SettingsManager::retryConnections() {
   return this->settings_->value(kMaxRetry, kDefaultRetries).toInt();
 }
@@ -68,18 +54,33 @@ void SettingsManager::setRetryConnections(int retries) {
   emit this->retryConnectionsChanged(retries);
 }
 
-int SettingsManager::themeId() {
+int SettingsManager::localeIndex() {
+  const QString locale = this->settings_->value(kLocale, kDefaultLocale).toString();
+  qDebug() << "locale:" << locale;
+  const int index = this->locales_.indexOf(locale);
+  Q_ASSERT(index > -1);
+  return index;
+}
+
+void SettingsManager::setLocaleIndex(int index) {
+  qDebug() << __func__ << index;
+  Q_ASSERT(index > -1 && index < this->locales_.length());
+  this->settings_->setValue(kLocale, this->locales_.at(index));
+  emit this->localeIndexChanged(index);
+}
+
+int SettingsManager::themeIndex() {
   const QString theme = this->settings_->value(kTheme, kDefaultTheme).toString();
   const int index = this->themes_.indexOf(theme);
   Q_ASSERT(index > -1);
   return index;
 }
 
-void SettingsManager::setThemeId(int index) {
+void SettingsManager::setThemeIndex(int index) {
   qDebug() << __func__ << index;
   Q_ASSERT(index > -1 && index < this->themes_.length());
   this->settings_->setValue(kTheme, this->themes_.at(index));
-  emit this->themeIdChanged(index);
+  emit this->themeIndexChanged(index);
 }
 
 }  // namespace hebo

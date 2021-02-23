@@ -41,8 +41,16 @@ Item {
           }
 
           ComboBox {
+            id: languageField;
             editable: false;
-            model: ["English", "简体中文",];
+            model: settingsManager.localeNames;
+            currentIndex: settingsManager.localeIndex;
+
+            Binding {
+              target: settingsManager;
+              property: "localeIndex";
+              value: languageField.currentIndex;
+            }
           }
         }
 
@@ -103,11 +111,11 @@ Item {
             id: themeField;
             editable: false;
             model: settingsManager.themeNames;
-            currentIndex: settingsManager.themeId;
+            currentIndex: settingsManager.themeIndex;
 
             Binding {
               target: settingsManager;
-              property: "themeId";
+              property: "themeIndex";
               value: themeField.currentIndex;
             }
           }
