@@ -1,16 +1,77 @@
-// Copyright (c) 2021 Xu Shaohua <shaohua@biofan.org>. All rights reserved.
-// Use of this source is governed by General Public License that can be found
-// in the LICENSE file.
+// Copyright Wouter van Kleunen 2020
+//
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
 
 #include <iostream>
-#include <iomanip>
-#include <map>
 
 #include <mqtt_client_cpp.hpp>
 
+// This example shows the client reconnecting to the broker
+//
+// The client connects to the server and published a total of 100 messages,
+// if the connection was lost a new connection will be established.
+//
+// Important: please note that messages are only republished to the broker if
+// the broker still has an active session for this client. If it does not,
+// the client will start with a new session and not resend offline stored messages
+//
+
+template <typename C>
+void reconnect_client(boost::asio::steady_timer& timer, C& c)
+{
+  std::cout << "Start reconnect timer" << std::endl;
+
+  // Set an expiry time relative to now.
+  timer.expires_after(std::chrono::seconds(5));
+
+  timer.async_wait([&timer, &c](const boost::system::error_code& error) {
+    if (error != boost::asio::error::operation_aborted) {
+      std::cout << "Reconnect now !!" << std::endl;
+
+      // Connect
+      c->async_connect(
+          // [optional] checking underlying layer completion code
+          [&timer, &c]
+              (MQTT_NS::error_code ec){
+            std::cout << "async_connect callback: " << ec.message() << std::endl;
+            if (ec && ec != boost::asio::error::operation_aborted) {
+              reconnect_client(timer, c);
+            }
+          }
+                      );
+    }
+  });
+}
+
+template <typename C>
+void publish_message(boost::asio::steady_timer& timer, C& c, unsigned int& packet_counter)
+{
+  // Publish a message every 5 seconds
+  timer.expires_after(std::chrono::seconds(5));
+
+  timer.async_wait([&timer, &c, &packet_counter](boost::system::error_code const& error) {
+    if (error != boost::asio::error::operation_aborted) {
+      c->async_publish(
+          MQTT_NS::allocate_buffer("mqtt_client_cpp/topic1"),
+          MQTT_NS::allocate_buffer("packet #" + std::to_string(packet_counter)),
+          MQTT_NS::qos::exactly_once,
+          // [optional] checking async_publish completion code
+          []
+              (MQTT_NS::error_code ec){
+            std::cout << "async_publish callback: " << ec.message() << std::endl;
+          }
+                      );
+
+      publish_message(timer, c, packet_counter);
+    }
+  });
+}
+
 int main(int argc, char** argv) {
   if (argc != 3) {
-    std::cout << argv[0] << " host port" << std::endl;
+    std::cout << argv[0] << " hostname port" << std::endl;
     return -1;
   }
 
@@ -18,40 +79,47 @@ int main(int argc, char** argv) {
 
   boost::asio::io_context ioc;
 
-  std::uint16_t pid_sub1;
-  std::uint16_t pid_sub2;
+  boost::asio::steady_timer publish_timer(ioc);
+  boost::asio::steady_timer reconnect_timer(ioc);
+  unsigned int packet_counter = 1;
 
-  int count = 0;
-  // Create no TLS client
-  auto c = MQTT_NS::make_sync_client(ioc, argv[1], argv[2]);
+  auto c = MQTT_NS::make_async_client(ioc, argv[1], argv[2]);
   using packet_id_t = typename std::remove_reference_t<decltype(*c)>::packet_id_t;
 
-  auto disconnect = [&] {
-    if (++count == 5) c->disconnect();
+  auto disconnect = [&]() {
+    publish_timer.cancel();
+    reconnect_timer.cancel();
+    c->async_disconnect(
+        // [optional] checking async_disconnect completion code
+        []
+            (MQTT_NS::error_code ec){
+          std::cout << "async_disconnect callback: " << ec.message() << std::endl;
+        }
+                       );
   };
 
-  // Setup client
-  c->set_client_id("cid1");
-  c->set_clean_session(true);
+  c->set_client_id("reconnect_client");
+  c->set_clean_session(false);
 
   // Setup handlers
   c->set_connack_handler(
-      [&c, &pid_sub1, &pid_sub2]
+      [&]
           (bool sp, MQTT_NS::connect_return_code connack_return_code){
         std::cout << "Connack handler called" << std::endl;
         std::cout << "Session Present: " << std::boolalpha << sp << std::endl;
-        std::cout << "Connack Return Code: "
-                  << MQTT_NS::connect_return_code_to_str(connack_return_code) << std::endl;
-        if (connack_return_code == MQTT_NS::connect_return_code::accepted) {
-          pid_sub1 = c->subscribe("mqtt_client_cpp/topic1", MQTT_NS::qos::at_most_once);
-          pid_sub2 = c->subscribe(
-              std::vector<std::tuple<MQTT_NS::string_view, MQTT_NS::subscribe_options>>
-                  {
-                      { "mqtt_client_cpp/topic2_1", MQTT_NS::qos::at_least_once },
-                      { "mqtt_client_cpp/topic2_2", MQTT_NS::qos::exactly_once }
-                  }
-                                 );
-        }
+        std::cout << "Connack Return Code: " << MQTT_NS::connect_return_code_to_str(connack_return_code) << std::endl;
+
+        c->async_subscribe(
+            "mqtt_client_cpp/topic1",
+            MQTT_NS::qos::exactly_once,
+            // [optional] checking async_subscribe completion code
+            []
+                (MQTT_NS::error_code ec){
+              std::cout << "async_subscribe callback: " << ec.message() << std::endl;
+            }
+                          );
+
+        publish_message(publish_timer, c, packet_counter);
         return true;
       });
   c->set_close_handler(
@@ -59,16 +127,18 @@ int main(int argc, char** argv) {
           (){
         std::cout << "closed." << std::endl;
       });
+
   c->set_error_handler(
-      []
+      [&]
           (MQTT_NS::error_code ec){
         std::cout << "error: " << ec.message() << std::endl;
+        reconnect_client(reconnect_timer, c);
       });
+
   c->set_puback_handler(
       [&]
           (packet_id_t packet_id){
         std::cout << "puback received. packet_id: " << packet_id << std::endl;
-        disconnect();
         return true;
       });
   c->set_pubrec_handler(
@@ -81,7 +151,12 @@ int main(int argc, char** argv) {
       [&]
           (packet_id_t packet_id){
         std::cout << "pubcomp received. packet_id: " << packet_id << std::endl;
-        disconnect();
+
+        if (packet_counter == 100) {
+          disconnect();
+        }
+
+        packet_counter += 1;
         return true;
       });
   c->set_suback_handler(
@@ -90,13 +165,6 @@ int main(int argc, char** argv) {
         std::cout << "suback received. packet_id: " << packet_id << std::endl;
         for (auto const& e : results) {
           std::cout << "[client] subscribe result: " << e << std::endl;
-        }
-        if (packet_id == pid_sub1) {
-          c->publish("mqtt_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once);
-        }
-        else if (packet_id == pid_sub2) {
-          c->publish("mqtt_client_cpp/topic2_1", "test2_1", MQTT_NS::qos::at_least_once);
-          c->publish("mqtt_client_cpp/topic2_2", "test2_2", MQTT_NS::qos::exactly_once);
         }
         return true;
       });
@@ -114,12 +182,20 @@ int main(int argc, char** argv) {
           std::cout << "packet_id: " << *packet_id << std::endl;
         std::cout << "topic_name: " << topic_name << std::endl;
         std::cout << "contents: " << contents << std::endl;
-        disconnect();
+
         return true;
       });
 
   // Connect
-  c->connect();
+  c->async_connect(
+      // Initial connect should succeed, otherwise we shutdown
+      [&]
+          (MQTT_NS::error_code ec) {
+        std::cout << "async_connect callback: " << ec.message() << std::endl;
+      }
+                  );
 
   ioc.run();
+
+  return 0;
 }
