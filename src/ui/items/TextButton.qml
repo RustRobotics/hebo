@@ -23,6 +23,8 @@ Button {
     onClicked: {
       if (!!parent.link) {
         Qt.openUrlExternally(parent.link);
+      } else if (!!parent.clickCallback) {
+        parent.clickCallback();
       }
     }
   }

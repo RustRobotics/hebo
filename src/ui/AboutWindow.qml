@@ -46,6 +46,9 @@ Item {
 
       Hebo.TextButton {
         text: qsTr("Check for Update");
+        function clickCallback() {
+          updateManager.checkUpdate();
+        }
       }
 
       Hebo.TextButton {

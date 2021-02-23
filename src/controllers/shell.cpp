@@ -5,15 +5,15 @@
 #include "controllers/shell.h"
 
 #include <QGuiApplication>
-#include <QQmlApplicationEngine>
 
-#include "ui/ui.h"
+#include "controllers/main_controller.h"
 
 namespace hebo {
 
 int runShell(int argc, char** argv) {
   QGuiApplication application(argc, argv);
-  QQmlApplicationEngine engine(kUiMainWindow);
+  QScopedPointer<MainController> controller(new MainController());
+  controller->showMainWindow();
 
   return QGuiApplication::exec();
 }

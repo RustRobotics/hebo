@@ -11,11 +11,15 @@
     <file>SettingsWindow.qml</file>
 
     <file>items/FormLabel.qml</file>
+    <file>items/FormSection.qml</file>
     <file>items/ImageButton.qml</file>
     <file>items/LinkIconButton.qml</file>
+    <file>items/NumberField.qml</file>
     <file>items/PageTitle.qml</file>
     <file>items/SectionTitle.qml</file>
+    <file>items/SwitchButtons.qml</file>
     <file>items/TextButton.qml</file>
+    <file>items/qmldir</file>
 
     <file>fonts/iconfont.ttf</file>
 
