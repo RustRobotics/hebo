@@ -20,7 +20,7 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -Werror -Wextra")
 
   # See https://fuzzing-project.org/tutorial-cflags.html.
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Werror -Wextra -fno-exceptions \
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall -Werror -Wextra \
   -fPIC -fno-omit-frame-pointer")
   # -fno-rtti, Disable real-time type information
   # -fno-exceptions Disable exceptions
