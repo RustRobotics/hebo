@@ -1,0 +1,5 @@
+Name: mqtt_cpp
+Home: https://github.com/redboltz/mqtt_cpp
+Author: Takatoshi Kondo
+License: BSL-1.0
+Description: MQTT client/server for C++14 based on Boost.Asio
