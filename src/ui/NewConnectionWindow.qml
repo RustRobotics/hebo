@@ -63,46 +63,37 @@ Item {
         width: parent.width;
         height: generalTab.height;
 
-        Column {
+        GridLayout {
           id: generalTab;
-          padding: 10;
-          spacing: 10;
           width: parent.width;
+          columns: 2;
+          columnSpacing: 15;
+          rowSpacing: 10;
 
-          RowLayout {
-            width: parent.width;
+          Hebo.FormLabel {
+            text: qsTr("Name");
+            required: true;
+          }
 
-            Hebo.FormLabel {
-              text: qsTr("Name");
-              required: true;
-            }
+          TextField {
+            id: nameField;
+          }
 
-            TextField {
-              id: nameField;
-            }
+          Hebo.FormLabel {
+            text: qsTr("Client ID");
+            required: true;
+          }
+
+          TextField {
+            id: clientIdField;
+          }
+
+          Hebo.FormLabel {
+            text: qsTr("Host");
+            required: true;
           }
 
           RowLayout {
-            width: parent.width;
-
-            Hebo.FormLabel {
-              text: qsTr("Client ID");
-              required: true;
-            }
-
-            TextField {
-              id: clientIdField;
-            }
-          }
-
-          RowLayout {
-            width: parent.width;
-
-            Hebo.FormLabel {
-              text: qsTr("Host");
-              required: true;
-            }
-
             ComboBox {
               id: hostProtocol;
               width: 94;
@@ -115,58 +106,42 @@ Item {
             }
           }
 
-          RowLayout {
-            width: parent.width;
-
-            Hebo.FormLabel {
-              text: qsTr("Port");
-              required: true;
-            }
-
-            Hebo.NumberField {
-              id: portField;
-              maxNumber: 65535;
-              minNumber: 1;
-              number: 1883;
-            }
+          Hebo.FormLabel {
+            text: qsTr("Port");
+            required: true;
           }
 
-          RowLayout {
-            width: parent.width;
-
-            Hebo.FormLabel {
-              text: qsTr("Username");
-            }
-
-            TextField {
-              id: usernameField;
-            }
+          Hebo.NumberField {
+            id: portField;
+            maxNumber: 65535;
+            minNumber: 1;
+            number: 1883;
           }
 
-          RowLayout {
-            width: parent.width;
-
-            Hebo.FormLabel {
-              text: qsTr("Password");
-            }
-
-            TextField {
-              id: passwordField;
-              echoMode: TextInput.Password;
-            }
+          Hebo.FormLabel {
+            text: qsTr("Username");
           }
 
-          RowLayout {
-            width: parent.width;
+          TextField {
+            id: usernameField;
+          }
 
-            Hebo.FormLabel {
-              text: qsTr("SSL/TLS");
-            }
+          Hebo.FormLabel {
+            text: qsTr("Password");
+          }
 
-            Hebo.SwitchButtons {
-              id: tlsButton;
-              checked: false;
-            }
+          TextField {
+            id: passwordField;
+            echoMode: TextInput.Password;
+          }
+
+          Hebo.FormLabel {
+            text: qsTr("SSL/TLS");
+          }
+
+          Hebo.SwitchButtons {
+            id: tlsButton;
+            checked: false;
           }
         }
       }  // generalTab
@@ -180,79 +155,60 @@ Item {
         width: parent.width;
         height: advancedTab.height;
 
-        Column {
+        GridLayout {
           id: advancedTab;
-          padding: 10;
-          spacing: 10;
           width: parent.width;
+          columns: 2;
+          columnSpacing: 15;
+          rowSpacing: 10;
 
-          RowLayout {
-            width: parent.width;
-
-            Hebo.FormLabel {
-              text: qsTr("Connection Timeout(s)");
-              required: true;
-            }
-
-            Hebo.NumberField {
-              id: connectionTimeoutField;
-              minNumber: 0;
-              maxNumber: 3600;
-              number: 20;
-            }
+          Hebo.FormLabel {
+            text: qsTr("Connection Timeout(s)");
+            required: true;
           }
 
-          RowLayout {
-            width: parent.width;
-
-            Hebo.FormLabel {
-              text: qsTr("Keep Alive(s)");
-            }
-
-            Hebo.NumberField {
-              id: keepAliveField;
-              minNumber: 10;
-              maxNumber: 2^30;
-              number: 60;
-            }
+          Hebo.NumberField {
+            id: connectionTimeoutField;
+            minNumber: 0;
+            maxNumber: 3600;
+            number: 20;
           }
 
-          RowLayout {
-            width: parent.width;
-
-            Hebo.FormLabel {
-              text: qsTr("Clean Session");
-            }
-
-            Hebo.SwitchButtons {
-              id: cleanSessionButton;
-              checked: true;
-            }
+          Hebo.FormLabel {
+            text: qsTr("Keep Alive(s)");
           }
 
-          RowLayout {
-            width: parent.width;
-
-            Hebo.FormLabel {
-              text: qsTr("Auto Reconnect");
-            }
-
-            Hebo.SwitchButtons {
-              id: autoReconnectButton;
-            }
+          Hebo.NumberField {
+            id: keepAliveField;
+            minNumber: 10;
+            maxNumber: 2^30;
+            number: 60;
           }
 
-          RowLayout {
-            width: parent.width;
+          Hebo.FormLabel {
+            text: qsTr("Clean Session");
+          }
 
-            Hebo.FormLabel {
-              text: qsTr("MQTT Version");
-            }
+          Hebo.SwitchButtons {
+            id: cleanSessionButton;
+            checked: true;
+          }
 
-            ComboBox {
-              id: mqttVersionBox;
-              model: ["3.1.1", "5.0",];
-            }
+          Hebo.FormLabel {
+            text: qsTr("Auto Reconnect");
+          }
+
+          Hebo.SwitchButtons {
+            id: autoReconnectButton;
+          }
+
+          Hebo.FormLabel {
+            text: qsTr("MQTT Version");
+          }
+
+          ComboBox {
+            id: mqttVersionBox;
+            model: ["3.1.1", "5.0",];
           }
         }
       }  // advancedTab
@@ -267,105 +223,93 @@ Item {
         width: parent.width;
         height: lastWillTab.height;
 
-        Column {
+        GridLayout {
           id: lastWillTab;
-          padding: 10;
-          spacing: 10;
           width: parent.width;
+          columns: 2;
+          columnSpacing: 15;
+          rowSpacing: 10;
 
-          RowLayout {
-            width: parent.width;
+          Hebo.FormLabel {
+            text: qsTr("Last-Will Topic");
+          }
 
-            Hebo.FormLabel {
-              text: qsTr("Last-Will Topic");
-            }
+          TextField {
+            id: lastWillField;
+          }
 
-            TextField {
-              id: lastWillField;
-            }
+          Hebo.FormLabel {
+            text: qsTr("Last-Will QoS");
           }
 
           RowLayout {
-            width: parent.width;
+            id: qosField;
+            property int qos: 0;
 
-            Hebo.FormLabel {
-              text: qsTr("Last-Will QoS");
+            RadioButton {
+              checked: parent.qos === 0;
+              text: "0";
             }
 
-            RowLayout {
-              id: qosField;
-              property int qos: 0;
+            RadioButton {
+              checked: parent.qos === 1;
+              text: "1";
+            }
 
-              RadioButton {
-                checked: parent.qos === 0;
-                text: "0";
-              }
-
-              RadioButton {
-                checked: parent.qos === 1;
-                text: "1";
-              }
-
-              RadioButton {
-                checked: parent.qos === 2;
-                text: "2";
-              }
+            RadioButton {
+              checked: parent.qos === 2;
+              text: "2";
             }
           }
 
-          RowLayout {
+          Hebo.FormLabel {
+            text: qsTr("Last-Will Payload");
+            Layout.alignment: Qt.AlignTop | Qt.AlignRight;
+            topPadding: 14;
+          }
+
+          ColumnLayout {
             width: parent.width;
 
-            Hebo.FormLabel {
-              text: qsTr("Last-Will Payload");
-              Layout.alignment: Qt.AlignTop;
-              topPadding: 14;
-            }
+            ScrollView {
+              width: 390;
+              Layout.preferredWidth: 390;
+              height: 124;
+              Layout.preferredHeight: 124;
 
-            ColumnLayout {
-              width: parent.width;
+              TextArea {
+                id: lastWillPayloadField;
+                readOnly: false;
+                selectByMouse: true;
+                selectByKeyboard: true;
+                wrapMode: TextEdit.WrapAnywhere;
+                text: "Hello, world";
 
-              ScrollView {
-                width: 390;
-                Layout.preferredWidth: 390;
-                height: 124;
-                Layout.preferredHeight: 124;
-
-                TextArea {
-                  id: lastWillPayloadField;
-                  readOnly: false;
-                  selectByMouse: true;
-                  selectByKeyboard: true;
-                  wrapMode: TextEdit.WrapAnywhere;
-                  text: "Hello, world";
-
-                  background: Rectangle {
-                    anchors.fill: parent;
-                    border {
-                      width: 1;
-                      color: "#e1e1e1";
-                    }
+                background: Rectangle {
+                  anchors.fill: parent;
+                  border {
+                    width: 1;
+                    color: "#e1e1e1";
                   }
                 }
               }
+            }
 
-              RowLayout {
-                id: lastWillPayloadFormat;
-                property string format: "text";
+            RowLayout {
+              id: lastWillPayloadFormat;
+              property string format: "text";
 
-                RadioButton {
-                  checked: parent.format === "json";
-                  text: "JSON";
-                }
+              RadioButton {
+                checked: parent.format === "json";
+                text: "JSON";
+              }
 
-                RadioButton {
-                  checked: parent.format === "text";
-                  text: "text";
-                }
+              RadioButton {
+                checked: parent.format === "text";
+                text: "text";
               }
             }
           }
-
         }  // lastWillTab
       }
     }
