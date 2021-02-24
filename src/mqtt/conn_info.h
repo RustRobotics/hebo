@@ -34,6 +34,10 @@ using ConnInfoList = QVector<ConnInfo>;
 
 QDebug operator<<(QDebug stream, const ConnInfo& info);
 
+bool parseConnInfos(const QString& file, ConnInfoList& list);
+
+bool dumpConnInfos(const QString& file, const ConnInfoList& list);
+
 }  // namespace hebo
 
 Q_DECLARE_METATYPE(hebo::ConnInfo);
