@@ -15,4 +15,6 @@ target_link_libraries(mqtt-static
     Qt5::Core
 
     mqtt_cpp_iface
+
+    base-static
     )

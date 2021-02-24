@@ -28,19 +28,21 @@ MqttConnectManager::MqttConnectManager(QObject* parent)
 }
 
 void MqttConnectManager::deleteConnection(const QString& name) {
-  auto it = std::find(conn_info_list_.begin(), conn_info_list_.end(), [&](const ConnInfo& info) {
-    return info.name == name;
-  });
-  if (it == conn_info_list_.end()) {
+  int index;
+  for (index = 0; index < conn_info_list_.length(); ++index) {
+    if (conn_info_list_.at(index).name == name) {
+      break;
+    }
+  }
+  if (index == conn_info_list_.length()) {
     qWarning() << "Failed to find ConnInfo with name:" << name;
-
     return;
   }
 
   // disconnect
 
   // delete from list
-  conn_info_list_.erase(it);
+  conn_info_list_.removeAt(index);
 
   // Save to file
   if (!dumpConnInfos(conn_file_, conn_info_list_)) {
