@@ -27,7 +27,7 @@ Item {
     onClicked: {
       // TODO(Shaohua): Check conn name is unique
       connectManager.addConnection(
-        namField.text,
+        nameField.text,
         clientIdField.text,
         hostProtocol.currentText,
         hostnameField.text,

@@ -36,6 +36,12 @@ void MqttClient::initSignals() {
           this, &MqttClient::doConnect);
   connect(this, &MqttClient::requestDisconnect,
           this, &MqttClient::doDisconnect);
+  connect(this, &MqttClient::requestPublish,
+          this, &MqttClient::doPublish);
+  connect(this, &MqttClient::requestSubscribe,
+          this, &MqttClient::doSubscribe);
+  connect(this, &MqttClient::requestUnsubscribe,
+          this, &MqttClient::doUnsubscribe);
 }
 
 void MqttClient::doConnect(const ConnInfo& info) {
@@ -96,6 +102,21 @@ void MqttClient::doDisconnect() {
 void MqttClient::timerEvent(QTimerEvent* event) {
   QObject::timerEvent(event);
   this->p_->context.poll();
+}
+
+void MqttClient::doSubscribe(const QString& topic, QoS qos) {
+  Q_UNUSED(topic)
+  Q_UNUSED(qos)
+}
+
+void MqttClient::doUnsubscribe(const QString& topic) {
+  Q_UNUSED(topic);
+}
+
+void MqttClient::doPublish(const QString& topic, QoS qos, const QByteArray& payload) {
+  Q_UNUSED(topic);
+  Q_UNUSED(qos);
+  Q_UNUSED(payload);
 }
 
 }  // namespace

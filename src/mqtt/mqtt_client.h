@@ -26,6 +26,16 @@ class MqttClient : public QObject {
   void connectResult(bool ok, const QString& error);
 
   void requestDisconnect();
+  void disconnectResult(bool ok, const QString& error);
+
+  void requestSubscribe(const QString& topic, QoS qos);
+  void subscribeResult(const QString& topic, bool ok, const QString& error);
+
+  void requestUnsubscribe(const QString& topic);
+  void unsubscribeResult(const QString& topic, bool ok, const QString& error);
+
+  void requestPublish(const QString& topic, QoS qos, const QByteArray& payload);
+  void publishResult(const QString& topic, bool ok, const QString& error);
 
  protected:
   void timerEvent(QTimerEvent* event) override;
@@ -34,6 +44,12 @@ class MqttClient : public QObject {
   void doConnect(const ConnInfo& info);
 
   void doDisconnect();
+
+  void doSubscribe(const QString& topic, QoS qos);
+
+  void doUnsubscribe(const QString& topic);
+
+  void doPublish(const QString& topic, QoS qos, const QByteArray& payload);
 
  private:
   void initSignals();
