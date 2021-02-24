@@ -16,12 +16,6 @@ Text {
   Layout.rightMargin: 0;
   Layout.alignment: Qt.AlignVCenter | Qt.AlignRight;
 
-  Rectangle {
-    anchors.fill: root;
-    color: "red";
-    opacity: 0.2;
-  }
-
   Text {
     text: root.required ? "*" : "";
     anchors.right: root.left;

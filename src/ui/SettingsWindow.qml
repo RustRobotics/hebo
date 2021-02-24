@@ -30,59 +30,55 @@ Item {
       width: parent.width;
       height: generalTab.height;
 
-      Column {
+      GridLayout {
         id: generalTab;
         width: parent.width;
-        padding: 10;
+        columns: 2;
+        columnSpacing: 15;
+        rowSpacing: 10;
 
-        RowLayout {
-          Hebo.FormLabel {
-            text: qsTr("Language");
-          }
+        Hebo.FormLabel {
+          text: qsTr("Language");
+        }
 
-          ComboBox {
-            id: languageField;
-            editable: false;
-            model: settingsManager.localeNames;
-            currentIndex: settingsManager.localeIndex;
+        ComboBox {
+          id: languageField;
+          editable: false;
+          model: settingsManager.localeNames;
+          currentIndex: settingsManager.localeIndex;
 
-            Binding {
-              target: settingsManager;
-              property: "localeIndex";
-              value: languageField.currentIndex;
-            }
+          Binding {
+            target: settingsManager;
+            property: "localeIndex";
+            value: languageField.currentIndex;
           }
         }
 
-        RowLayout {
-          Hebo.FormLabel {
-            text: qsTr("Auto check update");
-          }
+        Hebo.FormLabel {
+          text: qsTr("Auto check update");
+        }
 
-          Switch {
-            checked: settingsManager.autoUpdate;
-            onToggled: {
-              settingsManager.autoUpdate = this.checked;
-            }
+        Switch {
+          checked: settingsManager.autoUpdate;
+          onToggled: {
+            settingsManager.autoUpdate = this.checked;
           }
         }
 
-        RowLayout {
-          Hebo.FormLabel {
-            text: qsTr("Max retry connection");
-          }
+        Hebo.FormLabel {
+          text: qsTr("Max retry connection");
+        }
 
-          Hebo.NumberField {
-            id: maxRetryField;
-            minNumber: 0;
-            maxNumber: 1000;
-            number: settingsManager.retryConnections;
+        Hebo.NumberField {
+          id: maxRetryField;
+          minNumber: 0;
+          maxNumber: 1000;
+          number: settingsManager.retryConnections;
 
-            Binding {
-              target: settingsManager;
-              property: "retryConnections";
-              value: maxRetryField.number;
-            }
+          Binding {
+            target: settingsManager;
+            property: "retryConnections";
+            value: maxRetryField.number;
           }
         }
       }
@@ -97,27 +93,27 @@ Item {
       width: parent.width;
       implicitHeight: appearanceTab.implicitHeight;
 
-      Column {
+      GridLayout {
         id: appearanceTab;
         width: parent.width;
-        padding: 10;
+        columns: 2;
+        columnSpacing: 15;
+        rowSpacing: 10;
 
-        RowLayout {
-          Hebo.FormLabel {
-            text: qsTr("Theme");
-          }
+        Hebo.FormLabel {
+          text: qsTr("Theme");
+        }
 
-          ComboBox {
-            id: themeField;
-            editable: false;
-            model: settingsManager.themeNames;
-            currentIndex: settingsManager.themeIndex;
+        ComboBox {
+          id: themeField;
+          editable: false;
+          model: settingsManager.themeNames;
+          currentIndex: settingsManager.themeIndex;
 
-            Binding {
-              target: settingsManager;
-              property: "themeIndex";
-              value: themeField.currentIndex;
-            }
+          Binding {
+            target: settingsManager;
+            property: "themeIndex";
+            value: themeField.currentIndex;
           }
         }
       }
