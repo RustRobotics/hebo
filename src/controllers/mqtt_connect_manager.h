@@ -18,18 +18,37 @@ class MqttConnectManager : public QObject {
   explicit MqttConnectManager(QObject* parent = nullptr);
 
  public slots:
-  void setConnectName(const QString& name) { conn_info_.name = name; };
-  void setConnectClientId(const QString& client_id) { conn_info_.client_id = client_id; }
-  void setConnectProtocol(const QString& protocol) { conn_info_.protocol = protocol; }
-  void setConnectHost(const QString& host) { conn_info_.host = host; }
-  void setConnectPort(int port) { conn_info_.port = port; }
-  void setConnectQoS(int qos) { conn_info_.qos = static_cast<QoS>(qos); }
-  void setConnectCleanSession(bool clean) { conn_info_.clean_session = clean; }
+  // Connections management
+  // Protocol V3.1.1
+  void addConnection(const QString& name,
+                     const QString& client_id,
+                     const QString& protocol,
+                     const QString& host,
+                     int port,
+                     int qos,
+                     bool clean_session) {
+    ConnInfo conn_info{};
+    conn_info.name = name;
+    conn_info.client_id = client_id;
+    conn_info.protocol = protocol;
+    conn_info.host = host;
+    conn_info.port = port;
+    conn_info.qos = static_cast<QoS>(qos);
+    conn_info.clean_session = clean_session;
+    this->addConnInfo(conn_info);
+  }
 
-  void requestConnect();
+  const ConnInfoList& listConnections() const { return this->conn_info_list_; }
+
+  void deleteConnection(const QString& name);
+
+  void requestConnection(const QString& name);
 
  private:
-  ConnInfo conn_info_{};
+  void addConnInfo(const ConnInfo& info);
+
+  ConnInfoList conn_info_list_{};
+
   QVector<MqttClient*> clients_{};
 };
 

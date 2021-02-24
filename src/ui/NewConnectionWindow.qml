@@ -25,14 +25,17 @@ Item {
     z: 1;
 
     onClicked: {
-      connectManager.setConnectName(nameField.text);
-      connectManager.setConnectClientId(clientIdField.text);
-      connectManager.setConnectProtocol(hostProtocol.currentText);
-      connectManager.setConnectHost(hostnameField.text);
-      connectManager.setConnectPort(portField.number);
-      connectManager.setConnectQoS(qosField.qos);
-      connectManager.setConnectCleanSession(cleanSessionButton.checked);
-      connectManager.requestConnect();
+      // TODO(Shaohua): Check conn name is unique
+      connectManager.addConnection(
+        namField.text,
+        clientIdField.text,
+        hostProtocol.currentText,
+        hostnameField.text,
+        portField.number,
+        qosField.qos,
+        cleanSessionButton.checked
+      );
+      connectManager.requestConnection(nameField.text);
 
       root.connectClicked();
     }

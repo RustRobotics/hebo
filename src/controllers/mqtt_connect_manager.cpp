@@ -11,10 +11,35 @@ namespace hebo {
 MqttConnectManager::MqttConnectManager(QObject* parent) : QObject(parent) {
 }
 
-void MqttConnectManager::requestConnect() {
-  auto* client = new MqttClient();
-  client->requestConnect(conn_info_);
-  this->clients_.append(client);
+
+void MqttConnectManager::deleteConnection(const QString& name) {
+  for (const auto& info : conn_info_list_) {
+    if (info.name == name) {
+      // disconnect
+      // delete from list
+      // Save to file
+      return;
+    }
+  }
+  qWarning() << "Failed to find ConnInfo with name:" << name;
+}
+
+void MqttConnectManager::requestConnection(const QString& name) {
+  for (const auto& info : conn_info_list_) {
+    if (info.name == name) {
+      auto* client = new MqttClient();
+      client->requestConnect(info);
+      this->clients_.append(client);
+      return;
+    }
+  }
+  qWarning() << "Failed to find ConnInfo with name:" << name;
+
+}
+
+void MqttConnectManager::addConnInfo(const ConnInfo& info) {
+  this->conn_info_list_.append(info);
+  // save to local file
 }
 
 }  // namespace hebo
