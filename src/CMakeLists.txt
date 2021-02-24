@@ -9,6 +9,7 @@ add_subdirectory(third_party/CuteLogger)
 add_subdirectory(third_party/mqtt_cpp)
 
 add_subdirectory(app)
+add_subdirectory(base)
 add_subdirectory(controllers)
 add_subdirectory(mqtt)
 add_subdirectory(ui)
