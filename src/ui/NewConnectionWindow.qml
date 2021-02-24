@@ -10,6 +10,7 @@ import "items" as Hebo
 
 Item {
   id: root;
+  signal connectClicked();
 
   Hebo.PageTitle {
     id: title;
@@ -32,6 +33,8 @@ Item {
       connectManager.setConnectQoS(qosField.qos);
       connectManager.setConnectCleanSession(cleanSessionButton.checked);
       connectManager.requestConnect();
+
+      root.connectClicked();
     }
   }
 

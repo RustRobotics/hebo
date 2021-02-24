@@ -34,6 +34,9 @@ ApplicationWindow {
     }
 
     NewConnectionWindow {
+      onConnectClicked: {
+        leftPanel.setIndex(0);
+      }
     }
 
     LogWindow {

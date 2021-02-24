@@ -7,11 +7,24 @@ Rectangle {
   color: "#333844";
   property int currentIndex: 0;
 
+  function setIndex(index) {
+    this.currentIndex = index;
+    buttonGroup.setIndex(currentIndex);
+  }
+
   ButtonGroup {
     id: buttonGroup;
     exclusive: true;
 
     onClicked: root.currentIndex = button.index;
+    function setIndex(index) {
+      for (let i = 0; i < buttons.length; ++i) {
+        if (buttons[i].index === index) {
+          this.checkedButton = buttons[i];
+          break;
+        }
+      }
+    }
   }
 
   FontLoader {
