@@ -38,7 +38,7 @@ bool parseItems(const QJsonArray& array, ConnInfoList& list) {
     info.protocol = object.value(kKeyProtocol).toString();
     info.host = object.value(kKeyHost).toString();
     info.port = object.value(kKeyPort).toInt();
-    info.qos = static_cast<QoS>(object.value(kKeyQoS).toInt());
+    info.qos = object.value(kKeyQoS).toInt();
     info.username = object.value(kKeyUsername).toString();
     info.password = object.value(kKeyPassword).toString();
     info.with_tls = object.value(kKeyTls).toBool();
@@ -93,7 +93,7 @@ bool dumpConnInfos(const QString& file, const ConnInfoList& list) {
     object.insert(kKeyProtocol, info.protocol);
     object.insert(kKeyHost, info.host);
     object.insert(kKeyPort, info.port);
-    object.insert(kKeyQoS, static_cast<int32_t>(info.qos));
+    object.insert(kKeyQoS, info.qos);
     object.insert(kKeyUsername, info.username);
     object.insert(kKeyPassword, info.password);
     object.insert(kKeyTls, info.with_tls);

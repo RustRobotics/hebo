@@ -23,6 +23,7 @@ int runShell(int argc, char** argv) {
 //  QGuiApplication::setWindowIcon(QIcon(kHeboUiIcon));
 
   QGuiApplication application(argc, argv);
+//  registerComponents();
   cuteLogger->registerAppender(new ConsoleAppender());
 
   QScopedPointer<MainController> controller(new MainController());
@@ -36,6 +37,7 @@ int runShell(int argc, char** argv) {
 //  constexpr int kVersionMajor = 1;
 //  constexpr int kVersionMinor = 0;
 //  qmlRegisterType<ConnInfo>(kComponentName, kVersionMajor, kVersionMinor, "ConnInfo");
+//  qmlRegisterType<ConnectStateInfo>(kComponentName, kVersionMajor, kVersionMinor, "ConnectStateInfo");
 //}
 
 }  // namespace hebo

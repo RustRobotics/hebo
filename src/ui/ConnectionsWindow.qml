@@ -16,4 +16,27 @@ Item {
     text: qsTr("Connections");
     z: 1;
   }
+
+
+  ListView {
+    id: connectionList;
+    anchors.top: title.bottom;
+    anchors.left: root.left;
+    anchors.bottom: root.bottom;
+    width: 240;
+    model: connectManager.connList;
+    delegate: Text {
+      text: "Hello";
+    }
+
+    Rectangle {
+      anchors.fill: parent;
+      color: "red";
+      opacity: 0.24;
+    }
+
+  }
+
+  ScrollView {
+  }
 }

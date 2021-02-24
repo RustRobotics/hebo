@@ -104,7 +104,7 @@ void MqttClient::timerEvent(QTimerEvent* event) {
   this->p_->context.poll();
 }
 
-void MqttClient::doSubscribe(const QString& topic, QoS qos) {
+void MqttClient::doSubscribe(const QString& topic, int qos) {
   Q_UNUSED(topic)
   Q_UNUSED(qos)
 }
@@ -113,7 +113,7 @@ void MqttClient::doUnsubscribe(const QString& topic) {
   Q_UNUSED(topic);
 }
 
-void MqttClient::doPublish(const QString& topic, QoS qos, const QByteArray& payload) {
+void MqttClient::doPublish(const QString& topic, int qos, const QByteArray& payload) {
   Q_UNUSED(topic);
   Q_UNUSED(qos);
   Q_UNUSED(payload);

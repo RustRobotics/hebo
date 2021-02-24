@@ -15,6 +15,12 @@
 namespace hebo {
 
 struct ConnectStateInfo {
+ private:
+  Q_GADGET
+  Q_PROPERTY(ConnInfo info MEMBER info);
+  Q_PROPERTY(ConnectState state MEMBER state);
+
+ public:
   ConnInfo info{};
   ConnectState state{ConnectState::kDisconnected};
   QSharedPointer<MqttClient> client{nullptr};
@@ -44,7 +50,7 @@ class ConnectManager : public QObject {
     conn_info.protocol = protocol;
     conn_info.host = host;
     conn_info.port = port;
-    conn_info.qos = static_cast<QoS>(qos);
+    conn_info.qos = qos;
     conn_info.clean_session = clean_session;
     this->addConnInfo(conn_info);
   }

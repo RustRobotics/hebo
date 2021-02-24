@@ -11,19 +11,31 @@
 
 namespace hebo {
 
-enum class QoS : uint8_t {
-  kAtMostOnce,
-  kAtLeaseOnce,
-  kExactOnce,
-};
+constexpr const int kAtMostOnce = 0;
+constexpr const int kAtLeaseOnce = 1;
+constexpr const int kExactOnce = 2;
 
 struct ConnInfo {
+ private:
+  Q_GADGET
+  Q_PROPERTY(QString name MEMBER name);
+  Q_PROPERTY(QString clientId MEMBER client_id);
+  Q_PROPERTY(QString protocol MEMBER protocol);
+  Q_PROPERTY(QString host MEMBER host);
+  Q_PROPERTY(int port MEMBER port);
+  Q_PROPERTY(int qos MEMBER qos);
+  Q_PROPERTY(QString username MEMBER username);
+  Q_PROPERTY(QString password MEMBER password);
+  Q_PROPERTY(bool tls MEMBER with_tls);
+  Q_PROPERTY(bool cleanSession MEMBER clean_session);
+
+ public:
   QString name{};
   QString client_id{};
   QString protocol{};
   QString host{};
   uint16_t port{};
-  QoS qos{QoS::kAtMostOnce};
+  int qos{kAtMostOnce};
   QString username{};
   QString password{};
   bool with_tls{false};
