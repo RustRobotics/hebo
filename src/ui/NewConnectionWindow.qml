@@ -130,6 +130,7 @@ Item {
             from: 1;
             to: 65535;
             value: 1883;
+            editable: true;
           }
 
           Hebo.FormLabel {
@@ -186,6 +187,7 @@ Item {
             from: 0;
             to: 3600;
             value: 20;
+            editable: true;
           }
 
           Hebo.FormLabel {
@@ -195,8 +197,10 @@ Item {
           SpinBox {
             id: keepAliveField;
             from: 10;
-            to: 2^30;
+            to: 2 ^ 30;
+            //to: 1073741824;
             value: 60;
+            editable: true;
           }
 
           Hebo.FormLabel {

@@ -73,6 +73,7 @@ Item {
           id: maxRetryField;
           from: 0;
           to: 1000;
+          editable: true;
           value: settingsManager.retryConnections;
 
           Binding {
