@@ -69,16 +69,16 @@ Item {
           text: qsTr("Max retry connection");
         }
 
-        Hebo.NumberField {
+        SpinBox {
           id: maxRetryField;
-          minNumber: 0;
-          maxNumber: 1000;
-          number: settingsManager.retryConnections;
+          from: 0;
+          to: 1000;
+          value: settingsManager.retryConnections;
 
           Binding {
             target: settingsManager;
             property: "retryConnections";
-            value: maxRetryField.number;
+            value: maxRetryField.value;
           }
         }
       }

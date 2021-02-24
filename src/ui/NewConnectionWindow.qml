@@ -125,11 +125,11 @@ Item {
             required: true;
           }
 
-          Hebo.NumberField {
+          SpinBox {
             id: portField;
-            maxNumber: 65535;
-            minNumber: 1;
-            number: 1883;
+            from: 1;
+            to: 65535;
+            value: 1883;
           }
 
           Hebo.FormLabel {
@@ -181,22 +181,22 @@ Item {
             required: true;
           }
 
-          Hebo.NumberField {
+          SpinBox {
             id: connectionTimeoutField;
-            minNumber: 0;
-            maxNumber: 3600;
-            number: 20;
+            from: 0;
+            to: 3600;
+            value: 20;
           }
 
           Hebo.FormLabel {
             text: qsTr("Keep Alive(s)");
           }
 
-          Hebo.NumberField {
+          SpinBox {
             id: keepAliveField;
-            minNumber: 10;
-            maxNumber: 2^30;
-            number: 60;
+            from: 10;
+            to: 2^30;
+            value: 60;
           }
 
           Hebo.FormLabel {
