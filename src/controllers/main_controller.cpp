@@ -17,7 +17,7 @@ MainController::MainController(QObject* parent)
       log_manager_(new LogManager(this)),
       update_manager_(new UpdateManager()),
       settings_manager_(new SettingsManager(this)),
-      connect_manager_(new MqttConnectManager(this)) {
+      connect_manager_(new ConnectManager(this)) {
 
   update_manager_->moveToThread(updater_thread_);
   updater_thread_->start();

@@ -3,8 +3,8 @@ set(SOURCES
     log_manager.h
     main_controller.cpp
     main_controller.h
-    mqtt_connect_manager.cpp
-    mqtt_connect_manager.h
+    connect_manager.cpp
+    connect_manager.h
     settings_manager.cpp
     settings_manager.h
     shell.cpp

@@ -20,8 +20,10 @@ Item {
 
   Button {
     text: "Connect";
-    anchors.top: root.top;
-    anchors.right: root.right;
+    anchors.top: title.top;
+    anchors.topMargin: 10;
+    anchors.left: title.right;
+    anchors.leftMargin: 24;
     z: 1;
 
     onClicked: {
@@ -35,7 +37,7 @@ Item {
         qosField.qos,
         cleanSessionButton.checked
       );
-      connectManager.requestConnection(nameField.text);
+      connectManager.requestConnect(nameField.text);
 
       root.connectClicked();
     }

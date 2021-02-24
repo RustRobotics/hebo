@@ -2,20 +2,31 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#ifndef HEBOUI_SRC_CONTROLLERS_MQTT_CONNECT_MANAGER_H_
-#define HEBOUI_SRC_CONTROLLERS_MQTT_CONNECT_MANAGER_H_
+#ifndef HEBOUI_SRC_CONTROLLERS_CONNECT_MANAGER_H_
+#define HEBOUI_SRC_CONTROLLERS_CONNECT_MANAGER_H_
 
 #include <QObject>
+#include <QSharedPointer>
 
 #include "mqtt/conn_info.h"
+#include "mqtt/conn_state.h"
 #include "mqtt/mqtt_client.h"
 
 namespace hebo {
 
-class MqttConnectManager : public QObject {
+struct ConnectStateInfo {
+  ConnInfo info{};
+  ConnectState state{ConnectState::kDisconnected};
+  QSharedPointer<MqttClient> client{nullptr};
+};
+using ConnectStateInfoList =  QVector<ConnectStateInfo>;
+
+class ConnectManager : public QObject {
   Q_OBJECT
+  Q_PROPERTY(ConnectStateInfoList connList READ connList NOTIFY connListChanged)
+
  public:
-  explicit MqttConnectManager(QObject* parent = nullptr);
+  explicit ConnectManager(QObject* parent = nullptr);
 
  public slots:
   // Connections management
@@ -38,21 +49,28 @@ class MqttConnectManager : public QObject {
     this->addConnInfo(conn_info);
   }
 
-  const ConnInfoList& listConnections() const { return this->conn_info_list_; }
-
   void deleteConnection(const QString& name);
 
-  void requestConnection(const QString& name);
+  void requestConnect(const QString& name);
+
+  const ConnectStateInfoList& connList() const {
+    return this->conn_list_;
+  }
+
+ signals:
+  void connListChanged(const ConnectStateInfoList& list);
 
  private:
   void addConnInfo(const ConnInfo& info);
 
-  ConnInfoList conn_info_list_{};
-  QString conn_file_;
+  void saveConnInfo();
 
-  QVector<MqttClient*> clients_{};
+  QString conn_file_;
+  ConnectStateInfoList conn_list_{};
 };
 
 }  // namespace hebo
 
-#endif  // HEBOUI_SRC_CONTROLLERS_MQTT_CONNECT_MANAGER_H_
+Q_DECLARE_METATYPE(hebo::ConnectStateInfo);
+
+#endif  // HEBOUI_SRC_CONTROLLERS_CONNECT_MANAGER_H_
