@@ -5,23 +5,47 @@
 #include "controllers/mqtt_connect_manager.h"
 
 #include <QDebug>
+#include <QDir>
+#include <QStandardPaths>
 
 namespace hebo {
+namespace {
 
-MqttConnectManager::MqttConnectManager(QObject* parent) : QObject(parent) {
+QString getJsonFile() {
+  const QStringList dirs = QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation);
+  Q_ASSERT(!dirs.isEmpty());
+  QDir dir(dirs.first());
+  dir.cdUp();
+  return dir.absoluteFilePath("connections.json");
 }
 
+}  // namespace
+
+MqttConnectManager::MqttConnectManager(QObject* parent)
+    : QObject(parent),
+      conn_file_(getJsonFile()) {
+  qDebug() << "conn file:" << conn_file_;
+}
 
 void MqttConnectManager::deleteConnection(const QString& name) {
-  for (const auto& info : conn_info_list_) {
-    if (info.name == name) {
-      // disconnect
-      // delete from list
-      // Save to file
-      return;
-    }
+  auto it = std::find(conn_info_list_.begin(), conn_info_list_.end(), [&](const ConnInfo& info) {
+    return info.name == name;
+  });
+  if (it == conn_info_list_.end()) {
+    qWarning() << "Failed to find ConnInfo with name:" << name;
+
+    return;
   }
-  qWarning() << "Failed to find ConnInfo with name:" << name;
+
+  // disconnect
+
+  // delete from list
+  conn_info_list_.erase(it);
+
+  // Save to file
+  if (!dumpConnInfos(conn_file_, conn_info_list_)) {
+    qWarning() << "Failed to save connection info to file:" << conn_file_;
+  }
 }
 
 void MqttConnectManager::requestConnection(const QString& name) {
@@ -34,12 +58,15 @@ void MqttConnectManager::requestConnection(const QString& name) {
     }
   }
   qWarning() << "Failed to find ConnInfo with name:" << name;
-
 }
 
 void MqttConnectManager::addConnInfo(const ConnInfo& info) {
   this->conn_info_list_.append(info);
+
   // save to local file
+  if (!dumpConnInfos(conn_file_, conn_info_list_)) {
+    qWarning() << "Failed to save connection info to file:" << conn_file_;
+  }
 }
 
 }  // namespace hebo

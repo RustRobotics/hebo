@@ -48,6 +48,7 @@ class MqttConnectManager : public QObject {
   void addConnInfo(const ConnInfo& info);
 
   ConnInfoList conn_info_list_{};
+  QString conn_file_;
 
   QVector<MqttClient*> clients_{};
 };
