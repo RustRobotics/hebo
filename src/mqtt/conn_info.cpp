@@ -111,4 +111,12 @@ bool dumpConnInfos(const QString& file, const ConnInfoList& list) {
   return writeBinaryFile(file, contents);
 }
 
+bool ConnInfo::operator==(const ConnInfo& other) const {
+  return this->name == other.name;
+}
+
+bool ConnInfo::operator!=(const ConnInfo& other) const {
+  return !(*this == other);
+}
+
 }  // namespace hebo

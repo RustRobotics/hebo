@@ -25,6 +25,9 @@ ConnectManager::ConnectManager(QObject* parent)
     : QObject(parent),
       conn_file_(getJsonFile()) {
   qDebug() << "conn file:" << conn_file_;
+  // Load connections on startup.
+
+  qRegisterMetaType<ConnectStateInfoList>("ConnectStateInfoList");
 }
 
 void ConnectManager::deleteConnection(const QString& name) {
@@ -75,6 +78,8 @@ void ConnectManager::addConnInfo(const ConnInfo& info) {
 
   // save to local file
   this->saveConnInfo();
+
+  emit this->connListChanged(this->conn_list_);
 }
 
 void ConnectManager::saveConnInfo() {

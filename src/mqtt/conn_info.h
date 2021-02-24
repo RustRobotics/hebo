@@ -40,6 +40,9 @@ struct ConnInfo {
   QString password{};
   bool with_tls{false};
   bool clean_session;
+
+  bool operator==(const ConnInfo& other) const;
+  bool operator!=(const ConnInfo& other) const;
 };
 
 using ConnInfoList = QVector<ConnInfo>;

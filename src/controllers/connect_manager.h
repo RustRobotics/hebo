@@ -78,5 +78,6 @@ class ConnectManager : public QObject {
 }  // namespace hebo
 
 Q_DECLARE_METATYPE(hebo::ConnectStateInfo);
+Q_DECLARE_METATYPE(hebo::ConnectStateInfoList);
 
 #endif  // HEBOUI_SRC_CONTROLLERS_CONNECT_MANAGER_H_
