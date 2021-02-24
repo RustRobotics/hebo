@@ -14,12 +14,14 @@ Item {
   Hebo.PageTitle {
     id: title;
     text: qsTr("New Connection");
+    z: 1;
   }
 
   Button {
     text: "Connect";
     anchors.top: root.top;
     anchors.right: root.right;
+    z: 1;
 
     onClicked: {
       connectManager.setConnectName(nameField.text);
@@ -44,13 +46,17 @@ Item {
       bottom: root.bottom;
     }
     width: root.width;
-    topInset: 2;
+    topInset: 24;
     rightInset: 14;
     bottomInset: 10;
     leftInset: 14;
-    padding: 18;
+    topPadding: 2;
+    rightPadding: 18;
+    bottomPadding: 18;
+    leftPadding: 18;
+    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff;
 
-    Column {
+    ColumnLayout {
       spacing: 10;
       width: 580;
 
@@ -283,7 +289,6 @@ Item {
                 selectByMouse: true;
                 selectByKeyboard: true;
                 wrapMode: TextEdit.WrapAnywhere;
-                text: "Hello, world";
 
                 background: Rectangle {
                   anchors.fill: parent;

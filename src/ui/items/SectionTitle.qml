@@ -8,5 +8,5 @@ Text {
   font.pixelSize: 16;
   font.weight: Font.Medium;
   horizontalAlignment: Text.AlignLeft;
-  Layout.topMargin: 8;
+  Layout.topMargin: 16;
 }
