@@ -30,6 +30,8 @@ struct ConnInfo {
   bool clean_session;
 };
 
+using ConnInfoList = QVector<ConnInfo>;
+
 QDebug operator<<(QDebug stream, const ConnInfo& info);
 
 }  // namespace hebo
