@@ -19,15 +19,19 @@ QString getJsonFile() {
   return dir.absoluteFilePath("connections.json");
 }
 
+QString generateConnDescription(const ConnInfo& info) {
+  return QString("%1@%2:%3").arg(info.name).arg(info.host).arg(info.port);
+}
+
 }  // namespace
 
 ConnectManager::ConnectManager(QObject* parent)
     : QObject(parent),
       conn_file_(getJsonFile()) {
-  qDebug() << "conn file:" << conn_file_;
-  // Load connections on startup.
-
   qRegisterMetaType<ConnectStateInfoList>("ConnectStateInfoList");
+
+  // Load connections on startup.
+  this->loadConnInfo();
 }
 
 void ConnectManager::deleteConnection(const QString& name) {
@@ -73,6 +77,7 @@ void ConnectManager::requestConnect(const QString& name) {
 
 void ConnectManager::addConnInfo(const ConnInfo& info) {
   ConnectStateInfo item{};
+  item.description = generateConnDescription(info);
   item.info = info;
   this->conn_list_.append(item);
 
@@ -90,6 +95,22 @@ void ConnectManager::saveConnInfo() {
 
   if (!dumpConnInfos(conn_file_, info_list)) {
     qWarning() << "Failed to save connection info to file:" << conn_file_;
+  }
+}
+
+void ConnectManager::loadConnInfo() {
+  ConnInfoList list{};
+  const bool ok = parseConnInfos(this->conn_file_, list);
+  if (!ok) {
+    qWarning() << "Failed to parse conn info file:" << this->conn_file_;
+    return;
+  }
+
+  for (const auto& info : list) {
+    ConnectStateInfo item{};
+    item.description = generateConnDescription(info);
+    item.info = info;
+    this->conn_list_.append(item);
   }
 }
 

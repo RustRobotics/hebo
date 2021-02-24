@@ -19,11 +19,13 @@ struct ConnectStateInfo {
   Q_GADGET
   Q_PROPERTY(ConnInfo info MEMBER info);
   Q_PROPERTY(ConnectState state MEMBER state);
+  Q_PROPERTY(QString description MEMBER description);
 
  public:
   ConnInfo info{};
   ConnectState state{ConnectState::kDisconnected};
   QSharedPointer<MqttClient> client{nullptr};
+  QString description{};
 };
 using ConnectStateInfoList =  QVector<ConnectStateInfo>;
 
@@ -69,6 +71,7 @@ class ConnectManager : public QObject {
  private:
   void addConnInfo(const ConnInfo& info);
 
+  void loadConnInfo();
   void saveConnInfo();
 
   QString conn_file_;

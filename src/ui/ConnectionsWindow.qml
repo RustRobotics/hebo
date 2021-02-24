@@ -26,13 +26,17 @@ Item {
     width: 240;
     model: connectManager.connList;
     delegate: Text {
-      text: "Hello";
-    }
+      font.pixelSize: 14;
+      padding: 20;
+      verticalAlignment: Text.AlignVCenter;
+      width: connectionList.width;
+      text: connectionList.model[index].description;
 
-    Rectangle {
-      anchors.fill: parent;
-      color: "red";
-      opacity: 0.24;
+      Rectangle {
+        anchors.fill: parent;
+        color: "#c3e6c8";
+        opacity: 0.25;
+      }
     }
 
   }
