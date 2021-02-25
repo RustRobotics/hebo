@@ -22,6 +22,7 @@ class ConnectManager : public QObject {
  public:
   explicit ConnectManager(QObject* parent = nullptr);
 
+  ConnectionModel* model() { return this->model_; }
   [[nodiscard]] const ConnectionModel* model() const { return this->model_; }
 
  public slots:

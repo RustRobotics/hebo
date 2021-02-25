@@ -83,7 +83,7 @@ QHash<int, QByteArray> ConnectionModel::roleNames() const {
 
 void ConnectionModel::addConnectionInfo(const ConnectionInfo& info) {
   const int len = this->list_.length();
-  this->beginInsertRows(len, len + 1);
+  this->beginInsertRows(QModelIndex(), len, len + 1);
   this->list_.append(info);
   this->endInsertRows();
 }
