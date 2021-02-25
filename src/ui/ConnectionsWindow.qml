@@ -26,6 +26,11 @@ Item {
     model: connectManager.connList;
     keyNavigationEnabled: true;
 
+    onCurrentIndexChanged: {
+      const name = this.model[this.currentIndex].description;
+      stackView.switchClient(name);
+    }
+
     delegate: Item {
       width: connectionList.width;
       height: 60;
@@ -63,9 +68,37 @@ Item {
         }
       }
     }
-
   }
 
-  ScrollView {
+  // Right panel
+  StackLayout {
+    id: stackView;
+
+    anchors {
+      left: connectionList.right;
+      right: root.right;
+      top: title.top;
+      bottom: root.bottom;
+    }
+
+    function switchClient(name) {
+      for (let index = 0; index < this.children.length; ++index) {
+        if (this.children[index].name === name) {
+          this.currentIndex = index;
+          return;
+        }
+      }
+
+      const newItem = clientControl.createObject(null, {name: name});
+      this.children.push(newItem);
+      this.currentIndex = this.count - 1;
+    }
+  }
+
+  Component {
+    id: clientControl;
+
+    ClientControl {
+    }
   }
 }

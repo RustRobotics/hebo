@@ -2,7 +2,7 @@
   <RCC version="1.0">
     <qresource prefix="/ui">
     <file>AboutWindow.qml</file>
-    <file>CMakeLists.txt</file>
+    <file>ClientControl.qml</file>
     <file>ConnectionsWindow.qml</file>
     <file>LeftPanel.qml</file>
     <file>LogWindow.qml</file>
