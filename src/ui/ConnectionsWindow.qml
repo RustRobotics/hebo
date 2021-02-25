@@ -27,11 +27,10 @@ Item {
     keyNavigationEnabled: true;
 
     onCurrentIndexChanged: {
-      const description = this.model[this.currentIndex].description;
-      console.log("des:", description);
-      const name = this.model[this.currentIndex].info;
-      console.log("name:", name);
-      stackView.switchClient(description);
+      console.log("model:", this.model);
+      //const description = this.model.data(this.currentIndex, "description");
+      //console.log("description:", description);
+      //stackView.switchClient(description);
     }
 
     delegate: Item {
@@ -46,7 +45,7 @@ Item {
       Rectangle {
         anchors.fill: rowItem;
         color: "#b0f9aa";
-        visible: connectionList.currentIndex == index;
+        visible: connectionList.currentIndex === index;
       }
 
       Row {
@@ -56,7 +55,7 @@ Item {
         spacing: 8;
 
         Rectangle {
-          color: connectionList.model[index].state === 2 ? "#39d12d" : "#606060";
+          color: model.state === 2 ? "#39d12d" : "#606060";
           width: 8;
           height: 8;
           radius: 4;
@@ -67,7 +66,7 @@ Item {
           font.pixelSize: 14;
           anchors.verticalCenter: parent.verticalCenter;
           color: "#000";
-          text: connectionList.model[index].description;
+          text: model.description;
         }
       }
     }
