@@ -23,7 +23,9 @@ QString getJsonFile() {
 
 ConnectManager::ConnectManager(QObject* parent)
     : QObject(parent),
-      conn_file_(getJsonFile()) {
+      conn_file_(getJsonFile()),
+      model_(new ConnectionModel(this)) {
+
   // Load connections on startup.
   this->loadConnInfo();
 }
