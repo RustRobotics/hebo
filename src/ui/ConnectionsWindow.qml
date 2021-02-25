@@ -55,7 +55,7 @@ Item {
         spacing: 8;
 
         Rectangle {
-          color: model.state === 2 ? "#39d12d" : "#606060";
+          color: model.state === HeboCpp.ConnectionConnected ? "#39d12d" : "#606060";
           width: 8;
           height: 8;
           radius: 4;

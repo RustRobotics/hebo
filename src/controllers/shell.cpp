@@ -35,7 +35,7 @@ int runShell(int argc, char** argv) {
 
 void registerComponents() {
   constexpr const char* kComponentUri = "HeboCpp";
-  constexpr const char* kComponentName = "HeboNs";
+  constexpr const char* kComponentName = "HeboCpp";
   constexpr int kVersionMajor = 1;
   constexpr int kVersionMinor = 0;
   qmlRegisterUncreatableMetaObject(hebo::staticMetaObject,
