@@ -31,7 +31,7 @@ struct ConnectionInfo {
   QString description{};
 };
 
-using ConnInfoList = QVector<ConnectionInfo>;
+using ConnectionInfoList = QVector<ConnectionInfo>;
 
 QString generateConnDescription(const ConnectionInfo& info);
 

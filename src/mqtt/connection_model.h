@@ -7,7 +7,23 @@
 
 #include <QAbstractListModel>
 
+#include "mqtt/connection_info.h"
+
 namespace hebo {
+
+enum ConnectionRole : int {
+  kConnectionNameRole = Qt::UserRole + 1,
+  kConnectionClientIdRole,
+  kConnectionProtocolRole,
+  kConnectionHostRole,
+  kConnectionPortRole,
+  kConnectionQoSRole,
+  kConnectionUsernameRole,
+  kConnectionPasswordRole,
+  kConnectionTlsRole,
+  kConnectionCleanSessionRole,
+  kConnectionDescriptionRole,
+};
 
 class ConnectionModel : public QAbstractListModel {
   Q_OBJECT
@@ -19,6 +35,11 @@ class ConnectionModel : public QAbstractListModel {
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
+
+  void addConnectionInfo(const ConnectionInfo& info);
+
+ private:
+  ConnectionInfoList list_{};
 };
 
 }  // namespace hebo
