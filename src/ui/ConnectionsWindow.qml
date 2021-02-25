@@ -24,10 +24,16 @@ Item {
     anchors.bottom: root.bottom;
     width: 240;
     model: connectManager.connList;
+    keyNavigationEnabled: true;
 
     delegate: Item {
       width: connectionList.width;
       height: 60;
+
+      MouseArea {
+        anchors.fill: parent;
+        onClicked: connectionList.currentIndex = index;
+      }
 
       Rectangle {
         anchors.fill: rowItem;
