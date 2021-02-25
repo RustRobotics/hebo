@@ -2,7 +2,7 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#include "mqtt/conn_info.h"
+#include "mqtt/connection_info.h"
 
 #include <QDebug>
 #include <QJsonDocument>
@@ -32,18 +32,18 @@ constexpr const char* kKeyCleanSession = "cleanSession";
 bool parseItems(const QJsonArray& array, ConnInfoList& list) {
   for (const auto& item : array) {
     const QJsonObject object = item.toObject();
-    ConnInfo info;
+    ConnectionInfo info;
     info.name = object.value(kKeyName).toString();
     info.client_id = object.value(kKeyClientId).toString();
     info.protocol = object.value(kKeyProtocol).toString();
     info.host = object.value(kKeyHost).toString();
     info.port = object.value(kKeyPort).toInt();
-    info.qos = object.value(kKeyQoS).toInt();
+    info.qos = static_cast<QoS>(object.value(kKeyQoS).toInt());
     info.username = object.value(kKeyUsername).toString();
     info.password = object.value(kKeyPassword).toString();
     info.with_tls = object.value(kKeyTls).toBool();
     info.clean_session = object.value(kKeyCleanSession).toBool();
-
+    info.description = generateConnDescription(info);
     list.append(info);
   }
   return true;
@@ -51,7 +51,11 @@ bool parseItems(const QJsonArray& array, ConnInfoList& list) {
 
 }  // namespace hebo
 
-QDebug operator<<(QDebug stream, const ConnInfo& info) {
+QString generateConnDescription(const ConnectionInfo& info) {
+  return QString("%1@%2:%3").arg(info.name).arg(info.host).arg(info.port);
+}
+
+QDebug operator<<(QDebug stream, const ConnectionInfo& info) {
   stream << "ConnInfo {"
          << "\n  name:" << info.name
          << "\n  clientId:" << info.client_id
@@ -61,6 +65,7 @@ QDebug operator<<(QDebug stream, const ConnInfo& info) {
          << "\n  password:" << info.password
          << "\n  tls:" << info.with_tls
          << "\n  cleanSession:" << info.clean_session
+         << "\n  description:" << info.description
          << "}";
   return stream;
 }
@@ -111,11 +116,11 @@ bool dumpConnInfos(const QString& file, const ConnInfoList& list) {
   return writeBinaryFile(file, contents);
 }
 
-bool ConnInfo::operator==(const ConnInfo& other) const {
+bool ConnectionInfo::operator==(const ConnectionInfo& other) const {
   return this->name == other.name;
 }
 
-bool ConnInfo::operator!=(const ConnInfo& other) const {
+bool ConnectionInfo::operator!=(const ConnectionInfo& other) const {
   return !(*this == other);
 }
 

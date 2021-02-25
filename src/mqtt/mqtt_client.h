@@ -7,7 +7,7 @@
 
 #include <QObject>
 
-#include "mqtt/conn_info.h"
+#include "mqtt/connection_info.h"
 
 namespace hebo {
 
@@ -22,30 +22,30 @@ class MqttClient : public QObject {
  public slots:
 
  signals:
-  void requestConnect(const ConnInfo& info);
+  void requestConnect(const ConnectionInfo& info);
   void connectResult(bool ok, const QString& error);
 
   void requestDisconnect();
   void disconnectResult(bool ok, const QString& error);
 
-  void requestSubscribe(const QString& topic, int qos);
+  void requestSubscribe(const QString& topic, QoS qos);
   void subscribeResult(const QString& topic, bool ok, const QString& error);
 
   void requestUnsubscribe(const QString& topic);
   void unsubscribeResult(const QString& topic, bool ok, const QString& error);
 
-  void requestPublish(const QString& topic, int qos, const QByteArray& payload);
+  void requestPublish(const QString& topic, QoS qos, const QByteArray& payload);
   void publishResult(const QString& topic, bool ok, const QString& error);
 
  protected:
   void timerEvent(QTimerEvent* event) override;
 
  private slots:
-  void doConnect(const ConnInfo& info);
+  void doConnect(const ConnectionInfo& info);
 
   void doDisconnect();
 
-  void doSubscribe(const QString& topic, int qos);
+  void doSubscribe(const QString& topic, QoS qos);
 
   void doUnsubscribe(const QString& topic);
 

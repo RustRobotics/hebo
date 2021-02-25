@@ -17,7 +17,7 @@ using InternalClient = std::shared_ptr<
 }  // namespace
 
 struct MqttClientPrivate {
-  ConnInfo conn_info{};
+  ConnectionInfo conn_info{};
   boost::asio::io_context context{};
   InternalClient client{};
   int timer_id{-1};
@@ -44,7 +44,7 @@ void MqttClient::initSignals() {
           this, &MqttClient::doUnsubscribe);
 }
 
-void MqttClient::doConnect(const ConnInfo& info) {
+void MqttClient::doConnect(const ConnectionInfo& info) {
   this->p_->conn_info = info;
   this->initClient();
 }
@@ -104,7 +104,7 @@ void MqttClient::timerEvent(QTimerEvent* event) {
   this->p_->context.poll();
 }
 
-void MqttClient::doSubscribe(const QString& topic, int qos) {
+void MqttClient::doSubscribe(const QString& topic, QoS qos) {
   Q_UNUSED(topic)
   Q_UNUSED(qos)
 }
@@ -113,7 +113,7 @@ void MqttClient::doUnsubscribe(const QString& topic) {
   Q_UNUSED(topic);
 }
 
-void MqttClient::doPublish(const QString& topic, int qos, const QByteArray& payload) {
+void MqttClient::doPublish(const QString& topic, QoS qos, const QByteArray& payload) {
   Q_UNUSED(topic);
   Q_UNUSED(qos);
   Q_UNUSED(payload);

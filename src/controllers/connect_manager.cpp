@@ -19,9 +19,6 @@ QString getJsonFile() {
   return dir.absoluteFilePath("connections.json");
 }
 
-QString generateConnDescription(const ConnInfo& info) {
-  return QString("%1@%2:%3").arg(info.name).arg(info.host).arg(info.port);
-}
 
 }  // namespace
 
@@ -75,7 +72,7 @@ void ConnectManager::requestConnect(const QString& name) {
   qWarning() << "Failed to find ConnInfo with name:" << name;
 }
 
-void ConnectManager::addConnInfo(const ConnInfo& info) {
+void ConnectManager::addConnInfo(const ConnectionInfo& info) {
   ConnectStateInfo item{};
   item.description = generateConnDescription(info);
   item.info = info;

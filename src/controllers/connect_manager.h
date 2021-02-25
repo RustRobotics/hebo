@@ -8,33 +8,21 @@
 #include <QObject>
 #include <QSharedPointer>
 
-#include "mqtt/conn_info.h"
-#include "mqtt/conn_state.h"
+#include "mqtt/connection_info.h"
+#include "mqtt/connection_state.h"
 #include "mqtt/mqtt_client.h"
+#include "mqtt/connection_model.h"
 
 namespace hebo {
 
-struct ConnectStateInfo {
- private:
-  Q_GADGET
-  Q_PROPERTY(ConnInfo info MEMBER info);
-  Q_PROPERTY(ConnectState state MEMBER state);
-  Q_PROPERTY(QString description MEMBER description);
-
- public:
-  ConnInfo info{};
-  ConnectState state{ConnectState::kDisconnected};
-  QSharedPointer<MqttClient> client{nullptr};
-  QString description{};
-};
-using ConnectStateInfoList =  QVector<ConnectStateInfo>;
-
 class ConnectManager : public QObject {
   Q_OBJECT
-  Q_PROPERTY(ConnectStateInfoList connList READ connList NOTIFY connListChanged)
+  Q_PROPERTY(ConnectionModel* model READ model);
 
  public:
   explicit ConnectManager(QObject* parent = nullptr);
+
+  [[nodiscard]] const ConnectionModel* model() const { return this->model_; }
 
  public slots:
   // Connections management
@@ -46,14 +34,15 @@ class ConnectManager : public QObject {
                      int port,
                      int qos,
                      bool clean_session) {
-    ConnInfo conn_info{};
+    ConnectionInfo conn_info{};
     conn_info.name = name;
     conn_info.client_id = client_id;
     conn_info.protocol = protocol;
     conn_info.host = host;
     conn_info.port = port;
-    conn_info.qos = qos;
+    conn_info.qos = static_cast<QoS>(qos);
     conn_info.clean_session = clean_session;
+    conn_info.description = generateConnDescription(conn_info);
     this->addConnInfo(conn_info);
   }
 
@@ -61,26 +50,18 @@ class ConnectManager : public QObject {
 
   void requestConnect(const QString& name);
 
-  const ConnectStateInfoList& connList() const {
-    return this->conn_list_;
-  }
-
  signals:
-  void connListChanged(const ConnectStateInfoList& list);
 
  private:
-  void addConnInfo(const ConnInfo& info);
+  void addConnInfo(const ConnectionInfo& info);
 
   void loadConnInfo();
   void saveConnInfo();
 
   QString conn_file_;
-  ConnectStateInfoList conn_list_{};
+  ConnectionModel* model_{nullptr};
 };
 
 }  // namespace hebo
-
-Q_DECLARE_METATYPE(hebo::ConnectStateInfo);
-Q_DECLARE_METATYPE(hebo::ConnectStateInfoList);
 
 #endif  // HEBOUI_SRC_CONTROLLERS_CONNECT_MANAGER_H_

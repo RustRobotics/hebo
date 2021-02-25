@@ -44,6 +44,16 @@ Item {
       }
     }
 
+    ScrollView {
+      Layout.fillWidth: true;
+      Layout.fillHeight: true;
+
+      TextEdit {
+        id: messagesField;
+        anchors.fill: parent;
+      }
+    }
+
     TextField {
       id: topicField;
       Layout.fillWidth: true;

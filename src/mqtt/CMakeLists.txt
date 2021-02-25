@@ -1,9 +1,11 @@
 
 set(SOURCE
-    conn_info.cpp
-    conn_info.h
-    conn_state.cpp
-    conn_state.h
+    connection_model.cpp
+    connection_model.h
+    connection_info.cpp
+    connection_info.h
+    connection_state.cpp
+    connection_state.h
     mqtt_client.cpp
     mqtt_client.h
     )

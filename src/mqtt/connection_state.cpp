@@ -2,26 +2,26 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#include "mqtt/conn_state.h"
+#include "mqtt/connection_state.h"
 
 namespace hebo {
 namespace {
 
-const char* dumpState(ConnectState state) {
+const char* dumpState(ConnectionState state) {
   switch (state) {
-    case ConnectState::kConnectFailed: {
+    case ConnectionState::kConnectFailed: {
       return "connectFailed";
     }
-    case ConnectState::kConnected: {
+    case ConnectionState::kConnected: {
       return "connected";
     }
-    case ConnectState::kConnecting: {
+    case ConnectionState::kConnecting: {
       return "connecting";
     }
-    case ConnectState::kDisconnected: {
+    case ConnectionState::kDisconnected: {
       return "disconnected";
     }
-    case ConnectState::kDisconnecting: {
+    case ConnectionState::kDisconnecting: {
       return "disconnecting";
     }
     default: {
@@ -32,7 +32,7 @@ const char* dumpState(ConnectState state) {
 
 }  // namespace
 
-QDebug operator<<(QDebug stream, ConnectState state) {
+QDebug operator<<(QDebug stream, ConnectionState state) {
   stream << dumpState(state);
   return stream;
 }
