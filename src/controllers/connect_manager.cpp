@@ -55,6 +55,10 @@ void ConnectManager::requestConnect(const QString& name) {
 
   if (!this->clients_.contains(name)) {
     QSharedPointer<MqttClient> client(new MqttClient());
+    connect(client.data(), &MqttClient::connectionStateChanged, [=](ConnectionState state) {
+      this->model_->updateConnectionState(name, state);
+    });
+
     this->clients_.insert(name, client);
     client->requestConnect(info);
   } else {

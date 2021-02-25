@@ -57,9 +57,11 @@ void MqttClient::initClient() {
   c->set_client_id(p_->conn_info.client_id.toStdString());
   c->set_clean_session(p_->conn_info.clean_session);
     using PacketId = typename std::remove_reference_t<decltype(*c)>::packet_id_t;
+
   c->set_connack_handler([=](bool sp, MQTT_NS::connect_return_code rc) {
     qDebug() << "sp:" << sp << MQTT_NS::connect_return_code_to_str(rc);
     emit this->connectResult(!sp, MQTT_NS::connect_return_code_to_str(rc));
+    emit this->connectionStateChanged(ConnectionConnected);
 
     c->async_subscribe("hello", MQTT_NS::qos::exactly_once);
 
@@ -85,6 +87,7 @@ void MqttClient::initClient() {
 
   c->set_close_handler([&]() {
     qDebug() << __func__ << "close handler";
+    emit this->connectionStateChanged(ConnectionDisconnected);
   });
   c->set_error_handler([&](MQTT_NS::error_code ec) {
     qWarning() << "Got mqtt error:" << ec.message().c_str();
@@ -92,10 +95,11 @@ void MqttClient::initClient() {
 
   c->async_connect();
   p_->timer_id = this->startTimer(5);
-  qDebug() << __func__ << "timer id:" << p_->timer_id;
+  emit this->connectionStateChanged(ConnectionConnecting);
 }
 
 void MqttClient::doDisconnect() {
+  emit this->connectionStateChanged(ConnectionDisconnecting);
 //  this->killTimer(p_->timer_id);
 }
 

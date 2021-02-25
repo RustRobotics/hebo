@@ -37,6 +37,8 @@ class MqttClient : public QObject {
   void requestPublish(const QString& topic, QoS qos, const QByteArray& payload);
   void publishResult(const QString& topic, bool ok, const QString& error);
 
+  void connectionStateChanged(ConnectionState state);
+
  protected:
   void timerEvent(QTimerEvent* event) override;
 

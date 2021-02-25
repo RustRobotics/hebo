@@ -52,6 +52,8 @@ class ConnectionModel : public QAbstractListModel {
 
   void setList(const ConnectionInfoList& list);
 
+  void updateConnectionState(const QString& name, ConnectionState state);
+
  private:
   ConnectionInfoList list_{};
 };

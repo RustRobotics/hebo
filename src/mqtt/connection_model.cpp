@@ -110,6 +110,18 @@ void ConnectionModel::setList(const ConnectionInfoList& list) {
   this->endResetModel();
 }
 
+void ConnectionModel::updateConnectionState(const QString& name, ConnectionState state) {
+  qDebug() << __func__ << name << state;
+  this->beginResetModel();
+  for (auto& item : this->list_) {
+    if (item.name == name) {
+      item.state = state;
+      break;
+    }
+  }
+  this->endResetModel();
+}
+
 bool ConnectionModel::getConnectionInfo(const QString& name, ConnectionInfo& info) const {
   for (const auto& item : this->list_) {
     if (item.name == name) {
