@@ -17,7 +17,7 @@ namespace hebo {
 
 class ConnectManager : public QObject {
   Q_OBJECT
-  Q_PROPERTY(ConnectionModel* model READ model);
+  Q_PROPERTY(ConnectionModel* model READ model NOTIFY modelChanged);
 
  public:
   explicit ConnectManager(QObject* parent = nullptr);
@@ -41,6 +41,7 @@ class ConnectManager : public QObject {
   void requestConnect(const QString& name);
 
  signals:
+  void modelChanged(ConnectionModel* model);
 
  private:
   void loadConnInfo();

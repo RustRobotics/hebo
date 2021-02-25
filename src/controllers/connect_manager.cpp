@@ -28,6 +28,10 @@ ConnectManager::ConnectManager(QObject* parent)
 
   // Load connections on startup.
   this->loadConnInfo();
+
+  connect(this->model_, &ConnectionModel::dataChanged, [=]() {
+    emit this->modelChanged(this->model_);
+  });
 }
 
 void ConnectManager::deleteConnection(const QString& name) {
