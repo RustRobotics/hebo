@@ -7,6 +7,21 @@
 #include <QDebug>
 
 namespace hebo {
+namespace {
+
+constexpr const char* kName = "name";
+constexpr const char* kClientId = "clientId";
+constexpr const char* kProtocol = "protocol";
+constexpr const char* kHost = "host";
+constexpr const char* kPort = "port";
+constexpr const char* kQoS = "qos";
+constexpr const char* kUsername = "username";
+constexpr const char* kPassword = "password";
+constexpr const char* kTls = "tls";
+constexpr const char* kCleanSession = "cleanSession";
+constexpr const char* kDescription = "description";
+
+}  // namespace
 
 ConnectionModel::ConnectionModel(QObject* parent) : QAbstractListModel(parent) {
 
@@ -24,37 +39,37 @@ QVariant ConnectionModel::data(const QModelIndex& index, int role) const {
 
   const ConnectionInfo& info = this->list_.at(index.row());
   switch (role) {
-    case kConnectionNameRole: {
+    case kNameRole: {
       return info.name;
     }
-    case kConnectionClientIdRole: {
+    case kClientIdRole: {
       return info.client_id;
     }
-    case kConnectionProtocolRole: {
+    case kProtocolRole: {
       return info.protocol;
     }
-    case kConnectionHostRole: {
+    case kHostRole: {
       return info.host;
     }
-    case kConnectionPortRole: {
+    case kPortRole: {
       return info.port;
     }
-    case kConnectionQoSRole: {
+    case kQoSRole: {
       return static_cast<int>(info.qos);
     }
-    case kConnectionUsernameRole: {
+    case kUsernameRole: {
       return info.username;
     }
-    case kConnectionPasswordRole: {
+    case kPasswordRole: {
       return info.password;
     }
-    case kConnectionTlsRole: {
+    case kTlsRole: {
       return info.with_tls;
     }
-    case kConnectionCleanSessionRole: {
+    case kCleanSessionRole: {
       return info.clean_session;
     }
-    case kConnectionDescriptionRole: {
+    case kDescriptionRole: {
       return info.description;
     }
     default: {
@@ -67,17 +82,17 @@ QVariant ConnectionModel::data(const QModelIndex& index, int role) const {
 QHash<int, QByteArray> ConnectionModel::roleNames() const {
   // Map role index to qml property name.
   return {
-      {kConnectionNameRole, "name"},
-      {kConnectionClientIdRole, "clientId"},
-      {kConnectionProtocolRole, "protocol"},
-      {kConnectionHostRole, "host"},
-      {kConnectionPortRole, "port"},
-      {kConnectionQoSRole, "qos"},
-      {kConnectionUsernameRole, "username"},
-      {kConnectionPasswordRole, "password"},
-      {kConnectionTlsRole, "tls"},
-      {kConnectionCleanSessionRole, "cleanSession"},
-      {kConnectionDescriptionRole, "description"},
+      {kNameRole, kName},
+      {kClientIdRole, kClientId},
+      {kProtocolRole, kProtocol},
+      {kHostRole, kHost},
+      {kPortRole, kPort},
+      {kQoSRole, kQoS},
+      {kUsernameRole, kUsername},
+      {kPasswordRole, kPassword},
+      {kTlsRole, kTls},
+      {kCleanSessionRole, kCleanSession},
+      {kDescriptionRole, kDescription},
   };
 }
 

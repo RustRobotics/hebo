@@ -11,24 +11,26 @@
 
 namespace hebo {
 
-enum ConnectionRole : int {
-  kConnectionNameRole = Qt::UserRole + 1,
-  kConnectionClientIdRole,
-  kConnectionProtocolRole,
-  kConnectionHostRole,
-  kConnectionPortRole,
-  kConnectionQoSRole,
-  kConnectionUsernameRole,
-  kConnectionPasswordRole,
-  kConnectionTlsRole,
-  kConnectionCleanSessionRole,
-  kConnectionDescriptionRole,
-};
-
 class ConnectionModel : public QAbstractListModel {
   Q_OBJECT
  public:
+  enum ConnectionRole : int {
+    kNameRole = Qt::UserRole + 1,
+    kClientIdRole,
+    kProtocolRole,
+    kHostRole,
+    kPortRole,
+    kQoSRole,
+    kUsernameRole,
+    kPasswordRole,
+    kTlsRole,
+    kCleanSessionRole,
+    kDescriptionRole,
+  };
+  Q_ENUM(ConnectionRole);
+
   explicit ConnectionModel(QObject* parent = nullptr);
+
 
   [[nodiscard]] int rowCount(const QModelIndex& parent) const override;
 
