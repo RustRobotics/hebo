@@ -6,18 +6,29 @@
 #define HEBOUI_SRC_MQTT_CONNECTION_STATE_H_
 
 #include <QDebug>
+#include <QObject>
+#include <QAbstractListModel>
 
 namespace hebo {
 
-enum class ConnectionState : uint8_t {
-  kDisconnected = 0,
-  kConnecting = 1,
-  kConnected = 2,
-  kConnectFailed = 3,
-  kDisconnecting = 4,
-};
+class TestClass : public QAbstractListModel {
+  Q_OBJECT
+  Q_PROPERTY(int indexValue READ indexValue);
 
-QDebug operator<<(QDebug stream, ConnectionState state);
+ public:
+  explicit TestClass(QObject* parent);
+
+  int rowCount(const QModelIndex& parent) const override;
+
+  QVariant data(const QModelIndex& index, int role) const override;
+
+  QHash<int, QByteArray> roleNames() const override;
+
+  [[nodiscard]] int indexValue() const { return this->index_; }
+
+ private:
+  int index_{42};
+};
 
 }  // namespace hebo
 

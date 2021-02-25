@@ -9,6 +9,7 @@
 #include <QGuiApplication>
 
 #include "controllers/main_controller.h"
+#include "mqtt/contact_model.h"
 
 namespace hebo {
 
@@ -33,10 +34,11 @@ int runShell(int argc, char** argv) {
 }
 
 void registerComponents() {
-//  constexpr const char* kComponentName = "HeboComponents";
-//  constexpr int kVersionMajor = 1;
-//  constexpr int kVersionMinor = 0;
-//  qmlRegisterType<ConnectionInfo>(kComponentName, kVersionMajor, kVersionMinor, "ConnectionInfo");
+  constexpr const char* kComponentName = "HeboComponents";
+  constexpr int kVersionMajor = 1;
+  constexpr int kVersionMinor = 0;
+//  qmlRegisterType<TestClass>(kComponentName, kVersionMajor, kVersionMinor, "TestClass");
+  qmlRegisterType<ContactModel>(kComponentName, kVersionMajor, kVersionMinor, "ContactModel");
 }
 
 }  // namespace hebo

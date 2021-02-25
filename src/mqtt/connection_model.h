@@ -8,6 +8,8 @@
 #include <QAbstractListModel>
 
 #include "mqtt/connection_info.h"
+#include "mqtt/connection_state.h"
+#include "mqtt/contact_model.h"
 
 namespace hebo {
 
@@ -31,7 +33,6 @@ class ConnectionModel : public QAbstractListModel {
 
   explicit ConnectionModel(QObject* parent = nullptr);
 
-
   [[nodiscard]] int rowCount(const QModelIndex& parent) const override;
 
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
@@ -42,7 +43,12 @@ class ConnectionModel : public QAbstractListModel {
 
   bool getConnectionInfo(const QString& name, ConnectionInfo& info) const;
 
-  Q_INVOKABLE QVariantMap row(int index) const;
+  //Q_INVOKABLE QVariantMap row(int index) const;
+//  Q_INVOKABLE ConnectionInfo row(int index) const;
+  Q_INVOKABLE ContactModel* row(int index) {
+    Q_UNUSED(index);
+    return new ContactModel(this);
+  }
 
   bool deleteConnectionInfo(const QString& name);
 

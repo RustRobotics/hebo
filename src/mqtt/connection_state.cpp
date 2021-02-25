@@ -5,36 +5,25 @@
 #include "mqtt/connection_state.h"
 
 namespace hebo {
-namespace {
 
-const char* dumpState(ConnectionState state) {
-  switch (state) {
-    case ConnectionState::kConnectFailed: {
-      return "connectFailed";
-    }
-    case ConnectionState::kConnected: {
-      return "connected";
-    }
-    case ConnectionState::kConnecting: {
-      return "connecting";
-    }
-    case ConnectionState::kDisconnected: {
-      return "disconnected";
-    }
-    case ConnectionState::kDisconnecting: {
-      return "disconnecting";
-    }
-    default: {
-      return "";
-    }
-  }
+TestClass::TestClass(QObject* parent) : QAbstractListModel(parent) {
+  this->setObjectName("TestClass");
+
 }
 
-}  // namespace
+int TestClass::rowCount(const QModelIndex& parent) const {
+  Q_UNUSED(parent);
+  return 0;
+}
 
-QDebug operator<<(QDebug stream, ConnectionState state) {
-  stream << dumpState(state);
-  return stream;
+QVariant TestClass::data(const QModelIndex& index, int role) const {
+  Q_UNUSED(index);
+  Q_UNUSED(role);
+  return QVariant();
+}
+
+QHash<int, QByteArray> TestClass::roleNames() const {
+  return QAbstractItemModel::roleNames();
 }
 
 }  // namespace hebo
