@@ -42,6 +42,8 @@ class ConnectionModel : public QAbstractListModel {
 
   bool getConnectionInfo(const QString& name, ConnectionInfo& info) const;
 
+  Q_INVOKABLE QVariantMap row(int index) const;
+
   bool deleteConnectionInfo(const QString& name);
 
  public slots:

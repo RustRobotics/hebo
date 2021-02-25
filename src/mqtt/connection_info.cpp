@@ -90,22 +90,25 @@ bool parseConnectionInfos(const QString& file, ConnectionInfoList& list) {
   }
 }
 
+QJsonObject dumpConnectionInfo(const ConnectionInfo& info) {
+  QJsonObject object;
+  object.insert(kKeyName, info.name);
+  object.insert(kKeyClientId, info.client_id);
+  object.insert(kKeyProtocol, info.protocol);
+  object.insert(kKeyHost, info.host);
+  object.insert(kKeyPort, info.port);
+  object.insert(kKeyQoS, static_cast<int>(info.qos));
+  object.insert(kKeyUsername, info.username);
+  object.insert(kKeyPassword, info.password);
+  object.insert(kKeyTls, info.with_tls);
+  object.insert(kKeyCleanSession, info.clean_session);
+  return object;
+}
+
 bool dumpConnectionInfos(const QString& file, const ConnectionInfoList& list) {
   QJsonArray array;
   for (const auto& info : list) {
-    QJsonObject object;
-    object.insert(kKeyName, info.name);
-    object.insert(kKeyClientId, info.client_id);
-    object.insert(kKeyProtocol, info.protocol);
-    object.insert(kKeyHost, info.host);
-    object.insert(kKeyPort, info.port);
-    object.insert(kKeyQoS, static_cast<int>(info.qos));
-    object.insert(kKeyUsername, info.username);
-    object.insert(kKeyPassword, info.password);
-    object.insert(kKeyTls, info.with_tls);
-    object.insert(kKeyCleanSession, info.clean_session);
-
-    array.append(object);
+    array.append(dumpConnectionInfo(info));
   }
 
   QJsonObject root_object;

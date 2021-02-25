@@ -20,6 +20,22 @@ enum class QoS : uint8_t {
 };
 
 struct ConnectionInfo {
+// private:
+// Q_GADGET
+//  Q_PROPERTY(QString name MEMBER name);
+//  Q_PROPERTY(QString clientId MEMBER client_id);
+//  Q_PROPERTY(QString protocol MEMBER protocol);
+//  Q_PROPERTY(QString host MEMBER host);
+//  Q_PROPERTY(int port MEMBER port);
+//  Q_PROPERTY(QoS qos MEMBER qos);
+//  Q_PROPERTY(QString username MEMBER username);
+//  Q_PROPERTY(QString password MEMBER password);
+//  Q_PROPERTY(bool tls MEMBER with_tls);
+//  Q_PROPERTY(bool cleanSession MEMBER clean_session);
+//  Q_PROPERTY(QString description MEMBER description);
+//  Q_PROPERTY(ConnectionState state MEMBER state);
+//
+// public:
   QString name{};
   QString client_id{};
   QString protocol{};
@@ -42,6 +58,8 @@ QString generateConnDescription(const ConnectionInfo& info);
 QDebug operator<<(QDebug stream, const ConnectionInfo& info);
 
 bool parseConnectionInfos(const QString& file, ConnectionInfoList& list);
+
+QJsonObject dumpConnectionInfo(const ConnectionInfo& info);
 
 bool dumpConnectionInfos(const QString& file, const ConnectionInfoList& list);
 
