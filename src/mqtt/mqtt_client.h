@@ -49,7 +49,7 @@ class MqttClient : public QObject {
 
   void doUnsubscribe(const QString& topic);
 
-  void doPublish(const QString& topic, int qos, const QByteArray& payload);
+  void doPublish(const QString& topic, QoS qos, const QByteArray& payload);
 
  private:
   void initSignals();
@@ -58,6 +58,8 @@ class MqttClient : public QObject {
 
   MqttClientPrivate* p_;
 };
+
+using MqttClientPtr = QSharedPointer<MqttClient>;
 
 }  // namespace hebo
 

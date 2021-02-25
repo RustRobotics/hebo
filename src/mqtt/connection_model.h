@@ -36,7 +36,16 @@ class ConnectionModel : public QAbstractListModel {
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
+  [[nodiscard]] const ConnectionInfoList& list() const { return this->list_; }
+
+  bool getConnectionInfo(const QString& name, ConnectionInfo& info) const;
+
+  bool deleteConnectionInfo(const QString& name);
+
+ public slots:
   void addConnectionInfo(const ConnectionInfo& info);
+
+  void setList(const ConnectionInfoList& list);
 
  private:
   ConnectionInfoList list_{};

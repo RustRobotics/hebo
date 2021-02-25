@@ -33,18 +33,7 @@ class ConnectManager : public QObject {
                      const QString& host,
                      int port,
                      int qos,
-                     bool clean_session) {
-    ConnectionInfo conn_info{};
-    conn_info.name = name;
-    conn_info.client_id = client_id;
-    conn_info.protocol = protocol;
-    conn_info.host = host;
-    conn_info.port = port;
-    conn_info.qos = static_cast<QoS>(qos);
-    conn_info.clean_session = clean_session;
-    conn_info.description = generateConnDescription(conn_info);
-    this->addConnInfo(conn_info);
-  }
+                     bool clean_session);
 
   void deleteConnection(const QString& name);
 
@@ -53,13 +42,12 @@ class ConnectManager : public QObject {
  signals:
 
  private:
-  void addConnInfo(const ConnectionInfo& info);
-
   void loadConnInfo();
   void saveConnInfo();
 
   QString conn_file_;
   ConnectionModel* model_{nullptr};
+  QMap<QString, MqttClientPtr> clients_{};
 };
 
 }  // namespace hebo

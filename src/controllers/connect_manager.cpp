@@ -19,96 +19,83 @@ QString getJsonFile() {
   return dir.absoluteFilePath("connections.json");
 }
 
-
 }  // namespace
 
 ConnectManager::ConnectManager(QObject* parent)
     : QObject(parent),
       conn_file_(getJsonFile()) {
-  qRegisterMetaType<ConnectStateInfoList>("ConnectStateInfoList");
-
   // Load connections on startup.
   this->loadConnInfo();
 }
 
 void ConnectManager::deleteConnection(const QString& name) {
-  int index;
-  for (index = 0; index < conn_list_.length(); ++index) {
-    if (conn_list_.at(index).info.name == name) {
-      break;
-    }
-  }
-  if (index == conn_list_.length()) {
-    qWarning() << "Failed to find ConnInfo with name:" << name;
-    return;
+  if (!this->model_->deleteConnectionInfo(name)) {
+    qWarning() << "Invalid connection info:" << name;
+  } else {
+    this->saveConnInfo();
   }
 
-  auto& item = conn_list_[index];
-  // disconnect
-  if (item.client.isNull()) {
-    emit item.client->requestDisconnect();
-    item.client.clear();
+  if (this->clients_.contains(name)) {
+    emit this->clients_.take(name)->requestDisconnect();
   }
-
-  // delete from list
-  conn_list_.removeAt(index);
-
-  // Save to file
-  this->saveConnInfo();
 }
 
 void ConnectManager::requestConnect(const QString& name) {
-  for (auto& item : conn_list_) {
-    if (item.info.name == name) {
-      if (item.client.isNull()) {
-        item.client.reset(new MqttClient());
-        item.client->requestConnect(item.info);
-      } else {
-        qWarning() << "MqttClient is not null:" << name;
-      }
-      return;
-    }
+  ConnectionInfo info;
+  if (!this->model_->getConnectionInfo(name, info)) {
+    qWarning() << "Invalid connection info:" << name;
+    return;
   }
-  qWarning() << "Failed to find ConnInfo with name:" << name;
+
+  if (!this->clients_.contains(name)) {
+
+  } else {
+    const auto client = this->clients_[name];
+    Q_ASSERT(!client.isNull());
+    client->requestConnect(info);
+  }
 }
 
-void ConnectManager::addConnInfo(const ConnectionInfo& info) {
-  ConnectStateInfo item{};
-  item.description = generateConnDescription(info);
-  item.info = info;
-  this->conn_list_.append(item);
+void ConnectManager::addConnection(const QString& name,
+                   const QString& client_id,
+                   const QString& protocol,
+                   const QString& host,
+                   int port,
+                   int qos,
+                   bool clean_session) {
+  ConnectionInfo conn_info{};
+  conn_info.name = name;
+  conn_info.client_id = client_id;
+  conn_info.protocol = protocol;
+  conn_info.host = host;
+  conn_info.port = port;
+  conn_info.qos = static_cast<QoS>(qos);
+  conn_info.clean_session = clean_session;
+  conn_info.description = generateConnDescription(conn_info);
+
+  this->model_->addConnectionInfo(conn_info);
 
   // save to local file
   this->saveConnInfo();
-
-  emit this->connListChanged(this->conn_list_);
 }
 
-void ConnectManager::saveConnInfo() {
-  ConnInfoList info_list{};
-  for (const auto& item : conn_list_) {
-    info_list.append(item.info);
-  }
 
-  if (!dumpConnInfos(conn_file_, info_list)) {
+void ConnectManager::saveConnInfo() {
+  if (!dumpConnectionInfos(this->conn_file_, this->model_->list())) {
     qWarning() << "Failed to save connection info to file:" << conn_file_;
   }
 }
 
 void ConnectManager::loadConnInfo() {
-  ConnInfoList list{};
-  const bool ok = parseConnInfos(this->conn_file_, list);
+  ConnectionInfoList list{};
+  const bool ok = parseConnectionInfos(this->conn_file_, list);
   if (!ok) {
     qWarning() << "Failed to parse conn info file:" << this->conn_file_;
     return;
   }
 
-  for (const auto& info : list) {
-    ConnectStateInfo item{};
-    item.description = generateConnDescription(info);
-    item.info = info;
-    this->conn_list_.append(item);
-  }
+  this->model_->setList(list);
+  // TODO(Shaohua): Create mqtt client map.
 }
 
 }  // namespace hebo

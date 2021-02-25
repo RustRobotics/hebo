@@ -82,9 +82,40 @@ QHash<int, QByteArray> ConnectionModel::roleNames() const {
 }
 
 void ConnectionModel::addConnectionInfo(const ConnectionInfo& info) {
-  this->beginResetModel();
+  const int len = this->list_.length();
+  this->beginInsertRows(len, len + 1);
   this->list_.append(info);
+  this->endInsertRows();
+}
+
+void ConnectionModel::setList(const ConnectionInfoList& list) {
+  this->beginResetModel();
+  this->list_ = list;
   this->endResetModel();
+}
+
+bool ConnectionModel::getConnectionInfo(const QString& name, ConnectionInfo& info) const {
+  for (const auto& item : this->list_) {
+    if (item.name == name) {
+      info = item;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool ConnectionModel::deleteConnectionInfo(const QString& name) {
+  int index;
+  for (index = 0; index < this->list_.length(); ++index) {
+    if (this->list_.at(index).name == name) {
+      break;
+    }
+  }
+  if (index < this->list_.length()) {
+    this->list_.removeAt(index);
+  }
+
+  return index < this->list_.length();
 }
 
 }  // namespace hebo

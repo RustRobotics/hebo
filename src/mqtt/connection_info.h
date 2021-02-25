@@ -9,6 +9,8 @@
 #include <QMetaType>
 #include <QString>
 
+#include "mqtt/connection_state.h"
+
 namespace hebo {
 
 enum class QoS : uint8_t {
@@ -28,7 +30,9 @@ struct ConnectionInfo {
   QString password{};
   bool with_tls{false};
   bool clean_session{true};
+
   QString description{};
+  ConnectionState state{ConnectionState::kDisconnected};
 };
 
 using ConnectionInfoList = QVector<ConnectionInfo>;
@@ -37,9 +41,9 @@ QString generateConnDescription(const ConnectionInfo& info);
 
 QDebug operator<<(QDebug stream, const ConnectionInfo& info);
 
-bool parseConnInfos(const QString& file, ConnInfoList& list);
+bool parseConnectionInfos(const QString& file, ConnectionInfoList& list);
 
-bool dumpConnInfos(const QString& file, const ConnInfoList& list);
+bool dumpConnectionInfos(const QString& file, const ConnectionInfoList& list);
 
 }  // namespace hebo
 

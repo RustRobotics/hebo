@@ -29,7 +29,7 @@ constexpr const char* kKeyTls = "tls";
 constexpr const char* kKeyQoS = "qos";
 constexpr const char* kKeyCleanSession = "cleanSession";
 
-bool parseItems(const QJsonArray& array, ConnInfoList& list) {
+bool parseItems(const QJsonArray& array, ConnectionInfoList& list) {
   for (const auto& item : array) {
     const QJsonObject object = item.toObject();
     ConnectionInfo info;
@@ -66,11 +66,12 @@ QDebug operator<<(QDebug stream, const ConnectionInfo& info) {
          << "\n  tls:" << info.with_tls
          << "\n  cleanSession:" << info.clean_session
          << "\n  description:" << info.description
+         << "\n  state:" << info.state
          << "}";
   return stream;
 }
 
-bool parseConnInfos(const QString& file, ConnInfoList& list) {
+bool parseConnectionInfos(const QString& file, ConnectionInfoList& list) {
   const QByteArray contents = readBinaryFile(file);
   const QJsonDocument document{QJsonDocument::fromJson(contents)};
   if (!document.isObject()) {
@@ -89,7 +90,7 @@ bool parseConnInfos(const QString& file, ConnInfoList& list) {
   }
 }
 
-bool dumpConnInfos(const QString& file, const ConnInfoList& list) {
+bool dumpConnectionInfos(const QString& file, const ConnectionInfoList& list) {
   QJsonArray array;
   for (const auto& info : list) {
     QJsonObject object;
@@ -98,7 +99,7 @@ bool dumpConnInfos(const QString& file, const ConnInfoList& list) {
     object.insert(kKeyProtocol, info.protocol);
     object.insert(kKeyHost, info.host);
     object.insert(kKeyPort, info.port);
-    object.insert(kKeyQoS, info.qos);
+    object.insert(kKeyQoS, static_cast<int>(info.qos));
     object.insert(kKeyUsername, info.username);
     object.insert(kKeyPassword, info.password);
     object.insert(kKeyTls, info.with_tls);
@@ -114,14 +115,6 @@ bool dumpConnInfos(const QString& file, const ConnInfoList& list) {
   document.setObject(root_object);
   const QByteArray contents = document.toJson();
   return writeBinaryFile(file, contents);
-}
-
-bool ConnectionInfo::operator==(const ConnectionInfo& other) const {
-  return this->name == other.name;
-}
-
-bool ConnectionInfo::operator!=(const ConnectionInfo& other) const {
-  return !(*this == other);
 }
 
 }  // namespace hebo
