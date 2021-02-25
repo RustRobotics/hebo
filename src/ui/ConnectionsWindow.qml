@@ -27,10 +27,9 @@ Item {
     keyNavigationEnabled: true;
 
     onCurrentIndexChanged: {
-      console.log("model:", this.model);
-      //const description = this.model.data(this.currentIndex, "description");
-      //console.log("description:", description);
-      //stackView.switchClient(description);
+      const item = this.model.row(this.currentIndex);
+      console.log("item:", item);
+      stackView.switchClient(item.description);
     }
 
     delegate: Item {

@@ -36,8 +36,7 @@ void registerComponents() {
 //  constexpr const char* kComponentName = "HeboComponents";
 //  constexpr int kVersionMajor = 1;
 //  constexpr int kVersionMinor = 0;
-//  qmlRegisterType<ConnInfo>(kComponentName, kVersionMajor, kVersionMinor, "ConnInfo");
-//  qmlRegisterType<ConnectStateInfo>(kComponentName, kVersionMajor, kVersionMinor, "ConnectStateInfo");
+//  qmlRegisterType<ConnectionInfo>(kComponentName, kVersionMajor, kVersionMinor, "ConnectionInfo");
 }
 
 }  // namespace hebo
