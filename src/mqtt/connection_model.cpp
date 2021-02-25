@@ -25,7 +25,7 @@ constexpr const char* kDescription = "description";
 }  // namespace
 
 ConnectionModel::ConnectionModel(QObject* parent) : QAbstractListModel(parent) {
-
+  qRegisterMetaType<ConnectionInfo>("ConnectionInfo");
 }
 
 int ConnectionModel::rowCount(const QModelIndex& parent) const {
@@ -120,22 +120,14 @@ bool ConnectionModel::getConnectionInfo(const QString& name, ConnectionInfo& inf
   return false;
 }
 
-//ConnectionInfo ConnectionModel::row(int row) const {
-//  if (row >= 0 && row < this->list_.length()) {
-//    return this->list_.at(row);
-//  } else {
-//    return {};
-//  }
-//}
-
-//QVariantMap ConnectionModel::row(int row) const {
-//  if (row >= 0 && row < this->list_.length()) {
-//    const QJsonObject object = dumpConnectionInfo(this->list_.at(row));
-//    return object.toVariantMap();
-//  } else {
-//    return {};
-//  }
-//}
+QVariantMap ConnectionModel::row(int row) const {
+  if (row >= 0 && row < this->list_.length()) {
+    const QJsonObject object = dumpConnectionInfo(this->list_.at(row));
+    return object.toVariantMap();
+  } else {
+    return {};
+  }
+}
 
 bool ConnectionModel::deleteConnectionInfo(const QString& name) {
   int index;

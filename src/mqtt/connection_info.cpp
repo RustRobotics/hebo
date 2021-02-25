@@ -29,6 +29,9 @@ constexpr const char* kKeyTls = "tls";
 constexpr const char* kKeyQoS = "qos";
 constexpr const char* kKeyCleanSession = "cleanSession";
 
+constexpr const char* kKeyState = "state";
+constexpr const char* kKeyDescription = "description";
+
 bool parseItems(const QJsonArray& array, ConnectionInfoList& list) {
   for (const auto& item : array) {
     const QJsonObject object = item.toObject();
@@ -43,6 +46,7 @@ bool parseItems(const QJsonArray& array, ConnectionInfoList& list) {
     info.password = object.value(kKeyPassword).toString();
     info.with_tls = object.value(kKeyTls).toBool();
     info.clean_session = object.value(kKeyCleanSession).toBool();
+    info.state = ConnectionDisconnected;
     info.description = generateConnDescription(info);
     list.append(info);
   }
@@ -97,11 +101,14 @@ QJsonObject dumpConnectionInfo(const ConnectionInfo& info) {
   object.insert(kKeyProtocol, info.protocol);
   object.insert(kKeyHost, info.host);
   object.insert(kKeyPort, info.port);
-  object.insert(kKeyQoS, static_cast<int>(info.qos));
+  object.insert(kKeyQoS, info.qos);
   object.insert(kKeyUsername, info.username);
   object.insert(kKeyPassword, info.password);
   object.insert(kKeyTls, info.with_tls);
   object.insert(kKeyCleanSession, info.clean_session);
+
+  object.insert(kKeyState, info.state);
+  object.insert(kKeyDescription, info.description);
   return object;
 }
 

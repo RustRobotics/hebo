@@ -34,11 +34,15 @@ int runShell(int argc, char** argv) {
 }
 
 void registerComponents() {
-  constexpr const char* kComponentName = "HeboComponents";
+  constexpr const char* kComponentUri = "HeboCpp";
+  constexpr const char* kComponentName = "HeboNs";
   constexpr int kVersionMajor = 1;
   constexpr int kVersionMinor = 0;
-//  qmlRegisterType<TestClass>(kComponentName, kVersionMajor, kVersionMinor, "TestClass");
-  qmlRegisterType<ContactModel>(kComponentName, kVersionMajor, kVersionMinor, "ContactModel");
+  qmlRegisterUncreatableMetaObject(hebo::staticMetaObject,
+                                   kComponentUri,
+                                   kVersionMajor, kVersionMinor,
+                                   kComponentName,
+                                   "Access to enums & flags only");
 }
 
 }  // namespace hebo

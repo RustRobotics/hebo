@@ -9,57 +9,39 @@
 #include <QObject>
 
 namespace hebo {
+Q_NAMESPACE
 
-struct ConnectionInfo {
-  Q_GADGET
-  Q_PROPERTY(QString name MEMBER name);
-  Q_PROPERTY(QString clientId MEMBER client_id);
-  Q_PROPERTY(QString protocol MEMBER protocol);
-  Q_PROPERTY(QString host MEMBER host);
-  Q_PROPERTY(int port MEMBER port);
-  Q_PROPERTY(QoS qos MEMBER qos);
-  Q_PROPERTY(QString username MEMBER username);
-  Q_PROPERTY(QString password MEMBER password);
-  Q_PROPERTY(bool tls MEMBER with_tls);
-  Q_PROPERTY(bool cleanSession MEMBER clean_session);
-  Q_PROPERTY(QString description MEMBER description);
-  Q_PROPERTY(ConnectionState state MEMBER state);
+enum QoS : int32_t {
+  AtMostOnce = 0,
+  AtLeaseOnce = 1,
+  ExactOnce = 2,
+};
+Q_ENUM_NS(QoS);
 
- public:
-  enum QoS : int32_t {
-    kAtMostOnce = 0,
-    kAtLeaseOnce = 1,
-    kExactOnce = 2,
-  };
-  Q_ENUM(QoS);
+enum ConnectionState : int32_t {
+  ConnectionDisconnected = 0,
+  ConnectionConnecting = 1,
+  ConnectionConnected = 2,
+  ConnectionConnectFailed = 3,
+  ConnectionDisconnecting = 4,
+};
+Q_ENUM_NS(ConnectionState);
 
-  enum ConnectionState : int32_t {
-    kDisconnected = 0,
-    kConnecting = 1,
-    kConnected = 2,
-    kConnectFailed = 3,
-    kDisconnecting = 4,
-  };
-  Q_ENUM(ConnectionState);
-
- public:
+struct ConnectionInfo{
   QString name{};
   QString client_id{};
   QString protocol{};
   QString host{};
   int port{};
-  QoS qos{QoS::kAtMostOnce};
+  QoS qos{QoS::AtMostOnce};
   QString username{};
   QString password{};
   bool with_tls{false};
   bool clean_session{true};
 
   QString description{};
-  ConnectionState state{ConnectionState::kDisconnected};
+  ConnectionState state{ConnectionState::ConnectionDisconnected};
 };
-
-using QoS = ConnectionInfo::QoS;
-using ConnectionState = ConnectionInfo::ConnectionState;
 
 using ConnectionInfoList = QVector<ConnectionInfo>;
 

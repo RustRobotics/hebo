@@ -43,12 +43,7 @@ class ConnectionModel : public QAbstractListModel {
 
   bool getConnectionInfo(const QString& name, ConnectionInfo& info) const;
 
-  //Q_INVOKABLE QVariantMap row(int index) const;
-//  Q_INVOKABLE ConnectionInfo row(int index) const;
-  Q_INVOKABLE ContactModel* row(int index) {
-    Q_UNUSED(index);
-    return new ContactModel(this);
-  }
+  Q_INVOKABLE QVariantMap row(int index) const;
 
   bool deleteConnectionInfo(const QString& name);
 

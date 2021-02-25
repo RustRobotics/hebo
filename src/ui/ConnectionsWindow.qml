@@ -6,7 +6,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-import HeboComponents 1.0
+import HeboCpp 1.0
 import "items" as Hebo
 
 Item {
@@ -29,10 +29,8 @@ Item {
 
     onCurrentIndexChanged: {
       const item = this.model.row(this.currentIndex);
-      console.log("item:", item);
-      //console.log("qos:", item.qos);
-      //console.log("state:", item.state);
-      //stackView.switchClient(item.description);
+      console.log("connectionInfo:", JSON.stringify(item));
+      stackView.switchClient(item.name);
     }
 
     delegate: Item {
