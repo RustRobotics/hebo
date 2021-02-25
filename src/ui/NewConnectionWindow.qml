@@ -33,7 +33,7 @@ Item {
         clientIdField.text,
         hostProtocol.currentText,
         hostnameField.text,
-        portField.number,
+        portField.value,
         qosField.qos,
         cleanSessionButton.checked
       );
