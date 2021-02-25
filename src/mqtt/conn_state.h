@@ -10,11 +10,11 @@
 namespace hebo {
 
 enum class ConnectState : uint8_t {
-  kDisconnected,
-  kConnecting,
-  kConnected,
-  kConnectFailed,
-  kDisconnecting,
+  kDisconnected = 0,
+  kConnecting = 1,
+  kConnected = 2,
+  kConnectFailed = 3,
+  kDisconnecting = 4,
 };
 
 QDebug operator<<(QDebug stream, ConnectState state);

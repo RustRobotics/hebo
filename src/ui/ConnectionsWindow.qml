@@ -17,7 +17,6 @@ Item {
     z: 1;
   }
 
-
   ListView {
     id: connectionList;
     anchors.top: title.bottom;
@@ -25,17 +24,37 @@ Item {
     anchors.bottom: root.bottom;
     width: 240;
     model: connectManager.connList;
-    delegate: Text {
-      font.pixelSize: 14;
-      padding: 20;
-      verticalAlignment: Text.AlignVCenter;
+
+    delegate: Item {
       width: connectionList.width;
-      text: connectionList.model[index].description;
+      height: 60;
 
       Rectangle {
+        anchors.fill: rowItem;
+        color: "#b0f9aa";
+        visible: connectionList.currentIndex == index;
+      }
+
+      Row {
+        id: rowItem;
         anchors.fill: parent;
-        color: "#c3e6c8";
-        opacity: 0.25;
+        leftPadding: 14;
+        spacing: 8;
+
+        Rectangle {
+          color: connectionList.model[index].state === 2 ? "#39d12d" : "#606060";
+          width: 8;
+          height: 8;
+          radius: 4;
+          anchors.verticalCenter: parent.verticalCenter;
+        }
+
+        Text {
+          font.pixelSize: 14;
+          anchors.verticalCenter: parent.verticalCenter;
+          color: "#000";
+          text: connectionList.model[index].description;
+        }
       }
     }
 
