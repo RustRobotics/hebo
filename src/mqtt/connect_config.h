@@ -14,7 +14,7 @@ Q_NAMESPACE
 
 enum QoS : int32_t {
   AtMostOnce = 0,
-  AtLeaseOnce = 1,
+  AtLeastOnce = 1,
   ExactOnce = 2,
 };
 Q_ENUM_NS(QoS);

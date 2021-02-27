@@ -23,8 +23,11 @@ struct MqttClientPrivate {
 
 MqttClient::MqttClient(QObject* parent)
     : QObject(parent),
+      worker_thread_(new QThread(this)),
       p_(new MqttClientPrivate()) {
   this->initSignals();
+
+//  this->worker_thread_->start();
 }
 
 MqttClient::~MqttClient() {
@@ -32,9 +35,17 @@ MqttClient::~MqttClient() {
 }
 
 void MqttClient::initSignals() {
+  connect(this->worker_thread_, &QThread::finished,
+          this->worker_thread_, &QThread::deleteLater);
+
   connect(this, &MqttClient::stateChanged, [](ConnectionState state) {
     qDebug() << "state:" << state;
   });
+}
+
+void MqttClient::setState(ConnectionState state) {
+  this->state_ = state;
+  emit this->stateChanged(state);
 }
 
 void MqttClient::requestConnect() {
@@ -49,8 +60,8 @@ void MqttClient::requestConnect() {
 
   c->set_connack_handler([=](bool sp, MQTT_NS::connect_return_code rc) {
     qDebug() << "sp:" << sp << MQTT_NS::connect_return_code_to_str(rc);
+    this->setState(ConnectionConnected);
     emit this->connectResult(!sp, MQTT_NS::connect_return_code_to_str(rc));
-    emit this->stateChanged(ConnectionConnected);
 
     c->async_subscribe("hello", MQTT_NS::qos::exactly_once);
 
@@ -76,7 +87,7 @@ void MqttClient::requestConnect() {
 
   c->set_close_handler([&]() {
     qDebug() << __func__ << "close handler";
-    emit this->stateChanged(ConnectionDisconnected);
+    this->setState(ConnectionDisconnected);
   });
   c->set_error_handler([&](MQTT_NS::error_code ec) {
     qWarning() << "Got mqtt error:" << ec.message().c_str();
@@ -84,11 +95,11 @@ void MqttClient::requestConnect() {
 
   c->async_connect();
   this->timer_id_ = this->startTimer(5);
-  emit this->stateChanged(ConnectionConnecting);
+  this->setState(ConnectionConnecting);
 }
 
 void MqttClient::requestDisconnect() {
-  emit this->stateChanged(ConnectionDisconnecting);
+  this->setState(ConnectionDisconnecting);
   this->killTimer(this->timer_id_);
 }
 
@@ -106,10 +117,20 @@ void MqttClient::requestUnsubscribe(const QString& topic) {
   Q_UNUSED(topic);
 }
 
-void MqttClient::requestPublish(const QString& topic, QoS qos, const QByteArray& payload) {
-  Q_UNUSED(topic);
+void MqttClient::requestPublish(const QString& topic, int qos, const QByteArray& payload) {
+  Q_ASSERT(this->state_ == ConnectionConnected);
+  if (this->state_ != ConnectionConnected) {
+    qWarning() << "Invalid state:" << this->state_;
+    return;
+  }
   Q_UNUSED(qos);
-  Q_UNUSED(payload);
+
+  const auto topic_str = topic.toStdString();
+  this->p_->client->async_publish(MQTT_NS::allocate_buffer(topic_str),
+                                  MQTT_NS::allocate_buffer(payload.constData()),
+                                  MQTT_NS::qos::exactly_once, [](MQTT_NS::error_code ec) {
+    qWarning() << "ec;" << ec.message().c_str();
+  });
 }
 
 }  // namespace

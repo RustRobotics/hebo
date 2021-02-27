@@ -6,6 +6,7 @@
 #define HEBOUI_SRC_MQTT_MQTT_CLIENT_H_
 
 #include <QObject>
+#include <QThread>
 
 #include "mqtt/connect_config.h"
 
@@ -39,7 +40,7 @@ class MqttClient : public QObject {
   void requestDisconnect();
   void requestSubscribe(const QString& topic, QoS qos);
   void requestUnsubscribe(const QString& topic);
-  void requestPublish(const QString& topic, QoS qos, const QByteArray& payload);
+  void requestPublish(const QString& topic, int qos, const QByteArray& payload);
 
  signals:
   void connectResult(bool ok, const QString& error);
@@ -55,13 +56,14 @@ class MqttClient : public QObject {
  private:
   void initSignals();
 
+  void setState(ConnectionState state);
+
+  QThread* worker_thread_;
   ConnectConfig config_{};
   ConnectionState state_{ConnectionState::ConnectionDisconnected};
   int timer_id_{-1};
   MqttClientPrivate* p_;
 };
-
-using MqttClientPtr = QSharedPointer<MqttClient>;
 
 }  // namespace hebo
 

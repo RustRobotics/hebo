@@ -9,6 +9,7 @@
 #include <QGuiApplication>
 
 #include "controllers/main_controller.h"
+#include "mqtt/connect_config.h"
 #include "mqtt/mqtt_client.h"
 
 namespace hebo {

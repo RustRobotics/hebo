@@ -89,6 +89,7 @@ Item {
         text: "Send";
         onClicked: {
           console.log("publish msg");
+          root.client.requestPublish(topicField.text, HeboNs.AtMostOnce, payloadField.text);
         }
       }
     }
@@ -97,5 +98,6 @@ Item {
   Component.onCompleted: {
     this.client = connectManager.client(this.name);
     console.log("client:", client);
+    console.log("QoS:", HeboNs.AtMostOnce);
   }
 }
