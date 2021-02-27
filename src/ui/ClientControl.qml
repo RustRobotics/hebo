@@ -185,6 +185,10 @@ Item {
           Layout.fillWidth: true;
           Layout.fillHeight: true;
 
+          ScrollBar.horizontal: ScrollBar {
+            policy: ScrollBar.AlwaysOff;
+          }
+
           ListView {
             id: messageStreamList;
             model: root.client.messages;
@@ -241,10 +245,14 @@ Item {
             opacity: 0.24;
           }
 
-          Button {
+          IconButton {
             anchors.right: parent.right;
             anchors.bottom: parent.bottom;
-            text: "Send";
+            anchors.rightMargin: 16;
+            anchors.bottomMargin: 16;
+            text: "\ue729";
+            textColor: "#3a3a3a";
+            ToolTip.text: qsTr("Send");
             onClicked: {
               console.log("publish msg");
               root.client.requestPublish(topicField.text, HeboNs.AtMostOnce, payloadField.text);
@@ -270,11 +278,19 @@ Item {
   }
 
   component IconButton: Button {
-    width: 26;
-    Layout.preferredWidth: width;
+    property color textColor;
+
+    width: 28;
+    height: 28;
     flat: true;
-    font.pixelSize: 24;
-    font.family: iconFont.name;
+    Layout.preferredWidth: width;
     ToolTip.visible: hovered;
+
+    contentItem: Text {
+      text: parent.text;
+      color: parent.textColor;
+      font.pixelSize: 24;
+      font.family: iconFont.name;
+    }
   }
 }
