@@ -135,9 +135,9 @@ void MqttClient::requestUnsubscribe(const QString& topic) {
     return;
   }
 
-  for (const auto& item : this->subscriptions_) {
-    if (item.topic == topic) {
-      this->subscriptions_.removeOne(item);
+  for (int index = 0; index < this->subscriptions_.length(); ++index) {
+    if (this->subscriptions_.at(index).topic == topic) {
+      this->subscriptions_.removeAt(index);
       const std::string topic_str = topic.toStdString();
       this->p_->client->async_unsubscribe(topic_str);
       return;
