@@ -40,7 +40,7 @@ QString generateConnDescription(const ConnectConfig& info);
 
 QDebug operator<<(QDebug stream, const ConnectConfig& info);
 
-bool parseConnectConfigs(const QString& file, ConnectConfig& list);
+bool parseConnectConfigs(const QString& file, ConnectConfigList& list);
 
 QJsonObject dumpConnectConfig(const ConnectConfig& info);
 

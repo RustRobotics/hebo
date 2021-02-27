@@ -4,6 +4,10 @@
 
 #include "controllers/connect_manager.h"
 
+#include <QDebug>
+#include <QDir>
+#include <QStandardPaths>
+
 namespace hebo {
 namespace {
 
@@ -19,10 +23,21 @@ constexpr const char* kTls = "tls";
 constexpr const char* kCleanSession = "cleanSession";
 constexpr const char* kDescription = "description";
 
+QString getJsonFile() {
+  const QStringList dirs = QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation);
+  Q_ASSERT(!dirs.isEmpty());
+  QDir dir(dirs.first());
+  dir.cdUp();
+  return dir.absoluteFilePath("connections.json");
+}
+
 }  // namespace
 
-ConnectManager::ConnectManager(QObject* parent) : QAbstractListModel(parent) {
-
+ConnectManager::ConnectManager(QObject* parent)
+    : QAbstractListModel(parent),
+      conn_file_(getJsonFile()) {
+  // Load connections on startup.
+  this->loadConnInfo();
 }
 
 
@@ -93,6 +108,43 @@ QHash<int, QByteArray> ConnectManager::roleNames() const {
       {kCleanSessionRole, kCleanSession},
       {kDescriptionRole, kDescription},
   };
+}
+
+void ConnectManager::addConnection(const QString& name,
+                                   const QString& client_id,
+                                   const QString& protocol,
+                                   const QString& host,
+                                   int port,
+                                   int qos,
+                                   bool clean_session) {
+  ConnectConfig config{};
+  config.name = name;
+  config.client_id = client_id;
+  config.protocol = protocol;
+  config.host = host;
+  config.port = port;
+  config.qos = static_cast<QoS>(qos);
+  config.clean_session = clean_session;
+  config.description = generateConnDescription(config);
+
+  // save to local file
+  this->saveConnInfo();
+}
+
+
+void ConnectManager::saveConnInfo() {
+  if (!dumpConnectConfigs(this->conn_file_, this->configs_)) {
+    qWarning() << "Failed to save connection info to file:" << conn_file_;
+  }
+}
+
+void ConnectManager::loadConnInfo() {
+  ConnectConfigList list{};
+  const bool ok = parseConnectConfigs(this->conn_file_, list);
+  if (!ok) {
+    qWarning() << "Failed to parse conn info file:" << this->conn_file_;
+    return;
+  }
 }
 
 }  // namespace hebo

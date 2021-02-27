@@ -8,6 +8,7 @@
 #include <QAbstractListModel>
 
 #include "mqtt/connect_config.h"
+#include "mqtt/mqtt_client.h"
 
 namespace hebo {
 
@@ -37,8 +38,24 @@ class ConnectManager : public QAbstractListModel {
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
+ public slots:
+  // Connections management
+  // Protocol V3.1.1
+  void addConnection(const QString& name,
+                     const QString& client_id,
+                     const QString& protocol,
+                     const QString& host,
+                     int port,
+                     int qos,
+                     bool clean_session);
+
  private:
+  void loadConnInfo();
+  void saveConnInfo();
+
+  QString conn_file_;
   QVector<ConnectConfig> configs_{};
+  QMap<QString, MqttClientPtr> clients_{};
 };
 
 }  // namespace hebo

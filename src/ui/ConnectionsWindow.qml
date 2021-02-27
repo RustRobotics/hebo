@@ -24,7 +24,7 @@ Item {
     anchors.left: root.left;
     anchors.bottom: root.bottom;
     width: 240;
-    model: connectManager.model;
+    model: connectManager;
     keyNavigationEnabled: true;
 
     onCurrentIndexChanged: {
