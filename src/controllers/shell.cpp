@@ -38,13 +38,18 @@ void registerComponents() {
   constexpr int kVersionMajor = 1;
   constexpr int kVersionMinor = 0;
   qmlRegisterUncreatableMetaObject(hebo::staticMetaObject,
-                                   kComponentUri,
-                                   kVersionMajor, kVersionMinor,
+                                   kComponentUri, kVersionMajor, kVersionMinor,
                                    "HeboNs",
                                    "Access to enums & flags only");
-  qmlRegisterType<MqttClient>(kComponentUri,
-                              kVersionMajor, kVersionMinor,
-                              "MqttClient");
+//  qmlRegisterType<MqttClient>(kComponentUri,
+//                              kVersionMajor, kVersionMinor,
+//                              "MqttClient");
+  qmlRegisterUncreatableType<MqttClient>(kComponentUri, kVersionMajor, kVersionMinor,
+                                         "MqttClient",
+                                         "Cannot create a MqttClient instance");
+  qmlRegisterUncreatableType<ConnectManager>(kComponentUri, kVersionMajor, kVersionMinor,
+                                         "ConnectManager",
+                                         "Cannot create a ConnectManager instance");
 }
 
 }  // namespace hebo

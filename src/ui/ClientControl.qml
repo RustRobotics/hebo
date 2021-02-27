@@ -6,9 +6,13 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+import org.biofan.hebo 1.0
+
 Item {
   id: root;
   property string name;
+
+  property MqttClient client;
 
   ColumnLayout {
     anchors.fill: parent;
@@ -80,5 +84,10 @@ Item {
         }
       }
     }
+  }
+
+  Component.onCompleted: {
+    this.client = connectManager.client(this.name);
+    console.log("client:", client);
   }
 }
