@@ -1,5 +1,7 @@
 
 set(SOURCE
+    color.cpp
+    color.h
     file.cpp
     file.h
     )
@@ -9,4 +11,5 @@ add_library(base-static STATIC
     )
 target_link_libraries(base-static
     Qt5::Core
+    Qt5::Gui
     )
