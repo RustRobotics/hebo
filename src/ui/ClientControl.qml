@@ -167,9 +167,42 @@ Item {
           Layout.fillWidth: true;
           Layout.fillHeight: true;
 
-          TextEdit {
-            id: messagesField;
-            anchors.fill: parent;
+          ListView {
+            id: messageStreamList;
+            model: root.client.messages;
+            spacing: 16;
+
+            delegate: Rectangle {
+              color: "#eaeaea";
+              width: messageStreamList.width;
+              height: 120;
+              radius: 14;
+
+              ColumnLayout {
+                anchors.fill: parent;
+
+                Text {
+                  text: "Topic: " + model.topic;
+                }
+
+                Text {
+                  text: "QoS " + model.qos;
+                }
+
+                Text {
+                  text: model.payload;
+                }
+
+                Text {
+                  text: model.isPublish ? "Publish": "Subscribe";
+                }
+
+                Text {
+                  color: "gray";
+                  text: model.timestamp;
+                }
+              }
+            }
           }
         }
 
