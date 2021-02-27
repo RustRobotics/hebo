@@ -26,7 +26,7 @@ int SubscriptionModel::rowCount(const QModelIndex& parent) const {
 }
 
 QVariant SubscriptionModel::data(const QModelIndex& index, int role) const {
-  if (index.isValid()) {
+  if (!index.isValid()) {
     return {};
   }
   const auto& sub = this->list_.at(index.row());

@@ -68,75 +68,110 @@ Item {
 
     RowLayout {
 
-      Column {
-        Layout.preferredWidth: 252;
+      ColumnLayout {
+        id: topicLayout;
+        Layout.preferredWidth: 202;
+        spacing: 12;
 
         Button {
           text: qsTr("New Subscription");
           onClicked: {
             console.log("Show new subscription window");
-            newSubscriptionDialog.reset();
-            newSubscriptionDialog.open();
+            if (root.client.state === MqttClient.ConnectionConnected) {
+              newSubscriptionDialog.reset();
+              newSubscriptionDialog.open();
+            } else {
+              console.warn("Invalid connection state");
+            }
           }
         }
 
-        ListView {
-          id: subscriptionsList;
-          model: root.client.subscription;
+        ScrollView {
+          Layout.fillHeight: true;
 
-          delegate: Rectangle {
-            Rectangle {
-              width: 16;
-              height: 16;
+          ListView {
+            id: subscriptionsList;
+            model: root.client.subscriptions;
+
+            delegate: Rectangle {
+              color: "#eaeaea";
               radius: 4;
-              color: model.color;
-            }
+              width: topicLayout.Layout.preferredWidth;
+              height: topicLabel.height + 24;
 
-            Text {
-              text: model.topic;
-            }
+              MouseArea {
+                anchors.fill: parent;
+                onClicked: {
+                  console.log("clicked");
+                }
+              }
 
-            Text {
-              text: model.qos;
+              RowLayout {
+                anchors.fill: parent;
+                spacing: 8;
+
+                Rectangle {
+                  width: 16;
+                  height: 16;
+                  radius: 4;
+                  color: model.color;
+                }
+
+                Text {
+                  id: topicLabel;
+                  text: model.topic;
+                }
+
+                Text {
+                  Layout.alignment: Qt.AlignRight;
+                  horizontalAlignment: Text.AlignRight;
+                  color: "#313131";
+                  text: "QoS " + model.qos;
+                }
+              }
             }
           }
         }
+
       }
 
-      ScrollView {
-        Layout.fillWidth: true;
-        Layout.fillHeight: true;
+      ColumnLayout {
 
-        TextEdit {
-          id: messagesField;
-          anchors.fill: parent;
-        }
-      }
+        ScrollView {
+          Layout.fillWidth: true;
+          Layout.fillHeight: true;
 
-      TextField {
-        id: topicField;
-        Layout.fillWidth: true;
-        placeholderText: qsTr("Topic");
-      }
-
-      TextArea {
-        id: payloadField;
-        height: 148;
-        Layout.fillWidth: true;
-        Layout.preferredHeight: height;
-        background: Rectangle {
-          anchors.fill: parent;
-          color: "#a9a9a9";
-          opacity: 0.24;
+          TextEdit {
+            id: messagesField;
+            anchors.fill: parent;
+          }
         }
 
-        Button {
-          anchors.right: parent.right;
-          anchors.bottom: parent.bottom;
-          text: "Send";
-          onClicked: {
-            console.log("publish msg");
-            root.client.requestPublish(topicField.text, HeboNs.AtMostOnce, payloadField.text);
+        TextField {
+          id: topicField;
+          Layout.fillWidth: true;
+          placeholderText: qsTr("Topic");
+        }
+
+        TextArea {
+          id: payloadField;
+          height: 148;
+          Layout.fillWidth: true;
+          Layout.preferredHeight: height;
+          background: Rectangle {
+            anchors.fill: parent;
+            color: "#a9a9a9";
+            opacity: 0.24;
+          }
+
+          Button {
+            anchors.right: parent.right;
+            anchors.bottom: parent.bottom;
+            text: "Send";
+            onClicked: {
+              console.log("publish msg");
+              root.client.requestPublish(topicField.text, HeboNs.AtMostOnce, payloadField.text);
+            }
           }
         }
       }
