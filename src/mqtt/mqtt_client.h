@@ -43,7 +43,6 @@ class MqttClient : public QObject {
   void requestPublish(const QString& topic, int qos, const QByteArray& payload);
 
  signals:
-  void connectResult(bool ok, const QString& error);
   void disconnectResult(bool ok, const QString& error);
   void subscribeResult(const QString& topic, bool ok, const QString& error);
   void unsubscribeResult(const QString& topic, bool ok, const QString& error);

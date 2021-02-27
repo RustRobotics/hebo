@@ -34,10 +34,19 @@ Item {
 
       Button {
         text: "Connect";
+        //visible: !root.client || root.client.state === MqttClient.Disconnected || root.client.state === MqttClient.Connected;
         onClicked: {
           console.log("Do connect client");
           console.log("client state:", root.client.state);
           root.client.requestConnect();
+        }
+      }
+
+      Button {
+        text: "Disconnect";
+        //visible: root.client && root.client.state !== MqttClient.Disconnected && root.client.state !== MqttClient.Connected;
+        onClicked: {
+          root.client.requestDisconnect();
         }
       }
 
@@ -99,5 +108,6 @@ Item {
     this.client = connectManager.client(this.name);
     console.log("client:", client);
     console.log("QoS:", HeboNs.AtMostOnce);
+    console.log("state:", this.client.state);
   }
 }

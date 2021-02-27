@@ -59,10 +59,9 @@ void MqttClient::requestConnect() {
   using PacketId = typename std::remove_reference_t<decltype(*c)>::packet_id_t;
 
   c->set_connack_handler([=](bool sp, MQTT_NS::connect_return_code rc) {
-    qDebug() << "sp:" << sp << MQTT_NS::connect_return_code_to_str(rc);
+    Q_UNUSED(sp);
+    Q_UNUSED(rc);
     this->setState(ConnectionConnected);
-    emit this->connectResult(!sp, MQTT_NS::connect_return_code_to_str(rc));
-
     c->async_subscribe("hello", MQTT_NS::qos::exactly_once);
 
     return true;
@@ -86,8 +85,9 @@ void MqttClient::requestConnect() {
   });
 
   c->set_close_handler([&]() {
-    qDebug() << __func__ << "close handler";
+    qDebug() << "close handler";
     this->setState(ConnectionDisconnected);
+    this->killTimer(this->timer_id_);
   });
   c->set_error_handler([&](MQTT_NS::error_code ec) {
     qWarning() << "Got mqtt error:" << ec.message().c_str();
@@ -100,7 +100,9 @@ void MqttClient::requestConnect() {
 
 void MqttClient::requestDisconnect() {
   this->setState(ConnectionDisconnecting);
-  this->killTimer(this->timer_id_);
+  this->p_->client->async_disconnect([=](MQTT_NS::error_code ec) {
+    qDebug() << "async_disconnect() returns:" << ec.message().data();
+  });
 }
 
 void MqttClient::timerEvent(QTimerEvent* event) {
@@ -129,7 +131,7 @@ void MqttClient::requestPublish(const QString& topic, int qos, const QByteArray&
   this->p_->client->async_publish(MQTT_NS::allocate_buffer(topic_str),
                                   MQTT_NS::allocate_buffer(payload.constData()),
                                   MQTT_NS::qos::exactly_once, [](MQTT_NS::error_code ec) {
-    qWarning() << "ec;" << ec.message().c_str();
+    qWarning() << "ec;" << ec.message().data();
   });
 }
 
