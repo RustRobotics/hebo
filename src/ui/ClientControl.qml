@@ -92,6 +92,7 @@ Item {
           ListView {
             id: subscriptionsList;
             model: root.client.subscriptions;
+            spacing: 9;
 
             delegate: Rectangle {
               color: "#eaeaea";
@@ -100,9 +101,32 @@ Item {
               height: topicLabel.height + 24;
 
               MouseArea {
+                id: unsubscribeMA;
                 anchors.fill: parent;
+                hoverEnabled: true;
+
                 onClicked: {
-                  console.log("clicked");
+                  console.log("clicked, filter topic");
+                }
+              }
+
+              Button {
+                id: unsubscribeButton;
+                visible: unsubscribeMA.containsMouse;
+                anchors.right: parent.right;
+                anchors.verticalCenter: parent.verticalCenter;
+                text: "x";
+
+                background: Rectangle {
+                  color: "red";
+                  width: 24;
+                  height: 24;
+                  radius: 12;
+                }
+
+                onClicked: {
+                  // TODO(Shaohua): Check connection state.
+                  root.client.requestUnsubscribe(model.topic);
                 }
               }
 
