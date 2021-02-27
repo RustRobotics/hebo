@@ -7,6 +7,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 import org.biofan.hebo 1.0
+import "items" as Hebo
 
 Item {
   id: root;
@@ -65,42 +66,90 @@ Item {
       }
     }
 
-    ScrollView {
-      Layout.fillWidth: true;
-      Layout.fillHeight: true;
+    RowLayout {
 
-      TextEdit {
-        id: messagesField;
-        anchors.fill: parent;
-      }
-    }
+      Column {
+        Layout.preferredWidth: 252;
 
-    TextField {
-      id: topicField;
-      Layout.fillWidth: true;
-      placeholderText: qsTr("Topic");
-    }
+        Button {
+          text: qsTr("New Subscription");
+          onClicked: {
+            console.log("Show new subscription window");
+            newSubscriptionDialog.reset();
+            newSubscriptionDialog.open();
+          }
+        }
 
-    TextArea {
-      id: payloadField;
-      height: 148;
-      Layout.fillWidth: true;
-      Layout.preferredHeight: height;
-      background: Rectangle {
-        anchors.fill: parent;
-        color: "#a9a9a9";
-        opacity: 0.24;
-      }
+        ListView {
+          id: subscriptionsList;
+          model: root.client.subscription;
 
-      Button {
-        anchors.right: parent.right;
-        anchors.bottom: parent.bottom;
-        text: "Send";
-        onClicked: {
-          console.log("publish msg");
-          root.client.requestPublish(topicField.text, HeboNs.AtMostOnce, payloadField.text);
+          delegate: Rectangle {
+            Rectangle {
+              width: 16;
+              height: 16;
+              radius: 4;
+              color: model.color;
+            }
+
+            Text {
+              text: model.topic;
+            }
+
+            Text {
+              text: model.qos;
+            }
+          }
         }
       }
+
+      ScrollView {
+        Layout.fillWidth: true;
+        Layout.fillHeight: true;
+
+        TextEdit {
+          id: messagesField;
+          anchors.fill: parent;
+        }
+      }
+
+      TextField {
+        id: topicField;
+        Layout.fillWidth: true;
+        placeholderText: qsTr("Topic");
+      }
+
+      TextArea {
+        id: payloadField;
+        height: 148;
+        Layout.fillWidth: true;
+        Layout.preferredHeight: height;
+        background: Rectangle {
+          anchors.fill: parent;
+          color: "#a9a9a9";
+          opacity: 0.24;
+        }
+
+        Button {
+          anchors.right: parent.right;
+          anchors.bottom: parent.bottom;
+          text: "Send";
+          onClicked: {
+            console.log("publish msg");
+            root.client.requestPublish(topicField.text, HeboNs.AtMostOnce, payloadField.text);
+          }
+        }
+      }
+    }
+  }
+
+  Hebo.NewSubscriptionDialog {
+    id: newSubscriptionDialog;
+
+    onAccepted: {
+      const fields = this.fields();
+      console.log("fields:", fields);
+      root.client.requestSubscribe(fields.topic, fields.qos, fields.color);
     }
   }
 
