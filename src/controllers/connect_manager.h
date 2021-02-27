@@ -39,7 +39,7 @@ class ConnectManager : public QAbstractListModel {
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
-  Q_INVOKABLE MqttClient* client(const QString& name);
+  Q_INVOKABLE QObject* client(const QString& name);
 
   Q_INVOKABLE QVariantMap row(int index);
 

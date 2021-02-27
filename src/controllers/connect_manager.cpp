@@ -155,7 +155,7 @@ QVariantMap ConnectManager::row(int index) {
   return dumpConnectConfig(this->configs_.at(index)).toVariantMap();
 }
 
-MqttClient* ConnectManager::client(const QString& name) {
+QObject* ConnectManager::client(const QString& name) {
   if (this->clients_.contains(name)) {
     auto* client = this->clients_.value(name);
     Q_ASSERT(client != nullptr);

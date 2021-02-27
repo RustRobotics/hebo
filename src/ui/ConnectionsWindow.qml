@@ -29,9 +29,7 @@ Item {
     keyNavigationEnabled: true;
 
     onCurrentIndexChanged: {
-      console.log("current index:", this.currentIndex);
       const config = connectManager.row(this.currentIndex);
-      console.log("config:", JSON.stringify(config));
       stackView.switchClient(config.name);
     }
 

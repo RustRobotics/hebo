@@ -25,11 +25,19 @@ Item {
         color: "#4d4d4d";
       }
 
+      Text {
+        width: 36;
+        font.pixelSize: 16;
+        color: "red";
+        text: root.client.state;
+      }
+
       Button {
         text: "Connect";
         onClicked: {
           console.log("Do connect client");
-          connectManager.requestConnect(root.name);
+          console.log("client state:", root.client.state);
+          root.client.requestConnect();
         }
       }
 

@@ -34,37 +34,23 @@ class MqttClient : public QObject {
 
   [[nodiscard]] ConnectionState state() const { return this->state_; }
 
- signals:
-  void requestConnect(const ConnectConfig& config);
-  void connectResult(bool ok, const QString& error);
-
+ public slots:
+  void requestConnect();
   void requestDisconnect();
-  void disconnectResult(bool ok, const QString& error);
-
   void requestSubscribe(const QString& topic, QoS qos);
-  void subscribeResult(const QString& topic, bool ok, const QString& error);
-
   void requestUnsubscribe(const QString& topic);
-  void unsubscribeResult(const QString& topic, bool ok, const QString& error);
-
   void requestPublish(const QString& topic, QoS qos, const QByteArray& payload);
-  void publishResult(const QString& topic, bool ok, const QString& error);
 
+ signals:
+  void connectResult(bool ok, const QString& error);
+  void disconnectResult(bool ok, const QString& error);
+  void subscribeResult(const QString& topic, bool ok, const QString& error);
+  void unsubscribeResult(const QString& topic, bool ok, const QString& error);
+  void publishResult(const QString& topic, bool ok, const QString& error);
   void stateChanged(ConnectionState state);
 
  protected:
   void timerEvent(QTimerEvent* event) override;
-
- private slots:
-  void doConnect();
-
-  void doDisconnect();
-
-  void doSubscribe(const QString& topic, QoS qos);
-
-  void doUnsubscribe(const QString& topic);
-
-  void doPublish(const QString& topic, QoS qos, const QByteArray& payload);
 
  private:
   void initSignals();

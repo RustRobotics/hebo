@@ -32,19 +32,12 @@ MqttClient::~MqttClient() {
 }
 
 void MqttClient::initSignals() {
-  connect(this, &MqttClient::requestConnect,
-          this, &MqttClient::doConnect);
-  connect(this, &MqttClient::requestDisconnect,
-          this, &MqttClient::doDisconnect);
-  connect(this, &MqttClient::requestPublish,
-          this, &MqttClient::doPublish);
-  connect(this, &MqttClient::requestSubscribe,
-          this, &MqttClient::doSubscribe);
-  connect(this, &MqttClient::requestUnsubscribe,
-          this, &MqttClient::doUnsubscribe);
+  connect(this, &MqttClient::stateChanged, [](ConnectionState state) {
+    qDebug() << "state:" << state;
+  });
 }
 
-void MqttClient::doConnect() {
+void MqttClient::requestConnect() {
   auto c = MQTT_NS::make_async_client(p_->context,
                                       this->config_.host.toStdString(),
                                       this->config_.port);
@@ -94,7 +87,7 @@ void MqttClient::doConnect() {
   emit this->stateChanged(ConnectionConnecting);
 }
 
-void MqttClient::doDisconnect() {
+void MqttClient::requestDisconnect() {
   emit this->stateChanged(ConnectionDisconnecting);
   this->killTimer(this->timer_id_);
 }
@@ -104,16 +97,16 @@ void MqttClient::timerEvent(QTimerEvent* event) {
   this->p_->context.poll();
 }
 
-void MqttClient::doSubscribe(const QString& topic, QoS qos) {
+void MqttClient::requestSubscribe(const QString& topic, QoS qos) {
   Q_UNUSED(topic)
   Q_UNUSED(qos)
 }
 
-void MqttClient::doUnsubscribe(const QString& topic) {
+void MqttClient::requestUnsubscribe(const QString& topic) {
   Q_UNUSED(topic);
 }
 
-void MqttClient::doPublish(const QString& topic, QoS qos, const QByteArray& payload) {
+void MqttClient::requestPublish(const QString& topic, QoS qos, const QByteArray& payload) {
   Q_UNUSED(topic);
   Q_UNUSED(qos);
   Q_UNUSED(payload);

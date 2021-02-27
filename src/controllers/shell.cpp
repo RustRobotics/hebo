@@ -47,6 +47,7 @@ void registerComponents() {
   qmlRegisterUncreatableType<MqttClient>(kComponentUri, kVersionMajor, kVersionMinor,
                                          "MqttClient",
                                          "Cannot create a MqttClient instance");
+//  qmlRegisterInterface<MqttClient>(kComponentUri, kVersionMajor);
   qmlRegisterUncreatableType<ConnectManager>(kComponentUri, kVersionMajor, kVersionMinor,
                                          "ConnectManager",
                                          "Cannot create a ConnectManager instance");
