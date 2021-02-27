@@ -62,8 +62,6 @@ void MqttClient::requestConnect() {
     Q_UNUSED(sp);
     Q_UNUSED(rc);
     this->setState(ConnectionConnected);
-    c->async_subscribe("hello", MQTT_NS::qos::exactly_once);
-
     return true;
   });
 
@@ -110,13 +108,42 @@ void MqttClient::timerEvent(QTimerEvent* event) {
   this->p_->context.poll();
 }
 
-void MqttClient::requestSubscribe(const QString& topic, QoS qos) {
-  Q_UNUSED(topic)
-  Q_UNUSED(qos)
+void MqttClient::requestSubscribe(const QString& topic, int qos, const QColor& color) {
+  Q_ASSERT(this->state_ == ConnectionConnected);
+  if (this->state_ != ConnectionConnected) {
+    qWarning() << "Invalid state:" << this->state_;
+    return;
+  }
+
+  for (const auto& item : this->subscriptions_) {
+    if (item.topic == topic) {
+      qWarning() << "Topic already subscribed:" << topic;
+      return;
+    }
+  }
+  // TODO(Shaohua):
+  Subscription sub{topic, color, static_cast<QoS>(qos)};
+  this->subscriptions_.append(sub);
+  const std::string topic_str = topic.toStdString();
+  this->p_->client->async_subscribe(topic_str, static_cast<MQTT_NS::qos>(qos));
 }
 
 void MqttClient::requestUnsubscribe(const QString& topic) {
-  Q_UNUSED(topic);
+  Q_ASSERT(this->state_ == ConnectionConnected);
+  if (this->state_ != ConnectionConnected) {
+    qWarning() << "Invalid state:" << this->state_;
+    return;
+  }
+
+  for (const auto& item : this->subscriptions_) {
+    if (item.topic == topic) {
+      this->subscriptions_.removeOne(item);
+      const std::string topic_str = topic.toStdString();
+      this->p_->client->async_unsubscribe(topic_str);
+      return;
+    }
+  }
+  qWarning() << "Topic with name not subscribed:" << topic;
 }
 
 void MqttClient::requestPublish(const QString& topic, int qos, const QByteArray& payload) {

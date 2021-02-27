@@ -5,6 +5,7 @@
 #ifndef HEBOUI_SRC_MQTT_MQTT_CLIENT_H_
 #define HEBOUI_SRC_MQTT_MQTT_CLIENT_H_
 
+#include <QColor>
 #include <QObject>
 #include <QThread>
 
@@ -13,6 +14,13 @@
 namespace hebo {
 
 struct MqttClientPrivate;
+
+struct Subscription {
+  QString topic{};
+  QColor color{};
+  QoS qos{};
+};
+using SubscriptionList = QVector<Subscription>;
 
 class MqttClient : public QObject {
   Q_OBJECT
@@ -38,7 +46,7 @@ class MqttClient : public QObject {
  public slots:
   void requestConnect();
   void requestDisconnect();
-  void requestSubscribe(const QString& topic, QoS qos);
+  void requestSubscribe(const QString& topic, int qos, const QColor& color);
   void requestUnsubscribe(const QString& topic);
   void requestPublish(const QString& topic, int qos, const QByteArray& payload);
 
@@ -61,6 +69,8 @@ class MqttClient : public QObject {
   ConnectConfig config_{};
   ConnectionState state_{ConnectionState::ConnectionDisconnected};
   int timer_id_{-1};
+  SubscriptionList subscriptions_{};
+
   MqttClientPrivate* p_;
 };
 

@@ -11,6 +11,7 @@ add_library(mqtt-static STATIC
     )
 target_link_libraries(mqtt-static
     Qt5::Core
+    Qt5::Gui
 
     mqtt_cpp_iface
 
