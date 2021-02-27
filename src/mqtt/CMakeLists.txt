@@ -2,6 +2,8 @@
 set(SOURCE
     connect_config.cpp
     connect_config.h
+    message_stream_model.cpp
+    message_stream_model.h
     mqtt_client.cpp
     mqtt_client.h
     subscription_model.cpp

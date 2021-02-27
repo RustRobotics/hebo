@@ -25,6 +25,7 @@ MqttClient::MqttClient(QObject* parent)
     : QObject(parent),
       worker_thread_(new QThread(this)),
       subscriptions_(new SubscriptionModel(this)),
+      messages_(new MessageStreamModel(this)),
       p_(new MqttClientPrivate()) {
   this->initSignals();
 
@@ -41,6 +42,10 @@ void MqttClient::initSignals() {
 
   connect(this->subscriptions_, &SubscriptionModel::dataChanged, [=]() {
     emit this->subscriptionsChanged(this->subscriptions_);
+  });
+
+  connect(this->messages_, &MessageStreamModel::dataChanged, [=]() {
+    emit this->messagesChanged(this->messages_);
   });
 
   connect(this, &MqttClient::stateChanged, [](ConnectionState state) {

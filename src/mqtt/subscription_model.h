@@ -22,7 +22,7 @@ using SubscriptionList = QVector<Subscription>;
 class SubscriptionModel : public QAbstractListModel {
   Q_OBJECT
  public:
-  enum SubscriptionRole : int {
+  enum SubscriptionRole : int32_t {
     kTopicRole = Qt::UserRole + 1,
     kColorRole,
     kQoSRole,
