@@ -86,8 +86,13 @@ void MqttClient::requestConnect() {
     if (packet_id) {
       std::cout << "packet_id: " << *packet_id << std::endl;
     }
-    std::cout << "topic_name: " << topic_name << std::endl;
-    std::cout << "contents: " << contents << std::endl;
+
+    MqttMessage message{};
+    message.topic.append(topic_name.data());
+    message.qos = static_cast<QoS>(pubopts.get_qos());
+    message.is_publish = false;
+    message.payload.append(contents.data(), contents.size());
+    this->messages_->addMessage(message);
 
     return true;
   });
@@ -158,7 +163,6 @@ void MqttClient::requestPublish(const QString& topic, int qos, const QByteArray&
     qWarning() << "Invalid state:" << this->state_;
     return;
   }
-  Q_UNUSED(qos);
 
   const auto topic_str = topic.toStdString();
   this->p_->client->async_publish(MQTT_NS::allocate_buffer(topic_str),
@@ -166,6 +170,13 @@ void MqttClient::requestPublish(const QString& topic, int qos, const QByteArray&
                                   MQTT_NS::qos::exactly_once, [](MQTT_NS::error_code ec) {
     qWarning() << "ec;" << ec.message().data();
   });
+
+  MqttMessage message{};
+  message.topic = topic;
+  message.qos = static_cast<QoS>(qos);
+  message.is_publish = true;
+  message.payload = payload;
+  this->messages_->addMessage(message);
 }
 
 }  // namespace

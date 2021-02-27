@@ -49,4 +49,11 @@ QHash<int, QByteArray> MessageStreamModel::roleNames() const {
   };
 }
 
+void MessageStreamModel::addMessage(const MqttMessage& message) {
+  // TODO(Shaohua): Tuning insertion operation.
+  this->beginResetModel();
+  this->messages_.append(message);
+  this->endResetModel();
+}
+
 }  // namespace hebo

@@ -14,8 +14,8 @@ namespace hebo {
 struct MqttMessage {
   QString topic{};
   QoS qos{};
-  bool is_publish{};
-  QDateTime timestamp{};
+  bool is_publish{false};
+  QDateTime timestamp{QDateTime::currentDateTime()};
   QByteArray payload{};
 };
 
@@ -40,6 +40,8 @@ class MessageStreamModel : public QAbstractListModel {
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
+
+  void addMessage(const MqttMessage& message);
 
  private:
   MqttMessages messages_{};
