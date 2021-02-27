@@ -180,6 +180,7 @@ Item {
       }
 
       ColumnLayout {
+        spacing: 0;
 
         ScrollView {
           Layout.fillWidth: true;
@@ -239,10 +240,12 @@ Item {
           height: 148;
           Layout.fillWidth: true;
           Layout.preferredHeight: height;
+          placeholderText: qsTr("Payload");
           background: Rectangle {
             anchors.fill: parent;
-            color: "#a9a9a9";
-            opacity: 0.24;
+            color: "#fff";
+            border.color: parent.focus ? "#0066ff" : "#c1c1c1";
+            border.width: 2;
           }
 
           IconButton {
@@ -254,8 +257,11 @@ Item {
             textColor: "#3a3a3a";
             ToolTip.text: qsTr("Send");
             onClicked: {
-              console.log("publish msg");
-              root.client.requestPublish(topicField.text, HeboNs.AtMostOnce, payloadField.text);
+              if (root.client.state === MqttClient.ConnectionConnected) {
+                root.client.requestPublish(topicField.text, HeboNs.AtMostOnce, payloadField.text);
+              } else {
+                console.warn("Invalid mqtt connection state:", root.client.state);
+              }
             }
           }
         }
@@ -280,10 +286,11 @@ Item {
   component IconButton: Button {
     property color textColor;
 
-    width: 28;
-    height: 28;
+    width: 32;
+    height: 32;
     flat: true;
     Layout.preferredWidth: width;
+    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter;
     ToolTip.visible: hovered;
 
     contentItem: Text {
@@ -291,6 +298,8 @@ Item {
       color: parent.textColor;
       font.pixelSize: 24;
       font.family: iconFont.name;
+      horizontalAlignment: Text.AlignHCenter;
+      verticalAlignment: Text.AlignVCenter;
     }
   }
 }
