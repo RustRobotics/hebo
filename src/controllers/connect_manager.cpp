@@ -47,7 +47,6 @@ int ConnectManager::rowCount(const QModelIndex& parent) const {
 }
 
 QVariant ConnectManager::data(const QModelIndex& index, int role) const {
-  qDebug() << __func__ << index << role;
   if (!index.isValid()) {
     return {};
   }
@@ -149,6 +148,11 @@ void ConnectManager::loadConnInfo() {
     qWarning() << "Failed to parse conn info file:" << this->conn_file_;
     return;
   }
+}
+
+QVariantMap ConnectManager::row(int index) {
+  Q_ASSERT(index >= 0 && index < this->configs_.length());
+  return dumpConnectConfig(this->configs_.at(index)).toVariantMap();
 }
 
 QObject* ConnectManager::client(const QString& name) {

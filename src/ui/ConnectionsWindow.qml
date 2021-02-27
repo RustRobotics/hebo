@@ -20,6 +20,7 @@ Item {
 
   ListView {
     id: connectionList;
+
     anchors.top: title.bottom;
     anchors.left: root.left;
     anchors.bottom: root.bottom;
@@ -28,10 +29,10 @@ Item {
     keyNavigationEnabled: true;
 
     onCurrentIndexChanged: {
-      console.log("new index:", this.currentIndex);
-      //const item = this.model.row(this.currentIndex);
-      //console.log("connectionInfo:", JSON.stringify(item));
-      //stackView.switchClient(item.name);
+      console.log("current index:", this.currentIndex);
+      const config = connectManager.row(this.currentIndex);
+      console.log("config:", JSON.stringify(config));
+      stackView.switchClient(config.name);
     }
 
     delegate: Item {
@@ -40,7 +41,10 @@ Item {
 
       MouseArea {
         anchors.fill: parent;
-        onClicked: connectionList.currentIndex = index;
+        onClicked: {
+          console.log("model:", model);
+          connectionList.currentIndex = index;
+        }
       }
 
       Rectangle {
@@ -56,7 +60,7 @@ Item {
         spacing: 8;
 
         Rectangle {
-          color: model.state === HeboNs.ConnectionConnected ? "#39d12d" : "#606060";
+          color: model.state === MqttClient.ConnectionConnected ? "#39d12d" : "#606060";
           width: 8;
           height: 8;
           radius: 4;
@@ -99,8 +103,6 @@ Item {
   }
 
   Component.onCompleted: {
-    console.log("connectManager:", connectManager);
-    console.log("client flag:", MqttClient.ConnectionConnected);
   }
 
   Component {

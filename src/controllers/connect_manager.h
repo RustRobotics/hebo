@@ -44,6 +44,8 @@ class ConnectManager : public QAbstractListModel {
 
   Q_INVOKABLE QObject* client(const QString& name);
 
+  Q_INVOKABLE QVariantMap row(int index);
+
  public slots:
   // Connections management
   // Protocol V3.1.1
