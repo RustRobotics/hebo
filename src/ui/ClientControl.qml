@@ -41,8 +41,7 @@ Item {
       IconButton {
         text: "\ue791";
         ToolTip.text: qsTr("Connect");
-
-        //visible: !root.client || root.client.state === MqttClient.Disconnected || root.client.state === MqttClient.Connected;
+        visible: root.client.state !== MqttClient.ConnectionConnected;
         onClicked: {
           console.log("Do connect client");
           console.log("client state:", root.client.state);
@@ -52,8 +51,9 @@ Item {
 
       IconButton {
         text: "\ue71b";
+        textColor: "red";
         ToolTip.text: qsTr("Disconnect");
-        //visible: root.client && root.client.state !== MqttClient.Disconnected && root.client.state !== MqttClient.Connected;
+        visible: root.client.state === MqttClient.ConnectionConnected;
         onClicked: {
           root.client.requestDisconnect();
         }
@@ -61,6 +61,7 @@ Item {
 
       IconButton {
         text: "\ue78c";
+        textColor: "gray";
         ToolTip.text: qsTr("Edit");
         onClicked: {
           console.log("Edit connection");
