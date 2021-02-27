@@ -22,6 +22,7 @@
     <file>items/TextButton.qml</file>
     <file>items/qmldir</file>
 
+    <file>fonts/element-icons.ttf</file>
     <file>fonts/iconfont.ttf</file>
 
     <file>images/app-logo.png</file>
