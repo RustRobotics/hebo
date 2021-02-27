@@ -9,7 +9,7 @@
 #include <QGuiApplication>
 
 #include "controllers/main_controller.h"
-#include "mqtt/contact_model.h"
+#include "mqtt/mqtt_client.h"
 
 namespace hebo {
 
@@ -34,15 +34,17 @@ int runShell(int argc, char** argv) {
 }
 
 void registerComponents() {
-  constexpr const char* kComponentUri = "HeboCpp";
-  constexpr const char* kComponentName = "HeboCpp";
+  constexpr const char* kComponentUri = "org.biofan.hebo";
   constexpr int kVersionMajor = 1;
   constexpr int kVersionMinor = 0;
   qmlRegisterUncreatableMetaObject(hebo::staticMetaObject,
                                    kComponentUri,
                                    kVersionMajor, kVersionMinor,
-                                   kComponentName,
+                                   "HeboNs",
                                    "Access to enums & flags only");
+  qmlRegisterType<MqttClient>(kComponentUri,
+                              kVersionMajor, kVersionMinor,
+                              "MqttClient");
 }
 
 }  // namespace hebo

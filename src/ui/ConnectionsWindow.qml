@@ -6,7 +6,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-import HeboCpp 1.0
+import org.biofan.hebo 1.0
 import "items" as Hebo
 
 Item {

@@ -147,4 +147,24 @@ void ConnectManager::loadConnInfo() {
   }
 }
 
+MqttClient* ConnectManager::client(const QString& name) {
+  if (this->clients_.contains(name)) {
+    auto* client = this->clients_.value(name);
+    Q_ASSERT(client != nullptr);
+    return client;
+  }
+
+  for (const auto& config : this->configs_) {
+    if (config.name == name) {
+      auto* new_client = new MqttClient(this);
+      new_client->setConfig(config);
+      this->clients_.insert(name, new_client);
+      return new_client;
+    }
+  }
+
+  qWarning() << "Invalid connection name:" << name;
+  return nullptr;
+}
+
 }  // namespace hebo

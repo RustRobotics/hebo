@@ -38,6 +38,8 @@ class ConnectManager : public QAbstractListModel {
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
+  Q_INVOKABLE MqttClient* client(const QString& name);
+
  public slots:
   // Connections management
   // Protocol V3.1.1
@@ -55,7 +57,7 @@ class ConnectManager : public QAbstractListModel {
 
   QString conn_file_;
   QVector<ConnectConfig> configs_{};
-  QMap<QString, MqttClientPtr> clients_{};
+  QMap<QString, MqttClient*> clients_{};
 };
 
 }  // namespace hebo

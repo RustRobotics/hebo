@@ -21,7 +21,9 @@ struct MqttClientPrivate {
   InternalClient client{};
 };
 
-MqttClient::MqttClient(QObject* parent) : QObject(parent), p_(new MqttClientPrivate()) {
+MqttClient::MqttClient(QObject* parent)
+    : QObject(parent),
+      p_(new MqttClientPrivate()) {
   this->initSignals();
 }
 
@@ -42,13 +44,14 @@ void MqttClient::initSignals() {
           this, &MqttClient::doUnsubscribe);
 }
 
-void MqttClient::doConnect(const ConnectConfig& config) {
-  auto c = MQTT_NS::make_async_client(p_->context, config.host.toStdString(),
-                                      config.port);
+void MqttClient::doConnect() {
+  auto c = MQTT_NS::make_async_client(p_->context,
+                                      this->config_.host.toStdString(),
+                                      this->config_.port);
   p_->client = c;
 
-  c->set_client_id(config.client_id.toStdString());
-  c->set_clean_session(config.clean_session);
+  c->set_client_id(this->config_.client_id.toStdString());
+  c->set_clean_session(this->config_.clean_session);
   using PacketId = typename std::remove_reference_t<decltype(*c)>::packet_id_t;
 
   c->set_connack_handler([=](bool sp, MQTT_NS::connect_return_code rc) {

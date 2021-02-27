@@ -30,13 +30,11 @@ class MqttClient : public QObject {
   explicit MqttClient(QObject* parent = nullptr);
   ~MqttClient() override;
 
-  ConnectionState state() const { return this->state_; }
+  void setConfig(const ConnectConfig& config) { this->config_ = config; }
 
- public slots:
+  [[nodiscard]] ConnectionState state() const { return this->state_; }
 
  signals:
-
-
   void requestConnect(const ConnectConfig& config);
   void connectResult(bool ok, const QString& error);
 
@@ -58,7 +56,7 @@ class MqttClient : public QObject {
   void timerEvent(QTimerEvent* event) override;
 
  private slots:
-  void doConnect(const ConnectConfig& config);
+  void doConnect();
 
   void doDisconnect();
 
@@ -71,6 +69,7 @@ class MqttClient : public QObject {
  private:
   void initSignals();
 
+  ConnectConfig config_{};
   ConnectionState state_{ConnectionState::ConnectionDisconnected};
   int timer_id_{-1};
   MqttClientPrivate* p_;

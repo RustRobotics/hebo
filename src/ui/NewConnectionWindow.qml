@@ -37,9 +37,13 @@ Item {
         qosField.qos,
         cleanSessionButton.checked
       );
-      connectManager.requestConnect(nameField.text);
-
-      root.connectClicked();
+      const client = connectManager.client(nameField.text);
+      if (!!client) {
+        client.requestConnect();
+        root.connectClicked();
+      } else {
+        console.error("Failed to get client with name:", nameField.text);
+      }
     }
   }
 
