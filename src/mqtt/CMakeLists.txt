@@ -4,6 +4,8 @@ set(SOURCE
     connect_config.h
     mqtt_client.cpp
     mqtt_client.h
+    subscription_model.cpp
+    subscription_model.h
     )
 
 add_library(mqtt-static STATIC

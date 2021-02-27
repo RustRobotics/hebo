@@ -24,6 +24,7 @@ struct MqttClientPrivate {
 MqttClient::MqttClient(QObject* parent)
     : QObject(parent),
       worker_thread_(new QThread(this)),
+      subscriptions_(new SubscriptionModel(this)),
       p_(new MqttClientPrivate()) {
   this->initSignals();
 
@@ -37,6 +38,10 @@ MqttClient::~MqttClient() {
 void MqttClient::initSignals() {
   connect(this->worker_thread_, &QThread::finished,
           this->worker_thread_, &QThread::deleteLater);
+
+  connect(this->subscriptions_, &SubscriptionModel::dataChanged, [=]() {
+    emit this->subscriptionsChanged(this->subscriptions_);
+  });
 
   connect(this, &MqttClient::stateChanged, [](ConnectionState state) {
     qDebug() << "state:" << state;
@@ -115,15 +120,12 @@ void MqttClient::requestSubscribe(const QString& topic, int qos, const QColor& c
     return;
   }
 
-  for (const auto& item : this->subscriptions_) {
-    if (item.topic == topic) {
-      qWarning() << "Topic already subscribed:" << topic;
-      return;
-    }
+  if (this->subscriptions_->hasSubscription(topic)) {
+    qWarning() << "Topic already subscribed:" << topic;
+    return;
   }
-  // TODO(Shaohua):
-  Subscription sub{topic, color, static_cast<QoS>(qos)};
-  this->subscriptions_.append(sub);
+
+  this->subscriptions_->addSubscription(topic, qos, color);
   const std::string topic_str = topic.toStdString();
   this->p_->client->async_subscribe(topic_str, static_cast<MQTT_NS::qos>(qos));
 }
@@ -135,15 +137,12 @@ void MqttClient::requestUnsubscribe(const QString& topic) {
     return;
   }
 
-  for (int index = 0; index < this->subscriptions_.length(); ++index) {
-    if (this->subscriptions_.at(index).topic == topic) {
-      this->subscriptions_.removeAt(index);
-      const std::string topic_str = topic.toStdString();
-      this->p_->client->async_unsubscribe(topic_str);
-      return;
-    }
+  if (this->subscriptions_->removeSubscription(topic)) {
+    const std::string topic_str = topic.toStdString();
+    this->p_->client->async_unsubscribe(topic_str);
+  } else {
+    qWarning() << "Topic with name not subscribed:" << topic;
   }
-  qWarning() << "Topic with name not subscribed:" << topic;
 }
 
 void MqttClient::requestPublish(const QString& topic, int qos, const QByteArray& payload) {

@@ -10,21 +10,16 @@
 #include <QThread>
 
 #include "mqtt/connect_config.h"
+#include "mqtt/subscription_model.h"
 
 namespace hebo {
 
 struct MqttClientPrivate;
 
-struct Subscription {
-  QString topic{};
-  QColor color{};
-  QoS qos{};
-};
-using SubscriptionList = QVector<Subscription>;
-
 class MqttClient : public QObject {
   Q_OBJECT
   Q_PROPERTY(ConnectionState state READ state NOTIFY stateChanged);
+  Q_PROPERTY(SubscriptionModel* subscriptions READ subscriptions NOTIFY subscriptionsChanged);
 
  public:
   enum ConnectionState : int32_t {
@@ -43,6 +38,8 @@ class MqttClient : public QObject {
 
   [[nodiscard]] ConnectionState state() const { return this->state_; }
 
+  [[nodiscard]] SubscriptionModel* subscriptions() const { return this->subscriptions_; }
+
  public slots:
   void requestConnect();
   void requestDisconnect();
@@ -55,7 +52,9 @@ class MqttClient : public QObject {
   void subscribeResult(const QString& topic, bool ok, const QString& error);
   void unsubscribeResult(const QString& topic, bool ok, const QString& error);
   void publishResult(const QString& topic, bool ok, const QString& error);
+
   void stateChanged(ConnectionState state);
+  void subscriptionsChanged(SubscriptionModel* model);
 
  protected:
   void timerEvent(QTimerEvent* event) override;
@@ -69,7 +68,7 @@ class MqttClient : public QObject {
   ConnectConfig config_{};
   ConnectionState state_{ConnectionState::ConnectionDisconnected};
   int timer_id_{-1};
-  SubscriptionList subscriptions_{};
+  SubscriptionModel* subscriptions_;
 
   MqttClientPrivate* p_;
 };
