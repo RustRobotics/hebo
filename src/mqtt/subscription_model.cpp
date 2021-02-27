@@ -4,6 +4,8 @@
 
 #include "mqtt/subscription_model.h"
 
+#include "base/color.h"
+
 namespace hebo {
 namespace {
 
@@ -14,10 +16,11 @@ constexpr const char* kQoS = "qos";
 }  // namespace
 
 SubscriptionModel::SubscriptionModel(QObject* parent) : QAbstractListModel(parent) {
-
+  this->list_.append(Subscription{"Hello", Qt::red, AtMostOnce});
 }
 
 int SubscriptionModel::rowCount(const QModelIndex& parent) const {
+  qDebug() << __func__ << this->list_.length();
   Q_UNUSED(parent);
   return this->list_.length();
 }
@@ -60,18 +63,22 @@ bool SubscriptionModel::hasSubscription(const QString& topic) {
   return false;
 }
 
-bool SubscriptionModel::addSubscription(const QString& topic, int qos, const QColor& color) {
+bool SubscriptionModel::addSubscription(const QString& topic, int qos, const QString& color) {
   if (this->hasSubscription(topic)) {
     return false;
   }
-  this->list_.append({topic, color, static_cast<QoS>(qos)});
+  this->beginResetModel();
+  this->list_.append({topic, parseColor(color), static_cast<QoS>(qos)});
+  this->endResetModel();
   return true;
 }
 
 bool SubscriptionModel::removeSubscription(const QString& topic) {
   for (int index = 0; index < this->list_.length(); ++index) {
     if (this->list_.at(index).topic == topic) {
+      this->beginResetModel();
       this->list_.removeAt(index);
+      this->endResetModel();
       return true;
     }
   }

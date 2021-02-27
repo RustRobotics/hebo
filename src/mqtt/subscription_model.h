@@ -39,7 +39,7 @@ class SubscriptionModel : public QAbstractListModel {
 
   bool hasSubscription(const QString& topic);
 
-  bool addSubscription(const QString& topic, int qos, const QColor& color);
+  bool addSubscription(const QString& topic, int qos, const QString& color);
 
   bool removeSubscription(const QString& topic);
 

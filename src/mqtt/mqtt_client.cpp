@@ -113,7 +113,9 @@ void MqttClient::timerEvent(QTimerEvent* event) {
   this->p_->context.poll();
 }
 
-void MqttClient::requestSubscribe(const QString& topic, int qos, const QColor& color) {
+void MqttClient::requestSubscribe(const QString& topic, int qos, const QString& color) {
+  qDebug() << __func__ << topic;
+
   Q_ASSERT(this->state_ == ConnectionConnected);
   if (this->state_ != ConnectionConnected) {
     qWarning() << "Invalid state:" << this->state_;
