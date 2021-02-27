@@ -109,8 +109,8 @@ QJsonObject dumpConnectConfig(const ConnectConfig& info) {
 
 bool dumpConnectConfigs(const QString& file, const ConnectConfigList& list) {
   QJsonArray array;
-  for (const auto& info : list) {
-    array.append(dumpConnectConfig(info));
+  for (const auto& config : list) {
+    array.append(dumpConnectConfig(config));
   }
 
   QJsonObject root_object;

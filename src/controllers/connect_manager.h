@@ -14,6 +14,8 @@ namespace hebo {
 
 class ConnectManager : public QAbstractListModel {
   Q_OBJECT
+  Q_PROPERTY(ConnectManager* model READ model NOTIFY modelChanged);
+
  public:
   enum ConnectionRole : int {
     kNameRole = Qt::UserRole + 1,
@@ -32,13 +34,15 @@ class ConnectManager : public QAbstractListModel {
 
   explicit ConnectManager(QObject* parent=nullptr);
 
+  ConnectManager* model() { return this; }
+
   [[nodiscard]] int rowCount(const QModelIndex& parent) const override;
 
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
-  Q_INVOKABLE MqttClient* client(const QString& name);
+  Q_INVOKABLE QObject* client(const QString& name);
 
  public slots:
   // Connections management
@@ -50,6 +54,9 @@ class ConnectManager : public QAbstractListModel {
                      int port,
                      int qos,
                      bool clean_session);
+
+ signals:
+  void modelChanged(ConnectManager* model);
 
  private:
   void loadConnInfo();

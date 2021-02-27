@@ -24,13 +24,14 @@ Item {
     anchors.left: root.left;
     anchors.bottom: root.bottom;
     width: 240;
-    model: connectManager;
+    model: connectManager.model;
     keyNavigationEnabled: true;
 
     onCurrentIndexChanged: {
-      const item = this.model.row(this.currentIndex);
-      console.log("connectionInfo:", JSON.stringify(item));
-      stackView.switchClient(item.name);
+      console.log("new index:", this.currentIndex);
+      //const item = this.model.row(this.currentIndex);
+      //console.log("connectionInfo:", JSON.stringify(item));
+      //stackView.switchClient(item.name);
     }
 
     delegate: Item {
@@ -55,7 +56,7 @@ Item {
         spacing: 8;
 
         Rectangle {
-          color: model.state === HeboCpp.ConnectionConnected ? "#39d12d" : "#606060";
+          color: model.state === HeboNs.ConnectionConnected ? "#39d12d" : "#606060";
           width: 8;
           height: 8;
           radius: 4;
@@ -95,6 +96,11 @@ Item {
       this.children.push(newItem);
       this.currentIndex = this.count - 1;
     }
+  }
+
+  Component.onCompleted: {
+    console.log("connectManager:", connectManager);
+    console.log("client flag:", MqttClient.ConnectionConnected);
   }
 
   Component {

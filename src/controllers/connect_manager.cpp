@@ -47,6 +47,7 @@ int ConnectManager::rowCount(const QModelIndex& parent) const {
 }
 
 QVariant ConnectManager::data(const QModelIndex& index, int role) const {
+  qDebug() << __func__ << index << role;
   if (!index.isValid()) {
     return {};
   }
@@ -127,6 +128,10 @@ void ConnectManager::addConnection(const QString& name,
   config.clean_session = clean_session;
   config.description = generateConnDescription(config);
 
+  this->beginResetModel();
+  this->configs_.append(config);
+  this->endResetModel();
+
   // save to local file
   this->saveConnInfo();
 }
@@ -139,15 +144,14 @@ void ConnectManager::saveConnInfo() {
 }
 
 void ConnectManager::loadConnInfo() {
-  ConnectConfigList list{};
-  const bool ok = parseConnectConfigs(this->conn_file_, list);
+  const bool ok = parseConnectConfigs(this->conn_file_, this->configs_);
   if (!ok) {
     qWarning() << "Failed to parse conn info file:" << this->conn_file_;
     return;
   }
 }
 
-MqttClient* ConnectManager::client(const QString& name) {
+QObject* ConnectManager::client(const QString& name) {
   if (this->clients_.contains(name)) {
     auto* client = this->clients_.value(name);
     Q_ASSERT(client != nullptr);

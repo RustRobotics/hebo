@@ -39,7 +39,6 @@ bool SettingsManager::autoUpdate() {
 }
 
 void SettingsManager::setAutoUpdate(bool enable) {
-  qDebug() << __func__ << enable;
   this->settings_->setValue(kAutoUpdate, enable);
   emit this->autoUpdateChanged(enable);
 }
@@ -49,21 +48,18 @@ int SettingsManager::retryConnections() {
 }
 
 void SettingsManager::setRetryConnections(int retries) {
-  qDebug() << __func__ << retries;
   this->settings_->setValue(kMaxRetry, retries);
   emit this->retryConnectionsChanged(retries);
 }
 
 int SettingsManager::localeIndex() {
   const QString locale = this->settings_->value(kLocale, kDefaultLocale).toString();
-  qDebug() << "locale:" << locale;
   const int index = this->locales_.indexOf(locale);
   Q_ASSERT(index > -1);
   return index;
 }
 
 void SettingsManager::setLocaleIndex(int index) {
-  qDebug() << __func__ << index;
   Q_ASSERT(index > -1 && index < this->locales_.length());
   this->settings_->setValue(kLocale, this->locales_.at(index));
   emit this->localeIndexChanged(index);
@@ -77,7 +73,6 @@ int SettingsManager::themeIndex() {
 }
 
 void SettingsManager::setThemeIndex(int index) {
-  qDebug() << __func__ << index;
   Q_ASSERT(index > -1 && index < this->themes_.length());
   this->settings_->setValue(kTheme, this->themes_.at(index));
   emit this->themeIndexChanged(index);

@@ -27,6 +27,7 @@ Item {
     z: 1;
 
     onClicked: {
+      console.log("on connect button clicked:", nameField.text);
       // TODO(Shaohua): Check conn name is unique
       connectManager.addConnection(
         nameField.text,
