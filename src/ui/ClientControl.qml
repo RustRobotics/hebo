@@ -15,10 +15,17 @@ Item {
 
   property MqttClient client;
 
+  FontLoader {
+    id: iconFont;
+    source: "fonts/element-icons.ttf";
+  }
+
   ColumnLayout {
     anchors.fill: parent;
 
-    Row {
+    RowLayout {
+      width: parent.width;
+      spacing: 12;
 
       Text {
         text: root.name;
@@ -26,15 +33,15 @@ Item {
         color: "#4d4d4d";
       }
 
-      Text {
-        width: 36;
-        font.pixelSize: 16;
-        color: "red";
-        text: root.client.state;
+      Item {
+        height: 1;
+        Layout.fillWidth: true;
       }
 
-      Button {
-        text: "Connect";
+      IconButton {
+        text: "\ue791";
+        ToolTip.text: qsTr("Connect");
+
         //visible: !root.client || root.client.state === MqttClient.Disconnected || root.client.state === MqttClient.Connected;
         onClicked: {
           console.log("Do connect client");
@@ -43,25 +50,36 @@ Item {
         }
       }
 
-      Button {
-        text: "Disconnect";
+      IconButton {
+        text: "\ue71b";
+        ToolTip.text: qsTr("Disconnect");
         //visible: root.client && root.client.state !== MqttClient.Disconnected && root.client.state !== MqttClient.Connected;
         onClicked: {
           root.client.requestDisconnect();
         }
       }
 
-      Button {
-        text: "Edit";
+      IconButton {
+        text: "\ue78c";
+        ToolTip.text: qsTr("Edit");
         onClicked: {
           console.log("Edit connection");
         }
       }
 
-      Button {
-        text: "NewWindow";
+      IconButton {
+        text: "\ue775";
+        ToolTip.text: qsTr("New Window");
         onClicked: {
           console.log("popup new window");
+        }
+      }
+
+      IconButton {
+        text: "\ue794";
+        ToolTip.text: qsTr("More");
+        onClicked: {
+          console.log("Show popup menu");
         }
       }
     }
@@ -249,8 +267,14 @@ Item {
 
   Component.onCompleted: {
     this.client = connectManager.client(this.name);
-    console.log("client:", client);
-    console.log("QoS:", HeboNs.AtMostOnce);
-    console.log("state:", this.client.state);
+  }
+
+  component IconButton: Button {
+    width: 26;
+    Layout.preferredWidth: width;
+    flat: true;
+    font.pixelSize: 24;
+    font.family: iconFont.name;
+    ToolTip.visible: hovered;
   }
 }

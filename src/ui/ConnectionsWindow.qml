@@ -100,9 +100,6 @@ Item {
     }
   }
 
-  Component.onCompleted: {
-  }
-
   Component {
     id: clientControl;
 
