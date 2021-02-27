@@ -4,110 +4,95 @@
 
 #include "controllers/connect_manager.h"
 
-#include <QDebug>
-#include <QDir>
-#include <QStandardPaths>
-
 namespace hebo {
 namespace {
 
-QString getJsonFile() {
-  const QStringList dirs = QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation);
-  Q_ASSERT(!dirs.isEmpty());
-  QDir dir(dirs.first());
-  dir.cdUp();
-  return dir.absoluteFilePath("connections.json");
-}
+constexpr const char* kName = "name";
+constexpr const char* kClientId = "clientId";
+constexpr const char* kProtocol = "protocol";
+constexpr const char* kHost = "host";
+constexpr const char* kPort = "port";
+constexpr const char* kQoS = "qos";
+constexpr const char* kUsername = "username";
+constexpr const char* kPassword = "password";
+constexpr const char* kTls = "tls";
+constexpr const char* kCleanSession = "cleanSession";
+constexpr const char* kDescription = "description";
 
 }  // namespace
 
-ConnectManager::ConnectManager(QObject* parent)
-    : QObject(parent),
-      conn_file_(getJsonFile()),
-      model_(new ConnectionModel(this)) {
+ConnectManager::ConnectManager(QObject* parent) : QAbstractListModel(parent) {
 
-  // Load connections on startup.
-  this->loadConnInfo();
-
-  connect(this->model_, &ConnectionModel::dataChanged, [=]() {
-    emit this->modelChanged(this->model_);
-  });
-}
-
-void ConnectManager::deleteConnection(const QString& name) {
-  if (!this->model_->deleteConnectionInfo(name)) {
-    qWarning() << "Invalid connection info:" << name;
-  } else {
-    this->saveConnInfo();
-  }
-
-  if (this->clients_.contains(name)) {
-    emit this->clients_.take(name)->requestDisconnect();
-  }
-}
-
-void ConnectManager::requestConnect(const QString& name) {
-  ConnectionInfo info;
-  if (!this->model_->getConnectionInfo(name, info)) {
-    qWarning() << "Invalid connection info:" << name;
-    return;
-  }
-
-  if (!this->clients_.contains(name)) {
-    QSharedPointer<MqttClient> client(new MqttClient());
-    connect(client.data(), &MqttClient::connectionStateChanged, [=](ConnectionState state) {
-      this->model_->updateConnectionState(name, state);
-    });
-
-    this->clients_.insert(name, client);
-    client->requestConnect(info);
-  } else {
-    const auto client = this->clients_[name];
-    Q_ASSERT(!client.isNull());
-    client->requestConnect(info);
-  }
-}
-
-void ConnectManager::addConnection(const QString& name,
-                   const QString& client_id,
-                   const QString& protocol,
-                   const QString& host,
-                   int port,
-                   int qos,
-                   bool clean_session) {
-  ConnectionInfo conn_info{};
-  conn_info.name = name;
-  conn_info.client_id = client_id;
-  conn_info.protocol = protocol;
-  conn_info.host = host;
-  conn_info.port = port;
-  conn_info.qos = static_cast<QoS>(qos);
-  conn_info.clean_session = clean_session;
-  conn_info.description = generateConnDescription(conn_info);
-
-  this->model_->addConnectionInfo(conn_info);
-
-  // save to local file
-  this->saveConnInfo();
 }
 
 
-void ConnectManager::saveConnInfo() {
-  if (!dumpConnectionInfos(this->conn_file_, this->model_->list())) {
-    qWarning() << "Failed to save connection info to file:" << conn_file_;
+int ConnectManager::rowCount(const QModelIndex& parent) const {
+  Q_UNUSED(parent);
+  return this->configs_.length();
+}
+
+QVariant ConnectManager::data(const QModelIndex& index, int role) const {
+  if (!index.isValid()) {
+    return {};
+  }
+
+  const ConnectConfig& info = this->configs_.at(index.row());
+  switch (role) {
+    case kNameRole: {
+      return info.name;
+    }
+    case kClientIdRole: {
+      return info.client_id;
+    }
+    case kProtocolRole: {
+      return info.protocol;
+    }
+    case kHostRole: {
+      return info.host;
+    }
+    case kPortRole: {
+      return info.port;
+    }
+    case kQoSRole: {
+      return static_cast<int>(info.qos);
+    }
+    case kUsernameRole: {
+      return info.username;
+    }
+    case kPasswordRole: {
+      return info.password;
+    }
+    case kTlsRole: {
+      return info.with_tls;
+    }
+    case kCleanSessionRole: {
+      return info.clean_session;
+    }
+    case kDescriptionRole: {
+      return info.description;
+    }
+    default: {
+      qWarning() << "Invalid role:" << role;
+      return {};
+    }
   }
 }
 
-void ConnectManager::loadConnInfo() {
-  ConnectionInfoList list{};
-  const bool ok = parseConnectionInfos(this->conn_file_, list);
-  if (!ok) {
-    qWarning() << "Failed to parse conn info file:" << this->conn_file_;
-    return;
-  }
-
-  this->model_->setList(list);
-  // TODO(Shaohua): Create mqtt client map.
+QHash<int, QByteArray> ConnectManager::roleNames() const {
+  // Map role index to qml property name.
+  return {
+      {kNameRole, kName},
+      {kClientIdRole, kClientId},
+      {kProtocolRole, kProtocol},
+      {kHostRole, kHost},
+      {kPortRole, kPort},
+      {kQoSRole, kQoS},
+      {kUsernameRole, kUsername},
+      {kPasswordRole, kPassword},
+      {kTlsRole, kTls},
+      {kCleanSessionRole, kCleanSession},
+      {kDescriptionRole, kDescription},
+  };
 }
 
 }  // namespace hebo

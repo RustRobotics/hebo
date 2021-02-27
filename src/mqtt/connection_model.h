@@ -16,28 +16,8 @@ namespace hebo {
 class ConnectionModel : public QAbstractListModel {
   Q_OBJECT
  public:
-  enum ConnectionRole : int {
-    kNameRole = Qt::UserRole + 1,
-    kClientIdRole,
-    kProtocolRole,
-    kHostRole,
-    kPortRole,
-    kQoSRole,
-    kUsernameRole,
-    kPasswordRole,
-    kTlsRole,
-    kCleanSessionRole,
-    kDescriptionRole,
-  };
-  Q_ENUM(ConnectionRole);
 
   explicit ConnectionModel(QObject* parent = nullptr);
-
-  [[nodiscard]] int rowCount(const QModelIndex& parent) const override;
-
-  [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
-
-  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
   [[nodiscard]] const ConnectionInfoList& list() const { return this->list_; }
 

@@ -5,51 +5,40 @@
 #ifndef HEBOUI_SRC_CONTROLLERS_CONNECT_MANAGER_H_
 #define HEBOUI_SRC_CONTROLLERS_CONNECT_MANAGER_H_
 
-#include <QObject>
-#include <QSharedPointer>
+#include <QAbstractListModel>
 
-#include "mqtt/connection_info.h"
-#include "mqtt/connection_state.h"
-#include "mqtt/mqtt_client.h"
-#include "mqtt/connection_model.h"
+#include "mqtt/connect_config.h"
 
 namespace hebo {
 
-class ConnectManager : public QObject {
+class ConnectManager : public QAbstractListModel {
   Q_OBJECT
-  Q_PROPERTY(ConnectionModel* model READ model NOTIFY modelChanged);
-
  public:
-  explicit ConnectManager(QObject* parent = nullptr);
+  enum ConnectionRole : int {
+    kNameRole = Qt::UserRole + 1,
+    kClientIdRole,
+    kProtocolRole,
+    kHostRole,
+    kPortRole,
+    kQoSRole,
+    kUsernameRole,
+    kPasswordRole,
+    kTlsRole,
+    kCleanSessionRole,
+    kDescriptionRole,
+  };
+  Q_ENUM(ConnectionRole);
 
-  ConnectionModel* model() { return this->model_; }
-  [[nodiscard]] const ConnectionModel* model() const { return this->model_; }
+  explicit ConnectManager(QObject* parent=nullptr);
 
- public slots:
-  // Connections management
-  // Protocol V3.1.1
-  void addConnection(const QString& name,
-                     const QString& client_id,
-                     const QString& protocol,
-                     const QString& host,
-                     int port,
-                     int qos,
-                     bool clean_session);
+  [[nodiscard]] int rowCount(const QModelIndex& parent) const override;
 
-  void deleteConnection(const QString& name);
+  [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
 
-  void requestConnect(const QString& name);
-
- signals:
-  void modelChanged(ConnectionModel* model);
+  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
  private:
-  void loadConnInfo();
-  void saveConnInfo();
-
-  QString conn_file_;
-  ConnectionModel* model_{nullptr};
-  QMap<QString, MqttClientPtr> clients_{};
+  QVector<ConnectConfig> configs_{};
 };
 
 }  // namespace hebo

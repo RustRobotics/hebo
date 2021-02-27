@@ -1,16 +1,9 @@
 
 set(SOURCE
-    connection_model.cpp
-    connection_model.h
-    connection_info.cpp
-    connection_info.h
-    connection_state.cpp
-    connection_state.h
+    connect_config.cpp
+    connect_config.h
     mqtt_client.cpp
     mqtt_client.h
-
-    contact_model.cpp
-    contact_model.h
     )
 
 add_library(mqtt-static STATIC

@@ -17,10 +17,8 @@ using InternalClient = std::shared_ptr<
 }  // namespace
 
 struct MqttClientPrivate {
-  ConnectionInfo conn_info{};
   boost::asio::io_context context{};
   InternalClient client{};
-  int timer_id{-1};
 };
 
 MqttClient::MqttClient(QObject* parent) : QObject(parent), p_(new MqttClientPrivate()) {
@@ -44,24 +42,19 @@ void MqttClient::initSignals() {
           this, &MqttClient::doUnsubscribe);
 }
 
-void MqttClient::doConnect(const ConnectionInfo& info) {
-  this->p_->conn_info = info;
-  this->initClient();
-}
-
-void MqttClient::initClient() {
-  auto c = MQTT_NS::make_async_client(p_->context, p_->conn_info.host.toStdString(),
-                                      p_->conn_info.port);
+void MqttClient::doConnect(const ConnectConfig& config) {
+  auto c = MQTT_NS::make_async_client(p_->context, config.host.toStdString(),
+                                      config.port);
   p_->client = c;
 
-  c->set_client_id(p_->conn_info.client_id.toStdString());
-  c->set_clean_session(p_->conn_info.clean_session);
-    using PacketId = typename std::remove_reference_t<decltype(*c)>::packet_id_t;
+  c->set_client_id(config.client_id.toStdString());
+  c->set_clean_session(config.clean_session);
+  using PacketId = typename std::remove_reference_t<decltype(*c)>::packet_id_t;
 
   c->set_connack_handler([=](bool sp, MQTT_NS::connect_return_code rc) {
     qDebug() << "sp:" << sp << MQTT_NS::connect_return_code_to_str(rc);
     emit this->connectResult(!sp, MQTT_NS::connect_return_code_to_str(rc));
-    emit this->connectionStateChanged(ConnectionConnected);
+    emit this->stateChanged(ConnectionConnected);
 
     c->async_subscribe("hello", MQTT_NS::qos::exactly_once);
 
@@ -87,20 +80,20 @@ void MqttClient::initClient() {
 
   c->set_close_handler([&]() {
     qDebug() << __func__ << "close handler";
-    emit this->connectionStateChanged(ConnectionDisconnected);
+    emit this->stateChanged(ConnectionDisconnected);
   });
   c->set_error_handler([&](MQTT_NS::error_code ec) {
     qWarning() << "Got mqtt error:" << ec.message().c_str();
   });
 
   c->async_connect();
-  p_->timer_id = this->startTimer(5);
-  emit this->connectionStateChanged(ConnectionConnecting);
+  this->timer_id_ = this->startTimer(5);
+  emit this->stateChanged(ConnectionConnecting);
 }
 
 void MqttClient::doDisconnect() {
-  emit this->connectionStateChanged(ConnectionDisconnecting);
-//  this->killTimer(p_->timer_id);
+  emit this->stateChanged(ConnectionDisconnecting);
+  this->killTimer(this->timer_id_);
 }
 
 void MqttClient::timerEvent(QTimerEvent* event) {
