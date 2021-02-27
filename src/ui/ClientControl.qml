@@ -104,7 +104,6 @@ Item {
                 id: unsubscribeMA;
                 anchors.fill: parent;
                 hoverEnabled: true;
-
                 onClicked: {
                   console.log("clicked, filter topic");
                 }
@@ -114,11 +113,12 @@ Item {
                 id: unsubscribeButton;
                 visible: unsubscribeMA.containsMouse;
                 anchors.right: parent.right;
-                anchors.verticalCenter: parent.verticalCenter;
-                text: "x";
+                anchors.top: parent.top;
+                text: "X";
 
                 background: Rectangle {
                   color: "red";
+                  opacity: 1;
                   width: 24;
                   height: 24;
                   radius: 12;
@@ -132,6 +132,8 @@ Item {
 
               RowLayout {
                 anchors.fill: parent;
+                anchors.leftMargin: 8;
+                anchors.rightMargin: 8;
                 spacing: 8;
 
                 Rectangle {

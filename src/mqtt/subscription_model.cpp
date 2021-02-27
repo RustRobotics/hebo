@@ -16,11 +16,9 @@ constexpr const char* kQoS = "qos";
 }  // namespace
 
 SubscriptionModel::SubscriptionModel(QObject* parent) : QAbstractListModel(parent) {
-  this->list_.append(Subscription{"Hello", Qt::red, AtMostOnce});
 }
 
 int SubscriptionModel::rowCount(const QModelIndex& parent) const {
-  qDebug() << __func__ << this->list_.length();
   Q_UNUSED(parent);
   return this->list_.length();
 }
