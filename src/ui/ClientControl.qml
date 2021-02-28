@@ -194,37 +194,40 @@ Item {
           ListView {
             id: messageStreamList;
             model: root.client.messages;
-            spacing: 16;
+            spacing: 12;
 
-            delegate: Rectangle {
-              color: "#eaeaea";
-              width: messageStreamList.width;
-              height: 120;
-              radius: 14;
+            delegate: Column {
+              anchors.right: model.isPublish ? messageStreamList.contentItem.right : undefined;
 
-              ColumnLayout {
-                anchors.fill: parent;
+              Pane {
+                width: parent.width;
 
-                Text {
-                  text: "Topic: " + model.topic;
+                background: Rectangle {
+                  color: model.isPublish ? "#34c388" : "gray";
+                  radius: 14;
                 }
 
-                Text {
-                  text: "QoS " + model.qos;
-                }
+                ColumnLayout {
+                  width: parent.width;
+                  spacing: 0;
 
-                Text {
-                  text: model.payload;
-                }
+                  Label {
+                    text: "Topic: " + model.topic;
+                  }
 
-                Text {
-                  text: model.isPublish ? "Publish": "Subscribe";
-                }
+                  Label {
+                    text: "QoS " + model.qos;
+                  }
 
-                Text {
-                  color: "gray";
-                  text: model.timestamp;
+                  Label {
+                    text: model.payload;
+                  }
                 }
+              }
+
+              Label {
+                color: "gray";
+                text: model.timestamp;
               }
             }
           }
