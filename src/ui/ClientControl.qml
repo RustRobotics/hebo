@@ -105,91 +105,90 @@ Item {
           }
         }
 
-        ScrollView {
+        ListView {
+          id: subscriptionsList;
           Layout.fillHeight: true;
+          spacing: 9;
+          model: root.client.subscriptions;
 
-          ListView {
-            id: subscriptionsList;
-            model: root.client.subscriptions;
-            spacing: 9;
+          delegate: Rectangle {
+            color: "#eaeaea";
+            radius: 4;
+            width: topicLayout.Layout.preferredWidth;
+            height: topicLabel.height + 24;
 
-            delegate: Rectangle {
-              color: "#eaeaea";
-              radius: 4;
-              width: topicLayout.Layout.preferredWidth;
-              height: topicLabel.height + 24;
+            MouseArea {
+              id: unsubscribeMA;
+              anchors.fill: parent;
+              hoverEnabled: true;
+              onClicked: {
+                console.log("clicked, filter topic");
+              }
+            }
 
-              MouseArea {
-                id: unsubscribeMA;
-                anchors.fill: parent;
-                hoverEnabled: true;
-                onClicked: {
-                  console.log("clicked, filter topic");
-                }
+            Button {
+              id: unsubscribeButton;
+              visible: unsubscribeMA.containsMouse;
+              anchors.right: parent.right;
+              anchors.top: parent.top;
+              text: "X";
+
+              background: Rectangle {
+                color: "red";
+                opacity: 1;
+                width: 24;
+                height: 24;
+                radius: 12;
               }
 
-              Button {
-                id: unsubscribeButton;
-                visible: unsubscribeMA.containsMouse;
-                anchors.right: parent.right;
-                anchors.top: parent.top;
-                text: "X";
+              onClicked: {
+                // TODO(Shaohua): Check connection state.
+                root.client.requestUnsubscribe(model.topic);
+              }
+            }
 
-                background: Rectangle {
-                  color: "red";
-                  opacity: 1;
-                  width: 24;
-                  height: 24;
-                  radius: 12;
-                }
+            RowLayout {
+              anchors.fill: parent;
+              anchors.leftMargin: 8;
+              anchors.rightMargin: 8;
+              spacing: 8;
 
-                onClicked: {
-                  // TODO(Shaohua): Check connection state.
-                  root.client.requestUnsubscribe(model.topic);
-                }
+              Rectangle {
+                width: 16;
+                height: 16;
+                radius: 4;
+                color: model.color;
               }
 
-              RowLayout {
-                anchors.fill: parent;
-                anchors.leftMargin: 8;
-                anchors.rightMargin: 8;
-                spacing: 8;
+              Text {
+                id: topicLabel;
+                text: model.topic;
+              }
 
-                Rectangle {
-                  width: 16;
-                  height: 16;
-                  radius: 4;
-                  color: model.color;
-                }
-
-                Text {
-                  id: topicLabel;
-                  text: model.topic;
-                }
-
-                Text {
-                  Layout.alignment: Qt.AlignRight;
-                  horizontalAlignment: Text.AlignRight;
-                  color: "#313131";
-                  text: "QoS " + model.qos;
-                }
+              Text {
+                Layout.alignment: Qt.AlignRight;
+                horizontalAlignment: Text.AlignRight;
+                color: "#313131";
+                text: "QoS " + model.qos;
               }
             }
           }
         }
-
       }
 
       ColumnLayout {
         spacing: 0;
 
         ListView {
+          id: messageStreamList;
           Layout.fillWidth: true;
           Layout.fillHeight: true;
-
-          id: messageStreamList;
-          model: root.client.messages;
           spacing: 12;
+          model: root.client.messages;
+
+          onCountChanged: {
+            this.positionViewAtEnd();
+          }
 
           delegate: Column {
             anchors.right: model.isPublish ? messageStreamList.contentItem.right : undefined;
