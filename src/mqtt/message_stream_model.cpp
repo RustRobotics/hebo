@@ -50,10 +50,10 @@ QHash<int, QByteArray> MessageStreamModel::roleNames() const {
 }
 
 void MessageStreamModel::addMessage(const MqttMessage& message) {
-  // TODO(Shaohua): Tuning insertion operation.
-  this->beginResetModel();
+  const int pos = this->messages_.length();
+  this->beginInsertRows(QModelIndex(), pos, pos);
   this->messages_.append(message);
-  this->endResetModel();
+  this->endInsertRows();
 }
 
 }  // namespace hebo
