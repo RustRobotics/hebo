@@ -79,16 +79,12 @@ void MqttClient::requestConnect() {
                              MQTT_NS::publish_options pubopts,
                              MQTT_NS::buffer topic_name,
                              MQTT_NS::buffer contents) {
-    std::cout << "publish received."
-              << " dup: " << pubopts.get_dup()
-              << " qos: " << pubopts.get_qos()
-              << " retain: " << pubopts.get_retain() << std::endl;
     if (packet_id) {
       std::cout << "packet_id: " << *packet_id << std::endl;
     }
 
     MqttMessage message{};
-    message.topic.append(topic_name.data());
+    message.topic = QString::fromUtf8(topic_name.data(), topic_name.size());
     message.qos = static_cast<QoS>(pubopts.get_qos());
     message.is_publish = false;
     message.payload.append(contents.data(), contents.size());
