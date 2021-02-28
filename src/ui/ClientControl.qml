@@ -183,52 +183,46 @@ Item {
       ColumnLayout {
         spacing: 0;
 
-        ScrollView {
+        ListView {
           Layout.fillWidth: true;
           Layout.fillHeight: true;
 
-          ScrollBar.horizontal: ScrollBar {
-            policy: ScrollBar.AlwaysOff;
-          }
+          id: messageStreamList;
+          model: root.client.messages;
+          spacing: 12;
 
-          ListView {
-            id: messageStreamList;
-            model: root.client.messages;
-            spacing: 12;
+          delegate: Column {
+            anchors.right: model.isPublish ? messageStreamList.contentItem.right : undefined;
 
-            delegate: Column {
-              anchors.right: model.isPublish ? messageStreamList.contentItem.right : undefined;
+            Pane {
+              width: parent.width;
 
-              Pane {
+              background: Rectangle {
+                color: model.isPublish ? "#34c388" : "gray";
+                radius: 14;
+              }
+
+              ColumnLayout {
                 width: parent.width;
+                spacing: 0;
 
-                background: Rectangle {
-                  color: model.isPublish ? "#34c388" : "gray";
-                  radius: 14;
+                Label {
+                  text: "Topic: " + model.topic;
                 }
 
-                ColumnLayout {
-                  width: parent.width;
-                  spacing: 0;
+                Label {
+                  text: "QoS " + model.qos;
+                }
 
-                  Label {
-                    text: "Topic: " + model.topic;
-                  }
-
-                  Label {
-                    text: "QoS " + model.qos;
-                  }
-
-                  Label {
-                    text: model.payload;
-                  }
+                Label {
+                  text: model.payload;
                 }
               }
+            }
 
-              Label {
-                color: "gray";
-                text: model.timestamp;
-              }
+            Label {
+              color: "gray";
+              text: model.timestamp;
             }
           }
         }
