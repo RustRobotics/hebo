@@ -25,6 +25,8 @@ class MainController : public QObject {
   void showMainWindow();
 
  private:
+  void installTranslators();
+
   QQmlApplicationEngine* engine_{};
 
   QThread* updater_thread_;

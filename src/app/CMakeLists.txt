@@ -1,5 +1,6 @@
 set(UI_FILES
     ../ui/ui.qrc
+    ${CMAKE_BINARY_DIR}/i18n/hebo.qrc
     )
 
 add_executable(hebo
@@ -10,6 +11,7 @@ target_link_libraries(hebo
     Qt5::Core
     controllers-static
     )
+add_dependencies(hebo generate-i18n-files)
 
 add_executable(mqtt-client-demo
     mqtt_client_demo.cpp

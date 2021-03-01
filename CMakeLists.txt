@@ -53,6 +53,7 @@ if (BUILD_TESTING)
   enable_testing()
 endif ()
 
+add_subdirectory(i18n)
 add_subdirectory(src)
 
 add_custom_target(generate-deps
