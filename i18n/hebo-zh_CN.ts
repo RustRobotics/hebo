@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1">
+<TS version="2.1" language="zh_CN" sourcelanguage="en">
 <context>
     <name>AboutWindow</name>
     <message>
         <location filename="../src/ui/AboutWindow.qml" line="16"/>
         <source>About</source>
-        <translation type="unfinished"></translation>
+        <translation>关于</translation>
     </message>
     <message>
         <location filename="../src/ui/AboutWindow.qml" line="48"/>
         <source>Check for Update</source>
-        <translation type="unfinished"></translation>
+        <translation>检查更新</translation>
     </message>
     <message>
         <location filename="../src/ui/AboutWindow.qml" line="55"/>
         <source>Releases</source>
-        <translation type="unfinished"></translation>
+        <translation>发行版</translation>
     </message>
     <message>
         <location filename="../src/ui/AboutWindow.qml" line="60"/>
         <source>Support</source>
-        <translation type="unfinished"></translation>
+        <translation>技术支持</translation>
     </message>
     <message>
         <location filename="../src/ui/AboutWindow.qml" line="76"/>
@@ -36,7 +36,7 @@
     <message>
         <location filename="../src/ui/AboutWindow.qml" line="123"/>
         <source>Follow us on Github</source>
-        <translation type="unfinished"></translation>
+        <translation>在 Github 上关注我们</translation>
     </message>
 </context>
 <context>
@@ -44,47 +44,47 @@
     <message>
         <location filename="../src/ui/ClientControl.qml" line="43"/>
         <source>Connect</source>
-        <translation type="unfinished"></translation>
+        <translation>连接</translation>
     </message>
     <message>
         <location filename="../src/ui/ClientControl.qml" line="55"/>
         <source>Disconnect</source>
-        <translation type="unfinished"></translation>
+        <translation>断开连接</translation>
     </message>
     <message>
         <location filename="../src/ui/ClientControl.qml" line="65"/>
         <source>Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>编辑</translation>
     </message>
     <message>
         <location filename="../src/ui/ClientControl.qml" line="73"/>
         <source>New Window</source>
-        <translation type="unfinished"></translation>
+        <translation>在新窗口中打开</translation>
     </message>
     <message>
         <location filename="../src/ui/ClientControl.qml" line="81"/>
         <source>More</source>
-        <translation type="unfinished"></translation>
+        <translation>更多</translation>
     </message>
     <message>
         <location filename="../src/ui/ClientControl.qml" line="96"/>
         <source>New Subscription</source>
-        <translation type="unfinished"></translation>
+        <translation>添加订阅</translation>
     </message>
     <message>
         <location filename="../src/ui/ClientControl.qml" line="232"/>
         <source>Topic</source>
-        <translation type="unfinished"></translation>
+        <translation>话题</translation>
     </message>
     <message>
         <location filename="../src/ui/ClientControl.qml" line="240"/>
         <source>Payload</source>
-        <translation type="unfinished"></translation>
+        <translation>消息内容</translation>
     </message>
     <message>
         <location filename="../src/ui/ClientControl.qml" line="255"/>
         <source>Send</source>
-        <translation type="unfinished"></translation>
+        <translation>发送</translation>
     </message>
 </context>
 <context>
