@@ -114,9 +114,15 @@ void InternalClient::doPublish(const QString& topic, QoS qos, const QByteArray& 
   const auto topic_str = topic.toStdString();
   this->p_->client->async_publish(MQTT_NS::allocate_buffer(topic_str),
                                   MQTT_NS::allocate_buffer(payload.constData()),
-                                  MQTT_NS::qos::exactly_once, [](MQTT_NS::error_code ec) {
+                                  static_cast<MQTT_NS::qos>(qos),
+                                  [](MQTT_NS::error_code ec) {
         qWarning() << "ec;" << ec.message().data();
       });
+}
+
+void InternalClient::timerEvent(QTimerEvent* event) {
+  QObject::timerEvent(event);
+  this->p_->context.poll();
 }
 
 }  // namespace hebo

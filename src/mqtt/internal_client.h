@@ -31,6 +31,9 @@ class InternalClient : public QObject {
 
   void messageReceived(const MqttMessage& message);
 
+ protected:
+  void timerEvent(QTimerEvent* event) override;
+
  private slots:
   void doConnect(const ConnectConfig& config);
   void doDisconnect();
@@ -41,6 +44,7 @@ class InternalClient : public QObject {
  private:
   void initSignals();
   MqttClientPrivate* p_;
+  int timer_id_{-1};
 };
 
 }  // namespace hebo
