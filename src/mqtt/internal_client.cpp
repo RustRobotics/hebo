@@ -75,7 +75,7 @@ void InternalClient::doConnect(const ConnectConfig& config) {
     message.qos = static_cast<QoS>(pubopts.get_qos());
     message.is_publish = false;
     message.payload.append(contents.data(), contents.size());
-    this->messages_->addMessage(message);
+    emit this->messageReceived(message);
 
     return true;
   });
@@ -110,20 +110,13 @@ void InternalClient::doUnsubscribe(const QString& topic) {
   this->p_->client->async_unsubscribe(topic_str);
 }
 
-void InternalClient::doPublisher(const QString& topic, QoS qos, const QByteArray& payload) {
+void InternalClient::doPublish(const QString& topic, QoS qos, const QByteArray& payload) {
   const auto topic_str = topic.toStdString();
   this->p_->client->async_publish(MQTT_NS::allocate_buffer(topic_str),
                                   MQTT_NS::allocate_buffer(payload.constData()),
                                   MQTT_NS::qos::exactly_once, [](MQTT_NS::error_code ec) {
         qWarning() << "ec;" << ec.message().data();
       });
-
-  MqttMessage message{};
-  message.topic = topic;
-  message.qos = static_cast<QoS>(qos);
-  message.is_publish = true;
-  message.payload = payload;
-  this->messages_->addMessage(message);
 }
 
 }  // namespace hebo

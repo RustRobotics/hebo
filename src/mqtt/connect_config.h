@@ -12,6 +12,15 @@
 namespace hebo {
 Q_NAMESPACE
 
+enum ConnectionState : int32_t {
+  ConnectionDisconnected = 0,
+  ConnectionConnecting = 1,
+  ConnectionConnected = 2,
+  ConnectionConnectFailed = 3,
+  ConnectionDisconnecting = 4,
+};
+Q_ENUM_NS(ConnectionState);
+
 enum QoS : int32_t {
   AtMostOnce = 0,
   AtLeastOnce = 1,

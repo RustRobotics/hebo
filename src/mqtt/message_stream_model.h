@@ -41,6 +41,7 @@ class MessageStreamModel : public QAbstractListModel {
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
+ public slots:
   void addMessage(const MqttMessage& message);
 
  private:

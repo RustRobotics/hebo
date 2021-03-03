@@ -8,7 +8,7 @@
 #include <QObject>
 
 #include "mqtt/connect_config.h"
-#include "mqtt/connection_state.h"
+#include "mqtt/message_stream_model.h"
 
 namespace hebo {
 
@@ -26,14 +26,17 @@ class InternalClient : public QObject {
   void requestSubscribe(const QString& topic, QoS qos);
   void requestUnsubscribe(const QString& topic);
   void requestPublish(const QString& topic, QoS qos, const QByteArray& payload);
+
   void stateChanged(ConnectionState state);
+
+  void messageReceived(const MqttMessage& message);
 
  private slots:
   void doConnect(const ConnectConfig& config);
   void doDisconnect();
-  void doSubscribe(const QString& topic, QoS qos, const QString& color);
+  void doSubscribe(const QString& topic, QoS qos);
   void doUnsubscribe(const QString& topic);
-  void doPublisher(const QString& topic, QoS qos, const QByteArray& payload);
+  void doPublish(const QString& topic, QoS qos, const QByteArray& payload);
 
  private:
   void initSignals();

@@ -4,41 +4,36 @@
 
 #include "mqtt/mqtt_client.h"
 
-#include <mqtt_client_cpp.hpp>
-
 namespace hebo {
-namespace {
-
-using InternalClient = std::shared_ptr<
-    MQTT_NS::callable_overlay<MQTT_NS::async_client<
-        MQTT_NS::tcp_endpoint<as::ip::tcp::socket,
-                              as::io_context::strand>>>>;
-
-}  // namespace
-
-struct MqttClientPrivate {
-  boost::asio::io_context context{};
-  InternalClient client{};
-};
 
 MqttClient::MqttClient(QObject* parent)
     : QObject(parent),
       worker_thread_(new QThread(this)),
       subscriptions_(new SubscriptionModel(this)),
       messages_(new MessageStreamModel(this)),
-      p_(new MqttClientPrivate()) {
+      internal_(new InternalClient()) {
+  this->internal_->moveToThread(this->worker_thread_);
   this->initSignals();
 
-//  this->worker_thread_->start();
+  this->worker_thread_->start();
 }
 
 MqttClient::~MqttClient() {
-  delete this->p_;
+  this->worker_thread_->quit();
+  this->worker_thread_->wait();
 }
 
 void MqttClient::initSignals() {
   connect(this->worker_thread_, &QThread::finished,
+          this->internal_, &InternalClient::deleteLater);
+  connect(this->worker_thread_, &QThread::finished,
           this->worker_thread_, &QThread::deleteLater);
+
+  connect(this->internal_, &InternalClient::stateChanged,
+          this, &MqttClient::setState);
+
+  connect(this->internal_, &InternalClient::messageReceived,
+          this->messages_, &MessageStreamModel::addMessage);
 
   connect(this->subscriptions_, &SubscriptionModel::dataChanged, [=]() {
     emit this->subscriptionsChanged(this->subscriptions_);
@@ -59,64 +54,13 @@ void MqttClient::setState(ConnectionState state) {
 }
 
 void MqttClient::requestConnect() {
-  auto c = MQTT_NS::make_async_client(p_->context,
-                                      this->config_.host.toStdString(),
-                                      this->config_.port);
-  p_->client = c;
-
-  c->set_client_id(this->config_.client_id.toStdString());
-  c->set_clean_session(this->config_.clean_session);
-  using PacketId = typename std::remove_reference_t<decltype(*c)>::packet_id_t;
-
-  c->set_connack_handler([=](bool sp, MQTT_NS::connect_return_code rc) {
-    Q_UNUSED(sp);
-    Q_UNUSED(rc);
-    this->setState(ConnectionConnected);
-    return true;
-  });
-
-  c->set_publish_handler([&](MQTT_NS::optional<PacketId> packet_id,
-                             MQTT_NS::publish_options pubopts,
-                             MQTT_NS::buffer topic_name,
-                             MQTT_NS::buffer contents) {
-    if (packet_id) {
-      std::cout << "packet_id: " << *packet_id << std::endl;
-    }
-
-    MqttMessage message{};
-    message.topic = QString::fromUtf8(topic_name.data(), topic_name.size());
-    message.qos = static_cast<QoS>(pubopts.get_qos());
-    message.is_publish = false;
-    message.payload.append(contents.data(), contents.size());
-    this->messages_->addMessage(message);
-
-    return true;
-  });
-
-  c->set_close_handler([&]() {
-    qDebug() << "close handler";
-    this->setState(ConnectionDisconnected);
-    this->killTimer(this->timer_id_);
-  });
-  c->set_error_handler([&](MQTT_NS::error_code ec) {
-    qWarning() << "Got mqtt error:" << ec.message().c_str();
-  });
-
-  c->async_connect();
-  this->timer_id_ = this->startTimer(5);
-  this->setState(ConnectionConnecting);
+  emit this->internal_->requestConnect(this->config_);
 }
 
 void MqttClient::requestDisconnect() {
+  Q_ASSERT(this->state_ == ConnectionConnected);
   this->setState(ConnectionDisconnecting);
-  this->p_->client->async_disconnect([=](MQTT_NS::error_code ec) {
-    qDebug() << "async_disconnect() returns:" << ec.message().data();
-  });
-}
-
-void MqttClient::timerEvent(QTimerEvent* event) {
-  QObject::timerEvent(event);
-  this->p_->context.poll();
+  emit this->internal_->requestDisconnect();
 }
 
 void MqttClient::requestSubscribe(const QString& topic, int qos, const QString& color) {
@@ -134,8 +78,7 @@ void MqttClient::requestSubscribe(const QString& topic, int qos, const QString& 
   }
 
   this->subscriptions_->addSubscription(topic, qos, color);
-  const std::string topic_str = topic.toStdString();
-  this->p_->client->async_subscribe(topic_str, static_cast<MQTT_NS::qos>(qos));
+  emit this->internal_->requestSubscribe(topic, static_cast<QoS>(qos));
 }
 
 void MqttClient::requestUnsubscribe(const QString& topic) {
@@ -146,8 +89,7 @@ void MqttClient::requestUnsubscribe(const QString& topic) {
   }
 
   if (this->subscriptions_->removeSubscription(topic)) {
-    const std::string topic_str = topic.toStdString();
-    this->p_->client->async_unsubscribe(topic_str);
+    emit this->internal_->requestUnsubscribe(topic);
   } else {
     qWarning() << "Topic with name not subscribed:" << topic;
   }
@@ -159,14 +101,7 @@ void MqttClient::requestPublish(const QString& topic, int qos, const QByteArray&
     qWarning() << "Invalid state:" << this->state_;
     return;
   }
-
-  const auto topic_str = topic.toStdString();
-  this->p_->client->async_publish(MQTT_NS::allocate_buffer(topic_str),
-                                  MQTT_NS::allocate_buffer(payload.constData()),
-                                  MQTT_NS::qos::exactly_once, [](MQTT_NS::error_code ec) {
-    qWarning() << "ec;" << ec.message().data();
-  });
-
+  emit this->internal_->requestPublish(topic, static_cast<QoS>(qos), payload);
   MqttMessage message{};
   message.topic = topic;
   message.qos = static_cast<QoS>(qos);

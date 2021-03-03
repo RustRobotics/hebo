@@ -10,12 +10,11 @@
 #include <QThread>
 
 #include "mqtt/connect_config.h"
+#include "mqtt/internal_client.h"
 #include "mqtt/message_stream_model.h"
 #include "mqtt/subscription_model.h"
 
 namespace hebo {
-
-struct MqttClientPrivate;
 
 class MqttClient : public QObject {
   Q_OBJECT
@@ -24,15 +23,6 @@ class MqttClient : public QObject {
   Q_PROPERTY(MessageStreamModel* messages READ messages NOTIFY messagesChanged);
 
  public:
-  enum ConnectionState : int32_t {
-    ConnectionDisconnected = 0,
-    ConnectionConnecting = 1,
-    ConnectionConnected = 2,
-    ConnectionConnectFailed = 3,
-    ConnectionDisconnecting = 4,
-  };
-  Q_ENUM(ConnectionState);
-
   explicit MqttClient(QObject* parent = nullptr);
   ~MqttClient() override;
 
@@ -61,9 +51,6 @@ class MqttClient : public QObject {
   void subscriptionsChanged(SubscriptionModel* model);
   void messagesChanged(MessageStreamModel* model);
 
- protected:
-  void timerEvent(QTimerEvent* event) override;
-
  private:
   void initSignals();
 
@@ -72,11 +59,10 @@ class MqttClient : public QObject {
   QThread* worker_thread_;
   ConnectConfig config_{};
   ConnectionState state_{ConnectionState::ConnectionDisconnected};
-  int timer_id_{-1};
   SubscriptionModel* subscriptions_;
   MessageStreamModel* messages_;
 
-  MqttClientPrivate* p_;
+  InternalClient* internal_;
 };
 
 }  // namespace hebo
