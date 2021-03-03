@@ -16,7 +16,7 @@ class ConnectManager : public QAbstractListModel {
   Q_OBJECT
 
  public:
-  enum ConnectionRole : int {
+  enum ConnectionRole : int32_t {
     kNameRole = Qt::UserRole + 1,
     kClientIdRole,
     kProtocolRole,

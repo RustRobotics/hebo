@@ -64,8 +64,4 @@ bool dumpConnectConfigs(const QString& file, const ConnectConfigList& list);
 
 }  // namespace hebo
 
-Q_DECLARE_METATYPE(hebo::ConnectionState);
-Q_DECLARE_METATYPE(hebo::ConnectConfig);
-Q_DECLARE_METATYPE(hebo::QoS);
-
 #endif  // HEBOUI_SRC_MQTT_CONNECT_CONFIG_H_

@@ -57,7 +57,6 @@ Item {
         onClicked: {
           console.log("state:", root.client.state);
           console.log("connected:", HeboEnums.ConnectionDisconnected);
-          console.log("equal:", root.client.state === HeboEnums.ConnectionDisconnected);
           //root.client.requestDisconnect();
         }
       }
