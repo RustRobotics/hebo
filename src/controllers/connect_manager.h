@@ -28,6 +28,7 @@ class ConnectManager : public QAbstractListModel {
     kTlsRole,
     kCleanSessionRole,
     kDescriptionRole,
+    kConnectionStateRole,
   };
   Q_ENUM(ConnectionRole);
 
