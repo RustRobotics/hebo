@@ -10,6 +10,7 @@
 
 #include "controllers/main_controller.h"
 #include "mqtt/connect_config.h"
+#include "mqtt/connection_state.h"
 #include "mqtt/mqtt_client.h"
 
 namespace hebo {
