@@ -41,7 +41,7 @@ Item {
       IconButton {
         text: "\ue791";
         ToolTip.text: qsTr("Connect");
-        visible: root.client.state !== HeboEnums.ConnectionConnected;
+        visible: root.client.state !== HeboNs.ConnectionConnected;
         onClicked: {
           console.log("Do connect client");
           console.log("client state:", root.client.state);
@@ -53,7 +53,7 @@ Item {
         text: "\ue71b";
         textColor: "red";
         ToolTip.text: qsTr("Disconnect");
-        visible: root.client.state === HeboEnums.ConnectionConnected;
+        visible: root.client.state === HeboNs.ConnectionConnected;
         onClicked: {
           root.client.requestDisconnect();
         }
@@ -96,7 +96,7 @@ Item {
           text: qsTr("New Subscription");
           onClicked: {
             console.log("Show new subscription window");
-            if (root.client.state === HeboEnums.ConnectionConnected) {
+            if (root.client.state === HeboNs.ConnectionConnected) {
               newSubscriptionDialog.reset();
               newSubscriptionDialog.open();
             } else {
@@ -254,8 +254,8 @@ Item {
             textColor: "#3a3a3a";
             ToolTip.text: qsTr("Send");
             onClicked: {
-              if (root.client.state === HeboEnums.ConnectionConnected) {
-                root.client.requestPublish(topicField.text, HeboEnums.AtMostOnce, payloadField.text);
+              if (root.client.state === HeboNs.ConnectionConnected) {
+                root.client.requestPublish(topicField.text, HeboNs.AtMostOnce, payloadField.text);
               } else {
                 console.warn("Invalid mqtt connection state:", root.client.state);
               }

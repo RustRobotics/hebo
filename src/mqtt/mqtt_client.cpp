@@ -12,6 +12,10 @@ MqttClient::MqttClient(QObject* parent)
       subscriptions_(new SubscriptionModel(this)),
       messages_(new MessageStreamModel(this)),
       internal_(new InternalClient()) {
+  qRegisterMetaType<ConnectionState>("ConnectionState");
+  qRegisterMetaType<ConnectConfig>("ConnectConfig");
+  qRegisterMetaType<QoS>("QoS");
+
   this->internal_->moveToThread(this->worker_thread_);
   this->initSignals();
 

@@ -10,32 +10,23 @@
 #include <QString>
 
 namespace hebo {
+Q_NAMESPACE
 
-class HeboEnums : public QObject {
-  Q_OBJECT
- public:
-  explicit HeboEnums(QObject* parent = nullptr);
-
-  enum ConnectionState : int32_t {
-    ConnectionDisconnected = 0,
-    ConnectionConnecting = 1,
-    ConnectionConnected = 2,
-    ConnectionConnectFailed = 3,
-    ConnectionDisconnecting = 4,
-  };
-  Q_ENUM(ConnectionState);
-
-
-  enum QoS : int32_t {
-    AtMostOnce = 0,
-    AtLeastOnce = 1,
-    ExactOnce = 2,
-  };
-  Q_ENUM(QoS);
+enum ConnectionState : int32_t {
+  ConnectionDisconnected = 0,
+  ConnectionConnecting = 1,
+  ConnectionConnected = 2,
+  ConnectionConnectFailed = 3,
+  ConnectionDisconnecting = 4,
 };
+Q_ENUM_NS(ConnectionState);
 
-using QoS = HeboEnums::QoS;
-using ConnectionState = HeboEnums::ConnectionState;
+enum QoS : int32_t {
+  AtMostOnce = 0,
+  AtLeastOnce = 1,
+  ExactOnce = 2,
+};
+Q_ENUM_NS(QoS);
 
 struct ConnectConfig {
   QString name{};
@@ -65,5 +56,9 @@ QJsonObject dumpConnectConfig(const ConnectConfig& info);
 bool dumpConnectConfigs(const QString& file, const ConnectConfigList& list);
 
 }  // namespace hebo
+
+Q_DECLARE_METATYPE(hebo::ConnectionState);
+Q_DECLARE_METATYPE(hebo::ConnectConfig);
+Q_DECLARE_METATYPE(hebo::QoS);
 
 #endif  // HEBOUI_SRC_MQTT_CONNECT_CONFIG_H_
