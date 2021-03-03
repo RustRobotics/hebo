@@ -38,14 +38,17 @@ void registerComponents() {
   constexpr const char* kComponentUri = "org.biofan.hebo";
   constexpr int kVersionMajor = 1;
   constexpr int kVersionMinor = 0;
-  qmlRegisterUncreatableMetaObject(hebo::staticMetaObject,
-                                   kComponentUri, kVersionMajor, kVersionMinor,
-                                   "HeboNs",
-                                   "Access to enums & flags only");
+//  qmlRegisterUncreatableMetaObject(hebo::staticMetaObject,
+//                                   kComponentUri, kVersionMajor, kVersionMinor,
+//                                   "HeboNs",
+//                                   "Access to enums & flags only");
 //  qmlRegisterType<MqttClient>(kComponentUri,
 //                              kVersionMajor, kVersionMinor,
 //                              "MqttClient");
 //  qmlRegisterInterface<MqttClient>(kComponentUri, kVersionMajor);
+  qmlRegisterUncreatableType<HeboEnums>(kComponentUri, kVersionMajor, kVersionMinor,
+                                         "HeboEnums",
+                                         "Cannot create a HeboEnums instance");
   qmlRegisterUncreatableType<MqttClient>(kComponentUri, kVersionMajor, kVersionMinor,
                                          "MqttClient",
                                          "Cannot create a MqttClient instance");

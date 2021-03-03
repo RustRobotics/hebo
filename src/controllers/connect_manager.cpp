@@ -91,9 +91,10 @@ QVariant ConnectManager::data(const QModelIndex& index, int role) const {
       if (this->clients_.contains(info.name)) {
         auto* client = this->clients_.value(info.name);
         Q_ASSERT(client != nullptr);
+        qDebug() << "client state:" << client->state();
         return client->state();
       } else {
-        return MqttClient::ConnectionState::ConnectionDisconnected;
+        return ConnectionState::ConnectionDisconnected;
       }
     }
     default: {

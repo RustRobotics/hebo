@@ -13,6 +13,7 @@ MqttClient::MqttClient(QObject* parent)
       messages_(new MessageStreamModel(this)),
       internal_(new InternalClient()) {
   qRegisterMetaType<ConnectionState>("ConnectionState");
+  qRegisterMetaType<ConnectionState>("HeboEnums.ConnectionState");
   qRegisterMetaType<ConnectConfig>("ConnectConfig");
   qRegisterMetaType<QoS>("QoS");
 
@@ -46,13 +47,10 @@ void MqttClient::initSignals() {
   connect(this->messages_, &MessageStreamModel::dataChanged, [=]() {
     emit this->messagesChanged(this->messages_);
   });
-
-  connect(this, &MqttClient::stateChanged, [](ConnectionState state) {
-    qDebug() << "state:" << state;
-  });
 }
 
 void MqttClient::setState(ConnectionState state) {
+  qDebug() << __func__ << state;
   this->state_ = state;
   emit this->stateChanged(state);
 }

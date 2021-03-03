@@ -52,6 +52,8 @@ bool parseItems(const QJsonArray& array, ConnectConfigList& list) {
 
 }  // namespace hebo
 
+HeboEnums::HeboEnums(QObject* parent) : QObject(parent) {}
+
 QString generateConnDescription(const ConnectConfig& info) {
   return QString("%1@%2:%3").arg(info.name).arg(info.host).arg(info.port);
 }

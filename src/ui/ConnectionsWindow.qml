@@ -58,7 +58,7 @@ Item {
         spacing: 8;
 
         Rectangle {
-          color: model.connectionState === MqttClient.ConnectionConnected ? "#39d12d" : "#606060";
+          color: model.connectionState === HeboEnums.ConnectionConnected ? "#39d12d" : "#606060";
           width: 8;
           height: 8;
           radius: 4;

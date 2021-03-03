@@ -10,23 +10,30 @@
 #include <QString>
 
 namespace hebo {
-Q_NAMESPACE
 
-enum ConnectionState : int32_t {
-  ConnectionDisconnected = 0,
-  ConnectionConnecting = 1,
-  ConnectionConnected = 2,
-  ConnectionConnectFailed = 3,
-  ConnectionDisconnecting = 4,
-};
-Q_ENUM_NS(ConnectionState);
+class HeboEnums : public QObject {
+  Q_OBJECT
+ public:
+  explicit HeboEnums(QObject* parent = nullptr);
+  enum ConnectionState : int32_t {
+    ConnectionDisconnected = 0,
+    ConnectionConnecting = 1,
+    ConnectionConnected = 2,
+    ConnectionConnectFailed = 3,
+    ConnectionDisconnecting = 4,
+  };
+  Q_ENUM(ConnectionState);
 
-enum QoS : int32_t {
-  AtMostOnce = 0,
-  AtLeastOnce = 1,
-  ExactOnce = 2,
+  enum QoS : int32_t {
+    AtMostOnce = 0,
+    AtLeastOnce = 1,
+    ExactOnce = 2,
+  };
+  Q_ENUM(QoS);
 };
-Q_ENUM_NS(QoS);
+
+using QoS = HeboEnums::QoS;
+using ConnectionState = HeboEnums::ConnectionState;
 
 struct ConnectConfig {
   QString name{};
