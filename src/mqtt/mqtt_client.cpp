@@ -58,16 +58,16 @@ void MqttClient::requestConnect() {
 }
 
 void MqttClient::requestDisconnect() {
-  Q_ASSERT(this->state_ == ConnectionConnected);
-  this->setState(ConnectionDisconnecting);
+  Q_ASSERT(this->state_ == ConnectionState::ConnectionConnected);
+  this->setState(ConnectionState::ConnectionDisconnecting);
   emit this->internal_->requestDisconnect();
 }
 
 void MqttClient::requestSubscribe(const QString& topic, int qos, const QString& color) {
   qDebug() << __func__ << topic;
 
-  Q_ASSERT(this->state_ == ConnectionConnected);
-  if (this->state_ != ConnectionConnected) {
+  Q_ASSERT(this->state_ == ConnectionState::ConnectionConnected);
+  if (this->state_ != ConnectionState::ConnectionConnected) {
     qWarning() << "Invalid state:" << this->state_;
     return;
   }
@@ -82,8 +82,8 @@ void MqttClient::requestSubscribe(const QString& topic, int qos, const QString& 
 }
 
 void MqttClient::requestUnsubscribe(const QString& topic) {
-  Q_ASSERT(this->state_ == ConnectionConnected);
-  if (this->state_ != ConnectionConnected) {
+  Q_ASSERT(this->state_ == ConnectionState::ConnectionConnected);
+  if (this->state_ != ConnectionState::ConnectionConnected) {
     qWarning() << "Invalid state:" << this->state_;
     return;
   }
@@ -96,8 +96,8 @@ void MqttClient::requestUnsubscribe(const QString& topic) {
 }
 
 void MqttClient::requestPublish(const QString& topic, int qos, const QByteArray& payload) {
-  Q_ASSERT(this->state_ == ConnectionConnected);
-  if (this->state_ != ConnectionConnected) {
+  Q_ASSERT(this->state_ == ConnectionState::ConnectionConnected);
+  if (this->state_ != ConnectionState::ConnectionConnected) {
     qWarning() << "Invalid state:" << this->state_;
     return;
   }

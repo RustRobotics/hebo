@@ -58,7 +58,7 @@ void InternalClient::doConnect(const ConnectConfig& config) {
   c->set_connack_handler([=](bool sp, MQTT_NS::connect_return_code rc) {
     Q_UNUSED(sp);
     Q_UNUSED(rc);
-    emit this->stateChanged(ConnectionConnected);
+    emit this->stateChanged(ConnectionState::ConnectionConnected);
     return true;
   });
 
@@ -82,7 +82,7 @@ void InternalClient::doConnect(const ConnectConfig& config) {
 
   c->set_close_handler([&]() {
     qDebug() << "close handler";
-    emit this->stateChanged(ConnectionDisconnected);
+    emit this->stateChanged(ConnectionState::ConnectionDisconnected);
     this->killTimer(this->timer_id_);
   });
   c->set_error_handler([&](MQTT_NS::error_code ec) {
@@ -91,7 +91,7 @@ void InternalClient::doConnect(const ConnectConfig& config) {
 
   c->async_connect();
   this->timer_id_ = this->startTimer(5);
-  emit this->stateChanged(ConnectionConnecting);
+  emit this->stateChanged(ConnectionState::ConnectionConnecting);
 }
 
 void InternalClient::doDisconnect() {
