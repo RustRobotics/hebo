@@ -40,7 +40,6 @@ Item {
       MouseArea {
         anchors.fill: parent;
         onClicked: {
-          console.log("model:", model);
           connectionList.currentIndex = index;
         }
       }

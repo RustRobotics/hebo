@@ -8,26 +8,17 @@ import QtQuick.Layouts 1.15
 
 Dialog {
   id: root;
-  title: "New Subscription";
+  title: qsTr("New Subscription");
   modal: true;
-  standardButtons: Dialog.Cancel | Dialog.Ok;
 
-  //property string topic: "";
-  //property int qos: 0;
-  //property string color: "";
+  property string topic: topicField.text;
+  property int qos: qosField.currentIndex;
+  property string color: colorField.text;
 
   function reset() {
-    topicField.text = "";
+    topicField.reset();
     qosField.currentIndex = 0;
     colorField.text = "";
-  }
-
-  function fields() {
-    return {
-      topic: topicField.text,
-      qos: qosField.currentIndex,
-      color: colorField.text,
-    }
   }
 
   GridLayout {
@@ -41,8 +32,9 @@ Dialog {
       required: true;
     }
 
-    TextField {
+    FormField {
       id: topicField;
+      isValid: text.length > 0;
     }
 
     FormLabel {
@@ -60,6 +52,28 @@ Dialog {
 
     TextField {
       id: colorField;
+    }
+  }
+
+  footer: DialogButtonBox {
+    Button {
+      text: qsTr("Cancel");
+      DialogButtonBox.buttonRole: DialogButtonBox.RejectRole;
+    }
+
+    Button {
+      text: qsTr("Subscribe");
+      DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole;
+
+      MouseArea {
+        anchors.fill: parent;
+        onClicked: {
+          topicField.runValidate();
+          if (topicField.isValid) {
+            root.accept();
+          }
+        }
+      }
     }
   }
 }

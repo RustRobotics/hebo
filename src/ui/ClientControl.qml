@@ -43,8 +43,6 @@ Item {
         ToolTip.text: qsTr("Connect");
         visible: root.client.state !== MqttClient.ConnectionConnected;
         onClicked: {
-          console.log("Do connect client");
-          console.log("Current client state:", root.client.state);
           root.client.requestConnect();
         }
       }
@@ -55,7 +53,6 @@ Item {
         ToolTip.text: qsTr("Disconnect");
         visible: root.client.state === MqttClient.ConnectionConnected;
         onClicked: {
-          console.log("Current client state:", root.client.state);
           root.client.requestDisconnect();
         }
       }
@@ -271,9 +268,7 @@ Item {
     id: newSubscriptionDialog;
 
     onAccepted: {
-      const fields = this.fields();
-      console.log("fields:", fields);
-      root.client.requestSubscribe(fields.topic, fields.qos, fields.color);
+      root.client.requestSubscribe(this.topic, this.qos, this.color);
     }
   }
 
