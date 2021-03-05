@@ -15,7 +15,7 @@ class HeboEnums : public QObject {
   Q_OBJECT
  public:
   explicit HeboEnums(QObject* parent = nullptr);
-  enum ConnectionState : int32_t {
+  enum ConnectionState : int {
     ConnectionDisconnected = 0,
     ConnectionConnecting = 1,
     ConnectionConnected = 2,
@@ -24,7 +24,7 @@ class HeboEnums : public QObject {
   };
   Q_ENUM(ConnectionState);
 
-  enum QoS : int32_t {
+  enum class QoS : int {
     AtMostOnce = 0,
     AtLeastOnce = 1,
     ExactOnce = 2,
@@ -32,8 +32,8 @@ class HeboEnums : public QObject {
   Q_ENUM(QoS);
 };
 
-using QoS = HeboEnums::QoS;
 using ConnectionState = HeboEnums::ConnectionState;
+using QoS = HeboEnums::QoS;
 
 struct ConnectConfig {
   QString name{};

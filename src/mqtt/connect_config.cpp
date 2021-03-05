@@ -99,7 +99,7 @@ QJsonObject dumpConnectConfig(const ConnectConfig& info) {
   object.insert(kKeyProtocol, info.protocol);
   object.insert(kKeyHost, info.host);
   object.insert(kKeyPort, info.port);
-  object.insert(kKeyQoS, info.qos);
+  object.insert(kKeyQoS, static_cast<int>(info.qos));
   object.insert(kKeyUsername, info.username);
   object.insert(kKeyPassword, info.password);
   object.insert(kKeyTls, info.with_tls);

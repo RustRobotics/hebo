@@ -43,9 +43,9 @@ void registerComponents() {
   qmlRegisterUncreatableType<MqttClient>(kComponentUri, kVersionMajor, kVersionMinor,
                                          "MqttClient",
                                          "Cannot create a MqttClient instance");
-  qmlRegisterUncreatableType<HeboEnums>(kComponentUri, kVersionMajor, kVersionMinor,
-                                        "HeboEnums",
-                                        "Cannot create a HeboEnums instance");
+//  qmlRegisterUncreatableType<HeboEnums>(kComponentUri, kVersionMajor, kVersionMinor,
+//                                        "HeboEnums",
+//                                        "Cannot create a HeboEnums instance");
   qmlRegisterUncreatableType<ConnectManager>(kComponentUri, kVersionMajor, kVersionMinor,
                                          "ConnectManager",
                                          "Cannot create a ConnectManager instance");

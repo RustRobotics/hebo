@@ -29,18 +29,10 @@ QVariant SubscriptionModel::data(const QModelIndex& index, int role) const {
   }
   const auto& sub = this->list_.at(index.row());
   switch (role) {
-    case kTopicRole: {
-      return sub.topic;
-    }
-    case kColorRole: {
-      return sub.color;
-    }
-    case kQoSRole: {
-      return sub.qos;
-    }
-    default: {
-      return {};
-    }
+    case kTopicRole: { return sub.topic; }
+    case kColorRole: { return sub.color; }
+    case kQoSRole: { return static_cast<int>(sub.qos); }
+    default: { return {}; }
   }
 }
 
