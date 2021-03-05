@@ -16,8 +16,14 @@ Item {
   function resetForm() {
     nameField.reset();
     clientIdField.reset();
+    clientIdField.text = connectManager.newClientId();
     hostnameField.reset();
     hostnameField.text = "localhost";
+  }
+
+  FontLoader {
+    id: iconFont;
+    source: "fonts/element-icons.ttf";
   }
 
   Hebo.PageTitle {
@@ -60,11 +66,6 @@ Item {
         console.error("Failed to get client with name:", nameField.text);
       }
     }
-  }
-
-  FontLoader {
-    id: iconFont;
-    source: "fonts/iconfont.ttf";
   }
 
   ScrollView {
@@ -121,16 +122,21 @@ Item {
               }
 
               Row {
+                spacing: 24;
+
                 Hebo.FormField {
                   id: clientIdField;
                   isValid: this.text.length > 0;
                 }
 
-                Button {
-                  text: "R";
+                RoundButton {
+                  text: "\ue6d0";
+                  ToolTip.text: qsTr("Generate random client id");
+                  font.pixelSize: 14;
+                  font.family: iconFont.name;
+
                   onClicked: {
                     const clientId = connectManager.newClientId();
-                    console.log("clientId:", clientId);
                     clientIdField.text = clientId;
                   }
                 }
