@@ -13,6 +13,13 @@ Item {
   id: root;
   signal connectClicked();
 
+  function resetForm() {
+    nameField.reset();
+    clientIdField.reset();
+    hostnameField.reset();
+    hostnameField.text = "localhost";
+  }
+
   Hebo.PageTitle {
     id: title;
     text: qsTr("New Connection");
@@ -31,9 +38,7 @@ Item {
       nameField.runValidate();
       clientIdField.runValidate();
       hostnameField.runValidate();
-      if (!nameField.isValid || \
-          !clientIdField.isValid || \
-          !hostnameField.isValid) {
+      if (!nameField.isValid || !clientIdField.isValid || !hostnameField.isValid) {
         return;
       }
 

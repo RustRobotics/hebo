@@ -31,5 +31,10 @@ TextField {
     this.textFirstModified = true;
   }
 
+  function reset() {
+    this.textFirstModified = false;
+    this.text = "";
+  }
+
   onEditingFinished: this.runValidate();
 }

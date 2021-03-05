@@ -23,6 +23,12 @@ ApplicationWindow {
     id: stackLayout;
     currentIndex: leftPanel.currentIndex;
 
+    onCurrentIndexChanged: {
+      if (currentIndex == 1) {
+        newConnectionWindow.resetForm();
+      }
+    }
+
     anchors {
       left: leftPanel.right;
       right: parent.right;
@@ -34,6 +40,7 @@ ApplicationWindow {
     }
 
     NewConnectionWindow {
+      id: newConnectionWindow;
       onConnectClicked: {
         leftPanel.setIndex(0);
       }
