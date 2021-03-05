@@ -28,7 +28,15 @@ Item {
     }
 
     onClicked: {
-      console.log("on connect button clicked:", nameField.text);
+      nameField.runValidate();
+      clientIdField.runValidate();
+      hostnameField.runValidate();
+      if (!nameField.isValid || \
+          !clientIdField.isValid || \
+          !hostnameField.isValid) {
+        return;
+      }
+
       // TODO(Shaohua): Check conn name is unique
       connectManager.addConnection(
         nameField.text,
@@ -97,8 +105,9 @@ Item {
                 required: true;
               }
 
-              TextField {
+              Hebo.FormField {
                 id: nameField;
+                isValid: this.text.length > 0;
               }
 
               Hebo.FormLabel {
@@ -106,8 +115,11 @@ Item {
                 required: true;
               }
 
-              TextField {
+              // TODO(Shaohua): Add default value
+              // TODO(Shaohua): Add random name generator button
+              Hebo.FormField {
                 id: clientIdField;
+                isValid: this.text.length > 0;
               }
 
               Hebo.FormLabel {
@@ -118,13 +130,15 @@ Item {
               RowLayout {
                 ComboBox {
                   id: hostProtocol;
-                  width: 94;
-                  Layout.preferredWidth: 94;
+                  width: 100;
+                  Layout.preferredWidth: width;
                   model: ["mqtt://", "mqttx://", "ws://", "wss://"];
                 }
 
-                TextField {
+                Hebo.FormField {
                   id: hostnameField;
+                  text: "localhost";
+                  isValid: this.text.length > 0;
                 }
               }
 

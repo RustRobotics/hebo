@@ -10,6 +10,7 @@
     <file>NewConnectionWindow.qml</file>
     <file>SettingsWindow.qml</file>
 
+    <file>items/FormField.qml</file>
     <file>items/FormLabel.qml</file>
     <file>items/FormSection.qml</file>
     <file>items/ImageButton.qml</file>
