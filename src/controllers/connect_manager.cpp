@@ -8,6 +8,8 @@
 #include <QDir>
 #include <QStandardPaths>
 
+#include "base/random.h"
+
 namespace hebo {
 namespace {
 
@@ -196,6 +198,10 @@ MqttClient* ConnectManager::client(const QString& name) {
 
   qWarning() << "Invalid connection name:" << name;
   return nullptr;
+}
+
+QString ConnectManager::newClientId() const {
+  return "hebo_" + randomClientId();
 }
 
 }  // namespace hebo

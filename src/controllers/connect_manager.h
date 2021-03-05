@@ -44,6 +44,8 @@ class ConnectManager : public QAbstractListModel {
 
   Q_INVOKABLE hebo::MqttClient* client(const QString& name);
 
+  Q_INVOKABLE QString newClientId() const;
+
  public slots:
   // Connections management
   // Protocol V3.1.1

@@ -10,6 +10,8 @@ TextField {
   property bool isValid: false;
   property bool textFirstModified: false;
 
+  selectByMouse: true;
+
   background: Rectangle {
     implicitWidth: 200;
     implicitHeight: 40;

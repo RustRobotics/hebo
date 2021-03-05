@@ -120,11 +120,20 @@ Item {
                 required: true;
               }
 
-              // TODO(Shaohua): Add default value
-              // TODO(Shaohua): Add random name generator button
-              Hebo.FormField {
-                id: clientIdField;
-                isValid: this.text.length > 0;
+              Row {
+                Hebo.FormField {
+                  id: clientIdField;
+                  isValid: this.text.length > 0;
+                }
+
+                Button {
+                  text: "R";
+                  onClicked: {
+                    const clientId = connectManager.newClientId();
+                    console.log("clientId:", clientId);
+                    clientIdField.text = clientId;
+                  }
+                }
               }
 
               Hebo.FormLabel {
