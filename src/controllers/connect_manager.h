@@ -52,7 +52,7 @@ class ConnectManager : public QAbstractListModel {
                      const QString& protocol,
                      const QString& host,
                      int port,
-                     int qos,
+                     QoS qos,
                      bool clean_session);
 
  signals:

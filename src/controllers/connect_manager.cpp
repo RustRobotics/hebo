@@ -127,7 +127,7 @@ void ConnectManager::addConnection(const QString& name,
                                    const QString& protocol,
                                    const QString& host,
                                    int port,
-                                   int qos,
+                                   QoS qos,
                                    bool clean_session) {
   ConnectConfig config{};
   config.name = name;
@@ -135,7 +135,7 @@ void ConnectManager::addConnection(const QString& name,
   config.protocol = protocol;
   config.host = host;
   config.port = port;
-  config.qos = static_cast<QoS>(qos);
+  config.qos = qos;
   config.clean_session = clean_session;
   config.description = generateConnDescription(config);
 
