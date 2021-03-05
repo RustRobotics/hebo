@@ -84,90 +84,102 @@ Item {
     }
 
     RowLayout {
-
-      ColumnLayout {
-        id: topicLayout;
+      Pane {
+        id: leftPane;
+        width: 202;
         Layout.preferredWidth: 202;
-        spacing: 12;
+        Layout.fillHeight: true;
 
-        Button {
-          text: qsTr("New Subscription");
-          onClicked: {
-            console.log("Show new subscription window");
-            if (root.client.state === MqttClient.ConnectionConnected) {
-              newSubscriptionDialog.reset();
-              newSubscriptionDialog.open();
-            } else {
-              console.warn("Invalid connection state");
-            }
-          }
+        background: Rectangle {
+          anchors.fill: parent;
+          color: "#f1f1f1";
         }
 
-        ListView {
-          id: subscriptionsList;
-          Layout.fillHeight: true;
-          spacing: 9;
-          model: root.client.subscriptions;
+        ColumnLayout {
+          id: topicLayout;
+          width: 188;
+          Layout.preferredWidth: width;
+          spacing: 12;
 
-          delegate: Rectangle {
-            color: "#eaeaea";
-            radius: 4;
-            width: topicLayout.Layout.preferredWidth;
-            height: topicLabel.height + 24;
-
-            MouseArea {
-              id: unsubscribeMA;
-              anchors.fill: parent;
-              hoverEnabled: true;
-              onClicked: {
-                console.log("clicked, filter topic");
+          Button {
+            text: qsTr("New Subscription");
+            Layout.preferredWidth: parent.width;
+            onClicked: {
+              if (root.client.state === MqttClient.ConnectionConnected) {
+                newSubscriptionDialog.reset();
+                newSubscriptionDialog.open();
+              } else {
+                console.warn("Invalid connection state");
               }
             }
+          }
 
-            Button {
-              id: unsubscribeButton;
-              visible: unsubscribeMA.containsMouse;
-              anchors.right: parent.right;
-              anchors.top: parent.top;
-              text: "X";
+          ListView {
+            id: subscriptionsList;
+            Layout.fillHeight: true;
+            spacing: 9;
+            model: root.client.subscriptions;
 
-              background: Rectangle {
-                color: "red";
-                opacity: 1;
-                width: 24;
-                height: 24;
-                radius: 12;
+            delegate: Rectangle {
+              color: "#eaeaea";
+              radius: 4;
+              width: topicLayout.Layout.preferredWidth;
+              height: topicLabel.height + 24;
+
+              MouseArea {
+                id: unsubscribeMA;
+                anchors.fill: parent;
+                hoverEnabled: true;
+                onClicked: {
+                  console.log("clicked, filter topic");
+                }
               }
 
-              onClicked: {
-                // TODO(Shaohua): Check connection state.
-                root.client.requestUnsubscribe(model.topic);
-              }
-            }
+              Button {
+                id: unsubscribeButton;
+                visible: unsubscribeMA.containsMouse;
+                anchors.right: parent.right;
+                anchors.top: parent.top;
+                text: "X";
 
-            RowLayout {
-              anchors.fill: parent;
-              anchors.leftMargin: 8;
-              anchors.rightMargin: 8;
-              spacing: 8;
+                background: Rectangle {
+                  color: "red";
+                  opacity: 1;
+                  width: 24;
+                  height: 24;
+                  radius: 12;
+                }
 
-              Rectangle {
-                width: 16;
-                height: 16;
-                radius: 4;
-                color: model.color;
-              }
-
-              Text {
-                id: topicLabel;
-                text: model.topic;
+                onClicked: {
+                  // TODO(Shaohua): Check connection state.
+                  root.client.requestUnsubscribe(model.topic);
+                }
               }
 
-              Text {
-                Layout.alignment: Qt.AlignRight;
-                horizontalAlignment: Text.AlignRight;
-                color: "#313131";
-                text: "QoS " + model.qos;
+              RowLayout {
+                anchors.fill: parent;
+                anchors.leftMargin: 8;
+                anchors.rightMargin: 8;
+                spacing: 8;
+
+                Rectangle {
+                  width: 16;
+                  height: 16;
+                  radius: 4;
+                  color: model.color;
+                }
+
+                Text {
+                  id: topicLabel;
+                  text: model.topic;
+                }
+
+                Text {
+                  Layout.alignment: Qt.AlignRight;
+                  horizontalAlignment: Text.AlignRight;
+                  color: "#313131";
+                  text: "QoS " + model.qos;
+                }
               }
             }
           }
@@ -179,9 +191,10 @@ Item {
 
         ListView {
           id: messageStreamList;
+          spacing: 12;
+          clip: true;
           Layout.fillWidth: true;
           Layout.fillHeight: true;
-          spacing: 12;
           model: root.client.messages;
 
           onCountChanged: {
