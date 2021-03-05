@@ -24,7 +24,7 @@ class HeboEnums : public QObject {
   };
   Q_ENUM(ConnectionState);
 
-  enum class QoS : int {
+  enum QoS : int {
     AtMostOnce = 0,
     AtLeastOnce = 1,
     ExactOnce = 2,
