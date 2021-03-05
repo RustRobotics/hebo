@@ -22,12 +22,10 @@ class MainController : public QObject {
   explicit MainController(QObject* parent = nullptr);
   ~MainController() override;
 
-  void showMainWindow();
+  void showMainWindow(QQmlApplicationEngine* engine);
 
  private:
   void installTranslators();
-
-  QQmlApplicationEngine* engine_{};
 
   QThread* updater_thread_;
 

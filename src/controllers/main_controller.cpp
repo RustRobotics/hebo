@@ -16,7 +16,6 @@ namespace hebo {
 
 MainController::MainController(QObject* parent)
     : QObject(parent),
-      engine_(new QQmlApplicationEngine(this)),
       updater_thread_(new QThread()),
       log_manager_(new LogManager(this)),
       update_manager_(new UpdateManager()),
@@ -32,14 +31,14 @@ MainController::~MainController() {
   this->updater_thread_->deleteLater();
 }
 
-void MainController::showMainWindow() {
-  auto* context = this->engine_->rootContext();
+void MainController::showMainWindow(QQmlApplicationEngine* engine) {
+  auto* context = engine->rootContext();
   context->setContextProperty("logManager", this->log_manager_);
   context->setContextProperty("updateManager", this->update_manager_);
   context->setContextProperty("settingsManager", this->settings_manager_);
   context->setContextProperty("connectManager", this->connect_manager_);
 
-  this->engine_->load(kUiMainWindow);
+  engine->load(kUiMainWindow);
 }
 
 void MainController::installTranslators() {
