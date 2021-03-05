@@ -4,6 +4,8 @@ set(SOURCE
     color.h
     file.cpp
     file.h
+    random.cpp
+    random.h
     )
 
 add_library(base-static STATIC
