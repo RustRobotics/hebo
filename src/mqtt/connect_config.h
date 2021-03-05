@@ -11,10 +11,10 @@
 
 namespace hebo {
 
-class HeboEnums : public QObject {
+class MqttEnums : public QObject {
   Q_OBJECT
  public:
-  explicit HeboEnums(QObject* parent = nullptr);
+  explicit MqttEnums(QObject* parent = nullptr);
   enum ConnectionState : int {
     ConnectionDisconnected = 0,
     ConnectionConnecting = 1,
@@ -32,8 +32,8 @@ class HeboEnums : public QObject {
   Q_ENUM(QoS);
 };
 
-using ConnectionState = HeboEnums::ConnectionState;
-using QoS = HeboEnums::QoS;
+using ConnectionState = MqttEnums::ConnectionState;
+using QoS = MqttEnums::QoS;
 
 struct ConnectConfig {
   QString name{};

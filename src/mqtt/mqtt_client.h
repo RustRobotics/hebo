@@ -16,7 +16,7 @@
 
 namespace hebo {
 
-class MqttClient : public HeboEnums {
+class MqttClient : public MqttEnums {
   Q_OBJECT
   Q_PROPERTY(ConnectionState state READ state NOTIFY stateChanged);
   Q_PROPERTY(SubscriptionModel* subscriptions READ subscriptions NOTIFY subscriptionsChanged);

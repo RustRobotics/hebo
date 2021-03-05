@@ -16,7 +16,7 @@ constexpr const char* kPayload = "payload";
 }  // namespace
 
 MessageStreamModel::MessageStreamModel(QObject* parent) : QAbstractListModel(parent) {
-
+  qRegisterMetaType<MqttMessage>("MqttMessage");
 }
 
 int MessageStreamModel::rowCount(const QModelIndex& parent) const {

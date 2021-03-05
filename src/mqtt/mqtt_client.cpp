@@ -7,14 +7,14 @@
 namespace hebo {
 
 MqttClient::MqttClient(QObject* parent)
-    : HeboEnums(parent),
+    : MqttEnums(parent),
       worker_thread_(new QThread(this)),
       subscriptions_(new SubscriptionModel(this)),
       messages_(new MessageStreamModel(this)),
       internal_(new InternalClient()) {
   qRegisterMetaType<ConnectConfig>("ConnectConfig");
   qRegisterMetaType<ConnectionState>("ConnectionState");
-  qRegisterMetaType<HeboEnums::ConnectionState>("HeboEnums::ConnectionState");
+  qRegisterMetaType<QoS>("QoS");
 
   this->internal_->moveToThread(this->worker_thread_);
   this->initSignals();
