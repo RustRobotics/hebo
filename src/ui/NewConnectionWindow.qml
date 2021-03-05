@@ -15,16 +15,16 @@ Item {
   Hebo.PageTitle {
     id: title;
     text: qsTr("New Connection");
-    z: 1;
   }
 
   Button {
     text: "Connect";
-    anchors.top: title.top;
-    anchors.topMargin: 10;
-    anchors.left: title.right;
-    anchors.leftMargin: 24;
-    z: 1;
+    anchors {
+      top: root.top;
+      right: root.right;
+      topMargin: 10;
+      rightMargin: 24;
+    }
 
     onClicked: {
       console.log("on connect button clicked:", nameField.text);
@@ -57,7 +57,9 @@ Item {
     anchors {
       top: title.bottom;
       bottom: root.bottom;
+      topMargin: 4;
     }
+    clip: true;
     width: root.width;
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff;
 
