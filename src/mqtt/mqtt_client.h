@@ -18,7 +18,7 @@ namespace hebo {
 
 class MqttClient : public QObject {
   Q_OBJECT
-  Q_PROPERTY(HeboEnums::ConnectionState state READ state NOTIFY stateChanged);
+  Q_PROPERTY(ConnectionState state READ state NOTIFY stateChanged);
   Q_PROPERTY(SubscriptionModel* subscriptions READ subscriptions NOTIFY subscriptionsChanged);
   Q_PROPERTY(MessageStreamModel* messages READ messages NOTIFY messagesChanged);
 
@@ -28,7 +28,7 @@ class MqttClient : public QObject {
 
   void setConfig(const ConnectConfig& config) { this->config_ = config; }
 
-  [[nodiscard]] HeboEnums::ConnectionState state() const { return this->state_; }
+  [[nodiscard]] ConnectionState state() const { return this->state_; }
 
   [[nodiscard]] SubscriptionModel* subscriptions() const { return this->subscriptions_; }
 

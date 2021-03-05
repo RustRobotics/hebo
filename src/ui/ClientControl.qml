@@ -45,7 +45,10 @@ Item {
         onClicked: {
           console.log("Do connect client");
           console.log("client state:", root.client.state);
-          root.client.requestConnect();
+          console.log("Connected state:", HeboEnums.ConnectionConnected);
+          console.log("Connected state:", HeboEnums.ConnectionState);
+          console.log("int of client state:", parseInt(root.client.state));
+          //root.client.requestConnect();
         }
       }
 
@@ -279,7 +282,11 @@ Item {
   }
 
   Component.onCompleted: {
+    console.log("mqttClient:", MqttClient);
     this.client = connectManager.client(this.name);
+    console.log("state:", this.client.state, typeof(this.client.state));
+    console.log("dump object:", JSON.stringify(this.client.state));
+    console.log("type of state:", HeboEnums.ConnectionConnected, typeof(HeboEnums.ConnectionConnected));
   }
 
   component IconButton: Button {

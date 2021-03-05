@@ -40,9 +40,9 @@ class ConnectManager : public QAbstractListModel {
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
-  Q_INVOKABLE MqttClient* client(const QString& name);
-
   Q_INVOKABLE QVariantMap row(int index);
+
+  Q_INVOKABLE hebo::MqttClient* client(const QString& name);
 
  public slots:
   // Connections management

@@ -39,8 +39,7 @@ void registerComponents() {
   constexpr const char* kComponentUri = "org.biofan.hebo";
   constexpr int kVersionMajor = 1;
   constexpr int kVersionMinor = 0;
-  qmlRegisterInterface<MqttClient>("MqttClient");
-//  qmlRegisterInterface<MqttClient>(kComponentUri, kVersionMajor);
+  qmlRegisterInterface<MqttClient>(kComponentUri, kVersionMajor);
   qmlRegisterUncreatableType<MqttClient>(kComponentUri, kVersionMajor, kVersionMinor,
                                          "MqttClient",
                                          "Cannot create a MqttClient instance");

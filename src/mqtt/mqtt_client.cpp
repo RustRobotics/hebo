@@ -13,6 +13,8 @@ MqttClient::MqttClient(QObject* parent)
       messages_(new MessageStreamModel(this)),
       internal_(new InternalClient()) {
   qRegisterMetaType<ConnectConfig>("ConnectConfig");
+  qRegisterMetaType<ConnectionState>("ConnectionState");
+  qRegisterMetaType<HeboEnums::ConnectionState>("HeboEnums::ConnectionState");
 
   this->internal_->moveToThread(this->worker_thread_);
   this->initSignals();
