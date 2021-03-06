@@ -237,6 +237,31 @@ Item {
           }
         }
 
+        RowLayout {
+          Hebo.FormLabel {
+            text: "Payload:";
+          }
+
+          ComboBox{
+            id: payloadTypeField;
+            model: ["JSON", "Plaintext", "Base64", "Hex"];
+          }
+
+          Hebo.FormLabel {
+            text: "QoS:";
+          }
+
+          ComboBox {
+            id: qosTypeField;
+            model: [0, 1, 2];
+          }
+
+          CheckBox {
+            id: retainButtonField;
+            text: "Retain";
+          }
+        }
+
         TextField {
           id: topicField;
           Layout.fillWidth: true;
@@ -266,7 +291,7 @@ Item {
             ToolTip.text: qsTr("Send");
             onClicked: {
               if (root.client.state === MqttClient.ConnectionConnected) {
-                root.client.requestPublish(topicField.text, MqttClient.AtMostOnce, payloadField.text);
+                root.client.requestPublish(topicField.text, qosTypeField.currentIndex, payloadField.text);
               } else {
                 console.warn("Invalid mqtt connection state:", root.client.state);
               }
