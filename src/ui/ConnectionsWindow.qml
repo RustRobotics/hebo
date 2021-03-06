@@ -29,8 +29,8 @@ Item {
     keyNavigationEnabled: true;
 
     onCurrentIndexChanged: {
-      const config = connectManager.row(this.currentIndex);
-      stackView.switchClient(config.name);
+      const configId = connectManager.configId(this.currentIndex);
+      stackView.switchClient(configId);
     }
 
     delegate: Item {
@@ -85,15 +85,15 @@ Item {
       bottom: root.bottom;
     }
 
-    function switchClient(name) {
+    function switchClient(configId) {
       for (let index = 0; index < this.children.length; ++index) {
-        if (this.children[index].name === name) {
+        if (this.children[index].id === configId) {
           this.currentIndex = index;
           return;
         }
       }
 
-      const newItem = clientControl.createObject(null, {name: name});
+      const newItem = clientControl.createObject(null, {configId: configId});
       this.children.push(newItem);
       this.currentIndex = this.count - 1;
     }

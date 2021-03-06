@@ -90,8 +90,8 @@ QVariant ConnectManager::data(const QModelIndex& index, int role) const {
       return info.description;
     }
     case kConnectionStateRole: {
-      if (this->clients_.contains(info.name)) {
-        auto* client = this->clients_.value(info.name);
+      if (this->clients_.contains(info.id)) {
+        auto* client = this->clients_.value(info.id);
         Q_ASSERT(client != nullptr);
         qDebug() << "client state:" << client->state();
         return client->state();
@@ -164,49 +164,49 @@ void ConnectManager::loadConnInfo() {
   }
 }
 
-QVariantMap ConnectManager::row(int index) {
+QString ConnectManager::configId(int index) const {
   Q_ASSERT(index >= 0 && index < this->configs_.length());
-  return dumpConnectConfig(this->configs_.at(index)).toVariantMap();
+  return this->configs_.at(index).id;
 }
 
-QVariantMap ConnectManager::rowByName(const QString& name) {
+QVariantMap ConnectManager::config(const QString& config_id) const {
   for (const auto& config : this->configs_) {
-    if (config.name == name) {
+    if (config.id == config_id) {
       return dumpConnectConfig(config).toVariantMap();
     }
   }
-  qWarning() << "Failed to find config with name:" << name;
+  qWarning() << "Failed to find config with id:" << config_id;
   return {};
 }
 
-MqttClient* ConnectManager::client(const QString& name) {
-  if (this->clients_.contains(name)) {
-    auto* client = this->clients_.value(name);
+MqttClient* ConnectManager::client(const QString& config_id) {
+  if (this->clients_.contains(config_id)) {
+    auto* client = this->clients_.value(config_id);
     Q_ASSERT(client != nullptr);
     return client;
   }
 
   for (const auto& config : this->configs_) {
-    if (config.name == name) {
+    if (config.name == config_id) {
       auto* new_client = new MqttClient(this);
       connect(new_client, &MqttClient::stateChanged, [=]() {
         for (int index = 0; index < this->configs_.length(); ++index) {
-          if (this->configs_.at(index).name == name) {
+          if (this->configs_.at(index).name == config_id) {
             emit this->dataChanged(this->index(index), this->index(index));
             return;
           }
         }
-        qWarning() << "Failed to find config with name:" << name;
+        qWarning() << "Failed to find config with name:" << config_id;
       });
 
       new_client->setConfig(config);
-      this->clients_.insert(name, new_client);
+      this->clients_.insert(config_id, new_client);
       qDebug() << "Create new client:" << new_client;
       return new_client;
     }
   }
 
-  qWarning() << "Invalid connection name:" << name;
+  qWarning() << "Invalid connection name:" << config_id;
   return nullptr;
 }
 

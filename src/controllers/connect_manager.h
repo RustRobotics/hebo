@@ -40,11 +40,11 @@ class ConnectManager : public QAbstractListModel {
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
-  Q_INVOKABLE QVariantMap row(int index);
+  Q_INVOKABLE [[nodiscard]] QString configId(int index) const;
 
-  Q_INVOKABLE QVariantMap rowByName(const QString& name);
+  Q_INVOKABLE [[nodiscard]] QVariantMap config(const QString& config_id) const;
 
-  Q_INVOKABLE hebo::MqttClient* client(const QString& name);
+  Q_INVOKABLE hebo::MqttClient* client(const QString& config_id);
 
   Q_INVOKABLE [[nodiscard]] QString newClientId() const;
 
@@ -67,6 +67,8 @@ class ConnectManager : public QAbstractListModel {
 
   QString conn_file_;
   QVector<ConnectConfig> configs_{};
+
+  // ConfigId -> Client*
   QMap<QString, MqttClient*> clients_{};
 };
 

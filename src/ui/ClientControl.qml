@@ -11,7 +11,7 @@ import "items" as Hebo
 
 Item {
   id: root;
-  property string name;
+  property string configId;
 
   property MqttClient client;
 
@@ -28,7 +28,7 @@ Item {
       spacing: 12;
 
       Text {
-        text: root.name;
+        text: root.configId;
         font.pixelSize: 16;
         color: "#4d4d4d";
       }
@@ -62,7 +62,7 @@ Item {
         textColor: "gray";
         ToolTip.text: qsTr("Edit");
         onClicked: {
-          const config = connectManager.rowByName(root.name);
+          const config = connectManager.config(root.configId);
           if (!!config) {
             editConnectionDialog.connectionName = config.name;
             editConnectionDialog.clientId = config.clientId;
@@ -333,7 +333,7 @@ Item {
   }
 
   Component.onCompleted: {
-    this.client = connectManager.client(this.name);
+    this.client = connectManager.client(this.configId);
   }
 
   component IconButton: Button {
