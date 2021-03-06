@@ -96,13 +96,13 @@ void MqttClient::requestUnsubscribe(const QString& topic) {
   }
 }
 
-void MqttClient::requestPublish(const QString& topic, int qos, const QByteArray& payload) {
+void MqttClient::requestPublish(const QString& topic, const QByteArray& payload, QoS qos, bool retain) {
   Q_ASSERT(this->state_ == ConnectionState::ConnectionConnected);
   if (this->state_ != ConnectionState::ConnectionConnected) {
     qWarning() << "Invalid state:" << this->state_;
     return;
   }
-  emit this->internal_->requestPublish(topic, static_cast<QoS>(qos), payload);
+  emit this->internal_->requestPublish(topic, payload, qos, retain);
   MqttMessage message{};
   message.topic = topic;
   message.qos = static_cast<QoS>(qos);

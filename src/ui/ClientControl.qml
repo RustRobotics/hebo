@@ -291,7 +291,11 @@ Item {
             ToolTip.text: qsTr("Send");
             onClicked: {
               if (root.client.state === MqttClient.ConnectionConnected) {
-                root.client.requestPublish(topicField.text, qosTypeField.currentIndex, payloadField.text);
+                root.client.requestPublish(topicField.text,
+                  payloadField.text,
+                  qosTypeField.currentIndex,
+                  retainButtonField.checkState === Qt.Checked
+                );
               } else {
                 console.warn("Invalid mqtt connection state:", root.client.state);
               }

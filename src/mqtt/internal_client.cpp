@@ -110,11 +110,12 @@ void InternalClient::doUnsubscribe(const QString& topic) {
   this->p_->client->async_unsubscribe(topic_str);
 }
 
-void InternalClient::doPublish(const QString& topic, QoS qos, const QByteArray& payload) {
+void InternalClient::doPublish(const QString& topic, const QByteArray& payload, QoS qos, bool retain) {
   const auto topic_str = topic.toStdString();
   this->p_->client->async_publish(MQTT_NS::allocate_buffer(topic_str),
                                   MQTT_NS::allocate_buffer(payload.constData()),
                                   static_cast<MQTT_NS::qos>(qos),
+                                  retain,
                                   [](MQTT_NS::error_code ec) {
         qWarning() << "ec;" << ec.message().data();
       });

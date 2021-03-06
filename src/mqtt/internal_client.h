@@ -25,7 +25,7 @@ class InternalClient : public QObject {
   void requestDisconnect();
   void requestSubscribe(const QString& topic, QoS qos);
   void requestUnsubscribe(const QString& topic);
-  void requestPublish(const QString& topic, QoS qos, const QByteArray& payload);
+  void requestPublish(const QString& topic, const QByteArray& payload, QoS qos, bool retain);
 
   void stateChanged(ConnectionState state);
 
@@ -39,7 +39,7 @@ class InternalClient : public QObject {
   void doDisconnect();
   void doSubscribe(const QString& topic, QoS qos);
   void doUnsubscribe(const QString& topic);
-  void doPublish(const QString& topic, QoS qos, const QByteArray& payload);
+  void doPublish(const QString& topic, const QByteArray& payload, QoS qos, bool retain);
 
  private:
   void initSignals();

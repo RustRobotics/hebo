@@ -39,9 +39,10 @@ class MqttClient : public MqttEnums {
   void requestDisconnect();
   void requestSubscribe(const QString& topic, int qos, const QString& color);
   void requestUnsubscribe(const QString& topic);
-  void requestPublish(const QString& topic, int qos, const QByteArray& payload);
+  void requestPublish(const QString& topic, const QByteArray& payload, QoS qos, bool retain);
 
  signals:
+  // TODO(Shaohua): Remove response signals.
   void disconnectResult(bool ok, const QString& error);
   void subscribeResult(const QString& topic, bool ok, const QString& error);
   void unsubscribeResult(const QString& topic, bool ok, const QString& error);
