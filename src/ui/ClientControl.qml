@@ -63,6 +63,7 @@ Item {
         ToolTip.text: qsTr("Edit");
         onClicked: {
           console.log("Edit connection");
+          editConnectionDialog.open();
         }
       }
 
@@ -311,6 +312,14 @@ Item {
 
     onAccepted: {
       root.client.requestSubscribe(this.topic, this.qos, this.color);
+    }
+  }
+
+  Hebo.EditConnectionDialog {
+    id: editConnectionDialog;
+
+    onAccepted: {
+      console.log("TODO: Update connection info");
     }
   }
 
