@@ -42,9 +42,11 @@ class ConnectManager : public QAbstractListModel {
 
   Q_INVOKABLE QVariantMap row(int index);
 
+  Q_INVOKABLE QVariantMap rowByName(const QString& name);
+
   Q_INVOKABLE hebo::MqttClient* client(const QString& name);
 
-  Q_INVOKABLE QString newClientId() const;
+  Q_INVOKABLE [[nodiscard]] QString newClientId() const;
 
  public slots:
   // Connections management

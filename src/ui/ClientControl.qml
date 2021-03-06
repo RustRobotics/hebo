@@ -62,8 +62,17 @@ Item {
         textColor: "gray";
         ToolTip.text: qsTr("Edit");
         onClicked: {
-          console.log("Edit connection");
-          editConnectionDialog.open();
+          const config = connectManager.rowByName(root.name);
+          if (!!config) {
+            editConnectionDialog.connectionName = config.name;
+            editConnectionDialog.clientId = config.clientId;
+            editConnectionDialog.username = config.username;
+            editConnectionDialog.password = config.password;
+            editConnectionDialog.cleanSession = config.cleanSession;
+            editConnectionDialog.open();
+          } else {
+            console.warn("Invalid config:", config, root.name);
+          }
         }
       }
 

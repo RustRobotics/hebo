@@ -169,6 +169,16 @@ QVariantMap ConnectManager::row(int index) {
   return dumpConnectConfig(this->configs_.at(index)).toVariantMap();
 }
 
+QVariantMap ConnectManager::rowByName(const QString& name) {
+  for (const auto& config : this->configs_) {
+    if (config.name == name) {
+      return dumpConnectConfig(config).toVariantMap();
+    }
+  }
+  qWarning() << "Failed to find config with name:" << name;
+  return {};
+}
+
 MqttClient* ConnectManager::client(const QString& name) {
   if (this->clients_.contains(name)) {
     auto* client = this->clients_.value(name);

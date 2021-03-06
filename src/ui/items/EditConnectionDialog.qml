@@ -11,6 +11,13 @@ Dialog {
   title: qsTr("Edit Subscription");
   modal: true;
 
+  property string connectionName;
+  property string clientId;
+  property string username;
+  property string password;
+  property int keepAlive;
+  property bool cleanSession;
+
   GridLayout {
     width: root.width;
     columns: 2;
@@ -24,18 +31,21 @@ Dialog {
 
     FormField {
       id: nameField;
+      text: root.connectionName;
       isValid: text.length > 0;
     }
 
     FormLabel {
       text: qsTr("Client ID");
+      required: true;
     }
 
     Row {
       spacing: 24;
 
-      Hebo.FormField {
+      FormField {
         id: clientIdField;
+        text: root.clientId;
         isValid: this.text.length > 0;
       }
 
@@ -58,6 +68,7 @@ Dialog {
 
     TextField {
       id: usernameField;
+      text: root.username;
     }
 
     FormLabel {
@@ -66,6 +77,7 @@ Dialog {
 
     TextField {
       id: passwordField;
+      text: root.password;
       echoMode: TextInput.Password;
     }
 
@@ -76,18 +88,18 @@ Dialog {
     SpinBox {
       id: keepAliveField;
       from: 10;
-      to: 2 ^ 30;
-      value: 60;
+      to: 1 << 30;
+      value: root.keepAlive;
       editable: true;
     }
 
-    Hebo.FormLabel {
+    FormLabel {
       text: qsTr("Clean Session");
     }
 
-    Hebo.SwitchButtons {
+    SwitchButtons {
       id: cleanSessionButton;
-      checked: true;
+      checked: root.cleanSession;
     }
   }
 
