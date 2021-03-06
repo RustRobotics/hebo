@@ -15,6 +15,8 @@ namespace {
 constexpr const char* kKeyVersion = "version";
 constexpr const int32_t kCurrentVersion = 1;
 constexpr const char* kKeyItems = "items";
+
+constexpr const char* kKeyId = "id";
 constexpr const char* kKeyName = "name";
 constexpr const char* kKeyClientId = "clientId";
 constexpr const char* kKeyProtocol = "protocol";
@@ -23,17 +25,25 @@ constexpr const char* kKeyPort = "port";
 constexpr const char* kKeyUsername = "username";
 constexpr const char* kKeyPassword = "password";
 constexpr const char* kKeyTls = "tls";
-
 constexpr const char* kKeyQoS = "qos";
-constexpr const char* kKeyCleanSession = "cleanSession";
 
-constexpr const char* kKeyState = "state";
+constexpr const char* kKeyTimeout = "timeout";
+constexpr const char* kKeyKeepAlive = "keepAlive";
+constexpr const char* kKeyCleanSession = "cleanSession";
+constexpr const char* kKeyAutoReconnect = "autoReconnect";
+
+constexpr const char* kKeyLastWillTopic = "lastWillTopic";
+constexpr const char* kKeyLastWillQoS = "lastWillQoS";
+constexpr const char* kKeyLastWillRetain = "lastWillRetain";
+constexpr const char* kKeyLastWillPayload = "lastWillPayload";
+
 constexpr const char* kKeyDescription = "description";
 
 bool parseItems(const QJsonArray& array, ConnectConfigList& list) {
   for (const auto& item : array) {
     const QJsonObject object = item.toObject();
     ConnectConfig info;
+    info.id = object.value(kKeyId).toString();
     info.name = object.value(kKeyName).toString();
     info.client_id = object.value(kKeyClientId).toString();
     info.protocol = object.value(kKeyProtocol).toString();
@@ -43,7 +53,17 @@ bool parseItems(const QJsonArray& array, ConnectConfigList& list) {
     info.username = object.value(kKeyUsername).toString();
     info.password = object.value(kKeyPassword).toString();
     info.with_tls = object.value(kKeyTls).toBool();
+
+    info.timeout = object.value(kKeyTimeout).toInt();
+    info.keep_alive = object.value(kKeyKeepAlive).toInt();
     info.clean_session = object.value(kKeyCleanSession).toBool();
+    info.auto_reconnect = object.value(kKeyAutoReconnect).toBool();
+
+    info.last_will_topic = object.value(kKeyLastWillTopic).toString();
+    info.last_will_qos = static_cast<QoS>(object.value(kKeyLastWillQoS).toInt());
+    info.last_will_retain = object.value(kKeyLastWillRetain).toBool();
+    info.last_will_payload = QByteArray::fromBase64(object.value(kKeyLastWillPayload).toString().toLatin1());
+
     info.description = generateConnDescription(info);
     list.append(info);
   }
@@ -60,6 +80,7 @@ QString generateConnDescription(const ConnectConfig& info) {
 
 QDebug operator<<(QDebug stream, const ConnectConfig& info) {
   stream << "ConnectConfig {"
+         << "\n  id:" << info.id
          << "\n  name:" << info.name
          << "\n  clientId:" << info.client_id
          << "\n  host:" << info.host
@@ -81,7 +102,7 @@ bool parseConnectConfigs(const QString& file, ConnectConfigList& list) {
     return false;
   }
   const QJsonObject root_object = document.object();
-  const int32_t version =  root_object.value(kKeyVersion).toInt();
+  const int32_t version = root_object.value(kKeyVersion).toInt();
 
   if (version == kCurrentVersion) {
     return parseItems(root_object.value(kKeyItems).toArray(), list);
@@ -94,6 +115,7 @@ bool parseConnectConfigs(const QString& file, ConnectConfigList& list) {
 
 QJsonObject dumpConnectConfig(const ConnectConfig& info) {
   QJsonObject object;
+  object.insert(kKeyId, info.id);
   object.insert(kKeyName, info.name);
   object.insert(kKeyClientId, info.client_id);
   object.insert(kKeyProtocol, info.protocol);
@@ -103,7 +125,16 @@ QJsonObject dumpConnectConfig(const ConnectConfig& info) {
   object.insert(kKeyUsername, info.username);
   object.insert(kKeyPassword, info.password);
   object.insert(kKeyTls, info.with_tls);
+
+  object.insert(kKeyTimeout, info.timeout);
+  object.insert(kKeyKeepAlive, info.keep_alive);
   object.insert(kKeyCleanSession, info.clean_session);
+  object.insert(kKeyAutoReconnect, info.auto_reconnect);
+
+  object.insert(kKeyLastWillTopic, info.last_will_topic);
+  object.insert(kKeyLastWillQoS, info.last_will_qos);
+  object.insert(kKeyLastWillRetain, info.last_will_retain);
+  object.insert(kKeyLastWillPayload, QString(info.last_will_payload.toBase64()));
 
   object.insert(kKeyDescription, info.description);
   return object;

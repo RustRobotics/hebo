@@ -36,6 +36,7 @@ using ConnectionState = MqttEnums::ConnectionState;
 using QoS = MqttEnums::QoS;
 
 struct ConnectConfig {
+  QString id{};
   QString name{};
   QString client_id{};
   QString protocol{};
@@ -45,7 +46,18 @@ struct ConnectConfig {
   QString username{};
   QString password{};
   bool with_tls{false};
+
+  // Advanced
+  int timeout{10};
+  int keep_alive{60};
   bool clean_session{true};
+  bool auto_reconnect{false};
+
+  // Last Will
+  QString last_will_topic{};
+  QoS last_will_qos{QoS::AtMostOnce};
+  bool last_will_retain{};
+  QByteArray last_will_payload{};
 
   QString description{};
 };
