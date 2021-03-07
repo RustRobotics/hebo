@@ -234,6 +234,7 @@ void ConnectManager::deleteRow(const QString& config_id) {
       this->beginRemoveRows(QModelIndex(), index, index);
       this->configs_.removeAt(index);
       this->endRemoveRows();
+      this->saveConnInfo();
       break;
     }
   }
