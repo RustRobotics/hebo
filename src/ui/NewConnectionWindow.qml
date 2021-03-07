@@ -49,7 +49,7 @@ Item {
       }
 
       // TODO(Shaohua): Check conn name is unique
-      connectManager.addConnection(
+      const connectId = connectManager.addConnection(
         nameField.text,
         clientIdField.text,
         hostProtocol.currentText,
@@ -58,12 +58,12 @@ Item {
         qosField.qos,
         cleanSessionButton.checked
       );
-      const client = connectManager.client(nameField.text);
+      const client = connectManager.client(connectId);
       if (!!client) {
         client.requestConnect();
         root.connectClicked();
       } else {
-        console.error("Failed to get client with name:", nameField.text);
+        console.error("Failed to get client with name:", connectId);
       }
     }
   }
