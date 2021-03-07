@@ -20,7 +20,7 @@ QString randomClientId() {
 
 QString generateConfigId() {
   QUuid uuid = QUuid::createUuid();
-  return uuid.toString();
+  return uuid.toString(QUuid::WithoutBraces);
 }
 
 }  // namespace hebo

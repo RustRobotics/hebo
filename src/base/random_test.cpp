@@ -12,7 +12,7 @@ namespace hebo {
 
 TEST(RandomTest, TestGenerateConfigId) {
   const QString config_id = generateConfigId();
-  ASSERT_EQ(config_id.length(), 38);
+  ASSERT_EQ(config_id.length(), 36);
 
   QSet<QString> set{};
   for (int i = 0; i < 100; ++i) {
