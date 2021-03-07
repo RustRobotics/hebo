@@ -13,6 +13,7 @@
 namespace hebo {
 namespace {
 
+constexpr const char* kId = "id";
 constexpr const char* kName = "name";
 constexpr const char* kClientId = "clientId";
 constexpr const char* kProtocol = "protocol";
@@ -57,6 +58,9 @@ QVariant ConnectManager::data(const QModelIndex& index, int role) const {
 
   const ConnectConfig& info = this->configs_.at(index.row());
   switch (role) {
+    case kIdRole: {
+      return info.id;
+    }
     case kNameRole: {
       return info.name;
     }
@@ -110,6 +114,7 @@ QVariant ConnectManager::data(const QModelIndex& index, int role) const {
 QHash<int, QByteArray> ConnectManager::roleNames() const {
   // Map role index to qml property name.
   return {
+      {kIdRole, kId},
       {kNameRole, kName},
       {kClientIdRole, kClientId},
       {kProtocolRole, kProtocol},
@@ -218,6 +223,7 @@ QString ConnectManager::newClientId() const {
 }
 
 void ConnectManager::deleteRow(const QString& config_id) {
+  Q_ASSERT(!config_id.isEmpty());
   if (this->clients_.contains(config_id)) {
     auto* client = this->clients_.take(config_id);
     client->deleteLater();
@@ -225,7 +231,9 @@ void ConnectManager::deleteRow(const QString& config_id) {
 
   for (int index = 0; index < this->configs_.length(); ++index) {
     if (this->configs_.at(index).id == config_id) {
-      emit this->dataChanged(this->index(index), this->index(index));
+      this->beginRemoveRows(QModelIndex(), index, index);
+      this->configs_.removeAt(index);
+      this->endRemoveRows();
       break;
     }
   }
