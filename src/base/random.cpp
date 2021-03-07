@@ -19,7 +19,7 @@ QString randomClientId() {
 }
 
 QString generateConfigId() {
-  QUuid uuid = QUuid::createUuidV5(QUuid("org.biofan"), QString("hebo"));
+  QUuid uuid = QUuid::createUuid();
   return uuid.toString();
 }
 
