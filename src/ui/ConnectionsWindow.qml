@@ -39,8 +39,32 @@ Item {
 
       MouseArea {
         anchors.fill: parent;
+        acceptedButtons: Qt.LeftButton | Qt.RightButton;
         onClicked: {
-          connectionList.currentIndex = index;
+          if (mouse.button === Qt.LeftButton) {
+            connectionList.currentIndex = index;
+          } else if (mouse.button === Qt.RightButton) {
+            console.log("TODO: Show popup menu");
+            connectionContextMenu.popup();
+          }
+        }
+      }
+
+      Menu {
+        id: connectionContextMenu;
+
+        MenuItem {
+          text: qsTr("Edit");
+          onTriggered: {
+            console.log("TODO: edit connection config");
+          }
+        }
+
+        MenuItem {
+          text: qsTr("Delete");
+          onTriggered: {
+            connectManager.deleteRow(model.id);
+          }
         }
       }
 
