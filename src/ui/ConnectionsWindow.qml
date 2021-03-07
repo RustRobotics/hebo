@@ -29,8 +29,10 @@ Item {
     keyNavigationEnabled: true;
 
     onCurrentIndexChanged: {
-      const connectId = connectManager.configId(this.currentIndex);
-      stackView.switchClient(connectId);
+      if (this.currentIndex >= 0) {
+        const connectId = connectManager.configId(this.currentIndex);
+        stackView.switchClient(connectId);
+      }
     }
 
     delegate: Item {
@@ -64,6 +66,7 @@ Item {
           text: qsTr("Delete");
           onTriggered: {
             connectManager.deleteRow(model.id);
+            stackView.deleteClient(model.id);
           }
         }
       }
@@ -107,6 +110,10 @@ Item {
       right: root.right;
       top: title.top;
       bottom: root.bottom;
+    }
+
+    function deleteClient(connectId) {
+      this.children = Array.from(this.children).filter(r => r.id !== connectId);
     }
 
     function switchClient(connectId) {
