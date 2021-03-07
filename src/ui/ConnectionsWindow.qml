@@ -29,7 +29,7 @@ Item {
     keyNavigationEnabled: true;
 
     onCurrentIndexChanged: {
-      const connectId = connectManager.connectId(this.currentIndex);
+      const connectId = connectManager.configId(this.currentIndex);
       stackView.switchClient(connectId);
     }
 

@@ -28,7 +28,7 @@ Item {
       spacing: 12;
 
       Text {
-        text: root.connectId;
+        text: connectManager.config(root.connectId).name;
         font.pixelSize: 16;
         color: "#4d4d4d";
       }
