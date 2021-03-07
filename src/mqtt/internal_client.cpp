@@ -29,6 +29,7 @@ InternalClient::InternalClient(QObject* parent)
 }
 
 InternalClient::~InternalClient() {
+  this->doDisconnect();
   delete this->p_;
 }
 
@@ -95,22 +96,34 @@ void InternalClient::doConnect(const ConnectConfig& config) {
 }
 
 void InternalClient::doDisconnect() {
+  if (this->p_->client == nullptr) {
+    return;
+  }
   this->p_->client->async_disconnect([=](MQTT_NS::error_code ec) {
     qDebug() << "async_disconnect() returns:" << ec.message().data();
   });
 }
 
 void InternalClient::doSubscribe(const QString& topic, QoS qos) {
+  if (this->p_->client == nullptr) {
+    return;
+  }
   const std::string topic_str = topic.toStdString();
   this->p_->client->async_subscribe(topic_str, static_cast<MQTT_NS::qos>(qos));
 }
 
 void InternalClient::doUnsubscribe(const QString& topic) {
+  if (this->p_->client == nullptr) {
+    return;
+  }
   const std::string topic_str = topic.toStdString();
   this->p_->client->async_unsubscribe(topic_str);
 }
 
 void InternalClient::doPublish(const QString& topic, const QByteArray& payload, QoS qos, bool retain) {
+  if (this->p_->client == nullptr) {
+    return;
+  }
   const auto topic_str = topic.toStdString();
   this->p_->client->async_publish(MQTT_NS::allocate_buffer(topic_str),
                                   MQTT_NS::allocate_buffer(payload.constData()),

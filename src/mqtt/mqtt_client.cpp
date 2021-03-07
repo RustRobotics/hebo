@@ -22,6 +22,7 @@ MqttClient::MqttClient(QObject* parent)
 }
 
 MqttClient::~MqttClient() {
+  this->internal_->requestDisconnect();
   this->worker_thread_->quit();
   this->worker_thread_->wait();
 }

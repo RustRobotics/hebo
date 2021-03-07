@@ -50,7 +50,6 @@ class ConnectManager : public QAbstractListModel {
   Q_INVOKABLE [[nodiscard]] QString newClientId() const;
 
  public slots:
-
   // Connections management
   // Protocol V3.1.1
   QString addConnection(const QString& name,
@@ -60,6 +59,8 @@ class ConnectManager : public QAbstractListModel {
                         int port,
                         QoS qos,
                         bool clean_session);
+
+ void deleteRow(const QString& config_id);
 
  private:
   void loadConnInfo();

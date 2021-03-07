@@ -217,4 +217,18 @@ QString ConnectManager::newClientId() const {
   return "hebo_" + randomClientId();
 }
 
+void ConnectManager::deleteRow(const QString& config_id) {
+  if (this->clients_.contains(config_id)) {
+    auto* client = this->clients_.take(config_id);
+    client->deleteLater();
+  }
+
+  for (int index = 0; index < this->configs_.length(); ++index) {
+    if (this->configs_.at(index).id == config_id) {
+      emit this->dataChanged(this->index(index), this->index(index));
+      break;
+    }
+  }
+}
+
 }  // namespace hebo
