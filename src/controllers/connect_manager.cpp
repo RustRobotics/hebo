@@ -39,6 +39,8 @@ QString getJsonFile() {
 ConnectManager::ConnectManager(QObject* parent)
     : QAbstractListModel(parent),
       conn_file_(getJsonFile()) {
+  qRegisterMetaType<QoS>("QoS");
+
   // Load connections on startup.
   this->loadConnInfo();
 }
@@ -187,11 +189,11 @@ MqttClient* ConnectManager::client(const QString& config_id) {
   }
 
   for (const auto& config : this->configs_) {
-    if (config.name == config_id) {
+    if (config.id == config_id) {
       auto* new_client = new MqttClient(this);
       connect(new_client, &MqttClient::stateChanged, [=]() {
         for (int index = 0; index < this->configs_.length(); ++index) {
-          if (this->configs_.at(index).name == config_id) {
+          if (this->configs_.at(index).id == config_id) {
             emit this->dataChanged(this->index(index), this->index(index));
             return;
           }
@@ -206,7 +208,7 @@ MqttClient* ConnectManager::client(const QString& config_id) {
     }
   }
 
-  qWarning() << "Invalid connection name:" << config_id;
+  qWarning() << "Invalid connection config id:" << config_id;
   return nullptr;
 }
 

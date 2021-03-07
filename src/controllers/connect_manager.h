@@ -59,8 +59,6 @@ class ConnectManager : public QAbstractListModel {
                      QoS qos,
                      bool clean_session);
 
- signals:
-
  private:
   void loadConnInfo();
   void saveConnInfo();

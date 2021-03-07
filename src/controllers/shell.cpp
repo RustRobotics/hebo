@@ -47,8 +47,8 @@ void registerComponents() {
 //                                        "HeboEnums",
 //                                        "Cannot create a HeboEnums instance");
   qmlRegisterUncreatableType<ConnectManager>(kComponentUri, kVersionMajor, kVersionMinor,
-                                         "ConnectManager",
-                                         "Cannot create a ConnectManager instance");
+                                             "ConnectManager",
+                                             "Cannot create a ConnectManager instance");
 }
 
 }  // namespace hebo
