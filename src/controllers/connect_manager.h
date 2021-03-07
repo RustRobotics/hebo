@@ -13,7 +13,7 @@
 namespace hebo {
 
 class ConnectManager : public QAbstractListModel {
-  Q_OBJECT
+ Q_OBJECT
 
  public:
   enum ConnectionRole : int32_t {
@@ -30,9 +30,10 @@ class ConnectManager : public QAbstractListModel {
     kDescriptionRole,
     kConnectionStateRole,
   };
+
   Q_ENUM(ConnectionRole);
 
-  explicit ConnectManager(QObject* parent=nullptr);
+  explicit ConnectManager(QObject* parent = nullptr);
 
   [[nodiscard]] int rowCount(const QModelIndex& parent) const override;
 
@@ -49,18 +50,20 @@ class ConnectManager : public QAbstractListModel {
   Q_INVOKABLE [[nodiscard]] QString newClientId() const;
 
  public slots:
+
   // Connections management
   // Protocol V3.1.1
-  void addConnection(const QString& name,
-                     const QString& client_id,
-                     const QString& protocol,
-                     const QString& host,
-                     int port,
-                     QoS qos,
-                     bool clean_session);
+  QString addConnection(const QString& name,
+                        const QString& client_id,
+                        const QString& protocol,
+                        const QString& host,
+                        int port,
+                        QoS qos,
+                        bool clean_session);
 
  private:
   void loadConnInfo();
+
   void saveConnInfo();
 
   QString conn_file_;

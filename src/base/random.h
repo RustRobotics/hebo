@@ -11,6 +11,8 @@ namespace hebo {
 
 QString randomClientId();
 
+QString generateConfigId();
+
 }  // namespace hebo
 
 #endif  // HEBOUI_SRC_BASE_RANDOM_H_

@@ -45,7 +45,6 @@ ConnectManager::ConnectManager(QObject* parent)
   this->loadConnInfo();
 }
 
-
 int ConnectManager::rowCount(const QModelIndex& parent) const {
   Q_UNUSED(parent);
   return this->configs_.length();
@@ -126,14 +125,15 @@ QHash<int, QByteArray> ConnectManager::roleNames() const {
   };
 }
 
-void ConnectManager::addConnection(const QString& name,
-                                   const QString& client_id,
-                                   const QString& protocol,
-                                   const QString& host,
-                                   int port,
-                                   QoS qos,
-                                   bool clean_session) {
+QString ConnectManager::addConnection(const QString& name,
+                                      const QString& client_id,
+                                      const QString& protocol,
+                                      const QString& host,
+                                      int port,
+                                      QoS qos,
+                                      bool clean_session) {
   ConnectConfig config{};
+  config.id = generateConfigId();
   config.name = name;
   config.client_id = client_id;
   config.protocol = protocol;
@@ -149,8 +149,9 @@ void ConnectManager::addConnection(const QString& name,
 
   // save to local file
   this->saveConnInfo();
-}
 
+  return config.id;
+}
 
 void ConnectManager::saveConnInfo() {
   if (!dumpConnectConfigs(this->conn_file_, this->configs_)) {
