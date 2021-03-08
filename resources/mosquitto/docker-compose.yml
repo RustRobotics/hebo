@@ -1,16 +1,11 @@
 version: "3.0"
 services:
-  mosquitto-ssl-ruo:
-    image: eclipse-mosquitto:latest
+  mosquitto-ruo:
+    image: eclipse-mosquitto:2.0
     restart: always
-    user: 1000:1000
     ports:
-      - 1883:1883
-      - 8083:8083
-      - 8084:8084
-      - 8883:8883
+      - 127.0.0.1:1883:1883
+      - 127.0.0.1:9001:9001
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      - ./certs:/mosquitto/certs:ro
-      - ./data:/mosquitto/data
 
