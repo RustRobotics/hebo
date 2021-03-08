@@ -14,7 +14,9 @@ fn on_connect(client: &mut Client) {
 
     // self.subscribe("hello", QoS::AtMostOnce).await;
     client.subscribe("hello", QoS::AtMostOnce).unwrap();
-    client.publish("hello", QoS::AtMostOnce, b"Hello, world").unwrap();
+    client
+        .publish("hello", QoS::AtMostOnce, b"Hello, world")
+        .unwrap();
 }
 
 fn main() {

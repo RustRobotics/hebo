@@ -176,6 +176,7 @@ impl ToNetPacket for PublishPacket {
 }
 
 impl PublishPacket {
+    // TODO(Shaohua): No need to copy topic and msg
     pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> PublishPacket {
         PublishPacket {
             qos,
