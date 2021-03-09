@@ -10,3 +10,4 @@ sudo docker run --user ${UID}:${GID} --rm --volume ${PWD}/../../:/hebo \
   rust:latest /bin/bash -c 'cd /hebo; cargo build --release --bin hebo'
 
 install -m755 ../../target/release/hebo hebo
+sudo docker build -t hebo:latest .
