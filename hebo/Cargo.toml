@@ -1,0 +1,19 @@
+[package]
+name = "hebo"
+version = "0.1.0"
+authors = ["Xu Shaohua <shaohua@biofan.org>"]
+edition = "2018"
+license = "AGPL-3.0-only"
+description = "Distributed MQTT broker"
+
+[[bin]]
+name = "hebo"
+path = "src/bin/hebo.rs"
+
+[dependencies]
+codec = { path = "codec" }
+
+env_logger = "0.8.2"
+futures = "0.3.12"
+log = "0.4.14"
+tokio = { version = "1.2.0", features = ["full"] }
