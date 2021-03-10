@@ -12,23 +12,25 @@ use codec::publish_packet::PublishPacket;
 use codec::subscribe_packet::{SubscribePacket, SubscribeTopic};
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
+use crate::config::Config;
 use crate::connection_context::ConnectionContext;
 
 #[derive(Debug)]
 pub struct ServerContext {
+    config: Config,
+
     pipelines: Vec<Pipeline>,
-    address: String,
     connection_rx: Receiver<ConnectionCommand>,
     connection_tx: Sender<ConnectionCommand>,
     current_connection_id: ConnectionId,
 }
 
 impl ServerContext {
-    pub fn new(address: &str) -> ServerContext {
+    pub fn new(config: Config) -> ServerContext {
         let (connection_tx, connection_rx) = mpsc::channel(10);
         ServerContext {
+            config,
             pipelines: Vec::new(),
-            address: address.to_string(),
             connection_rx,
             connection_tx,
             current_connection_id: 0,
@@ -36,7 +38,7 @@ impl ServerContext {
     }
 
     pub async fn run_loop(&mut self) -> io::Result<()> {
-        let listener = TcpListener::bind(&self.address).await?;
+        let listener = TcpListener::bind(&self.config.connections.mqtt).await?;
         loop {
             tokio::select! {
                 Ok((socket, address)) = listener.accept() => {
