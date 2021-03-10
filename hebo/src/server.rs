@@ -15,9 +15,10 @@ pub async fn run_server() -> io::Result<()> {
         .author("Xu Shaohua <shaohua@biofan.org>")
         .about("Distributed MQTT Broker")
         .arg(
-            Arg::with_name("config_file")
+            Arg::with_name("config")
                 .short("c")
                 .long("config")
+                .value_name("config_file")
                 .takes_value(true)
                 .help("Specify config file path"),
         )
@@ -30,15 +31,15 @@ pub async fn run_server() -> io::Result<()> {
         )
         .get_matches();
 
-    if matches.value_of("test").is_some() {
-        let config_file = matches.value_of("config_file").unwrap_or(DEFAULT_CONFIG);
-        log::info!("Reading config file: {}", config_file);
+    if matches.is_present("test") {
+        let config_file = matches.value_of("config").unwrap_or(DEFAULT_CONFIG);
         let config_content = std::fs::read_to_string(config_file)?;
         let _config: Config = toml::from_str(&config_content).unwrap();
+        println!("The configuration file {} syntax is Ok", config_file);
         return Ok(());
     }
 
-    let config_file = matches.value_of("config_file").unwrap_or(DEFAULT_CONFIG);
+    let config_file = matches.value_of("config").unwrap_or(DEFAULT_CONFIG);
     let config_content = std::fs::read_to_string(config_file)?;
     let config: Config = toml::from_str(&config_content).unwrap();
 
