@@ -4,16 +4,12 @@
 
 use std::io;
 
-use hebo::config::Config;
-use hebo::server_context::ServerContext;
+use hebo::server;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    let config: Config = toml::from_str("").unwrap();
-    let mut server = ServerContext::new(config);
-    server.run_loop().await?;
-    Ok(())
+    server::run_server().await
 }

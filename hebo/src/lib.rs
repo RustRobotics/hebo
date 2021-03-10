@@ -7,6 +7,7 @@ pub mod config;
 pub mod connection_context;
 pub mod error;
 pub mod router;
+pub mod server;
 pub mod server_context;
 
 pub use error::{Error, Result};
