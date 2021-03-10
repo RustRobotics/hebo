@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 pub mod commands;
+pub mod config;
 pub mod connection_context;
 pub mod error;
 pub mod router;
