@@ -55,7 +55,7 @@ pub struct Security {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Storage {
     pub persistence: bool,
-    pub db_path: String,
+    pub db_path: Option<String>,
     pub auto_save_interval: usize,
     pub auto_save_on_change: bool,
 }

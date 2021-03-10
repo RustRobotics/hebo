@@ -11,6 +11,7 @@ name = "hebo"
 path = "src/bin/hebo.rs"
 
 [dependencies]
+clap = "2.33.3"
 codec = { path = "../codec" }
 
 env_logger = "0.8.2"
