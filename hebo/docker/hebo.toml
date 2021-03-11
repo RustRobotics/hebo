@@ -7,7 +7,7 @@ user = "hebo"
 
 [connections]
 #bind_interface = lo
-mqtt = "localhost:1883"
+mqtt = "127.0.0.1:1883"
 
 max_keepalive = 120
 max_connections = 0

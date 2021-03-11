@@ -38,6 +38,7 @@ impl ServerContext {
     }
 
     pub async fn run_loop(&mut self) -> io::Result<()> {
+        log::info!("Listening at: {}", self.config.connections.mqtt);
         let listener = TcpListener::bind(&self.config.connections.mqtt).await?;
         loop {
             tokio::select! {
