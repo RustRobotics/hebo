@@ -14,6 +14,7 @@ use codec::subscribe_packet::{SubscribePacket, SubscribeTopic};
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::config::Config;
 use crate::connection_context::ConnectionContext;
+use crate::sys_messages::SysMessage;
 
 #[derive(Debug)]
 pub struct ServerContext {
@@ -23,6 +24,7 @@ pub struct ServerContext {
     connection_rx: Receiver<ConnectionCommand>,
     connection_tx: Sender<ConnectionCommand>,
     current_connection_id: ConnectionId,
+    sys_message: SysMessage,
 }
 
 impl ServerContext {
@@ -34,6 +36,7 @@ impl ServerContext {
             connection_rx,
             connection_tx,
             current_connection_id: 0,
+            sys_message: SysMessage::new(),
         }
     }
 

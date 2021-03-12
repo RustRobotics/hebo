@@ -2,12 +2,13 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-pub mod commands;
-pub mod config;
-pub mod connection_context;
-pub mod error;
-pub mod router;
+mod commands;
+mod config;
+mod connection_context;
+mod error;
+mod router;
 pub mod server;
-pub mod server_context;
+mod server_context;
+mod sys_messages;
 
-pub use error::{Error, Result};
+use error::{Error, Result};
