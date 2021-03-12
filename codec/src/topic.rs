@@ -50,7 +50,10 @@ impl Topic {
                         return false;
                     }
                 }
-                _ => {}
+                TopicPart::SingleWildcard => {
+                    // Continue
+                }
+                TopicPart::MultiWildcard => return true,
             }
         }
         return true;
@@ -141,5 +144,8 @@ mod tests {
 
         let t_any = Topic::parse("#").unwrap();
         assert!(t_any.is_match(t_sys.str()));
+
+        let t_dev = Topic::parse("dev/#").unwrap();
+        assert!(t_dev.is_match("dev/cpu/0"));
     }
 }
