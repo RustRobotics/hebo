@@ -12,12 +12,13 @@ use crate::base::{
     PacketType, QoS, RemainingLength, ToNetPacket,
 };
 use crate::error::Error;
+use crate::topic::Topic;
 
 /// Topic/QoS pair.
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SubscribeTopic {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
-    pub topic: String,
+    pub topic: Topic,
 
     /// Maximum level of QoS of packet the Server can send to the Client.
     pub qos: QoS,
@@ -62,7 +63,7 @@ pub struct SubscribeTopic {
 /// Subscription with a new Subscription. The Topic Filter in the new Subscription will
 /// be identical to the previous Subscription, also QoS may be different. Any existing
 /// retained message will be re-sent to the new Subscrption.
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SubscribePacket {
     /// `packet_id` is used by the Server to reply SubscribeAckPacket to the client.
     packet_id: PacketId,
@@ -96,6 +97,12 @@ impl FromNetPacket for SubscribePacket {
             if !is_valid_topic_filter(&topic) {
                 return Err(Error::InvalidTopicFilter);
             }
+
+            let topic = Topic::parse(&topic);
+            if topic.is_err() {
+                return Err(Error::InvalidTopicFilter);
+            }
+            let topic = topic.unwrap();
 
             let qos_flag = buf[*offset];
             *offset += 1;
@@ -148,12 +155,10 @@ impl ToNetPacket for SubscribePacket {
 
 impl SubscribePacket {
     pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> SubscribePacket {
+        let topic = Topic::parse(topic).unwrap();
         SubscribePacket {
             packet_id,
-            topics: vec![SubscribeTopic {
-                topic: topic.to_string(),
-                qos,
-            }],
+            topics: vec![SubscribeTopic { topic, qos }],
         }
     }
 

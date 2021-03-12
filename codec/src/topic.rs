@@ -59,6 +59,14 @@ impl Topic {
     pub fn str(&self) -> &str {
         &self.topic
     }
+
+    pub fn len(&self) -> usize {
+        self.topic.len()
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        self.topic.as_bytes()
+    }
 }
 
 // TODO(Shaohua): Impl internal reference to `topic` String.
