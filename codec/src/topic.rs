@@ -13,6 +13,12 @@ pub enum TopicError {
     DecodeError,
 }
 
+impl PartialEq for Topic {
+    fn eq(&self, other: &Self) -> bool {
+        self.topic.eq(&other.topic)
+    }
+}
+
 impl Topic {
     // TODO(Shaohua): Replace with `std::str::FromStr` trait.
     pub fn parse(s: &str) -> Result<Topic, TopicError> {

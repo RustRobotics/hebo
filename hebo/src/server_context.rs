@@ -9,11 +9,13 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
 use codec::publish_packet::PublishPacket;
-use codec::subscribe_packet::{SubscribePacket, SubscribeTopic};
+use codec::subscribe_packet::{SubscribePacket};
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::config::Config;
 use crate::connection_context::ConnectionContext;
+use codec::base::QoS;
+use codec::topic::Topic;
 
 #[derive(Debug)]
 pub struct ServerContext {
@@ -23,6 +25,12 @@ pub struct ServerContext {
     connection_rx: Receiver<ConnectionCommand>,
     connection_tx: Sender<ConnectionCommand>,
     current_connection_id: ConnectionId,
+}
+
+#[derive(Debug)]
+struct TopicAndQoS {
+    topic: Topic,
+    qos: QoS,
 }
 
 impl ServerContext {
@@ -88,7 +96,16 @@ impl ServerContext {
     fn on_subscribe(&mut self, connection_id: ConnectionId, packet: SubscribePacket) {
         for pipeline in self.pipelines.iter_mut() {
             if pipeline.connection_id == connection_id {
-                pipeline.topics.extend(packet.mut_topics());
+                for sub_topic in packet.topics() {
+                    let topic = Topic::parse(&sub_topic.topic);
+                    if topic.is_err() {
+                        continue;
+                    }
+                    pipeline.topics.push(TopicAndQoS {
+                        topic: topic.unwrap(),
+                        qos: sub_topic.qos,
+                    });
+                }
                 break;
             }
         }
@@ -107,15 +124,14 @@ impl ServerContext {
     }
 }
 
-fn topic_match(topics: &[SubscribeTopic], topic: &str) -> bool {
-    // TODO(Shaohua): Create a topic parsing tree
-    topics.iter().any(|t| t.topic == topic)
+fn topic_match(topics: &[TopicAndQoS], topic: &str) -> bool {
+    topics.iter().any(|t| t.topic.is_match(topic))
 }
 
 #[derive(Debug)]
 pub struct Pipeline {
     server_tx: Sender<ServerCommand>,
-    topics: Vec<SubscribeTopic>,
+    topics: Vec<TopicAndQoS>,
     connection_id: ConnectionId,
 }
 
