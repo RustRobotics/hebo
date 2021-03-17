@@ -7,6 +7,7 @@ pub mod base;
 //pub mod connect_packet;
 //pub mod disconnect_packet;
 pub mod error;
+pub mod header;
 //pub mod ping_request_packet;
 //pub mod ping_response_packet;
 //pub mod publish_ack_packet;
@@ -21,4 +22,5 @@ pub mod error;
 //pub mod unsubscribe_packet;
 pub mod utils;
 
-//pub use error::Error;
+pub use base::{DecodePacket, EncodePacket, PacketId, QoS};
+pub use error::{DecodeError, EncodeError};
