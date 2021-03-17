@@ -4,7 +4,7 @@
 
 use std::convert::TryFrom;
 
-use super::{DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
+use super::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PacketType {
@@ -169,13 +169,12 @@ impl RemainingLength {
 }
 
 impl DecodePacket for RemainingLength {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError> {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let mut byte: u32;
         let mut value: u32 = 0;
         let mut multiplier = 1;
         loop {
-            byte = buf[*offset] as u32;
-            *offset += 1;
+            byte = ba.one_byte()? as u32;
             value += (byte & 127) * multiplier;
             multiplier *= 128;
 
@@ -232,12 +231,11 @@ pub struct FixedHeader {
 }
 
 impl DecodePacket for FixedHeader {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError> {
-        let flag = buf[*offset];
-        *offset += 1;
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let flag = ba.one_byte()?;
 
         let packet_type = PacketType::try_from(flag)?;
-        let remaining_length = RemainingLength::decode(buf, offset)?;
+        let remaining_length = RemainingLength::decode(ba)?;
 
         Ok(FixedHeader {
             packet_type,

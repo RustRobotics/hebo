@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 pub mod base;
+pub mod byte_array;
 //pub mod connect_ack_packet;
 //pub mod connect_packet;
 //pub mod disconnect_packet;
@@ -23,4 +24,5 @@ pub mod header;
 pub mod utils;
 
 pub use base::{DecodePacket, EncodePacket, PacketId, QoS};
+pub use byte_array::ByteArray;
 pub use error::{DecodeError, EncodeError};

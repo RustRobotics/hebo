@@ -40,6 +40,8 @@ pub enum DecodeError {
     /// Invalid UTF-8 string.
     InvalidString,
 
+    OutOfRangeError,
+
     /// Length of data exceeds its limitation
     TooManyData,
 }

@@ -5,7 +5,7 @@
 use std::convert::TryFrom;
 use std::io;
 
-use super::{DecodeError, EncodeError};
+use super::{ByteArray, DecodeError, EncodeError};
 
 /// Packet identifier
 pub type PacketId = u16;
@@ -16,7 +16,7 @@ pub trait EncodePacket {
 }
 
 pub trait DecodePacket: Sized {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError>;
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError>;
 }
 
 #[repr(u8)]
