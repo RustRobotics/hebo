@@ -6,15 +6,14 @@ use std::io;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::base::{
-    FixedHeader, DecodePacket, PacketFlags, PacketId, PacketType, QoS, RemainingLength,
-    EncodePacket,
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    PacketType, QoS, RemainingLength,
 };
-use super::error::Error;
 
 /// Reply to each subscribed topic.
 #[repr(u8)]
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SubscribeAck {
     /// Maximum level of QoS the Server granted for this topic.
     QoS(QoS),
@@ -47,7 +46,7 @@ impl Default for SubscribeAck {
 /// | Ack N ...                 |
 /// +---------------------------+
 /// ```
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SubscribeAckPacket {
     /// `packet_id` field is identical in Subscribe packet.
     packet_id: PacketId,
@@ -75,26 +74,27 @@ impl SubscribeAckPacket {
 }
 
 impl DecodePacket for SubscribeAckPacket {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::decode(buf, offset)?;
-        assert_eq!(fixed_header.packet_type, PacketType::SubscribeAck);
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+        if fixed_header.packet_type != PacketType::SubscribeAck {
+            return Err(DecodeError::InvalidPacketType);
+        }
 
-        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
-        *offset += 2;
+        let packet_id = BigEndian::read_u16(ba.read(2)?) as PacketId;
 
         let mut acknowledgements = Vec::new();
         let mut remaining_length = 2;
 
         while remaining_length < fixed_header.remaining_length.0 {
-            let payload = buf[*offset];
-            *offset += 1;
+            let payload = ba.one_byte()?;
             remaining_length += 1;
             match payload & 0b1000_0011 {
                 0b1000_0000 => acknowledgements.push(SubscribeAck::Failed),
                 0b0000_0010 => acknowledgements.push(SubscribeAck::QoS(QoS::ExactOnce)),
                 0b0000_0001 => acknowledgements.push(SubscribeAck::QoS(QoS::AtLeastOnce)),
                 0b0000_0000 => acknowledgements.push(SubscribeAck::QoS(QoS::AtMostOnce)),
-                _ => return Err(Error::InvalidQoS),
+
+                _ => return Err(DecodeError::InvalidQoS),
             }
         }
 
@@ -106,11 +106,10 @@ impl DecodePacket for SubscribeAckPacket {
 }
 
 impl EncodePacket for SubscribeAckPacket {
-    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
         let fixed_header = FixedHeader {
             packet_type: PacketType::SubscribeAck,
-            packet_flags: PacketFlags::SubscribeAck,
             remaining_length: RemainingLength(3),
         };
         fixed_header.encode(buf)?;
