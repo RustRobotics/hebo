@@ -6,6 +6,8 @@ use std::convert::TryFrom;
 
 use super::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
 
+pub const MAX_PACKET_LEN: u32 = 0x7F_FF_FF_FF;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PacketType {
     /// Request to connect to broker
@@ -152,9 +154,9 @@ pub struct RemainingLength(pub u32);
 
 impl RemainingLength {
     pub fn len(&self) -> usize {
-        if self.0 > 0x7fffff {
+        if self.0 > 0x7F_FF_FF {
             4
-        } else if self.0 > 0x7fff {
+        } else if self.0 > 0x7F_FF {
             3
         } else if self.0 > 0x7f {
             2
@@ -173,12 +175,15 @@ impl DecodePacket for RemainingLength {
         let mut byte: u32;
         let mut remaining_bytes: u32 = 0;
         let mut multiplier = 1;
+
         // TODO(Shaohua): Simplify
+        // Read variant length
         loop {
             byte = ba.one_byte()? as u32;
             remaining_bytes += (byte & 127) * multiplier;
             multiplier *= 128;
 
+            // TODO(Shaohua): Add comments about magic number
             if multiplier > 128 * 128 * 128 * 128 {
                 return Err(DecodeError::InvalidRemainingLength);
             }
@@ -188,22 +193,27 @@ impl DecodePacket for RemainingLength {
             }
         }
 
-        if ba.remaining_bytes() < remaining_bytes as usize {
-            Err(DecodeError::InvalidRemainingLength)
-        } else {
-            Ok(RemainingLength(remaining_bytes))
-        }
+        // No need to compare remaining bytes, sometimes we only receive
+        // header part of packet and decide whether to prevent from sending
+        // more bytes.
+        //if ba.remaining_bytes() < remaining_bytes as usize {
+        //    Err(DecodeError::InvalidRemainingLength)
+        //} else {
+        //    Ok(RemainingLength(remaining_bytes))
+        //}
+        Ok(RemainingLength(remaining_bytes))
     }
 }
 
 impl EncodePacket for RemainingLength {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        if self.0 > 0x7fffffff {
+        if self.0 > MAX_PACKET_LEN {
             return Err(EncodeError::TooManyData);
         }
 
         let mut n = self.0;
         let mut count = 0;
+        // TODO(Shaohua): Simplify
         while n > 0 {
             let mut m = n % 128;
             count += 1;
