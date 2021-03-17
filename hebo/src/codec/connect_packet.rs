@@ -46,7 +46,7 @@ impl TryFrom<u8> for ProtocolLevel {
 }
 
 impl EncodePacket for ProtocolLevel {
-    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         v.push(*self as u8);
         Ok(1)
     }
@@ -117,7 +117,7 @@ impl Default for ConnectFlags {
 }
 
 impl EncodePacket for ConnectFlags {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let flags = {
             let username = if self.username {
                 0b1000_0000
@@ -158,7 +158,7 @@ impl EncodePacket for ConnectFlags {
 }
 
 impl DecodePacket for ConnectFlags {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let flags = buf[*offset];
         let username = flags & 0b1000_0000 == 0b1000_0000;
         let password = flags & 0b0100_0000 == 0b0100_0000;
@@ -350,7 +350,7 @@ impl ConnectPacket {
 }
 
 impl EncodePacket for ConnectPacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
 
         let mut remaining_length = 2 // protocol_name_len
@@ -379,13 +379,13 @@ impl EncodePacket for ConnectPacket {
             remaining_length: RemainingLength(remaining_length as u32),
         };
         // Write fixed header
-        fixed_header.to_net(v)?;
+        fixed_header.encode(v)?;
 
         // Write variable header
         v.write_u16::<BigEndian>(self.protocol_name.len() as u16)?;
         v.write_all(&self.protocol_name.as_bytes())?;
-        self.protocol_level.to_net(v)?;
-        self.connect_flags.to_net(v)?;
+        self.protocol_level.encode(v)?;
+        self.connect_flags.encode(v)?;
         v.write_u16::<BigEndian>(self.keep_alive)?;
 
         // Write payload
@@ -412,8 +412,8 @@ impl EncodePacket for ConnectPacket {
 }
 
 impl DecodePacket for ConnectPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::Connect);
 
         let protocol_name_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
@@ -427,7 +427,7 @@ impl DecodePacket for ConnectPacket {
         let protocol_level = ProtocolLevel::try_from(buf[*offset])?;
         *offset += 1;
 
-        let connect_flags = ConnectFlags::from_net(buf, offset)?;
+        let connect_flags = ConnectFlags::decode(buf, offset)?;
 
         let keep_alive = BigEndian::read_u16(&buf[*offset..*offset + 2]);
         *offset += 2;
@@ -496,12 +496,12 @@ mod tests {
     use crate::connect_packet::ConnectPacket;
 
     #[test]
-    fn test_from_net() {
+    fn test_decode() {
         let buf: Vec<u8> = vec![
             16, 20, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 8, 119, 118, 80, 84, 88, 99, 67, 119,
         ];
         let mut offset = 0;
-        let packet = ConnectPacket::from_net(&buf, &mut offset);
+        let packet = ConnectPacket::decode(&buf, &mut offset);
         assert!(packet.is_ok());
         let packet = packet.unwrap();
         assert_eq!(packet.client_id(), "wvPTXcCw");

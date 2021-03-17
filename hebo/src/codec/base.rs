@@ -12,11 +12,11 @@ pub type PacketId = u16;
 
 /// Convert native data types to network byte stream.
 pub trait EncodePacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError>;
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError>;
 }
 
 pub trait DecodePacket: Sized {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError>;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError>;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -158,7 +158,6 @@ pub struct RemainingLength(pub u32);
 
 impl RemainingLength {
     pub fn len(&self) -> usize {
-        // TODO(Shaohua): Imply is_empty()
         if self.0 > 0x7fffff {
             4
         } else if self.0 > 0x7fff {
@@ -169,10 +168,14 @@ impl RemainingLength {
             1
         }
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
 }
 
 impl DecodePacket for RemainingLength {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError> {
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError> {
         let mut byte: u32;
         let mut value: u32 = 0;
         let mut multiplier = 1;
@@ -201,9 +204,9 @@ impl DecodePacket for RemainingLength {
 }
 
 impl EncodePacket for RemainingLength {
-    fn to_net(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         if self.0 > 0x7fffffff {
-            return Err(EncodeError::InvalidData);
+            return Err(EncodeError::TooManyData);
         }
 
         let mut n = self.0;
@@ -235,14 +238,14 @@ pub struct FixedHeader {
 }
 
 impl DecodePacket for FixedHeader {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError> {
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError> {
         let flag = buf[*offset];
         *offset += 1;
 
         // TODO(Shaohua): Handle invalid packet type.
         let packet_type = PacketType::try_from(flag)?;
 
-        let remaining_length = RemainingLength::from_net(buf, offset)?;
+        let remaining_length = RemainingLength::decode(buf, offset)?;
 
         Ok(FixedHeader {
             packet_type,
@@ -252,10 +255,10 @@ impl DecodePacket for FixedHeader {
 }
 
 impl EncodePacket for FixedHeader {
-    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let packet_type: u8 = self.packet_type.into();
         v.push(packet_type);
-        self.remaining_length.to_net(v)?;
+        self.remaining_length.encode(v)?;
 
         // TODO(Shaohua): Calc length.
         Ok(1 + self.remaining_length.len())
@@ -328,27 +331,27 @@ mod tests {
     fn test_remaining_length_decode() {
         let buf = [0x7e];
         let mut offset = 0;
-        let ret = RemainingLength::from_net(&buf, &mut offset);
+        let ret = RemainingLength::decode(&buf, &mut offset);
         assert_eq!(ret.unwrap().0, 126);
 
         let buf = [0x92, 0x01];
         let mut offset = 0;
-        let ret = RemainingLength::from_net(&buf, &mut offset);
+        let ret = RemainingLength::decode(&buf, &mut offset);
         assert_eq!(ret.unwrap().0, 146);
 
         let buf = [0x81, 0x80, 0x01];
         let mut offset = 0;
-        let ret = RemainingLength::from_net(&buf, &mut offset);
+        let ret = RemainingLength::decode(&buf, &mut offset);
         assert_eq!(ret.unwrap().0, 16_385);
 
         let buf = [0x81, 0x80, 0x80, 0x01];
         let mut offset = 0;
-        let ret = RemainingLength::from_net(&buf, &mut offset);
+        let ret = RemainingLength::decode(&buf, &mut offset);
         assert_eq!(ret.unwrap().0, 2_097_153);
 
         let buf = [0xff, 0xff, 0xff, 0x7f];
         let mut offset = 0;
-        let ret = RemainingLength::from_net(&buf, &mut offset);
+        let ret = RemainingLength::decode(&buf, &mut offset);
         assert_eq!(ret.unwrap().0, 268_435_455);
     }
 }

@@ -34,8 +34,8 @@ pub struct UnsubscribeAckPacket {
 }
 
 impl DecodePacket for UnsubscribeAckPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<UnsubscribeAckPacket, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<UnsubscribeAckPacket, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::UnsubscribeAck);
         assert_eq!(fixed_header.remaining_length.0, 2);
 
@@ -47,7 +47,7 @@ impl DecodePacket for UnsubscribeAckPacket {
 }
 
 impl EncodePacket for UnsubscribeAckPacket {
-    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
 
         let fixed_header = FixedHeader {
@@ -55,7 +55,7 @@ impl EncodePacket for UnsubscribeAckPacket {
             packet_flags: PacketFlags::UnsubscribeAck,
             remaining_length: RemainingLength(2),
         };
-        fixed_header.to_net(buf)?;
+        fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)
     }

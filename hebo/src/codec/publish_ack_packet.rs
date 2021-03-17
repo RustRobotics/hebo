@@ -42,8 +42,8 @@ impl PublishAckPacket {
 }
 
 impl DecodePacket for PublishAckPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PublishAck);
         assert_eq!(fixed_header.remaining_length.0, 2);
 
@@ -55,7 +55,7 @@ impl DecodePacket for PublishAckPacket {
 }
 
 impl EncodePacket for PublishAckPacket {
-    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
 
         let fixed_header = FixedHeader {
@@ -63,7 +63,7 @@ impl EncodePacket for PublishAckPacket {
             packet_flags: PacketFlags::PublishAck,
             remaining_length: RemainingLength(2),
         };
-        fixed_header.to_net(buf)?;
+        fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)
     }

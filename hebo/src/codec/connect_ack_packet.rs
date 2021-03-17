@@ -111,8 +111,8 @@ impl ConnectAckPacket {
 }
 
 impl DecodePacket for ConnectAckPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::ConnectAck);
 
         let ack_flags = buf[*offset];
@@ -129,14 +129,14 @@ impl DecodePacket for ConnectAckPacket {
 }
 
 impl EncodePacket for ConnectAckPacket {
-    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
         let fixed_header = FixedHeader {
             packet_type: PacketType::ConnectAck,
             packet_flags: PacketFlags::ConnectAck,
             remaining_length: RemainingLength(2),
         };
-        fixed_header.to_net(buf)?;
+        fixed_header.encode(buf)?;
 
         let ack_flags = if self.session_present { 0b0000_0001 } else { 0 };
         buf.push(ack_flags);
@@ -152,10 +152,10 @@ mod tests {
     use super::connect_ack_packet::ConnectAckPacket;
 
     #[test]
-    fn test_from_net() {
+    fn test_decode() {
         let buf: Vec<u8> = vec![0x20, 0x02, 0x00, 0x00];
         let mut offset = 0;
-        let packet = ConnectAckPacket::from_net(&buf, &mut offset);
+        let packet = ConnectAckPacket::decode(&buf, &mut offset);
         assert!(packet.is_ok());
         let packet = packet.unwrap();
         assert_eq!(packet.session_present, false);

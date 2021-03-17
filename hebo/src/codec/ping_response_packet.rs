@@ -24,19 +24,19 @@ impl PingResponsePacket {
 }
 
 impl EncodePacket for PingResponsePacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let fixed_header = FixedHeader {
             packet_type: PacketType::PingResponse,
             packet_flags: PacketFlags::PingResponse,
             remaining_length: RemainingLength(0), // Payload is empty
         };
-        fixed_header.to_net(v)
+        fixed_header.encode(v)
     }
 }
 
 impl DecodePacket for PingResponsePacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PingResponse);
         assert_eq!(fixed_header.remaining_length.0, 0);
         Ok(PingResponsePacket())

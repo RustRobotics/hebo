@@ -73,8 +73,8 @@ pub struct SubscribePacket {
 }
 
 impl DecodePacket for SubscribePacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<SubscribePacket, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<SubscribePacket, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::Subscribe);
 
         let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]);
@@ -121,7 +121,7 @@ impl DecodePacket for SubscribePacket {
 }
 
 impl EncodePacket for SubscribePacket {
-    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
 
         let mut remaining_length = 2; // Variable length
@@ -136,7 +136,7 @@ impl EncodePacket for SubscribePacket {
             packet_flags: PacketFlags::Subscribe,
             remaining_length: RemainingLength(remaining_length as u32),
         };
-        fixed_header.to_net(buf)?;
+        fixed_header.encode(buf)?;
 
         // Variable header
         buf.write_u16::<BigEndian>(self.packet_id)?;

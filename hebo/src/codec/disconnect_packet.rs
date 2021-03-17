@@ -27,19 +27,19 @@ impl DisconnectPacket {
 }
 
 impl EncodePacket for DisconnectPacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let fixed_header = FixedHeader {
             packet_type: PacketType::Disconnect,
             packet_flags: PacketFlags::Disconnect,
             remaining_length: RemainingLength(0), // No payload
         };
-        fixed_header.to_net(v)
+        fixed_header.encode(v)
     }
 }
 
 impl DecodePacket for DisconnectPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<DisconnectPacket, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<DisconnectPacket, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::Disconnect);
         assert_eq!(fixed_header.remaining_length.0, 0);
         Ok(DisconnectPacket {})

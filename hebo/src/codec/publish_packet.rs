@@ -88,8 +88,8 @@ pub struct PublishPacket {
 }
 
 impl DecodePacket for PublishPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         if fixed_header.packet_type != PacketType::Publish {
             return Err(Error::InvalidFixedHeader);
         }
@@ -139,7 +139,7 @@ impl DecodePacket for PublishPacket {
 }
 
 impl EncodePacket for PublishPacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
 
         let mut remaining_length = 2 // Topic length bytes
@@ -159,7 +159,7 @@ impl EncodePacket for PublishPacket {
             },
             remaining_length: RemainingLength(remaining_length as u32),
         };
-        fixed_header.to_net(v)?;
+        fixed_header.encode(v)?;
 
         // Write variable header
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;

@@ -46,6 +46,9 @@ pub enum DecodeError {
 
 pub enum EncodeError {
     InvalidData,
+
+    /// Length of data exceeds its limitation
+    TooManyData,
 }
 
 impl From<std::string::FromUtf8Error> for DecodeError {

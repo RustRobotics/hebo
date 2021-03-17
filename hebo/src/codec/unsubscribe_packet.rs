@@ -83,8 +83,8 @@ impl UnsubscribePacket {
 }
 
 impl DecodePacket for UnsubscribePacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<UnsubscribePacket, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<UnsubscribePacket, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PublishAck);
 
         let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
@@ -107,7 +107,7 @@ impl DecodePacket for UnsubscribePacket {
 }
 
 impl EncodePacket for UnsubscribePacket {
-    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
         let mut remaining_length: usize = 2; // packet id
         for topic in &self.topics {
@@ -120,7 +120,7 @@ impl EncodePacket for UnsubscribePacket {
             packet_flags: PacketFlags::Unsubscribe,
             remaining_length: RemainingLength(remaining_length as u32),
         };
-        fixed_header.to_net(v)?;
+        fixed_header.encode(v)?;
 
         v.write_u16::<BigEndian>(self.packet_id)?;
         for topic in &self.topics {

@@ -75,8 +75,8 @@ impl SubscribeAckPacket {
 }
 
 impl DecodePacket for SubscribeAckPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
+        let fixed_header = FixedHeader::decode(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::SubscribeAck);
 
         let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
@@ -106,14 +106,14 @@ impl DecodePacket for SubscribeAckPacket {
 }
 
 impl EncodePacket for SubscribeAckPacket {
-    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
         let fixed_header = FixedHeader {
             packet_type: PacketType::SubscribeAck,
             packet_flags: PacketFlags::SubscribeAck,
             remaining_length: RemainingLength(3),
         };
-        fixed_header.to_net(buf)?;
+        fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
 
         for ack in &self.acknowledgements {
