@@ -171,11 +171,12 @@ impl RemainingLength {
 impl DecodePacket for RemainingLength {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let mut byte: u32;
-        let mut value: u32 = 0;
+        let mut remaining_bytes: u32 = 0;
         let mut multiplier = 1;
+        // TODO(Shaohua): Simplify
         loop {
             byte = ba.one_byte()? as u32;
-            value += (byte & 127) * multiplier;
+            remaining_bytes += (byte & 127) * multiplier;
             multiplier *= 128;
 
             if multiplier > 128 * 128 * 128 * 128 {
@@ -187,12 +188,11 @@ impl DecodePacket for RemainingLength {
             }
         }
 
-        // if buf.len() - *offset < val as usize {
-        //     Err(Error::InvalidRemainingLength)
-        // } else {
-        //     Ok(RemainingLength(val))
-        // }
-        Ok(RemainingLength(value))
+        if ba.remaining_bytes() < remaining_bytes as usize {
+            Err(DecodeError::InvalidRemainingLength)
+        } else {
+            Ok(RemainingLength(remaining_bytes))
+        }
     }
 }
 

@@ -15,6 +15,16 @@ impl<'a> ByteArray<'a> {
         ByteArray { offset, data }
     }
 
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn remaining_bytes(&self) -> usize {
+        let remain = self.data.len() - self.offset;
+        assert!(remain >= 0);
+        remain
+    }
+
     // TODO(Shaohua): Add ByteArrayError
     pub fn one_byte(&mut self) -> Result<u8, DecodeError> {
         self.offset += 1;
