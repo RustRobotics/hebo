@@ -418,7 +418,9 @@ impl EncodePacket for ConnectPacket {
 impl DecodePacket for ConnectPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        assert_eq!(fixed_header.packet_type, PacketType::Connect);
+        if fixed_header.packet_type != PacketType::Connect {
+            return Err(DecodeError::InvalidPacketType);
+        }
 
         let protocol_name_len = BigEndian::read_u16(ba.read(2)?) as usize;
         let protocol_name = ba.read(protocol_name_len)?;

@@ -27,7 +27,7 @@ impl<'a> ByteArray<'a> {
     // TODO(Shaohua): Add ByteArrayError
     pub fn one_byte(&mut self) -> Result<u8, DecodeError> {
         self.offset += 1;
-        if self.offset >= self.data.len() {
+        if self.offset > self.data.len() {
             Err(DecodeError::OutOfRangeError)
         } else {
             Ok(self.data[self.offset - 1])
@@ -36,7 +36,7 @@ impl<'a> ByteArray<'a> {
 
     pub fn read(&mut self, len: usize) -> Result<&[u8], DecodeError> {
         self.offset += len;
-        if self.offset >= self.data.len() {
+        if self.offset > self.data.len() {
             Err(DecodeError::OutOfRangeError)
         } else {
             Ok(&self.data[self.offset - len..self.offset])
