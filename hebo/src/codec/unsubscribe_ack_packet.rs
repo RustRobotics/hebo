@@ -2,14 +2,12 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io;
-
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::base::{
-    FixedHeader, DecodePacket, PacketFlags, PacketId, PacketType, RemainingLength, EncodePacket,
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    PacketType, RemainingLength,
 };
-use super::error::Error;
 
 /// UnsubscribeAck packet is sent by the Server to the Client to confirm receipt of an
 /// Unsubscribe packet.
@@ -27,38 +25,10 @@ use super::error::Error;
 /// ```
 ///
 /// Note that this packet does not contain payload message.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct UnsubscribeAckPacket {
     /// `packet_id` field is read from Unsubscribe packet.
     packet_id: PacketId,
-}
-
-impl DecodePacket for UnsubscribeAckPacket {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<UnsubscribeAckPacket, Error> {
-        let fixed_header = FixedHeader::decode(buf, offset)?;
-        assert_eq!(fixed_header.packet_type, PacketType::UnsubscribeAck);
-        assert_eq!(fixed_header.remaining_length.0, 2);
-
-        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
-        *offset += 2;
-
-        Ok(UnsubscribeAckPacket { packet_id })
-    }
-}
-
-impl EncodePacket for UnsubscribeAckPacket {
-    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
-        let old_len = buf.len();
-
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::UnsubscribeAck,
-            packet_flags: PacketFlags::UnsubscribeAck,
-            remaining_length: RemainingLength(2),
-        };
-        fixed_header.encode(buf)?;
-        buf.write_u16::<BigEndian>(self.packet_id)?;
-        Ok(buf.len() - old_len)
-    }
 }
 
 impl UnsubscribeAckPacket {
@@ -68,5 +38,33 @@ impl UnsubscribeAckPacket {
 
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
+    }
+}
+
+impl DecodePacket for UnsubscribeAckPacket {
+    fn decode(ba: &mut ByteArray) -> Result<UnsubscribeAckPacket, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+        if fixed_header.packet_type != PacketType::UnsubscribeAck {
+            Err(DecodeError::InvalidPacketType)
+        } else if fixed_header.remaining_length.0 != 2 {
+            Err(DecodeError::InvalidRemainingLength)
+        } else {
+            let packet_id = BigEndian::read_u16(ba.read(2)?) as PacketId;
+            Ok(UnsubscribeAckPacket { packet_id })
+        }
+    }
+}
+
+impl EncodePacket for UnsubscribeAckPacket {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        let old_len = buf.len();
+
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::UnsubscribeAck,
+            remaining_length: RemainingLength(2),
+        };
+        fixed_header.encode(buf)?;
+        buf.write_u16::<BigEndian>(self.packet_id)?;
+        Ok(buf.len() - old_len)
     }
 }
