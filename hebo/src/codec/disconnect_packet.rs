@@ -5,10 +5,10 @@
 use std::default::Default;
 use std::io;
 
-use super::base::{
-    FixedHeader, DecodePacket, PacketFlags, PacketType, RemainingLength, EncodePacket,
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType,
+    RemainingLength,
 };
-use super::error::Error;
 
 /// The Disconnect packet is the final packet sent to the Server from a Client.
 ///
@@ -17,7 +17,7 @@ use super::error::Error;
 /// associated with current connection.
 ///
 /// This packet does not contain variable header or payload.
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct DisconnectPacket {}
 
 impl DisconnectPacket {
@@ -27,10 +27,9 @@ impl DisconnectPacket {
 }
 
 impl EncodePacket for DisconnectPacket {
-    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let fixed_header = FixedHeader {
             packet_type: PacketType::Disconnect,
-            packet_flags: PacketFlags::Disconnect,
             remaining_length: RemainingLength(0), // No payload
         };
         fixed_header.encode(v)
@@ -38,10 +37,14 @@ impl EncodePacket for DisconnectPacket {
 }
 
 impl DecodePacket for DisconnectPacket {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<DisconnectPacket, Error> {
-        let fixed_header = FixedHeader::decode(buf, offset)?;
-        assert_eq!(fixed_header.packet_type, PacketType::Disconnect);
-        assert_eq!(fixed_header.remaining_length.0, 0);
-        Ok(DisconnectPacket {})
+    fn decode(ba: &mut ByteArray) -> Result<DisconnectPacket, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+        if fixed_header.packet_type != PacketType::Disconnect {
+            Err(DecodeError::InvalidPacketType)
+        } else if (fixed_header.remaining_length.0 != 0) {
+            Err(DecodeError::InvalidRemainingLength)
+        } else {
+            Ok(DisconnectPacket {})
+        }
     }
 }
