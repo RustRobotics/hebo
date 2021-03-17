@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 #[derive(Debug)]
-pub enum Error {
+enum Error {
     TcpConnectError,
     InvalidFixedHeader,
     PacketEmpty,
@@ -11,36 +11,43 @@ pub enum Error {
     /// No topic is speicified in Subscribe packet.
     EmptyTopic,
 
-    InvalidQoS,
-
-    /// Protocol level is not in `3.1`, `3.1.1` or `5.0`.
-    InvalidProtocolLevel,
-
     /// Protocol name must be "MQTT".
     InvalidProtocolName,
-
-    /// ClientId is empty or its length exceeds 23.
-    /// Or contains invalid characters.
-    InvalidClientId,
-
-    /// Length of data exceeds its limitation
-    TooManyData,
-
-    /// Invalid UTF-8 string.
-    InvalidString,
 
     /// Topic name might contain wildcard characters.
     InvalidTopicName,
 
     /// Violate topic filter rules.
     InvalidTopicFilter,
+}
+
+pub enum DecodeError {
+    /// ClientId is empty or its length exceeds 23.
+    /// Or contains invalid characters.
+    InvalidClientId,
+
+    /// Protocol level is not in `3.1`, `3.1.1` or `5.0`.
+    InvalidProtocolLevel,
+
+    // QoS not 0, 1, 2
+    InvalidQoS,
 
     /// Length of buffer - offset < remaining length.
     InvalidRemainingLength,
+
+    /// Invalid UTF-8 string.
+    InvalidString,
+
+    /// Length of data exceeds its limitation
+    TooManyData,
 }
 
-impl From<std::string::FromUtf8Error> for Error {
-    fn from(_e: std::string::FromUtf8Error) -> Error {
-        Error::InvalidString
+pub enum EncodeError {
+    InvalidData,
+}
+
+impl From<std::string::FromUtf8Error> for DecodeError {
+    fn from(_e: std::string::FromUtf8Error) -> DecodeError {
+        DecodeError::InvalidString
     }
 }

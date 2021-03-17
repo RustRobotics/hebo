@@ -4,6 +4,7 @@
 
 use std::io;
 
+/*
 use hebo::server;
 
 #[tokio::main]
@@ -13,3 +14,6 @@ async fn main() -> io::Result<()> {
 
     server::run_server().await
 }
+*/
+
+fn main() {}

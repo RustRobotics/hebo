@@ -8,11 +8,9 @@ use std::io::{self, Write};
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::base::{
-    to_utf8_string, validate_two_bytes_data, validate_utf8_string, FixedHeader, FromNetPacket,
-    PacketFlags, PacketType, QoS, RemainingLength, ToNetPacket,
-};
-use super::error::Error;
+use super::base;
+use super::error::{DecodeError, EncodeError};
+use super::utils;
 
 const PROTOCOL_NAME: &str = "MQTT";
 
@@ -21,7 +19,7 @@ const PROTOCOL_NAME: &str = "MQTT";
 /// * 3.1.1
 /// * 5.0
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub enum ProtocolLevel {
     V31 = 3,
     V311 = 4,
@@ -35,14 +33,14 @@ impl Default for ProtocolLevel {
 }
 
 impl TryFrom<u8> for ProtocolLevel {
-    type Error = Error;
+    type Error = DecodeError;
 
     fn try_from(v: u8) -> Result<ProtocolLevel, Self::Error> {
         match v {
             3 => Ok(ProtocolLevel::V31),
             4 => Ok(ProtocolLevel::V311),
             5 => Ok(ProtocolLevel::V5),
-            _ => Err(Error::InvalidProtocolLevel),
+            _ => Err(DecodeError::InvalidProtocolLevel),
         }
     }
 }
@@ -61,7 +59,7 @@ impl ToNetPacket for ProtocolLevel {
 /// | Username Flag | Password Flag | Will Retain | Will QoS | Will Flag | Clean Session | Reserved |
 /// +---------------+---------------+-------------+----------+-----------+---------------+----------+
 /// ```
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct ConnectFlags {
     /// `username` field specifies whether `username` shall be presented in the Payload.
     pub username: bool,
@@ -119,7 +117,7 @@ impl Default for ConnectFlags {
 }
 
 impl ToNetPacket for ConnectFlags {
-    fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn to_net(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let flags = {
             let username = if self.username {
                 0b1000_0000
