@@ -19,104 +19,8 @@ pub trait DecodePacket: Sized {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError>;
 }
 
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum PacketType {
-    Unknown = 0,
-
-    /// Request to connect to broker
-    Connect = 1,
-
-    /// Broker reply to connect request
-    ConnectAck = 2,
-
-    /// Publish message
-    Publish = 3,
-
-    /// Publish acknowledgement
-    PublishAck = 4,
-
-    /// Publish received
-    PublishReceived = 5,
-
-    /// Publish release
-    PublishRelease = 6,
-
-    /// Publish complete
-    PublishComplete = 7,
-
-    /// Client subscribe request
-    Subscribe = 8,
-
-    /// Subscribe acknowledgement
-    SubscribeAck = 9,
-
-    /// Unsubscribe request
-    Unsubscribe = 10,
-
-    /// Unsubscribe acknowledgement
-    UnsubscribeAck = 11,
-
-    /// Client ping request
-    PingRequest = 12,
-
-    /// Server ping response
-    PingResponse = 13,
-
-    /// Client is disconnecting
-    Disconnect = 14,
-
-    Reserved = 15,
-}
-
-impl Into<u8> for PacketType {
-    fn into(self) -> u8 {
-        (self as u8 & 0b0000_1111) << 4
-    }
-}
-
-impl TryFrom<u8> for PacketType {
-    type Error = DecodeError;
-
-    fn try_from(v: u8) -> Result<PacketType, Self::Error> {
-        let packet_type = (v & 0b1111_0000) >> 4;
-        let t = match packet_type {
-            0 => PacketType::Unknown,
-            1 => PacketType::Connect,
-            2 => PacketType::ConnectAck,
-            3 => PacketType::Publish,
-            4 => PacketType::PublishAck,
-            5 => PacketType::PublishReceived,
-            6 => PacketType::PublishRelease,
-            7 => PacketType::PublishComplete,
-            8 => PacketType::Subscribe,
-            9 => PacketType::SubscribeAck,
-            10 => PacketType::Unsubscribe,
-            11 => PacketType::UnsubscribeAck,
-            12 => PacketType::PingRequest,
-            13 => PacketType::PingResponse,
-            14 => PacketType::Disconnect,
-            15 => PacketType::Reserved,
-
-            _ => PacketType::Unknown,
-        };
-        if t == PacketType::Unknown {
-            Err(DecodeError::InvalidPacketType)
-        } else {
-            Ok(t)
-        }
-    }
-}
-
-impl Default for PacketType {
-    fn default() -> Self {
-        PacketType::Connect
-    }
-}
-
-/// Packet flags
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum PacketFlags {
+pub enum PacketType {
     /// Request to connect to broker
     Connect,
 
@@ -124,7 +28,11 @@ pub enum PacketFlags {
     ConnectAck,
 
     /// Publish message
-    Publish { dup: bool, qos: QoS, retain: bool },
+    Publish {
+        dup: bool,
+        qos: QoS,
+        retain: bool,
+    },
 
     /// Publish acknowledgement
     PublishAck,
@@ -158,8 +66,64 @@ pub enum PacketFlags {
 
     /// Client is disconnecting
     Disconnect,
+
+    Reserved,
 }
 
+impl Into<u8> for PacketType {
+    fn into(self) -> u8 {
+        0b01
+        //(self as u8 & 0b0000_1111) << 4
+    }
+}
+
+impl TryFrom<u8> for PacketType {
+    type Error = DecodeError;
+
+    fn try_from(v: u8) -> Result<PacketType, Self::Error> {
+        let type_bits = (v & 0b1111_0000) >> 4;
+        match type_bits {
+            1 => Ok(PacketType::Connect),
+            2 => Ok(PacketType::ConnectAck),
+            3 => {
+                let flag = v & 0b0000_1111;
+                let dup = (flag & 0b0000_1000) == 0b0000_1000;
+                let retain = (flag & 0b0000_0001) == 0b0000_0001;
+                let qos = match flag & 0b0000_0110 {
+                    0b0000_0000 => QoS::AtMostOnce,
+                    0b0000_0010 => QoS::AtLeastOnce,
+                    0b0000_0100 => QoS::ExactOnce,
+
+                    _ => return Err(DecodeError::InvalidQoS),
+                };
+
+                Ok(PacketType::Publish { dup, retain, qos })
+            }
+            4 => Ok(PacketType::PublishAck),
+            5 => Ok(PacketType::PublishReceived),
+            6 => Ok(PacketType::PublishRelease),
+            7 => Ok(PacketType::PublishComplete),
+            8 => Ok(PacketType::Subscribe),
+            9 => Ok(PacketType::SubscribeAck),
+            10 => Ok(PacketType::Unsubscribe),
+            11 => Ok(PacketType::UnsubscribeAck),
+            12 => Ok(PacketType::PingRequest),
+            13 => Ok(PacketType::PingResponse),
+            14 => Ok(PacketType::Disconnect),
+            15 => Ok(PacketType::Reserved),
+
+            _ => return Err(DecodeError::InvalidPacketType),
+        }
+    }
+}
+
+impl Default for PacketType {
+    fn default() -> Self {
+        PacketType::Connect
+    }
+}
+
+/*
 impl Into<u8> for PacketFlags {
     fn into(self) -> u8 {
         match self {
@@ -190,14 +154,9 @@ impl Into<u8> for PacketFlags {
         }
     }
 }
+*/
 
-impl Default for PacketFlags {
-    fn default() -> Self {
-        PacketFlags::Connect
-    }
-}
-
-// TODO(Shaohua): Replace with TryFrom<>
+/*
 impl PacketFlags {
     pub fn from_u8(packet_type: PacketType, flag: u8) -> PacketFlags {
         let flag = flag & 0b0000_1111;
@@ -219,6 +178,7 @@ impl PacketFlags {
         }
     }
 }
+*/
 
 /// `Remaining Length` uses variable length encoding method. The 7th bit
 /// in a byte is used to indicate are bytes are available. And the maximum number
@@ -302,7 +262,6 @@ impl EncodePacket for RemainingLength {
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct FixedHeader {
     pub packet_type: PacketType,
-    pub packet_flags: PacketFlags,
     pub remaining_length: RemainingLength,
 }
 
@@ -313,13 +272,11 @@ impl DecodePacket for FixedHeader {
 
         // TODO(Shaohua): Handle invalid packet type.
         let packet_type = PacketType::try_from(flag)?;
-        let packet_flags = PacketFlags::from_u8(packet_type, flag);
 
         let remaining_length = RemainingLength::from_net(buf, offset)?;
 
         Ok(FixedHeader {
             packet_type,
-            packet_flags,
             remaining_length,
         })
     }
@@ -328,8 +285,7 @@ impl DecodePacket for FixedHeader {
 impl EncodePacket for FixedHeader {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let packet_type: u8 = self.packet_type.into();
-        let packet_flags: u8 = self.packet_flags.into();
-        v.push(packet_type | packet_flags);
+        v.push(packet_type);
         self.remaining_length.to_net(v)?;
 
         // TODO(Shaohua): Calc length.
