@@ -2,14 +2,12 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io;
-
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::base::{
-    FixedHeader, DecodePacket, PacketFlags, PacketId, PacketType, RemainingLength, EncodePacket,
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    PacketType, RemainingLength,
 };
-use super::error::Error;
 
 /// Response to a Publish packet with QoS 2. It is the third packet of the QoS 2 protocol
 /// exchange.
@@ -27,7 +25,7 @@ use super::error::Error;
 /// ```
 ///
 /// This packet does not contain payload part.
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PublishReleasePacket {
     packet_id: PacketId,
 }
@@ -39,25 +37,25 @@ impl PublishReleasePacket {
 }
 
 impl DecodePacket for PublishReleasePacket {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::decode(buf, offset)?;
-        assert_eq!(fixed_header.packet_type, PacketType::PublishRelease);
-        assert_eq!(fixed_header.remaining_length.0, 2);
-
-        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
-        *offset += 2;
-
-        Ok(PublishReleasePacket { packet_id })
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+        if fixed_header.packet_type != PacketType::PublishRelease {
+            Err(DecodeError::InvalidPacketType)
+        } else if fixed_header.remaining_length.0 != 2 {
+            Err(DecodeError::InvalidRemainingLength)
+        } else {
+            let packet_id = BigEndian::read_u16(ba.read(2)?) as PacketId;
+            Ok(PublishReleasePacket { packet_id })
+        }
     }
 }
 
 impl EncodePacket for PublishReleasePacket {
-    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
         let fixed_header = FixedHeader {
             packet_type: PacketType::PublishRelease,
-            packet_flags: PacketFlags::PublishRelease,
             remaining_length: RemainingLength(2),
         };
         fixed_header.encode(buf)?;
