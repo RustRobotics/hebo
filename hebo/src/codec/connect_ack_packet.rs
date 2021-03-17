@@ -2,17 +2,15 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io;
-
-use super::base::{
-    FixedHeader, DecodePacket, PacketFlags, PacketType, RemainingLength, EncodePacket,
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType,
+    RemainingLength,
 };
-use super::error::Error;
 
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
 /// close the network connection.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ConnectReturnCode {
     /// Connection accepted.
     Accepted = 0,
@@ -74,7 +72,7 @@ impl From<u8> for ConnectReturnCode {
 /// ```
 ///
 /// This packet does not contain payload.
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectAckPacket {
     /// Acknowledge flags is the first byte in variable header.
     /// Session Present flag is set in bit 0 of Ack flags, bits 7-1 are reserved.
@@ -111,15 +109,13 @@ impl ConnectAckPacket {
 }
 
 impl DecodePacket for ConnectAckPacket {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::decode(buf, offset)?;
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
         assert_eq!(fixed_header.packet_type, PacketType::ConnectAck);
 
-        let ack_flags = buf[*offset];
+        let ack_flags = ba.one_byte()?;
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
-        *offset += 1;
-        let return_code = ConnectReturnCode::from(buf[*offset]);
-        *offset += 1;
+        let return_code = ConnectReturnCode::from(ba.one_byte()?);
 
         Ok(ConnectAckPacket {
             session_present,
@@ -129,11 +125,10 @@ impl DecodePacket for ConnectAckPacket {
 }
 
 impl EncodePacket for ConnectAckPacket {
-    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
         let fixed_header = FixedHeader {
             packet_type: PacketType::ConnectAck,
-            packet_flags: PacketFlags::ConnectAck,
             remaining_length: RemainingLength(2),
         };
         fixed_header.encode(buf)?;

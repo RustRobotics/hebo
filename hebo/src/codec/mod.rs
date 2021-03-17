@@ -2,13 +2,13 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-pub mod base;
-pub mod byte_array;
-//pub mod connect_ack_packet;
-pub mod connect_packet;
+mod base;
+mod byte_array;
+mod connect_ack_packet;
+mod connect_packet;
 //pub mod disconnect_packet;
-pub mod error;
-pub mod header;
+mod error;
+mod header;
 //pub mod ping_request_packet;
 //pub mod ping_response_packet;
 //pub mod publish_ack_packet;
@@ -25,6 +25,7 @@ pub mod utils;
 
 pub use base::{DecodePacket, EncodePacket, PacketId, QoS};
 pub use byte_array::ByteArray;
+pub use connect_ack_packet::ConnectAckPacket;
 pub use connect_packet::ConnectPacket;
 pub use error::{DecodeError, EncodeError};
 pub use header::{FixedHeader, PacketType, RemainingLength};
