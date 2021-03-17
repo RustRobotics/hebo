@@ -11,9 +11,6 @@ enum Error {
     /// No topic is speicified in Subscribe packet.
     EmptyTopic,
 
-    /// Protocol name must be "MQTT".
-    InvalidProtocolName,
-
     /// Topic name might contain wildcard characters.
     InvalidTopicName,
 
@@ -30,6 +27,9 @@ pub enum DecodeError {
 
     /// Protocol level is not in `3.1`, `3.1.1` or `5.0`.
     InvalidProtocolLevel,
+
+    /// Protocol name must be "MQTT".
+    InvalidProtocolName,
 
     // QoS not 0, 1, 2
     InvalidQoS,
@@ -49,8 +49,21 @@ pub enum DecodeError {
 pub enum EncodeError {
     InvalidData,
 
+    IoError,
+
     /// Length of data exceeds its limitation
     TooManyData,
+}
+
+pub enum ClientIdError {
+    InvalidLength,
+    InvalidChar,
+}
+
+impl From<std::io::Error> for EncodeError {
+    fn from(_e: std::io::Error) -> EncodeError {
+        EncodeError::IoError
+    }
 }
 
 impl From<std::string::FromUtf8Error> for DecodeError {

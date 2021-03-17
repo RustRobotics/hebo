@@ -18,27 +18,6 @@ pub fn random_string(len: usize) -> String {
     .unwrap()
 }
 
-// TODO(Shaohua): Remove enum
-#[derive(Debug)]
-pub enum ClientIdError {
-    /// no chars
-    IsEmpty,
-
-    /// Larger than 23 chars
-    TooLong,
-
-    /// Can only contain 0-9a-zA-Z
-    InvalidChars,
-}
-
-// TODO(Shaohua): Simplify
-pub fn check_client_id(client_id: &str) -> bool {
-    if client_id.len() > 23 {
-        return false;
-    }
-    return true;
-}
-
 /// Check string characters and length.
 pub fn validate_utf8_string(s: &str) -> Result<(), DecodeError> {
     if s.len() > u16::MAX as usize {
@@ -57,11 +36,8 @@ pub fn validate_utf8_string(s: &str) -> Result<(), DecodeError> {
 }
 
 /// Convert range of bytes to valid UTF-8 string.
-pub fn to_utf8_string(buf: &[u8], start: usize, end: usize) -> Result<String, DecodeError> {
-    if end > buf.len() {
-        return Err(DecodeError::InvalidString);
-    }
-    let s = String::from_utf8((&buf[start..end]).to_vec())?;
+pub fn to_utf8_string(buf: &[u8]) -> Result<String, DecodeError> {
+    let s = String::from_utf8(buf.to_vec())?;
     validate_utf8_string(&s)?;
     Ok(s)
 }

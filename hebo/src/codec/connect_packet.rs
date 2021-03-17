@@ -8,9 +8,12 @@ use std::io::{self, Write};
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::base;
-use super::error::{DecodeError, EncodeError};
+use super::error::ClientIdError;
 use super::utils;
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType, QoS,
+    RemainingLength,
+};
 
 const PROTOCOL_NAME: &str = "MQTT";
 
@@ -40,13 +43,14 @@ impl TryFrom<u8> for ProtocolLevel {
             3 => Ok(ProtocolLevel::V31),
             4 => Ok(ProtocolLevel::V311),
             5 => Ok(ProtocolLevel::V5),
+
             _ => Err(DecodeError::InvalidProtocolLevel),
         }
     }
 }
 
 impl EncodePacket for ProtocolLevel {
-    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         v.push(*self as u8);
         Ok(1)
     }
@@ -158,15 +162,14 @@ impl EncodePacket for ConnectFlags {
 }
 
 impl DecodePacket for ConnectFlags {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let flags = buf[*offset];
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let flags = ba.one_byte()?;
         let username = flags & 0b1000_0000 == 0b1000_0000;
         let password = flags & 0b0100_0000 == 0b0100_0000;
         let will_retain = flags & 0b0010_0000 == 0b0010_0000;
         let will_qos = QoS::try_from((flags & 0b0001_1000) >> 3)?;
         let will = flags & 0b0000_0100 == 0b0000_0100;
         let clean_session = flags & 0b0000_0010 == 0b0000_0010;
-        *offset += 1;
         Ok(ConnectFlags {
             username,
             password,
@@ -224,11 +227,13 @@ impl DecodePacket for ConnectFlags {
 /// | Password bytes ...         |
 /// +----------------------------+
 /// ```
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
     protocol_name: String,
+
     pub protocol_level: ProtocolLevel,
+
     pub connect_flags: ConnectFlags,
 
     /// Time interval between two packets in seconds.
@@ -277,22 +282,22 @@ impl ConnectPacket {
         }
     }
 
-    pub fn validate_client_id(id: &str) -> Result<(), Error> {
+    pub fn validate_client_id(id: &str) -> Result<(), ClientIdError> {
         if id.is_empty() || id.len() > 23 {
-            return Err(Error::InvalidClientId);
+            return Err(ClientIdError::InvalidLength);
         }
         for byte in id.bytes() {
             if !((byte >= b'0' && byte <= b'9')
                 || (byte >= b'a' && byte <= b'z')
                 || (byte >= b'A' && byte <= b'Z'))
             {
-                return Err(Error::InvalidClientId);
+                return Err(ClientIdError::InvalidChar);
             }
         }
         Ok(())
     }
 
-    pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, Error> {
+    pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, ClientIdError> {
         self.client_id.clear();
         ConnectPacket::validate_client_id(id)?;
         self.client_id.push_str(id);
@@ -308,8 +313,8 @@ impl ConnectPacket {
         self
     }
 
-    pub fn set_username(&mut self, username: &str) -> Result<&mut Self, Error> {
-        validate_utf8_string(username)?;
+    pub fn set_username(&mut self, username: &str) -> Result<&mut Self, DecodeError> {
+        utils::validate_utf8_string(username)?;
         self.username = username.to_string();
         Ok(self)
     }
@@ -318,8 +323,8 @@ impl ConnectPacket {
         &self.username
     }
 
-    pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, Error> {
-        validate_two_bytes_data(password)?;
+    pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, DecodeError> {
+        utils::validate_two_bytes_data(password)?;
         self.password = password.to_vec();
         Ok(self)
     }
@@ -328,8 +333,8 @@ impl ConnectPacket {
         &self.password
     }
 
-    pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, Error> {
-        validate_utf8_string(topic)?;
+    pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, DecodeError> {
+        utils::validate_utf8_string(topic)?;
         self.will_topic = topic.to_string();
         Ok(self)
     }
@@ -338,8 +343,8 @@ impl ConnectPacket {
         &self.will_topic
     }
 
-    pub fn set_will_message(&mut self, message: &[u8]) -> Result<(), Error> {
-        validate_two_bytes_data(message)?;
+    pub fn set_will_message(&mut self, message: &[u8]) -> Result<(), DecodeError> {
+        utils::validate_two_bytes_data(message)?;
         self.will_message = message.to_vec();
         Ok(())
     }
@@ -350,7 +355,7 @@ impl ConnectPacket {
 }
 
 impl EncodePacket for ConnectPacket {
-    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
         let mut remaining_length = 2 // protocol_name_len
@@ -375,7 +380,6 @@ impl EncodePacket for ConnectPacket {
 
         let fixed_header = FixedHeader {
             packet_type: PacketType::Connect,
-            packet_flags: PacketFlags::Connect,
             remaining_length: RemainingLength(remaining_length as u32),
         };
         // Write fixed header
@@ -412,66 +416,49 @@ impl EncodePacket for ConnectPacket {
 }
 
 impl DecodePacket for ConnectPacket {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::decode(buf, offset)?;
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
         assert_eq!(fixed_header.packet_type, PacketType::Connect);
 
-        let protocol_name_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-        *offset += 2;
-        let protocol_name = to_utf8_string(buf, *offset, *offset + protocol_name_len)?;
-        *offset += protocol_name_len;
+        let protocol_name_len = BigEndian::read_u16(ba.read(2)?) as usize;
+        let protocol_name = ba.read(protocol_name_len)?;
+        // TODO(Shaohua: Compare bytes directly
+        let protocol_name = utils::to_utf8_string(protocol_name)?;
         if protocol_name != PROTOCOL_NAME {
-            return Err(Error::InvalidProtocolName);
+            return Err(DecodeError::InvalidProtocolName);
         }
 
-        let protocol_level = ProtocolLevel::try_from(buf[*offset])?;
-        *offset += 1;
+        let protocol_level = ProtocolLevel::try_from(ba.one_byte()?)?;
+        let connect_flags = ConnectFlags::decode(ba)?;
 
-        let connect_flags = ConnectFlags::decode(buf, offset)?;
+        let keep_alive = BigEndian::read_u16(ba.read(2)?);
 
-        let keep_alive = BigEndian::read_u16(&buf[*offset..*offset + 2]);
-        *offset += 2;
-
-        let client_id_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-        *offset += 2;
-        let client_id = to_utf8_string(buf, *offset, *offset + client_id_len)?;
-        *offset += client_id_len;
+        let client_id_len = BigEndian::read_u16(ba.read(2)?) as usize;
+        let client_id = utils::to_utf8_string(ba.read(client_id_len)?)?;
 
         let will_topic = if connect_flags.will {
-            let will_topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-            *offset += 2;
-            let will_topic = to_utf8_string(buf, *offset, *offset + will_topic_len)?;
-            *offset += will_topic_len;
-            will_topic
+            let will_topic_len = BigEndian::read_u16(ba.read(2)?) as usize;
+            utils::to_utf8_string(ba.read(will_topic_len)?)?
         } else {
             String::new()
         };
         let will_message = if connect_flags.will {
-            let will_message_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-            *offset += 2;
-            let will_message = buf[*offset..*offset + will_message_len].to_vec();
-            *offset += will_message_len;
-            will_message
+            let will_message_len = BigEndian::read_u16(ba.read(2)?) as usize;
+            ba.read(will_message_len)?.to_vec()
         } else {
             Vec::new()
         };
 
         let username = if connect_flags.username {
-            let username_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-            *offset += 2;
-            let username = to_utf8_string(buf, *offset, *offset + username_len)?;
-            *offset += username_len;
-            username
+            let username_len = BigEndian::read_u16(ba.read(2)?) as usize;
+            utils::to_utf8_string(ba.read(username_len)?)?
         } else {
             String::new()
         };
 
         let password = if connect_flags.password {
-            let password_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-            *offset += 2;
-            let password = buf[*offset..*offset + password_len].to_vec();
-            *offset += password_len;
-            password
+            let password_len = BigEndian::read_u16(ba.read(2)?) as usize;
+            ba.read(password_len)?.to_vec()
         } else {
             Vec::new()
         };

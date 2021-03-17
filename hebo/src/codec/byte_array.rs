@@ -20,8 +20,8 @@ impl<'a> ByteArray<'a> {
     }
 
     pub fn remaining_bytes(&self) -> usize {
+        assert!(self.offset <= self.data.len());
         let remain = self.data.len() - self.offset;
-        assert!(remain >= 0);
         remain
     }
 
@@ -32,6 +32,15 @@ impl<'a> ByteArray<'a> {
             Err(DecodeError::OutOfRangeError)
         } else {
             Ok(self.data[self.offset - 1])
+        }
+    }
+
+    pub fn read(&mut self, len: usize) -> Result<&[u8], DecodeError> {
+        self.offset += len;
+        if self.offset >= self.data.len() {
+            Err(DecodeError::OutOfRangeError)
+        } else {
+            Ok(&self.data[self.offset - len..self.offset])
         }
     }
 }
