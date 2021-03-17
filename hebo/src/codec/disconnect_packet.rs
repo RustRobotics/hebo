@@ -6,7 +6,7 @@ use std::default::Default;
 use std::io;
 
 use super::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketType, RemainingLength, ToNetPacket,
+    FixedHeader, DecodePacket, PacketFlags, PacketType, RemainingLength, EncodePacket,
 };
 use super::error::Error;
 
@@ -26,7 +26,7 @@ impl DisconnectPacket {
     }
 }
 
-impl ToNetPacket for DisconnectPacket {
+impl EncodePacket for DisconnectPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let fixed_header = FixedHeader {
             packet_type: PacketType::Disconnect,
@@ -37,7 +37,7 @@ impl ToNetPacket for DisconnectPacket {
     }
 }
 
-impl FromNetPacket for DisconnectPacket {
+impl DecodePacket for DisconnectPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<DisconnectPacket, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::Disconnect);

@@ -7,8 +7,8 @@ use std::io;
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, QoS, RemainingLength,
-    ToNetPacket,
+    FixedHeader, DecodePacket, PacketFlags, PacketId, PacketType, QoS, RemainingLength,
+    EncodePacket,
 };
 use super::error::Error;
 
@@ -74,7 +74,7 @@ impl SubscribeAckPacket {
     }
 }
 
-impl FromNetPacket for SubscribeAckPacket {
+impl DecodePacket for SubscribeAckPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::SubscribeAck);
@@ -105,7 +105,7 @@ impl FromNetPacket for SubscribeAckPacket {
     }
 }
 
-impl ToNetPacket for SubscribeAckPacket {
+impl EncodePacket for SubscribeAckPacket {
     fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
         let fixed_header = FixedHeader {

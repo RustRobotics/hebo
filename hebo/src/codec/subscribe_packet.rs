@@ -8,8 +8,8 @@ use std::io::{self, Write};
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::base::{
-    is_valid_topic_filter, to_utf8_string, FixedHeader, FromNetPacket, PacketFlags, PacketId,
-    PacketType, QoS, RemainingLength, ToNetPacket,
+    is_valid_topic_filter, to_utf8_string, FixedHeader, DecodePacket, PacketFlags, PacketId,
+    PacketType, QoS, RemainingLength, EncodePacket,
 };
 use super::error::Error;
 use super::topic::Topic;
@@ -72,7 +72,7 @@ pub struct SubscribePacket {
     topics: Vec<SubscribeTopic>,
 }
 
-impl FromNetPacket for SubscribePacket {
+impl DecodePacket for SubscribePacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<SubscribePacket, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::Subscribe);
@@ -120,7 +120,7 @@ impl FromNetPacket for SubscribePacket {
     }
 }
 
-impl ToNetPacket for SubscribePacket {
+impl EncodePacket for SubscribePacket {
     fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
 

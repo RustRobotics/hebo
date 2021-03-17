@@ -7,8 +7,8 @@ use std::io::{self, Write};
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::base::{
-    is_valid_topic_name, FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, QoS,
-    RemainingLength, ToNetPacket,
+    is_valid_topic_name, FixedHeader, DecodePacket, PacketFlags, PacketId, PacketType, QoS,
+    RemainingLength, EncodePacket,
 };
 use super::error::Error;
 
@@ -87,7 +87,7 @@ pub struct PublishPacket {
     msg: Vec<u8>,
 }
 
-impl FromNetPacket for PublishPacket {
+impl DecodePacket for PublishPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         if fixed_header.packet_type != PacketType::Publish {
@@ -138,7 +138,7 @@ impl FromNetPacket for PublishPacket {
     }
 }
 
-impl ToNetPacket for PublishPacket {
+impl EncodePacket for PublishPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
 

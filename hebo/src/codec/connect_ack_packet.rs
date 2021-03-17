@@ -5,7 +5,7 @@
 use std::io;
 
 use super::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketType, RemainingLength, ToNetPacket,
+    FixedHeader, DecodePacket, PacketFlags, PacketType, RemainingLength, EncodePacket,
 };
 use super::error::Error;
 
@@ -110,7 +110,7 @@ impl ConnectAckPacket {
     }
 }
 
-impl FromNetPacket for ConnectAckPacket {
+impl DecodePacket for ConnectAckPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::ConnectAck);
@@ -128,7 +128,7 @@ impl FromNetPacket for ConnectAckPacket {
     }
 }
 
-impl ToNetPacket for ConnectAckPacket {
+impl EncodePacket for ConnectAckPacket {
     fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
         let fixed_header = FixedHeader {
@@ -148,7 +148,7 @@ impl ToNetPacket for ConnectAckPacket {
 
 #[cfg(test)]
 mod tests {
-    use super::base::FromNetPacket;
+    use super::base::DecodePacket;
     use super::connect_ack_packet::ConnectAckPacket;
 
     #[test]

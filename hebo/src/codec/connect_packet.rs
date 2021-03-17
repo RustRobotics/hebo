@@ -45,7 +45,7 @@ impl TryFrom<u8> for ProtocolLevel {
     }
 }
 
-impl ToNetPacket for ProtocolLevel {
+impl EncodePacket for ProtocolLevel {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         v.push(*self as u8);
         Ok(1)
@@ -116,7 +116,7 @@ impl Default for ConnectFlags {
     }
 }
 
-impl ToNetPacket for ConnectFlags {
+impl EncodePacket for ConnectFlags {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let flags = {
             let username = if self.username {
@@ -157,7 +157,7 @@ impl ToNetPacket for ConnectFlags {
     }
 }
 
-impl FromNetPacket for ConnectFlags {
+impl DecodePacket for ConnectFlags {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let flags = buf[*offset];
         let username = flags & 0b1000_0000 == 0b1000_0000;
@@ -349,7 +349,7 @@ impl ConnectPacket {
     }
 }
 
-impl ToNetPacket for ConnectPacket {
+impl EncodePacket for ConnectPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
 
@@ -411,7 +411,7 @@ impl ToNetPacket for ConnectPacket {
     }
 }
 
-impl FromNetPacket for ConnectPacket {
+impl DecodePacket for ConnectPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::Connect);
@@ -492,7 +492,7 @@ impl FromNetPacket for ConnectPacket {
 
 #[cfg(test)]
 mod tests {
-    use crate::base::FromNetPacket;
+    use crate::base::DecodePacket;
     use crate::connect_packet::ConnectPacket;
 
     #[test]

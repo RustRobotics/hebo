@@ -7,7 +7,7 @@ use std::io;
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, RemainingLength, ToNetPacket,
+    FixedHeader, DecodePacket, PacketFlags, PacketId, PacketType, RemainingLength, EncodePacket,
 };
 use super::error::Error;
 
@@ -41,7 +41,7 @@ impl PublishAckPacket {
     }
 }
 
-impl FromNetPacket for PublishAckPacket {
+impl DecodePacket for PublishAckPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PublishAck);
@@ -54,7 +54,7 @@ impl FromNetPacket for PublishAckPacket {
     }
 }
 
-impl ToNetPacket for PublishAckPacket {
+impl EncodePacket for PublishAckPacket {
     fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = buf.len();
 

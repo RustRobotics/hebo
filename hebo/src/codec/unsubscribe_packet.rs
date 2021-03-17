@@ -8,8 +8,8 @@ use std::io::{self, Write};
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::base::{
-    to_utf8_string, FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, RemainingLength,
-    ToNetPacket,
+    to_utf8_string, FixedHeader, DecodePacket, PacketFlags, PacketId, PacketType, RemainingLength,
+    EncodePacket,
 };
 use super::error::Error;
 
@@ -82,7 +82,7 @@ impl UnsubscribePacket {
     }
 }
 
-impl FromNetPacket for UnsubscribePacket {
+impl DecodePacket for UnsubscribePacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<UnsubscribePacket, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PublishAck);
@@ -106,7 +106,7 @@ impl FromNetPacket for UnsubscribePacket {
     }
 }
 
-impl ToNetPacket for UnsubscribePacket {
+impl EncodePacket for UnsubscribePacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let old_len = v.len();
         let mut remaining_length: usize = 2; // packet id

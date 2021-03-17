@@ -22,7 +22,7 @@ impl PingRequestPacket {
     }
 }
 
-impl ToNetPacket for PingRequestPacket {
+impl EncodePacket for PingRequestPacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let fixed_header = FixedHeader {
             packet_type: PacketType::PingRequest,
@@ -33,7 +33,7 @@ impl ToNetPacket for PingRequestPacket {
     }
 }
 
-impl FromNetPacket for PingRequestPacket {
+impl DecodePacket for PingRequestPacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PingRequest);

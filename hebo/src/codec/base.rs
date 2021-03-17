@@ -11,11 +11,11 @@ use super::error::{DecodeError, EncodeError};
 pub type PacketId = u16;
 
 /// Convert native data types to network byte stream.
-pub trait ToNetPacket {
+pub trait EncodePacket {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError>;
 }
 
-pub trait FromNetPacket: Sized {
+pub trait DecodePacket: Sized {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError>;
 }
 
@@ -235,7 +235,7 @@ impl RemainingLength {
     }
 }
 
-impl FromNetPacket for RemainingLength {
+impl DecodePacket for RemainingLength {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError> {
         let mut byte: u32;
         let mut value: u32 = 0;
@@ -264,7 +264,7 @@ impl FromNetPacket for RemainingLength {
     }
 }
 
-impl ToNetPacket for RemainingLength {
+impl EncodePacket for RemainingLength {
     fn to_net(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         if self.0 > 0x7fffffff {
             return Err(EncodeError::InvalidData);
@@ -299,7 +299,7 @@ pub struct FixedHeader {
     pub remaining_length: RemainingLength,
 }
 
-impl FromNetPacket for FixedHeader {
+impl DecodePacket for FixedHeader {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, DecodeError> {
         let flag = buf[*offset];
         *offset += 1;
@@ -318,7 +318,7 @@ impl FromNetPacket for FixedHeader {
     }
 }
 
-impl ToNetPacket for FixedHeader {
+impl EncodePacket for FixedHeader {
     fn to_net(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let packet_type: u8 = self.packet_type.into();
         let packet_flags: u8 = self.packet_flags.into();
@@ -365,7 +365,7 @@ impl TryFrom<u8> for QoS {
 #[cfg(test)]
 mod tests {
     use super::RemainingLength;
-    use crate::base::{FromNetPacket, ToNetPacket};
+    use crate::base::{DecodePacket, EncodePacket};
 
     #[test]
     fn test_remaining_length_encode() {

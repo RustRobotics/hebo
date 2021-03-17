@@ -5,7 +5,7 @@
 use std::io;
 
 use super::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketType, RemainingLength, ToNetPacket,
+    FixedHeader, DecodePacket, PacketFlags, PacketType, RemainingLength, EncodePacket,
 };
 use super::error::Error;
 
@@ -23,7 +23,7 @@ impl PingResponsePacket {
     }
 }
 
-impl ToNetPacket for PingResponsePacket {
+impl EncodePacket for PingResponsePacket {
     fn to_net(&self, v: &mut Vec<u8>) -> io::Result<usize> {
         let fixed_header = FixedHeader {
             packet_type: PacketType::PingResponse,
@@ -34,7 +34,7 @@ impl ToNetPacket for PingResponsePacket {
     }
 }
 
-impl FromNetPacket for PingResponsePacket {
+impl DecodePacket for PingResponsePacket {
     fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
         let fixed_header = FixedHeader::from_net(buf, offset)?;
         assert_eq!(fixed_header.packet_type, PacketType::PingResponse);
