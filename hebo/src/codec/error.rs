@@ -5,14 +5,10 @@
 #[derive(Debug)]
 enum Error {
     TcpConnectError,
-    InvalidFixedHeader,
     PacketEmpty,
 
     /// No topic is speicified in Subscribe packet.
     EmptyTopic,
-
-    /// Topic name might contain wildcard characters.
-    InvalidTopicName,
 
     /// Violate topic filter rules.
     InvalidTopicFilter,
@@ -39,6 +35,9 @@ pub enum DecodeError {
 
     /// Invalid UTF-8 string.
     InvalidString,
+
+    /// Topic name might contain wildcard characters.
+    InvalidTopicName,
 
     OutOfRangeError,
 

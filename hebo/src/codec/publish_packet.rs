@@ -2,15 +2,15 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io::{self, Write};
+use std::io::Write;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::base::{
-    is_valid_topic_name, FixedHeader, DecodePacket, PacketFlags, PacketId, PacketType, QoS,
-    RemainingLength, EncodePacket,
+use super::utils;
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    PacketType, QoS, RemainingLength,
 };
-use super::error::Error;
 
 /// PublishPacket is used to transport application messages from the Client to the Server,
 /// or from the Server to the Client.
@@ -41,7 +41,7 @@ use super::error::Error;
 /// * QoS 0, no response
 /// * QoS 1, PublishAckPacket
 /// * QoS 2, PublishRecPacket
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PublishPacket {
     /// If dup field is false, it indicates that this is the first time to send this packet.
     /// If it is true, then this packet might be re-delivery of an earlier attempt to send the
@@ -85,94 +85,6 @@ pub struct PublishPacket {
 
     /// Payload contains `msg` field.
     msg: Vec<u8>,
-}
-
-impl DecodePacket for PublishPacket {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::decode(buf, offset)?;
-        if fixed_header.packet_type != PacketType::Publish {
-            return Err(Error::InvalidFixedHeader);
-        }
-        let (dup, qos, retain) =
-            if let PacketFlags::Publish { dup, qos, retain } = fixed_header.packet_flags {
-                (dup, qos, retain)
-            } else {
-                return Err(Error::InvalidFixedHeader);
-            };
-
-        let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-        *offset += 2;
-        let topic = String::from_utf8((&buf[*offset..*offset + topic_len]).to_vec())?;
-        *offset += topic_len;
-
-        // Topic name MUST NOT contain wildchard characters.
-        if !is_valid_topic_name(&topic) {
-            return Err(Error::InvalidTopicName);
-        }
-
-        // Parse packet id
-        let packet_id = if qos != QoS::AtMostOnce {
-            let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]);
-            *offset += 2;
-            packet_id
-        } else {
-            0
-        };
-
-        let mut msg_len = fixed_header.remaining_length.0 as usize
-            - 2 // topic length bytes
-            - topic_len; // topic
-        if qos != QoS::AtMostOnce {
-            // Packet identifier
-            msg_len -= 2;
-        }
-        let msg = buf[*offset..*offset + msg_len].to_vec();
-        Ok(PublishPacket {
-            qos,
-            retain,
-            dup,
-            topic,
-            packet_id,
-            msg,
-        })
-    }
-}
-
-impl EncodePacket for PublishPacket {
-    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
-        let old_len = v.len();
-
-        let mut remaining_length = 2 // Topic length bytes
-            + self.topic.len() // Topic length
-            + self.msg.len(); // Message length
-        if self.qos != QoS::AtMostOnce {
-            // For `packet_id` field.
-            remaining_length += 2;
-        }
-
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Publish,
-            packet_flags: PacketFlags::Publish {
-                dup: self.dup,
-                retain: self.retain,
-                qos: self.qos,
-            },
-            remaining_length: RemainingLength(remaining_length as u32),
-        };
-        fixed_header.encode(v)?;
-
-        // Write variable header
-        v.write_u16::<BigEndian>(self.topic.len() as u16)?;
-        v.write_all(&self.topic.as_bytes())?;
-        if self.qos() != QoS::AtMostOnce {
-            v.write_u16::<BigEndian>(self.packet_id())?;
-        }
-
-        // Write payload
-        v.write_all(&self.msg)?;
-
-        Ok(v.len() - old_len)
-    }
 }
 
 impl PublishPacket {
@@ -225,5 +137,89 @@ impl PublishPacket {
 
     pub fn message(&self) -> &[u8] {
         &self.msg
+    }
+}
+
+impl DecodePacket for PublishPacket {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+
+        let (dup, qos, retain) =
+            if let PacketType::Publish { dup, qos, retain } = fixed_header.packet_type {
+                (dup, qos, retain)
+            } else {
+                return Err(DecodeError::InvalidPacketType);
+            };
+
+        let topic_len = BigEndian::read_u16(ba.read(2)?) as usize;
+        let topic = ba.read(topic_len)?;
+        let topic = String::from_utf8(topic.to_vec())?;
+
+        // Topic name MUST NOT contain wildchard characters.
+        if !utils::is_valid_topic_name(&topic) {
+            return Err(DecodeError::InvalidTopicName);
+        }
+
+        // Parse packet id
+        let packet_id = if qos != QoS::AtMostOnce {
+            BigEndian::read_u16(ba.read(2)?)
+        } else {
+            0
+        };
+
+        let mut msg_len = fixed_header.remaining_length.0 as usize
+            - 2 // topic length bytes
+            - topic_len; // topic
+        if qos != QoS::AtMostOnce {
+            // Packet identifier
+            msg_len -= 2;
+        }
+
+        // TODO(Shaohua): Only copy a reference.
+        let msg = ba.read(msg_len)?.to_vec();
+        Ok(PublishPacket {
+            qos,
+            retain,
+            dup,
+            topic,
+            packet_id,
+            msg,
+        })
+    }
+}
+
+impl EncodePacket for PublishPacket {
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        let old_len = v.len();
+
+        let mut remaining_length = 2 // Topic length bytes
+            + self.topic.len() // Topic length
+            + self.msg.len(); // Message length
+        if self.qos != QoS::AtMostOnce {
+            // For `packet_id` field.
+            remaining_length += 2;
+        }
+
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Publish {
+                dup: self.dup,
+                retain: self.retain,
+                qos: self.qos,
+            },
+            remaining_length: RemainingLength(remaining_length as u32),
+        };
+        fixed_header.encode(v)?;
+
+        // Write variable header
+        v.write_u16::<BigEndian>(self.topic.len() as u16)?;
+        v.write_all(&self.topic.as_bytes())?;
+        if self.qos() != QoS::AtMostOnce {
+            v.write_u16::<BigEndian>(self.packet_id())?;
+        }
+
+        // Write payload
+        v.write_all(&self.msg)?;
+
+        Ok(v.len() - old_len)
     }
 }
