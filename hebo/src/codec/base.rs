@@ -28,11 +28,7 @@ pub enum PacketType {
     ConnectAck,
 
     /// Publish message
-    Publish {
-        dup: bool,
-        qos: QoS,
-        retain: bool,
-    },
+    Publish { dup: bool, qos: QoS, retain: bool },
 
     /// Publish acknowledgement
     PublishAck,
@@ -66,14 +62,45 @@ pub enum PacketType {
 
     /// Client is disconnecting
     Disconnect,
-
-    Reserved,
 }
 
 impl Into<u8> for PacketType {
     fn into(self) -> u8 {
-        0b01
-        //(self as u8 & 0b0000_1111) << 4
+        let type_bits = match self {
+            PacketType::Connect => 1,
+            PacketType::ConnectAck => 2,
+            PacketType::Publish { .. } => 3,
+            PacketType::PublishAck => 4,
+            PacketType::PublishReceived => 5,
+            PacketType::PublishRelease => 6,
+            PacketType::PublishComplete => 7,
+            PacketType::Subscribe => 8,
+            PacketType::SubscribeAck => 9,
+            PacketType::Unsubscribe => 10,
+            PacketType::UnsubscribeAck => 11,
+            PacketType::PingRequest => 12,
+            PacketType::PingResponse => 13,
+            PacketType::Disconnect => 14,
+        };
+
+        let flags_bits = match self {
+            PacketType::Publish { dup, qos, retain } => {
+                let dup = if dup { 0b0000_10000 } else { 0b0000_0000 };
+                let qos = match qos {
+                    QoS::AtMostOnce => 0b0000_0000,
+                    QoS::AtLeastOnce => 0b0000_0010,
+                    QoS::ExactOnce => 0b0000_0100,
+                };
+
+                let retain = if retain { 0b0000_0001 } else { 0b0000_0000 };
+                dup | qos | retain
+            }
+            PacketType::PublishRelease => 0b0000_0010,
+            PacketType::Subscribe => 0b0000_0010,
+            PacketType::Unsubscribe => 0b0000_0010,
+            _ => 0,
+        };
+        ((type_bits & 0b1111_0000) << 4) | flags_bits
     }
 }
 
@@ -110,7 +137,6 @@ impl TryFrom<u8> for PacketType {
             12 => Ok(PacketType::PingRequest),
             13 => Ok(PacketType::PingResponse),
             14 => Ok(PacketType::Disconnect),
-            15 => Ok(PacketType::Reserved),
 
             _ => return Err(DecodeError::InvalidPacketType),
         }
@@ -123,68 +149,11 @@ impl Default for PacketType {
     }
 }
 
-/*
-impl Into<u8> for PacketFlags {
-    fn into(self) -> u8 {
-        match self {
-            PacketFlags::Connect => 0,
-            PacketFlags::ConnectAck => 0,
-            PacketFlags::Publish { dup, qos, retain } => {
-                let dup = if dup { 0b0000_10000 } else { 0b0000_0000 };
-                let qos = match qos {
-                    QoS::AtMostOnce => 0b0000_0000,
-                    QoS::AtLeastOnce => 0b0000_0010,
-                    QoS::ExactOnce => 0b0000_0100,
-                };
-
-                let retain = if retain { 0b0000_0001 } else { 0b0000_0000 };
-                dup | qos | retain
-            }
-            PacketFlags::PublishAck => 0,
-            PacketFlags::PublishReceived => 0,
-            PacketFlags::PublishRelease => 0b0000_0010,
-            PacketFlags::PublishComplete => 0,
-            PacketFlags::Subscribe => 0b0000_0010,
-            PacketFlags::SubscribeAck => 0,
-            PacketFlags::Unsubscribe => 0b0000_0010,
-            PacketFlags::UnsubscribeAck => 0,
-            PacketFlags::PingRequest => 0,
-            PacketFlags::PingResponse => 0,
-            PacketFlags::Disconnect => 0,
-        }
-    }
-}
-*/
-
-/*
-impl PacketFlags {
-    pub fn from_u8(packet_type: PacketType, flag: u8) -> PacketFlags {
-        let flag = flag & 0b0000_1111;
-        match packet_type {
-            PacketType::Publish => {
-                let dup = (flag & 0b0000_1000) == 0b0000_1000;
-                let retain = (flag & 0b0000_0001) == 0b0000_0001;
-                let qos = match flag & 0b0000_0110 {
-                    0b0000_0000 => QoS::AtMostOnce,
-                    0b0000_0010 => QoS::AtLeastOnce,
-                    0b0000_0100 => QoS::ExactOnce,
-                    // TODO(Shaohua): Handle qos error
-                    _ => QoS::AtMostOnce,
-                };
-
-                PacketFlags::Publish { dup, qos, retain }
-            }
-            _ => PacketFlags::default(),
-        }
-    }
-}
-*/
-
 /// `Remaining Length` uses variable length encoding method. The 7th bit
 /// in a byte is used to indicate are bytes are available. And the maximum number
 /// of bytes in the `Remaining Length` field is 4 bytes. The maximum value is
 /// `0xFF 0xFF 0xFF 0x7F`, `256MB`.
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct RemainingLength(pub u32);
 
 impl RemainingLength {
