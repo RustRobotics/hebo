@@ -3,16 +3,16 @@
 // in the LICENSE file.
 
 use std::convert::TryFrom;
-use std::io::{self, Write};
+use std::io::Write;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::base::{
-    is_valid_topic_filter, to_utf8_string, FixedHeader, DecodePacket, PacketFlags, PacketId,
-    PacketType, QoS, RemainingLength, EncodePacket,
-};
-use super::error::Error;
 use super::topic::Topic;
+use super::utils;
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    PacketType, QoS, RemainingLength,
+};
 
 /// Topic/QoS pair.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -72,87 +72,6 @@ pub struct SubscribePacket {
     topics: Vec<SubscribeTopic>,
 }
 
-impl DecodePacket for SubscribePacket {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<SubscribePacket, Error> {
-        let fixed_header = FixedHeader::decode(buf, offset)?;
-        assert_eq!(fixed_header.packet_type, PacketType::Subscribe);
-
-        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]);
-        *offset += 2;
-
-        let mut topics = Vec::new();
-        let mut remaining_length = 2;
-
-        // Parse topic/qos list.
-        while remaining_length < fixed_header.remaining_length.0 {
-            let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-            *offset += 2;
-            remaining_length += 2;
-
-            let topic = to_utf8_string(buf, *offset, *offset + topic_len)?;
-            remaining_length += topic_len as u32;
-            *offset += topic_len;
-
-            // Check rules defined in MQTT chapter-4.7 Topic Name and Filters
-            if !is_valid_topic_filter(&topic) {
-                return Err(Error::InvalidTopicFilter);
-            }
-
-            let topic = Topic::parse(&topic);
-            if topic.is_err() {
-                return Err(Error::InvalidTopicFilter);
-            }
-            let topic = topic.unwrap();
-
-            let qos_flag = buf[*offset];
-            *offset += 1;
-            remaining_length += 1;
-            let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
-
-            topics.push(SubscribeTopic { topic, qos });
-        }
-
-        if topics.is_empty() {
-            return Err(Error::EmptyTopic);
-        }
-
-        Ok(SubscribePacket { packet_id, topics })
-    }
-}
-
-impl EncodePacket for SubscribePacket {
-    fn encode(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
-        let old_len = buf.len();
-
-        let mut remaining_length = 2; // Variable length
-        for topic in &self.topics {
-            remaining_length += 2 // Topic length bytes
-                + topic.topic.len() // Topic
-                + 1; // Requested QoS
-        }
-
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Subscribe,
-            packet_flags: PacketFlags::Subscribe,
-            remaining_length: RemainingLength(remaining_length as u32),
-        };
-        fixed_header.encode(buf)?;
-
-        // Variable header
-        buf.write_u16::<BigEndian>(self.packet_id)?;
-
-        // Payload
-        for topic in &self.topics {
-            buf.write_u16::<BigEndian>(topic.topic.len() as u16)?;
-            buf.write_all(&topic.topic.as_bytes())?;
-            let qos: u8 = 0b0000_0011 & (topic.qos as u8);
-            buf.push(qos);
-        }
-
-        Ok(buf.len() - old_len)
-    }
-}
-
 impl SubscribePacket {
     pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> SubscribePacket {
         let topic = Topic::parse(topic).unwrap();
@@ -172,5 +91,85 @@ impl SubscribePacket {
 
     pub fn mut_topics(self) -> Vec<SubscribeTopic> {
         self.topics
+    }
+}
+
+impl DecodePacket for SubscribePacket {
+    fn decode(ba: &mut ByteArray) -> Result<SubscribePacket, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+        if fixed_header.packet_type != PacketType::Subscribe {
+            return Err(DecodeError::InvalidPacketType);
+        }
+
+        let packet_id = BigEndian::read_u16(ba.read(2)?);
+
+        let mut topics = Vec::new();
+        let mut remaining_length = 2;
+
+        // Parse topic/qos list.
+        while remaining_length < fixed_header.remaining_length.0 {
+            let topic_len = BigEndian::read_u16(ba.read(2)?) as usize;
+            remaining_length += 2;
+
+            let topic = ba.read(topic_len)?;
+            let topic = utils::to_utf8_string(topic)?;
+            remaining_length += topic_len as u32;
+
+            // Check rules defined in MQTT chapter-4.7 Topic Name and Filters
+            if !utils::is_valid_topic_filter(&topic) {
+                return Err(DecodeError::InvalidTopicFilter);
+            }
+
+            // TODO(Shaohua): Convert TopicError to DecodeError
+            let topic = Topic::parse(&topic);
+            if topic.is_err() {
+                return Err(DecodeError::InvalidTopicFilter);
+            }
+            let topic = topic.unwrap();
+
+            let qos_flag = ba.one_byte()?;
+            remaining_length += 1;
+            let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
+
+            topics.push(SubscribeTopic { topic, qos });
+        }
+
+        if topics.is_empty() {
+            return Err(DecodeError::EmptyTopic);
+        }
+
+        Ok(SubscribePacket { packet_id, topics })
+    }
+}
+
+impl EncodePacket for SubscribePacket {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        let old_len = buf.len();
+
+        let mut remaining_length = 2; // Variable length
+        for topic in &self.topics {
+            remaining_length += 2 // Topic length bytes
+                + topic.topic.len() // Topic
+                + 1; // Requested QoS
+        }
+
+        let fixed_header = FixedHeader {
+            packet_type: PacketType::Subscribe,
+            remaining_length: RemainingLength(remaining_length as u32),
+        };
+        fixed_header.encode(buf)?;
+
+        // Variable header
+        buf.write_u16::<BigEndian>(self.packet_id)?;
+
+        // Payload
+        for topic in &self.topics {
+            buf.write_u16::<BigEndian>(topic.topic.len() as u16)?;
+            buf.write_all(&topic.topic.as_bytes())?;
+            let qos: u8 = 0b0000_0011 & (topic.qos as u8);
+            buf.push(qos);
+        }
+
+        Ok(buf.len() - old_len)
     }
 }

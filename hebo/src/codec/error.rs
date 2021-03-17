@@ -6,12 +6,6 @@
 enum Error {
     TcpConnectError,
     PacketEmpty,
-
-    /// No topic is speicified in Subscribe packet.
-    EmptyTopic,
-
-    /// Violate topic filter rules.
-    InvalidTopicFilter,
 }
 
 pub enum DecodeError {
@@ -35,6 +29,12 @@ pub enum DecodeError {
 
     /// Invalid UTF-8 string.
     InvalidString,
+
+    /// Violate topic filter rules.
+    InvalidTopicFilter,
+
+    /// No topic is speicified in Subscribe packet.
+    EmptyTopic,
 
     /// Topic name might contain wildcard characters.
     InvalidTopicName,
