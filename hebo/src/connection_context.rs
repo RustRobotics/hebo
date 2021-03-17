@@ -2,17 +2,17 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::base::{FixedHeader, FromNetPacket, PacketType, ToNetPacket};
-use codec::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
-use codec::connect_packet::ConnectPacket;
-use codec::ping_request_packet::PingRequestPacket;
-use codec::ping_response_packet::PingResponsePacket;
-use codec::publish_ack_packet::PublishAckPacket;
-use codec::publish_packet::PublishPacket;
-use codec::subscribe_ack_packet::{SubscribeAck, SubscribeAckPacket};
-use codec::subscribe_packet::SubscribePacket;
-use codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
-use codec::unsubscribe_packet::UnsubscribePacket;
+use crate::codec::base::{FixedHeader, FromNetPacket, PacketType, ToNetPacket};
+use crate::codec::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
+use crate::codec::connect_packet::ConnectPacket;
+use crate::codec::ping_request_packet::PingRequestPacket;
+use crate::codec::ping_response_packet::PingResponsePacket;
+use crate::codec::publish_ack_packet::PublishAckPacket;
+use crate::codec::publish_packet::PublishPacket;
+use crate::codec::subscribe_ack_packet::{SubscribeAck, SubscribeAckPacket};
+use crate::codec::subscribe_packet::SubscribePacket;
+use crate::codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
+use crate::codec::unsubscribe_packet::UnsubscribePacket;
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
