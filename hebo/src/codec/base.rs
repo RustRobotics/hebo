@@ -75,10 +75,12 @@ impl Into<u8> for PacketType {
     }
 }
 
-impl From<u8> for PacketType {
-    fn from(flag: u8) -> Self {
-        let packet_type = (flag & 0b1111_0000) >> 4;
-        match packet_type {
+impl TryFrom<u8> for PacketType {
+    type Error = DecodeError;
+
+    fn try_from(v: u8) -> Result<PacketType, Self::Error> {
+        let packet_type = (v & 0b1111_0000) >> 4;
+        let t = match packet_type {
             0 => PacketType::Unknown,
             1 => PacketType::Connect,
             2 => PacketType::ConnectAck,
@@ -97,6 +99,11 @@ impl From<u8> for PacketType {
             15 => PacketType::Reserved,
 
             _ => PacketType::Unknown,
+        };
+        if t == PacketType::Unknown {
+            Err(DecodeError::InvalidPacketType)
+        } else {
+            Ok(t)
         }
     }
 }
@@ -305,7 +312,7 @@ impl DecodePacket for FixedHeader {
         *offset += 1;
 
         // TODO(Shaohua): Handle invalid packet type.
-        let packet_type = PacketType::from(flag);
+        let packet_type = PacketType::try_from(flag)?;
         let packet_flags = PacketFlags::from_u8(packet_type, flag);
 
         let remaining_length = RemainingLength::from_net(buf, offset)?;

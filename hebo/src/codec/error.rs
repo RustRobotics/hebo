@@ -26,6 +26,8 @@ pub enum DecodeError {
     /// Or contains invalid characters.
     InvalidClientId,
 
+    InvalidPacketType,
+
     /// Protocol level is not in `3.1`, `3.1.1` or `5.0`.
     InvalidProtocolLevel,
 
