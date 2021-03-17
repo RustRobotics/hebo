@@ -3,15 +3,15 @@
 // in the LICENSE file.
 
 use std::default::Default;
-use std::io::{self, Write};
+use std::io::Write;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::base::{
-    to_utf8_string, FixedHeader, DecodePacket, PacketFlags, PacketId, PacketType, RemainingLength,
-    EncodePacket,
+use super::utils;
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    PacketType, RemainingLength,
 };
-use super::error::Error;
 
 /// The Client request to unsubscribe topics from the Server.
 /// When the Server receives this packet, no more Publish packet will be sent to the Client.
@@ -42,7 +42,7 @@ use super::error::Error;
 /// | Topic N ...             |
 /// +-------------------------+
 /// ```
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct UnsubscribePacket {
     /// Used in UnsubscribeAck packet.
     packet_id: PacketId,
@@ -77,27 +77,28 @@ impl UnsubscribePacket {
         self
     }
 
+    // TODO(Shaohua): Convert type to &[&str]
     pub fn topics(&self) -> &[String] {
         &self.topics
     }
 }
 
 impl DecodePacket for UnsubscribePacket {
-    fn decode(buf: &[u8], offset: &mut usize) -> Result<UnsubscribePacket, Error> {
-        let fixed_header = FixedHeader::decode(buf, offset)?;
-        assert_eq!(fixed_header.packet_type, PacketType::PublishAck);
+    fn decode(ba: &mut ByteArray) -> Result<UnsubscribePacket, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+        if fixed_header.packet_type != PacketType::PublishAck {
+            return Err(DecodeError::InvalidPacketType);
+        }
 
-        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
-        *offset += 2;
+        let packet_id = BigEndian::read_u16(ba.read(2)?) as PacketId;
 
         let mut remaining_length = 2;
         let mut topics = Vec::new();
         while remaining_length < fixed_header.remaining_length.0 {
-            let topic_len = BigEndian::read_u16(&buf[*offset..*offset + 2]) as usize;
-            *offset += 2;
+            let topic_len = BigEndian::read_u16(ba.read(2)?) as usize;
             remaining_length += 2;
-            let topic = to_utf8_string(buf, *offset, *offset + topic_len)?;
-            *offset += topic_len;
+            let topic = ba.read(topic_len)?;
+            let topic = utils::to_utf8_string(topic)?;
             remaining_length += topic_len as u32;
             topics.push(topic);
         }
@@ -107,7 +108,7 @@ impl DecodePacket for UnsubscribePacket {
 }
 
 impl EncodePacket for UnsubscribePacket {
-    fn encode(&self, v: &mut Vec<u8>) -> io::Result<usize> {
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
         let mut remaining_length: usize = 2; // packet id
         for topic in &self.topics {
@@ -117,7 +118,6 @@ impl EncodePacket for UnsubscribePacket {
 
         let fixed_header = FixedHeader {
             packet_type: PacketType::Unsubscribe,
-            packet_flags: PacketFlags::Unsubscribe,
             remaining_length: RemainingLength(remaining_length as u32),
         };
         fixed_header.encode(v)?;

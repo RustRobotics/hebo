@@ -20,7 +20,7 @@ mod publish_received_packet;
 mod subscribe_packet;
 pub mod topic;
 //pub mod unsubscribe_ack_packet;
-//pub mod unsubscribe_packet;
+mod unsubscribe_packet;
 pub mod utils;
 
 pub use base::{DecodePacket, EncodePacket, PacketId, QoS};
@@ -38,3 +38,4 @@ pub use publish_packet::PublishPacket;
 pub use publish_received_packet::PublishReceivedPacket;
 pub use subscribe_packet::SubscribePacket;
 pub use topic::Topic;
+pub use unsubscribe_packet::UnsubscribePacket;
