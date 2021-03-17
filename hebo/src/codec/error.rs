@@ -2,12 +2,12 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-#[derive(Debug)]
 enum Error {
     TcpConnectError,
     PacketEmpty,
 }
 
+#[derive(Debug)]
 pub enum DecodeError {
     /// ClientId is empty or its length exceeds 23.
     /// Or contains invalid characters.
@@ -45,6 +45,7 @@ pub enum DecodeError {
     TooManyData,
 }
 
+#[derive(Debug)]
 pub enum EncodeError {
     InvalidData,
 
@@ -54,6 +55,7 @@ pub enum EncodeError {
     TooManyData,
 }
 
+#[derive(Debug)]
 pub enum ClientIdError {
     InvalidLength,
     InvalidChar,

@@ -3,7 +3,6 @@
 // in the LICENSE file.
 
 use std::convert::TryFrom;
-use std::io;
 
 use super::{ByteArray, DecodeError, EncodeError};
 

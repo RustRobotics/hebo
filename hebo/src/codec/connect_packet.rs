@@ -4,7 +4,7 @@
 
 use std::convert::TryFrom;
 use std::default::Default;
-use std::io::{self, Write};
+use std::io::Write;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 

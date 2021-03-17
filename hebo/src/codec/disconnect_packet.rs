@@ -3,7 +3,6 @@
 // in the LICENSE file.
 
 use std::default::Default;
-use std::io;
 
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType,
@@ -41,7 +40,7 @@ impl DecodePacket for DisconnectPacket {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type != PacketType::Disconnect {
             Err(DecodeError::InvalidPacketType)
-        } else if (fixed_header.remaining_length.0 != 0) {
+        } else if fixed_header.remaining_length.0 != 0 {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             Ok(DisconnectPacket {})

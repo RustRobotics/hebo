@@ -10,9 +10,8 @@ pub struct ByteArray<'a> {
 }
 
 impl<'a> ByteArray<'a> {
-    pub fn new(data: &'a [u8], offset: usize) -> Self {
-        assert!(offset < data.len());
-        ByteArray { offset, data }
+    pub fn new(data: &'a [u8]) -> Self {
+        ByteArray { offset: 0, data }
     }
 
     pub fn len(&self) -> usize {
