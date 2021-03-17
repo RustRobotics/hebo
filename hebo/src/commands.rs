@@ -2,8 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use crate::codec::publish_packet::PublishPacket;
-use crate::codec::subscribe_packet::SubscribePacket;
+use super::codec::{PublishPacket, SubscribePacket};
 
 pub type ConnectionId = u64;
 

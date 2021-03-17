@@ -2,13 +2,14 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use crate::codec;
+use super::codec;
 use std::io;
 
 #[derive(Debug)]
 pub enum Error {
     IoError(io::Error),
-    CodecError(codec::Error),
+    EncodeError(codec::EncodeError),
+    DecodeError(codec::DecodeError),
     SendError,
 }
 
@@ -18,9 +19,15 @@ impl From<io::Error> for Error {
     }
 }
 
-impl From<codec::Error> for Error {
-    fn from(err: codec::Error) -> Self {
-        Error::CodecError(err)
+impl From<codec::EncodeError> for Error {
+    fn from(err: codec::EncodeError) -> Self {
+        Error::EncodeError(err)
+    }
+}
+
+impl From<codec::DecodeError> for Error {
+    fn from(err: codec::DecodeError) -> Self {
+        Error::DecodeError(err)
     }
 }
 

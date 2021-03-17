@@ -2,17 +2,6 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use crate::codec::base::{FixedHeader, FromNetPacket, PacketType, ToNetPacket};
-use crate::codec::connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
-use crate::codec::connect_packet::ConnectPacket;
-use crate::codec::ping_request_packet::PingRequestPacket;
-use crate::codec::ping_response_packet::PingResponsePacket;
-use crate::codec::publish_ack_packet::PublishAckPacket;
-use crate::codec::publish_packet::PublishPacket;
-use crate::codec::subscribe_ack_packet::{SubscribeAck, SubscribeAckPacket};
-use crate::codec::subscribe_packet::SubscribePacket;
-use crate::codec::unsubscribe_ack_packet::UnsubscribeAckPacket;
-use crate::codec::unsubscribe_packet::UnsubscribePacket;
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -20,6 +9,12 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
+use crate::codec::{
+    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, EncodePacket,
+    FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket,
+    PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
+    UnsubscribePacket,
+};
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::error;
 
@@ -95,9 +90,9 @@ impl ConnectionContext {
         }
     }
 
-    async fn send<P: ToNetPacket>(&mut self, packet: P) -> error::Result<()> {
+    async fn send<P: EncodePacket>(&mut self, packet: P) -> error::Result<()> {
         let mut buf = Vec::new();
-        packet.to_net(&mut buf).unwrap();
+        packet.encode(&mut buf).unwrap();
         self.stream
             .write(&buf)
             .await
@@ -106,8 +101,8 @@ impl ConnectionContext {
     }
 
     async fn handle_client_packet(&mut self, buf: &[u8]) -> error::Result<()> {
-        let mut offset: usize = 0;
-        let fixed_header = FixedHeader::from_net(&buf, &mut offset)?;
+        let mut ba = ByteArray::new(buf);
+        let fixed_header = FixedHeader::decode(&mut ba)?;
 
         match fixed_header.packet_type {
             PacketType::Connect => {
@@ -122,7 +117,7 @@ impl ConnectionContext {
                     return Err(err);
                 }
             }
-            PacketType::Publish => {
+            PacketType::Publish { .. } => {
                 if let Err(err) = self.publish(&buf).await {
                     log::warn!("publish() failed! {:?}", err);
                     return Err(err);
@@ -155,8 +150,8 @@ impl ConnectionContext {
 
     async fn connect(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("connect()");
-        let mut offset = 0;
-        let packet = ConnectPacket::from_net(&buf, &mut offset)?;
+        let mut ba = ByteArray::new(buf);
+        let packet = ConnectPacket::decode(&mut ba)?;
         self.client_id = packet.client_id().to_string();
         // TODO(Shaohua): Check connection status first.
         // TODO(Shaohua): If this client is already connected, send disconnect packet.
@@ -167,8 +162,8 @@ impl ConnectionContext {
 
     async fn ping(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("ping()");
-        let mut offset = 0;
-        let _packet = PingRequestPacket::from_net(&buf, &mut offset)?;
+        let mut ba = ByteArray::new(buf);
+        let _packet = PingRequestPacket::decode(&mut ba)?;
         log::info!("Will send ping response packet");
         let ping_resp_packet = PingResponsePacket::new();
         self.send(ping_resp_packet).await
@@ -176,8 +171,8 @@ impl ConnectionContext {
 
     async fn publish(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("publish()");
-        let mut offset: usize = 0;
-        let packet = PublishPacket::from_net(&buf, &mut offset)?;
+        let mut ba = ByteArray::new(buf);
+        let packet = PublishPacket::decode(&mut ba)?;
         let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
         self.send(publish_ack_packet).await?;
         // TODO(Shaohua): Send PublishAck if qos == 0
@@ -190,8 +185,8 @@ impl ConnectionContext {
 
     async fn subscribe(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("subscribe()");
-        let mut offset: usize = 0;
-        let packet = SubscribePacket::from_net(&buf, &mut offset)?;
+        let mut ba = ByteArray::new(buf);
+        let packet = SubscribePacket::decode(&mut ba)?;
         let ack;
         if let Err(err) = self
             .sender
@@ -213,8 +208,9 @@ impl ConnectionContext {
 
     async fn unsubscribe(&mut self, buf: &[u8]) -> error::Result<()> {
         log::info!("unsubscribe()");
-        let mut offset: usize = 0;
-        let packet = UnsubscribePacket::from_net(&buf, &mut offset)?;
+        let mut ba = ByteArray::new(buf);
+        let packet = UnsubscribePacket::decode(&mut ba)?;
+
         // TODO(Shaohua): Send msg to command channel
         let unsubscribe_ack_packet = UnsubscribeAckPacket::new(packet.packet_id());
         self.send(unsubscribe_ack_packet).await

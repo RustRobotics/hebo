@@ -2,9 +2,8 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-/*
-use std::io;
 use hebo::server;
+use std::io;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
@@ -13,6 +12,3 @@ async fn main() -> io::Result<()> {
 
     server::run_server().await
 }
-*/
-
-fn main() {}
