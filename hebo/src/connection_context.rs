@@ -44,6 +44,10 @@ pub struct ConnectionContext {
     receiver: Receiver<ServerCommand>,
     status: Status,
     client_id: String,
+    // TODO(Shaohua): Add session flag
+    // TODO(Shaohua): Add keep alive
+    // TODO(Shaohua): Add subscribed topics
+    // TODO(Shaohua): Add activiti statistics
 }
 
 impl ConnectionContext {
