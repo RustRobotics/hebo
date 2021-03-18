@@ -71,7 +71,6 @@ impl ServerContext {
     }
 
     async fn route_cmd(&mut self, cmd: ConnectionCommand) {
-        log::info!("new cmd received: {:?}", cmd);
         match cmd {
             ConnectionCommand::Publish(packet) => self.on_publish(packet).await,
             ConnectionCommand::Subscribe(connection_id, packet) => {
@@ -87,6 +86,7 @@ impl ServerContext {
     }
 
     fn on_subscribe(&mut self, connection_id: ConnectionId, packet: SubscribePacket) {
+        log::info!("on_subscribe(), connection id: {:?}", connection_id);
         for pipeline in self.pipelines.iter_mut() {
             if pipeline.connection_id == connection_id {
                 pipeline.topics.extend(packet.mut_topics());
@@ -99,7 +99,6 @@ impl ServerContext {
         let cmd = ServerCommand::Publish(packet.clone());
         for pipeline in self.pipelines.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {
-                log::info!("server_context will send publish packet");
                 if let Err(err) = pipeline.server_tx.send(cmd.clone()).await {
                     log::warn!("Failed to send publish packet to connection: {}", err);
                 }

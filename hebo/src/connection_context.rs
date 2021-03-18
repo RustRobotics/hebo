@@ -26,7 +26,7 @@ enum Status {
 }
 
 /// ConnectionContext represents a client connection.
-/// All the status of this client is mantinaed in this struct.
+/// All the status of this client is maintained in this struct.
 ///
 // TODO(Shaohua): Handle Session State
 // TODO(Shaohua): Handle Clean Session operation
@@ -202,8 +202,10 @@ impl ConnectionContext {
         } else {
             // TODO(Shaohua): Handle all of topics.
             ack = SubscribeAck::QoS(packet.topics()[0].qos);
+            log::info!("ack: {:?}", ack);
         }
         let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
+        log::info!("subscribe ack packet: {:?}", subscribe_ack_packet);
         self.send(subscribe_ack_packet).await
     }
 
