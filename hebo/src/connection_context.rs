@@ -153,11 +153,12 @@ impl ConnectionContext {
         let mut ba = ByteArray::new(buf);
         let packet = ConnectPacket::decode(&mut ba)?;
         self.client_id = packet.client_id().to_string();
+        // TODO(Shaohua): Handle keep alive
         // TODO(Shaohua): Check connection status first.
         // TODO(Shaohua): If this client is already connected, send disconnect packet.
         let packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
         self.status = Status::Connected;
-        self.send(packet).await.map(|_size| ())
+        self.send(packet).await.map(drop)
     }
 
     async fn ping(&mut self, buf: &[u8]) -> error::Result<()> {

@@ -96,7 +96,7 @@ impl Into<u8> for PacketType {
             PacketType::Unsubscribe => 0b0000_0010,
             _ => 0,
         };
-        ((type_bits & 0b1111_0000) << 4) | flags_bits
+        (type_bits << 4) | flags_bits
     }
 }
 
