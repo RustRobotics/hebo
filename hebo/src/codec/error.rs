@@ -50,6 +50,10 @@ pub enum DecodeError {
 pub enum EncodeError {
     InvalidData,
 
+    /// ClientId is empty or its length exceeds 23.
+    /// Or contains invalid characters.
+    InvalidClientId,
+
     IoError,
 
     /// Length of data exceeds its limitation
@@ -61,12 +65,6 @@ pub enum EncodeError {
     /// No topic is speicified in Subscribe packet.
     /// Topic name might contain wildcard characters.
     InvalidTopic(TopicError),
-}
-
-#[derive(Debug)]
-pub enum ClientIdError {
-    InvalidLength,
-    InvalidChar,
 }
 
 impl From<std::io::Error> for EncodeError {

@@ -8,7 +8,6 @@ use std::io::Write;
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::error::ClientIdError;
 use super::topic::Topic;
 use super::utils;
 use super::{
@@ -283,24 +282,9 @@ impl ConnectPacket {
         }
     }
 
-    pub fn validate_client_id(id: &str) -> Result<(), ClientIdError> {
-        if id.is_empty() || id.len() > 23 {
-            return Err(ClientIdError::InvalidLength);
-        }
-        for byte in id.bytes() {
-            if !((byte >= b'0' && byte <= b'9')
-                || (byte >= b'a' && byte <= b'z')
-                || (byte >= b'A' && byte <= b'Z'))
-            {
-                return Err(ClientIdError::InvalidChar);
-            }
-        }
-        Ok(())
-    }
-
-    pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, ClientIdError> {
+    pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
+        utils::validate_client_id(id)?;
         self.client_id.clear();
-        ConnectPacket::validate_client_id(id)?;
         self.client_id.push_str(id);
         Ok(self)
     }
