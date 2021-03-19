@@ -112,20 +112,10 @@ impl DecodePacket for SubscribePacket {
             remaining_length += 2;
 
             let topic = ba.read(topic_len)?;
+            Topic::validate_sub_topic(topic)?;
             let topic = utils::to_utf8_string(topic)?;
+            let topic = Topic::parse(&topic)?;
             remaining_length += topic_len as u32;
-
-            // Check rules defined in MQTT chapter-4.7 Topic Name and Filters
-            if !utils::is_valid_topic_filter(&topic) {
-                return Err(DecodeError::InvalidTopicFilter);
-            }
-
-            // TODO(Shaohua): Convert TopicError to DecodeError
-            let topic = Topic::parse(&topic);
-            if topic.is_err() {
-                return Err(DecodeError::InvalidTopicFilter);
-            }
-            let topic = topic.unwrap();
 
             let qos_flag = ba.one_byte()?;
             remaining_length += 1;
@@ -135,7 +125,7 @@ impl DecodePacket for SubscribePacket {
         }
 
         if topics.is_empty() {
-            return Err(DecodeError::EmptyTopic);
+            return Err(DecodeError::EmptyTopics);
         }
 
         Ok(SubscribePacket { packet_id, topics })
