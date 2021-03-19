@@ -2,6 +2,8 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use super::topic::TopicError;
+
 enum Error {
     TcpConnectError,
     PacketEmpty,
@@ -31,18 +33,16 @@ pub enum DecodeError {
     InvalidString,
 
     /// Violate topic filter rules.
-    InvalidTopicFilter,
-
-    /// No topic is speicified in Subscribe packet.
-    EmptyTopic,
-
     /// Topic name might contain wildcard characters.
-    InvalidTopicName,
+    InvalidTopic(TopicError),
 
     OutOfRangeError,
 
     /// Length of data exceeds its limitation
     TooManyData,
+
+    /// No topic is speicified in Subscribe packet.
+    EmptyTopics,
 }
 
 #[derive(Debug)]
@@ -53,6 +53,11 @@ pub enum EncodeError {
 
     /// Length of data exceeds its limitation
     TooManyData,
+
+    /// Violate topic filter rules.
+    /// No topic is speicified in Subscribe packet.
+    /// Topic name might contain wildcard characters.
+    InvalidTopic(TopicError),
 }
 
 #[derive(Debug)]
@@ -70,5 +75,17 @@ impl From<std::io::Error> for EncodeError {
 impl From<std::string::FromUtf8Error> for DecodeError {
     fn from(_e: std::string::FromUtf8Error) -> DecodeError {
         DecodeError::InvalidString
+    }
+}
+
+impl From<TopicError> for EncodeError {
+    fn from(e: TopicError) -> EncodeError {
+        EncodeError::InvalidTopic(e)
+    }
+}
+
+impl From<TopicError> for DecodeError {
+    fn from(e: TopicError) -> DecodeError {
+        DecodeError::InvalidTopic(e)
     }
 }
