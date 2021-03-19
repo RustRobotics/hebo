@@ -9,6 +9,7 @@ use std::io::Write;
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::error::ClientIdError;
+use super::topic::Topic;
 use super::utils;
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType, QoS,
@@ -335,6 +336,7 @@ impl ConnectPacket {
 
     pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, DecodeError> {
         utils::validate_utf8_string(topic)?;
+        Topic::validate_pub_topic(topic)?;
         self.will_topic = topic.to_string();
         Ok(self)
     }

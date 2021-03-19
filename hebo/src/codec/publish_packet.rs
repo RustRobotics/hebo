@@ -7,6 +7,7 @@ use std::io::Write;
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::topic::Topic;
+use super::utils;
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
     PacketType, QoS, RemainingLength,
@@ -90,7 +91,8 @@ pub struct PublishPacket {
 impl PublishPacket {
     // TODO(Shaohua): No need to copy topic and msg
     pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> Result<PublishPacket, EncodeError> {
-        Topic::validate_pub_topic(topic.as_bytes())?;
+        utils::validate_utf8_string(topic)?;
+        Topic::validate_pub_topic(topic)?;
 
         Ok(PublishPacket {
             qos,
@@ -155,8 +157,8 @@ impl DecodePacket for PublishPacket {
 
         let topic_len = BigEndian::read_u16(ba.read(2)?) as usize;
         let topic = ba.read(topic_len)?;
-        Topic::validate_pub_topic(topic)?;
-        let topic = String::from_utf8(topic.to_vec())?;
+        let topic = utils::to_utf8_string(topic)?;
+        Topic::validate_pub_topic(&topic)?;
 
         // Parse packet id
         let packet_id = if qos != QoS::AtMostOnce {

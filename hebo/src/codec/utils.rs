@@ -5,7 +5,8 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
-use super::error::DecodeError;
+use super::topic::TopicError;
+use super::StringError;
 
 /// Generate random string.
 pub fn random_string(len: usize) -> String {
@@ -18,27 +19,47 @@ pub fn random_string(len: usize) -> String {
     .unwrap()
 }
 
+#[derive(Debug)]
+pub enum StringError {
+    TooManyData,
+    InvalidString,
+    InvalidStringSerious,
+}
+impl From<std::string::FromUtf8Error> for StringError {
+    fn from(_e: std::string::FromUtf8Error) -> StringError {
+        StringError::InvalidStringSerious
+    }
+}
+
 /// Check data length exceeds 64k or not.
 #[inline]
-pub fn validate_two_bytes_data(data: &[u8]) -> Result<(), DecodeError> {
+pub fn validate_two_bytes_data(data: &[u8]) -> Result<(), StringError> {
     if data.len() > u16::MAX as usize {
-        Err(DecodeError::TooManyData)
+        Err(StringError::TooManyData)
     } else {
         Ok(())
     }
 }
 
 /// Check string characters and length.
-pub fn validate_utf8_string(s: &str) -> Result<(), DecodeError> {
+pub fn validate_utf8_string(s: &str) -> Result<(), StringError> {
     if s.len() > u16::MAX as usize {
-        return Err(DecodeError::TooManyData);
+        return Err(StringError::TooManyData);
     }
 
     for c in s.chars() {
-        // Ignore control characters
-        // No need to check chars between 0xd800 and 0xfffd as they are invalid coded point and not allowed.
-        if (c >= '\u{0000}' && c <= '\u{001f}') || (c >= '\u{007f}' && c <= '\u{009f}') {
-            return Err(DecodeError::InvalidString);
+        // Check control characters
+        if c == '\u{0000}' {
+            return Err(StringError::InvalidStringSerious);
+        }
+
+        // Not need to Check chars between 0xd800 and 0xfffd as they are invalid coded point and not allowed.
+        //if c >= '\u{d800}' && c <= '\u{fffd}' {
+        //    return Err(StringError::InvalidStringSerious);
+        //}
+
+        if (c >= '\u{0001}' && c <= '\u{001f}') || (c >= '\u{007f}' && c <= '\u{009f}') {
+            return Err(StringError::InvalidString);
         }
     }
 
@@ -47,7 +68,7 @@ pub fn validate_utf8_string(s: &str) -> Result<(), DecodeError> {
 }
 
 /// Convert range of bytes to valid UTF-8 string.
-pub fn to_utf8_string(buf: &[u8]) -> Result<String, DecodeError> {
+pub fn to_utf8_string(buf: &[u8]) -> Result<String, StringError> {
     let s = String::from_utf8(buf.to_vec())?;
     validate_utf8_string(&s)?;
     Ok(s)

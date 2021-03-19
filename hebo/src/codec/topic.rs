@@ -97,13 +97,14 @@ impl Topic {
     /// let name = "sport+";
     /// assert_eq!(validate_sub_topic(name), false);
     /// ```
-    pub fn validate_sub_topic(bytes: &[u8]) -> Result<(), TopicError> {
-        if bytes.is_empty() {
+    pub fn validate_sub_topic(topic: &str) -> Result<(), TopicError> {
+        if topic.is_empty() {
             return Err(TopicError::EmptyTopic);
         }
-        if bytes == b"#" {
+        if topic == "#" {
             return Ok(());
         }
+        let bytes = topic.as_bytes();
         for (index, b) in bytes.iter().enumerate() {
             if b == &b'#' {
                 // Must have a prefix level separator.
@@ -134,7 +135,7 @@ impl Topic {
     /// let name = "sport/tennis/player/ranking";
     /// assert_eq!(Topic::validate_pub_topic(name), true);
     /// ```
-    pub fn validate_pub_topic(topic: &[u8]) -> Result<(), TopicError> {
+    pub fn validate_pub_topic(topic: &str) -> Result<(), TopicError> {
         if topic.is_empty() {
             return Err(TopicError::EmptyTopic);
         }
@@ -142,7 +143,13 @@ impl Topic {
             return Err(TopicError::TooManyData);
         }
 
-        if topic.iter().filter(|c| c == &&b'+' || c == &&b'#').next() == None {
+        if topic
+            .as_bytes()
+            .iter()
+            .filter(|c| c == &&b'+' || c == &&b'#')
+            .next()
+            == None
+        {
             Ok(())
         } else {
             Err(TopicError::InvalidChar)

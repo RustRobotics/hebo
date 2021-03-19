@@ -4,10 +4,10 @@
 
 use super::topic::TopicError;
 
-enum Error {
-    TcpConnectError,
-    PacketEmpty,
-}
+//enum Error {
+//    TcpConnectError,
+//    PacketEmpty,
+//}
 
 #[derive(Debug)]
 pub enum DecodeError {
@@ -31,6 +31,9 @@ pub enum DecodeError {
 
     /// Invalid UTF-8 string.
     InvalidString,
+
+    /// Invalid UTF-8 string. Server or client shall DISCONNECT immediately.
+    InvalidStringSerious,
 
     /// Violate topic filter rules.
     /// Topic name might contain wildcard characters.
@@ -74,7 +77,7 @@ impl From<std::io::Error> for EncodeError {
 
 impl From<std::string::FromUtf8Error> for DecodeError {
     fn from(_e: std::string::FromUtf8Error) -> DecodeError {
-        DecodeError::InvalidString
+        DecodeError::InvalidStringSerious
     }
 }
 

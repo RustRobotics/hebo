@@ -112,8 +112,8 @@ impl DecodePacket for SubscribePacket {
             remaining_length += 2;
 
             let topic = ba.read(topic_len)?;
-            Topic::validate_sub_topic(topic)?;
             let topic = utils::to_utf8_string(topic)?;
+            Topic::validate_sub_topic(&topic)?;
             let topic = Topic::parse(&topic)?;
             remaining_length += topic_len as u32;
 
