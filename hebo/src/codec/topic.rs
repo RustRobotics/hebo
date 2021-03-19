@@ -10,7 +10,10 @@ pub struct Topic {
 
 #[derive(Debug)]
 pub enum TopicError {
-    DecodeError,
+    EmptyTopic,
+    TooManyData,
+    InvalidChar,
+    ContainsWildChar,
 }
 
 impl PartialEq for Topic {
@@ -72,6 +75,81 @@ impl Topic {
     }
 }
 
+impl Topic {
+    /// Validate topic filter.
+    /// Rules are defined in `MQTT chapter-4.7 Topic Name and Filters`
+    /// ```
+    /// let name = "sport/tennis/player/#";
+    /// assert_eq!(validate_sub_topic(name), true);
+    ///
+    /// let name = "sport/tennis/player#";
+    /// assert_eq!(validate_sub_topic(name), false);
+    ///
+    /// let name = "#";
+    /// assert_eq!(validate_sub_topic(name), true);
+    ///
+    /// let name = "sport/#/player/ranking";
+    /// assert_eq!(validate_sub_topic(name), false);
+    ///
+    /// let name = "+";
+    /// assert_eq!(validate_sub_topic(name), true);
+    ///
+    /// let name = "sport+";
+    /// assert_eq!(validate_sub_topic(name), false);
+    /// ```
+    pub fn validate_sub_topic(bytes: &[u8]) -> Result<(), TopicError> {
+        if bytes.is_empty() {
+            return Err(TopicError::EmptyTopic);
+        }
+        if bytes == b"#" {
+            return Ok(());
+        }
+        for (index, b) in bytes.iter().enumerate() {
+            if b == &b'#' {
+                // Must have a prefix level separator.
+                if index > 0 && bytes[index - 1] != b'/' {
+                    return Err(TopicError::InvalidChar);
+                }
+
+                // Must be the last wildcard.
+                if index != bytes.len() - 1 {
+                    return Err(TopicError::InvalidChar);
+                }
+            } else if b == &b'+' {
+                // Must have a prefix level separator.
+                if index > 0 && bytes[index - 1] != b'/' {
+                    return Err(TopicError::InvalidChar);
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Check whether topic name contains wildchard characters.
+    /// ```
+    /// let name = "sport/tennis/player/#";
+    /// assert_eq!(Topic::validate_pub_topic(name), false);
+    ///
+    /// let name = "sport/tennis/player/ranking";
+    /// assert_eq!(Topic::validate_pub_topic(name), true);
+    /// ```
+    pub fn validate_pub_topic(topic: &[u8]) -> Result<(), TopicError> {
+        if topic.is_empty() {
+            return Err(TopicError::EmptyTopic);
+        }
+        if topic.len() > u16::MAX as usize {
+            return Err(TopicError::TooManyData);
+        }
+
+        if topic.iter().filter(|c| c == &&b'+' || c == &&b'#').next() == None {
+            Ok(())
+        } else {
+            Err(TopicError::InvalidChar)
+        }
+    }
+}
+
 // TODO(Shaohua): Impl internal reference to `topic` String.
 #[derive(Debug, Clone)]
 pub enum TopicPart {
@@ -109,7 +187,7 @@ impl TopicPart {
             "#" => Ok(TopicPart::MultiWildcard),
             _ => {
                 if TopicPart::has_wildcard(s) {
-                    return Err(TopicError::DecodeError);
+                    return Err(TopicError::ContainsWildChar);
                 } else if TopicPart::is_internal(s) {
                     return Ok(TopicPart::Internal(s.to_string()));
                 } else {
