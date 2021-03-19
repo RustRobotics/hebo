@@ -5,8 +5,6 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
-use super::topic::TopicError;
-
 /// Generate random string.
 pub fn random_string(len: usize) -> String {
     String::from_utf8(
@@ -78,19 +76,4 @@ pub fn to_utf8_string(buf: &[u8]) -> Result<String, StringError> {
     let s = String::from_utf8(buf.to_vec())?;
     validate_utf8_string(&s)?;
     Ok(s)
-}
-
-pub fn validate_client_id(id: &str) -> Result<(), StringError> {
-    if id.is_empty() || id.len() > 23 {
-        return Err(StringError::InvalidLength);
-    }
-    for byte in id.bytes() {
-        if !((byte >= b'0' && byte <= b'9')
-            || (byte >= b'a' && byte <= b'z')
-            || (byte >= b'A' && byte <= b'Z'))
-        {
-            return Err(StringError::InvalidChar);
-        }
-    }
-    Ok(())
 }

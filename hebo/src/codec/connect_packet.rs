@@ -9,7 +9,7 @@ use std::io::Write;
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::topic::Topic;
-use super::utils;
+use super::utils::{self, StringError};
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType, QoS,
     RemainingLength,
@@ -283,7 +283,7 @@ impl ConnectPacket {
     }
 
     pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
-        utils::validate_client_id(id)?;
+        validate_client_id(id)?;
         self.client_id.clear();
         self.client_id.push_str(id);
         Ok(self)
@@ -338,6 +338,30 @@ impl ConnectPacket {
     pub fn will_message(&self) -> &[u8] {
         &self.will_message
     }
+}
+
+#[inline]
+pub fn validate_keep_alive(keep_alive: u16) -> Result<(), DecodeError> {
+    if keep_alive != 0 && keep_alive < 5 {
+        Err(DecodeError::OtherErrors)
+    } else {
+        Ok(())
+    }
+}
+
+pub fn validate_client_id(id: &str) -> Result<(), StringError> {
+    if id.is_empty() || id.len() > 23 {
+        return Err(StringError::InvalidLength);
+    }
+    for byte in id.bytes() {
+        if !((byte >= b'0' && byte <= b'9')
+            || (byte >= b'a' && byte <= b'z')
+            || (byte >= b'A' && byte <= b'Z'))
+        {
+            return Err(StringError::InvalidChar);
+        }
+    }
+    Ok(())
 }
 
 impl EncodePacket for ConnectPacket {
@@ -420,6 +444,7 @@ impl DecodePacket for ConnectPacket {
         let connect_flags = ConnectFlags::decode(ba)?;
 
         let keep_alive = BigEndian::read_u16(ba.read(2)?);
+        validate_keep_alive(keep_alive)?;
 
         let client_id_len = BigEndian::read_u16(ba.read(2)?) as usize;
         let client_id = utils::to_utf8_string(ba.read(client_id_len)?)?;

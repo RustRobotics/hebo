@@ -24,7 +24,7 @@ pub enum DecodeError {
     /// Protocol name must be "MQTT".
     InvalidProtocolName,
 
-    // QoS not 0, 1, 2
+    /// QoS not 0, 1, 2
     InvalidQoS,
 
     /// Length of buffer - offset < remaining length.
@@ -37,6 +37,7 @@ pub enum DecodeError {
     /// Topic name might contain wildcard characters.
     InvalidTopic(TopicError),
 
+    /// Byte array index ouf of range.
     OutOfRangeError,
 
     /// Length of data exceeds its limitation
@@ -44,6 +45,9 @@ pub enum DecodeError {
 
     /// No topic is speicified in Subscribe packet.
     EmptyTopics,
+
+    /// General errors
+    OtherErrors,
 }
 
 #[derive(Debug)]
