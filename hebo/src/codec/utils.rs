@@ -6,7 +6,6 @@ use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
 use super::topic::TopicError;
-use super::StringError;
 
 /// Generate random string.
 pub fn random_string(len: usize) -> String {
@@ -20,14 +19,19 @@ pub fn random_string(len: usize) -> String {
 }
 
 #[derive(Debug)]
+// Invalid UTF-8 string.
 pub enum StringError {
     TooManyData,
-    InvalidString,
-    InvalidStringSerious,
+
+    InvalidChar,
+
+    /// Server or client shall DISCONNECT immediately.
+    SeriousError,
 }
+
 impl From<std::string::FromUtf8Error> for StringError {
     fn from(_e: std::string::FromUtf8Error) -> StringError {
-        StringError::InvalidStringSerious
+        StringError::SeriousError
     }
 }
 
@@ -50,7 +54,7 @@ pub fn validate_utf8_string(s: &str) -> Result<(), StringError> {
     for c in s.chars() {
         // Check control characters
         if c == '\u{0000}' {
-            return Err(StringError::InvalidStringSerious);
+            return Err(StringError::SeriousError);
         }
 
         // Not need to Check chars between 0xd800 and 0xfffd as they are invalid coded point and not allowed.
@@ -59,7 +63,7 @@ pub fn validate_utf8_string(s: &str) -> Result<(), StringError> {
         //}
 
         if (c >= '\u{0001}' && c <= '\u{001f}') || (c >= '\u{007f}' && c <= '\u{009f}') {
-            return Err(StringError::InvalidString);
+            return Err(StringError::InvalidChar);
         }
     }
 

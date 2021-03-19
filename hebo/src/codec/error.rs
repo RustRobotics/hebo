@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use super::topic::TopicError;
+use super::utils::StringError;
 
 //enum Error {
 //    TcpConnectError,
@@ -30,10 +31,7 @@ pub enum DecodeError {
     InvalidRemainingLength,
 
     /// Invalid UTF-8 string.
-    InvalidString,
-
-    /// Invalid UTF-8 string. Server or client shall DISCONNECT immediately.
-    InvalidStringSerious,
+    InvalidString(StringError),
 
     /// Violate topic filter rules.
     /// Topic name might contain wildcard characters.
@@ -57,6 +55,8 @@ pub enum EncodeError {
     /// Length of data exceeds its limitation
     TooManyData,
 
+    InvalidString(StringError),
+
     /// Violate topic filter rules.
     /// No topic is speicified in Subscribe packet.
     /// Topic name might contain wildcard characters.
@@ -75,9 +75,15 @@ impl From<std::io::Error> for EncodeError {
     }
 }
 
-impl From<std::string::FromUtf8Error> for DecodeError {
-    fn from(_e: std::string::FromUtf8Error) -> DecodeError {
-        DecodeError::InvalidStringSerious
+impl From<StringError> for EncodeError {
+    fn from(e: StringError) -> EncodeError {
+        EncodeError::InvalidString(e)
+    }
+}
+
+impl From<StringError> for DecodeError {
+    fn from(e: StringError) -> DecodeError {
+        DecodeError::InvalidString(e)
     }
 }
 
