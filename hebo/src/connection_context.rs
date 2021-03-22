@@ -70,7 +70,7 @@ impl ConnectionContext {
     }
 
     pub async fn run_loop(mut self) {
-        let mut buf = Vec::new();
+        let mut buf = Vec::with_capacity(512);
         // TODO(Shaohua): Handle timeout
         let mut timer = interval(Duration::from_secs(10));
         loop {
@@ -84,7 +84,7 @@ impl ConnectionContext {
                     }
                 }
                 _ = timer.tick() => {
-                    log::info!("tick()");
+                    //log::info!("tick()");
                 },
                 Some(cmd) = self.receiver.recv() => {
                     // TODO(Shaohua): Handle errors
@@ -127,6 +127,9 @@ impl ConnectionContext {
                     return Err(err);
                 }
             }
+            PacketType::PublishRelease { .. } => {
+                // Do nothing currently
+            }
             PacketType::Subscribe => {
                 if let Err(err) = self.subscribe(&buf).await {
                     log::warn!("subscribe() failed! {:?}", err);
@@ -153,7 +156,6 @@ impl ConnectionContext {
     }
 
     async fn connect(&mut self, buf: &[u8]) -> error::Result<()> {
-        log::info!("connect()");
         let mut ba = ByteArray::new(buf);
         let packet = ConnectPacket::decode(&mut ba)?;
         self.client_id = packet.client_id().to_string();
@@ -166,21 +168,18 @@ impl ConnectionContext {
     }
 
     async fn ping(&mut self, buf: &[u8]) -> error::Result<()> {
-        log::info!("ping()");
         let mut ba = ByteArray::new(buf);
         let _packet = PingRequestPacket::decode(&mut ba)?;
-        log::info!("Will send ping response packet");
         let ping_resp_packet = PingResponsePacket::new();
         self.send(ping_resp_packet).await
     }
 
     async fn publish(&mut self, buf: &[u8]) -> error::Result<()> {
-        log::info!("publish()");
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
-        let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
-        self.send(publish_ack_packet).await?;
         // TODO(Shaohua): Send PublishAck if qos == 0
+        //let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
+        //self.send(publish_ack_packet).await?;
         self.sender
             .send(ConnectionCommand::Publish(packet))
             .await
@@ -189,7 +188,6 @@ impl ConnectionContext {
     }
 
     async fn subscribe(&mut self, buf: &[u8]) -> error::Result<()> {
-        log::info!("subscribe()");
         let mut ba = ByteArray::new(buf);
         let packet = SubscribePacket::decode(&mut ba)?;
         let ack;
@@ -206,15 +204,12 @@ impl ConnectionContext {
         } else {
             // TODO(Shaohua): Handle all of topics.
             ack = SubscribeAck::QoS(packet.topics()[0].qos);
-            log::info!("ack: {:?}", ack);
         }
         let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
-        log::info!("subscribe ack packet: {:?}", subscribe_ack_packet);
         self.send(subscribe_ack_packet).await
     }
 
     async fn unsubscribe(&mut self, buf: &[u8]) -> error::Result<()> {
-        log::info!("unsubscribe()");
         let mut ba = ByteArray::new(buf);
         let packet = UnsubscribePacket::decode(&mut ba)?;
 
@@ -224,7 +219,6 @@ impl ConnectionContext {
     }
 
     async fn disconnect(&mut self, _buf: &[u8]) -> error::Result<()> {
-        log::info!("disconnect");
         self.status = Status::Disconnected;
         // TODO(Shaohua): Send disconnect to server to unsubscribe any topics.
         Ok(())
@@ -238,7 +232,6 @@ impl ConnectionContext {
     }
 
     async fn server_publish(&mut self, packet: PublishPacket) -> error::Result<()> {
-        log::info!("server publish: {:?}", packet);
         self.send(packet).await
     }
 }

@@ -44,8 +44,6 @@ impl ServerContext {
         loop {
             tokio::select! {
                 Ok((socket, address)) = listener.accept() => {
-                    log::info!("accept()");
-                    log::info!("remote address: {:?}", address);
                     self.new_connection(socket, address).await;
                 },
                 Some(cmd) = self.connection_rx.recv() => {
@@ -86,7 +84,6 @@ impl ServerContext {
     }
 
     fn on_subscribe(&mut self, connection_id: ConnectionId, packet: SubscribePacket) {
-        log::info!("on_subscribe(), connection id: {:?}", connection_id);
         for pipeline in self.pipelines.iter_mut() {
             if pipeline.connection_id == connection_id {
                 pipeline.topics.extend(packet.mut_topics());
