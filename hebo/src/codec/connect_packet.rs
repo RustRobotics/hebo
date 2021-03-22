@@ -163,7 +163,7 @@ impl EncodePacket for ConnectFlags {
 
 impl DecodePacket for ConnectFlags {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let flags = ba.one_byte()?;
+        let flags = ba.read_byte()?;
         let username = flags & 0b1000_0000 == 0b1000_0000;
         let password = flags & 0b0100_0000 == 0b0100_0000;
         let will_retain = flags & 0b0010_0000 == 0b0010_0000;
@@ -432,46 +432,46 @@ impl DecodePacket for ConnectPacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let protocol_name_len = BigEndian::read_u16(ba.read(2)?) as usize;
-        let protocol_name = ba.read(protocol_name_len)?;
+        let protocol_name_len = BigEndian::read_u16(ba.read_bytes(2)?) as usize;
+        let protocol_name = ba.read_bytes(protocol_name_len)?;
         // TODO(Shaohua: Compare bytes directly
         let protocol_name = utils::to_utf8_string(protocol_name)?;
         if protocol_name != PROTOCOL_NAME {
             return Err(DecodeError::InvalidProtocolName);
         }
 
-        let protocol_level = ProtocolLevel::try_from(ba.one_byte()?)?;
+        let protocol_level = ProtocolLevel::try_from(ba.read_byte()?)?;
         let connect_flags = ConnectFlags::decode(ba)?;
 
-        let keep_alive = BigEndian::read_u16(ba.read(2)?);
+        let keep_alive = BigEndian::read_u16(ba.read_bytes(2)?);
         validate_keep_alive(keep_alive)?;
 
-        let client_id_len = BigEndian::read_u16(ba.read(2)?) as usize;
-        let client_id = utils::to_utf8_string(ba.read(client_id_len)?)?;
+        let client_id_len = BigEndian::read_u16(ba.read_bytes(2)?) as usize;
+        let client_id = utils::to_utf8_string(ba.read_bytes(client_id_len)?)?;
 
         let will_topic = if connect_flags.will {
-            let will_topic_len = BigEndian::read_u16(ba.read(2)?) as usize;
-            utils::to_utf8_string(ba.read(will_topic_len)?)?
+            let will_topic_len = BigEndian::read_u16(ba.read_bytes(2)?) as usize;
+            utils::to_utf8_string(ba.read_bytes(will_topic_len)?)?
         } else {
             String::new()
         };
         let will_message = if connect_flags.will {
-            let will_message_len = BigEndian::read_u16(ba.read(2)?) as usize;
-            ba.read(will_message_len)?.to_vec()
+            let will_message_len = BigEndian::read_u16(ba.read_bytes(2)?) as usize;
+            ba.read_bytes(will_message_len)?.to_vec()
         } else {
             Vec::new()
         };
 
         let username = if connect_flags.username {
-            let username_len = BigEndian::read_u16(ba.read(2)?) as usize;
-            utils::to_utf8_string(ba.read(username_len)?)?
+            let username_len = BigEndian::read_u16(ba.read_bytes(2)?) as usize;
+            utils::to_utf8_string(ba.read_bytes(username_len)?)?
         } else {
             String::new()
         };
 
         let password = if connect_flags.password {
-            let password_len = BigEndian::read_u16(ba.read(2)?) as usize;
-            ba.read(password_len)?.to_vec()
+            let password_len = BigEndian::read_u16(ba.read_bytes(2)?) as usize;
+            ba.read_bytes(password_len)?.to_vec()
         } else {
             Vec::new()
         };

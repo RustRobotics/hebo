@@ -113,9 +113,9 @@ impl DecodePacket for ConnectAckPacket {
         let fixed_header = FixedHeader::decode(ba)?;
         assert_eq!(fixed_header.packet_type, PacketType::ConnectAck);
 
-        let ack_flags = ba.one_byte()?;
+        let ack_flags = ba.read_byte()?;
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
-        let return_code = ConnectReturnCode::from(ba.one_byte()?);
+        let return_code = ConnectReturnCode::from(ba.read_byte()?);
 
         Ok(ConnectAckPacket {
             session_present,

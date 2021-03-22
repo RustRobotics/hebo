@@ -58,7 +58,7 @@ impl DecodePacket for PublishReceivedPacket {
         } else if fixed_header.remaining_length.0 != 2 {
             Err(DecodeError::InvalidRemainingLength)
         } else {
-            let packet_id = BigEndian::read_u16(ba.read(2)?) as PacketId;
+            let packet_id = BigEndian::read_u16(ba.read_bytes(2)?) as PacketId;
             Ok(PublishReceivedPacket { packet_id })
         }
     }

@@ -179,7 +179,7 @@ impl DecodePacket for RemainingLength {
         // TODO(Shaohua): Simplify
         // Read variant length
         loop {
-            byte = ba.one_byte()? as u32;
+            byte = ba.read_byte()? as u32;
             remaining_bytes += (byte & 127) * multiplier;
             multiplier *= 128;
 
@@ -242,7 +242,7 @@ pub struct FixedHeader {
 
 impl DecodePacket for FixedHeader {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let flag = ba.one_byte()?;
+        let flag = ba.read_byte()?;
 
         let packet_type = PacketType::try_from(flag)?;
         let remaining_length = RemainingLength::decode(ba)?;

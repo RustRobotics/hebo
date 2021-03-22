@@ -101,23 +101,23 @@ impl DecodePacket for SubscribePacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let packet_id = BigEndian::read_u16(ba.read(2)?);
+        let packet_id = BigEndian::read_u16(ba.read_bytes(2)?);
 
         let mut topics = Vec::new();
         let mut remaining_length = 2;
 
         // Parse topic/qos list.
         while remaining_length < fixed_header.remaining_length.0 {
-            let topic_len = BigEndian::read_u16(ba.read(2)?) as usize;
+            let topic_len = BigEndian::read_u16(ba.read_bytes(2)?) as usize;
             remaining_length += 2;
 
-            let topic = ba.read(topic_len)?;
+            let topic = ba.read_bytes(topic_len)?;
             let topic = utils::to_utf8_string(topic)?;
             Topic::validate_sub_topic(&topic)?;
             let topic = Topic::parse(&topic)?;
             remaining_length += topic_len as u32;
 
-            let qos_flag = ba.one_byte()?;
+            let qos_flag = ba.read_byte()?;
             remaining_length += 1;
             let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
 
