@@ -81,6 +81,8 @@ impl ConnectionContext {
                             log::error!("handle_client_packet() failed: {:?}", err);
                         }
                         buf.clear();
+                    } else {
+                        break;
                     }
                 }
                 _ = timer.tick() => {
@@ -90,6 +92,7 @@ impl ConnectionContext {
                     // TODO(Shaohua): Handle errors
                     let _result = self.cmd_router(cmd).await;
                 },
+                else => break,
             }
         }
     }
