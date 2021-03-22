@@ -78,7 +78,7 @@ impl DecodePacket for SubscribeAckPacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let packet_id = BigEndian::read_u16(ba.read_bytes(2)?) as PacketId;
+        let packet_id = ba.read_u16()? as PacketId;
 
         let mut acknowledgements = Vec::new();
         let mut remaining_length = 2;

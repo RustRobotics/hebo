@@ -2,13 +2,9 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use super::byte_array::ByteArrayError;
 use super::topic::TopicError;
 use super::utils::StringError;
-
-//enum Error {
-//    TcpConnectError,
-//    PacketEmpty,
-//}
 
 #[derive(Debug)]
 pub enum DecodeError {
@@ -98,5 +94,14 @@ impl From<TopicError> for EncodeError {
 impl From<TopicError> for DecodeError {
     fn from(e: TopicError) -> DecodeError {
         DecodeError::InvalidTopic(e)
+    }
+}
+
+impl From<ByteArrayError> for DecodeError {
+    fn from(e: ByteArrayError) -> DecodeError {
+        match e {
+            ByteArrayError::OutOfRangeError => DecodeError::OutOfRangeError,
+            ByteArrayError::InvalidString(e) => DecodeError::InvalidString(e),
+        }
     }
 }

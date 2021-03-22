@@ -2,7 +2,22 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use byteorder::{BigEndian, ByteOrder, ReadBytesExt};
+
+use super::utils;
 use super::DecodeError;
+
+#[derive(Debug)]
+pub enum ByteArrayError {
+    OutOfRangeError,
+    InvalidString(utils::StringError),
+}
+
+impl From<utils::StringError> for ByteArrayError {
+    fn from(e: utils::StringError) -> ByteArrayError {
+        ByteArrayError::InvalidString(e)
+    }
+}
 
 pub struct ByteArray<'a> {
     offset: usize,
@@ -25,19 +40,28 @@ impl<'a> ByteArray<'a> {
     }
 
     // TODO(Shaohua): Add ByteArrayError
-    pub fn read_byte(&mut self) -> Result<u8, DecodeError> {
+    pub fn read_byte(&mut self) -> Result<u8, ByteArrayError> {
         self.offset += 1;
         if self.offset > self.data.len() {
-            Err(DecodeError::OutOfRangeError)
+            Err(ByteArrayError::OutOfRangeError)
         } else {
             Ok(self.data[self.offset - 1])
         }
     }
 
-    pub fn read_bytes(&mut self, len: usize) -> Result<&[u8], DecodeError> {
+    pub fn read_u16(&mut self) -> Result<u16, ByteArrayError> {
+        Ok(BigEndian::read_u16(self.read_bytes(2)?))
+    }
+
+    pub fn read_string(&mut self, len: usize) -> Result<String, ByteArrayError> {
+        let bytes = self.read_bytes(len)?;
+        utils::to_utf8_string(bytes).map_err(|err| ByteArrayError::from(err))
+    }
+
+    pub fn read_bytes(&mut self, len: usize) -> Result<&[u8], ByteArrayError> {
         self.offset += len;
         if self.offset > self.data.len() {
-            Err(DecodeError::OutOfRangeError)
+            Err(ByteArrayError::OutOfRangeError)
         } else {
             Ok(&self.data[self.offset - len..self.offset])
         }

@@ -90,15 +90,14 @@ impl DecodePacket for UnsubscribePacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let packet_id = BigEndian::read_u16(ba.read_bytes(2)?) as PacketId;
+        let packet_id = ba.read_u16()? as PacketId;
 
         let mut remaining_length = 2;
         let mut topics = Vec::new();
         while remaining_length < fixed_header.remaining_length.0 {
-            let topic_len = BigEndian::read_u16(ba.read_bytes(2)?) as usize;
+            let topic_len = ba.read_u16()? as usize;
             remaining_length += 2;
-            let topic = ba.read_bytes(topic_len)?;
-            let topic = utils::to_utf8_string(topic)?;
+            let topic = ba.read_string(topic_len)?;
             remaining_length += topic_len as u32;
             topics.push(topic);
         }

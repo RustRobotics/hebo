@@ -155,14 +155,13 @@ impl DecodePacket for PublishPacket {
                 return Err(DecodeError::InvalidPacketType);
             };
 
-        let topic_len = BigEndian::read_u16(ba.read_bytes(2)?) as usize;
-        let topic = ba.read_bytes(topic_len)?;
-        let topic = utils::to_utf8_string(topic)?;
+        let topic_len = ba.read_u16()? as usize;
+        let topic = ba.read_string(topic_len)?;
         Topic::validate_pub_topic(&topic)?;
 
         // Parse packet id
         let packet_id = if qos != QoS::AtMostOnce {
-            BigEndian::read_u16(ba.read_bytes(2)?)
+            ba.read_u16()?
         } else {
             0
         };
