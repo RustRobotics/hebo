@@ -75,6 +75,16 @@ impl ServerContext {
                 self.on_subscribe(connection_id, packet);
             }
             ConnectionCommand::Unsubscribe => log::info!("TODO: unsubscribe!"),
+            ConnectionCommand::Disconnect(connection_id) => {
+                if let Some(pos) = self
+                    .pipelines
+                    .iter()
+                    .position(|pipe| pipe.connection_id == connection_id)
+                {
+                    log::debug!("Remove pipeline: {}", connection_id);
+                    self.pipelines.remove(pos);
+                }
+            }
         }
     }
 
@@ -111,7 +121,6 @@ fn topic_match(topics: &[SubscribeTopic], topic_str: &str) -> bool {
         }
     }
     return false;
-    //topics.iter().any(|t| t.topic.is_match(topic))
 }
 
 #[derive(Debug)]

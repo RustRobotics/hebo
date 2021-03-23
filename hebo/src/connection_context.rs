@@ -90,10 +90,20 @@ impl ConnectionContext {
                 },
                 Some(cmd) = self.receiver.recv() => {
                     // TODO(Shaohua): Handle errors
-                    let _result = self.cmd_router(cmd).await;
+                    let _result = self.handle_server_packet(cmd).await;
                 },
                 else => break,
             }
+        }
+        if let Err(err) = self
+            .sender
+            .send(ConnectionCommand::Disconnect(self.connection_id))
+            .await
+        {
+            log::error!(
+                "Failed to send disconnect cmd to server, connection_id: {}",
+                self.connection_id
+            );
         }
     }
 
@@ -227,7 +237,7 @@ impl ConnectionContext {
         Ok(())
     }
 
-    async fn cmd_router(&mut self, cmd: ServerCommand) -> error::Result<()> {
+    async fn handle_server_packet(&mut self, cmd: ServerCommand) -> error::Result<()> {
         match cmd {
             ServerCommand::Publish(packet) => self.server_publish(packet).await?,
         }

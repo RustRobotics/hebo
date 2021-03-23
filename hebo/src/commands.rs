@@ -16,4 +16,5 @@ pub enum ConnectionCommand {
     Publish(PublishPacket),
     Subscribe(ConnectionId, SubscribePacket),
     Unsubscribe,
+    Disconnect(ConnectionId),
 }
