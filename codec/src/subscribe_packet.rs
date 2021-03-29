@@ -16,10 +16,20 @@ use super::{
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SubscribeTopic {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
-    pub topic: String,
+    topic: String,
 
     /// Maximum level of QoS of packet the Server can send to the Client.
-    pub qos: QoS,
+    qos: QoS,
+}
+
+impl SubscribeTopic {
+    pub fn topic(&self) -> &str {
+        &self.topic
+    }
+
+    pub fn qos(&self) -> QoS {
+        self.qos
+    }
 }
 
 /// Subscribe packet is sent from the Client to the Server to subscribe one or more topics.

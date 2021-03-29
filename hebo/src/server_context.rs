@@ -2,10 +2,10 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io;
+use std::convert::TryFrom;
 use std::net::{SocketAddr, ToSocketAddrs};
 
-use codec::{PublishPacket, SubscribePacket, SubscribeTopic};
+use codec::{PublishPacket, QoS, SubscribePacket, Topic};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
@@ -107,7 +107,16 @@ impl ServerContext {
     fn on_subscribe(&mut self, connection_id: ConnectionId, packet: SubscribePacket) {
         for pipeline in self.pipelines.iter_mut() {
             if pipeline.connection_id == connection_id {
-                pipeline.topics.extend(packet.mut_topics());
+                for topic in packet.topics() {
+                    // TODO(Shaohua): Returns error
+                    match Topic::parse(topic.topic()) {
+                        Ok(t) => pipeline.topics.push(SubscribedTopic {
+                            topic: t,
+                            qos: topic.qos(),
+                        }),
+                        Err(err) => log::error!("Invalid sub topic: {:?}, err: {:?}", topic, err),
+                    }
+                }
                 break;
             }
         }
@@ -115,6 +124,7 @@ impl ServerContext {
 
     async fn on_publish(&mut self, packet: PublishPacket) {
         let cmd = ServerCommand::Publish(packet.clone());
+        // TODO(Shaohua): Replace with a tiar tree and a hash table.
         for pipeline in self.pipelines.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {
                 if let Err(err) = pipeline.server_tx.send(cmd.clone()).await {
@@ -125,7 +135,7 @@ impl ServerContext {
     }
 }
 
-fn topic_match(topics: &[SubscribeTopic], topic_str: &str) -> bool {
+fn topic_match(topics: &[SubscribedTopic], topic_str: &str) -> bool {
     for topic in topics {
         if topic.topic.is_match(topic_str) {
             return true;
@@ -135,9 +145,15 @@ fn topic_match(topics: &[SubscribeTopic], topic_str: &str) -> bool {
 }
 
 #[derive(Debug)]
+pub struct SubscribedTopic {
+    topic: Topic,
+    qos: QoS,
+}
+
+#[derive(Debug)]
 pub struct Pipeline {
     server_tx: Sender<ServerCommand>,
-    topics: Vec<SubscribeTopic>,
+    topics: Vec<SubscribedTopic>,
     connection_id: ConnectionId,
 }
 

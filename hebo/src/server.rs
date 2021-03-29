@@ -5,7 +5,6 @@
 use super::config::Config;
 use super::server_context::ServerContext;
 use clap::Arg;
-use std::io;
 
 use crate::error::Error;
 
