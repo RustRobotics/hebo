@@ -4,7 +4,7 @@
 
 use std::time;
 
-const UPTIME: &'static str = "$SYS/uptime";
+const UPTIME: &str = "$SYS/uptime";
 
 #[derive(Debug)]
 pub struct SysMessage {

@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 use std::default::Default;
 use std::io::Write;
 
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use byteorder::{BigEndian, WriteBytesExt};
 
 use super::topic::Topic;
 use super::utils::{self, StringError};

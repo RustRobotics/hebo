@@ -81,7 +81,7 @@ impl Into<u8> for PacketType {
 
         let flags_bits = match self {
             PacketType::Publish { dup, qos, retain } => {
-                let dup = if dup { 0b0000_10000 } else { 0b0000_0000 };
+                let dup = if dup { 0b0000_1000 } else { 0b0000_0000 };
                 let qos = match qos {
                     QoS::AtMostOnce => 0b0000_0000,
                     QoS::AtLeastOnce => 0b0000_0010,

@@ -11,9 +11,8 @@ use tokio::time::interval;
 
 use crate::codec::{
     ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, EncodePacket,
-    FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket,
-    PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
-    UnsubscribePacket,
+    FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishPacket, SubscribeAck,
+    SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
 };
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::error;

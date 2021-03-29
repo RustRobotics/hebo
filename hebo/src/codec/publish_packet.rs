@@ -4,7 +4,7 @@
 
 use std::io::Write;
 
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use byteorder::{BigEndian, WriteBytesExt};
 
 use super::topic::Topic;
 use super::utils;

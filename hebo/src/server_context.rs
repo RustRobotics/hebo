@@ -120,7 +120,7 @@ fn topic_match(topics: &[SubscribeTopic], topic_str: &str) -> bool {
             return true;
         }
     }
-    return false;
+    false
 }
 
 #[derive(Debug)]

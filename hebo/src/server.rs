@@ -7,7 +7,7 @@ use super::server_context::ServerContext;
 use clap::Arg;
 use std::io;
 
-const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
+const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
 
 pub async fn run_server() -> io::Result<()> {
     let matches = clap::App::new("Hebo")

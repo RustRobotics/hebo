@@ -2,10 +2,9 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, ByteOrder, ReadBytesExt};
+use byteorder::{BigEndian, ByteOrder};
 
 use super::utils;
-use super::DecodeError;
 
 #[derive(Debug)]
 pub enum ByteArrayError {
