@@ -2,10 +2,9 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
 use std::net::{SocketAddr, ToSocketAddrs};
 
-use codec::{PublishPacket, QoS, SubscribePacket, Topic};
+use codec::{PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
@@ -85,7 +84,9 @@ impl ServerContext {
             ConnectionCommand::Subscribe(connection_id, packet) => {
                 self.on_subscribe(connection_id, packet);
             }
-            ConnectionCommand::Unsubscribe => log::info!("TODO: unsubscribe!"),
+            ConnectionCommand::Unsubscribe(connection_id, packet) => {
+                self.on_unsubscribe(connection_id, packet)
+            }
             ConnectionCommand::Disconnect(connection_id) => {
                 if let Some(pos) = self
                     .pipelines
@@ -119,6 +120,17 @@ impl ServerContext {
                 }
                 break;
             }
+        }
+    }
+
+    fn on_unsubscribe(&mut self, connection_id: ConnectionId, packet: UnsubscribePacket) {
+        for pipeline in self.pipelines.iter_mut() {
+            if pipeline.connection_id == connection_id {
+                pipeline
+                    .topics
+                    .retain(|&topic| !packet.topics().contains("Hello"));
+            }
+            break;
         }
     }
 

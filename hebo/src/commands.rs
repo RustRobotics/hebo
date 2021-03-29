@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{PublishPacket, SubscribePacket};
+use codec::{PublishPacket, SubscribePacket, UnsubscribePacket};
 
 pub type ConnectionId = u64;
 
@@ -15,6 +15,6 @@ pub enum ServerCommand {
 pub enum ConnectionCommand {
     Publish(PublishPacket),
     Subscribe(ConnectionId, SubscribePacket),
-    Unsubscribe,
+    Unsubscribe(ConnectionId, UnsubscribePacket),
     Disconnect(ConnectionId),
 }

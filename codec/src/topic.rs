@@ -62,7 +62,7 @@ impl Topic {
         true
     }
 
-    pub fn str(&self) -> &str {
+    pub fn topic(&self) -> &str {
         &self.topic
     }
 

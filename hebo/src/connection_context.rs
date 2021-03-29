@@ -225,8 +225,17 @@ impl ConnectionContext {
     async fn unsubscribe(&mut self, buf: &[u8]) -> error::Result<()> {
         let mut ba = ByteArray::new(buf);
         let packet = UnsubscribePacket::decode(&mut ba)?;
+        if let Err(err) = self
+            .sender
+            .send(ConnectionCommand::Unsubscribe(
+                self.connection_id,
+                packet.clone(),
+            ))
+            .await
+        {
+            log::warn!("Failed to send unsubscribe command to server: {:?}", err);
+        }
 
-        // TODO(Shaohua): Send msg to command channel
         let unsubscribe_ack_packet = UnsubscribeAckPacket::new(packet.packet_id());
         self.send(unsubscribe_ack_packet).await
     }
