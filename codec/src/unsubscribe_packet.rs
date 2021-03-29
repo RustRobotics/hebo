@@ -76,9 +76,8 @@ impl UnsubscribePacket {
         self
     }
 
-    // TODO(Shaohua): Convert type to &[&str]
-    pub fn topics(&self) -> &[String] {
-        &self.topics
+    pub fn topics(&self) -> impl Iterator<Item = &str> {
+        self.topics.iter().map(|s| s.as_str())
     }
 }
 

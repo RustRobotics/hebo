@@ -111,8 +111,8 @@ impl ServerContext {
                 for topic in packet.topics() {
                     // TODO(Shaohua): Returns error
                     match Topic::parse(topic.topic()) {
-                        Ok(t) => pipeline.topics.push(SubscribedTopic {
-                            topic: t,
+                        Ok(pattern) => pipeline.topics.push(SubscribedTopic {
+                            pattern,
                             qos: topic.qos(),
                         }),
                         Err(err) => log::error!("Invalid sub topic: {:?}, err: {:?}", topic, err),
@@ -128,7 +128,7 @@ impl ServerContext {
             if pipeline.connection_id == connection_id {
                 pipeline
                     .topics
-                    .retain(|&topic| !packet.topics().contains("Hello"));
+                    .retain(|ref topic| !packet.topics().any(|t| t == topic.pattern.topic()));
             }
             break;
         }
@@ -149,7 +149,7 @@ impl ServerContext {
 
 fn topic_match(topics: &[SubscribedTopic], topic_str: &str) -> bool {
     for topic in topics {
-        if topic.topic.is_match(topic_str) {
+        if topic.pattern.is_match(topic_str) {
             return true;
         }
     }
@@ -158,7 +158,7 @@ fn topic_match(topics: &[SubscribedTopic], topic_str: &str) -> bool {
 
 #[derive(Debug)]
 pub struct SubscribedTopic {
-    topic: Topic,
+    pattern: Topic,
     qos: QoS,
 }
 
