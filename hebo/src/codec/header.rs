@@ -274,22 +274,22 @@ mod tests {
         let mut buf = Vec::with_capacity(4);
 
         let remaining_len = RemainingLength(126);
-        let _ = remaining_len.to_net(&mut buf);
+        let _ = remaining_len.encode(&mut buf);
         assert_eq!(&buf, &[0x7e]);
         buf.clear();
 
         let remaining_len = RemainingLength(146);
-        let _ = remaining_len.to_net(&mut buf);
+        let _ = remaining_len.encode(&mut buf);
         assert_eq!(&buf, &[0x92, 0x01]);
         buf.clear();
 
         let remaining_len = RemainingLength(16_385);
-        let _ret = remaining_len.to_net(&mut buf);
+        let _ret = remaining_len.encode(&mut buf);
         assert_eq!(&buf, &[0x81, 0x80, 0x01]);
         buf.clear();
 
         let remaining_len = RemainingLength(2_097_152);
-        let _ret = remaining_len.to_net(&mut buf);
+        let _ret = remaining_len.encode(&mut buf);
         assert_eq!(&buf, &[0x80, 0x80, 0x80, 0x01]);
         buf.clear();
     }
@@ -297,28 +297,28 @@ mod tests {
     #[test]
     fn test_remaining_length_decode() {
         let buf = [0x7e];
-        let mut offset = 0;
-        let ret = RemainingLength::decode(&buf, &mut offset);
+        let mut ba = ByteArray::new(&buf);
+        let ret = RemainingLength::decode(&mut ba);
         assert_eq!(ret.unwrap().0, 126);
 
         let buf = [0x92, 0x01];
-        let mut offset = 0;
-        let ret = RemainingLength::decode(&buf, &mut offset);
+        let mut ba = ByteArray::new(&buf);
+        let ret = RemainingLength::decode(&mut ba);
         assert_eq!(ret.unwrap().0, 146);
 
         let buf = [0x81, 0x80, 0x01];
-        let mut offset = 0;
-        let ret = RemainingLength::decode(&buf, &mut offset);
+        let mut ba = ByteArray::new(&buf);
+        let ret = RemainingLength::decode(&mut ba);
         assert_eq!(ret.unwrap().0, 16_385);
 
         let buf = [0x81, 0x80, 0x80, 0x01];
-        let mut offset = 0;
-        let ret = RemainingLength::decode(&buf, &mut offset);
+        let mut ba = ByteArray::new(&buf);
+        let ret = RemainingLength::decode(&mut ba);
         assert_eq!(ret.unwrap().0, 2_097_153);
 
         let buf = [0xff, 0xff, 0xff, 0x7f];
-        let mut offset = 0;
-        let ret = RemainingLength::decode(&buf, &mut offset);
+        let mut ba = ByteArray::new(&buf);
+        let ret = RemainingLength::decode(&mut ba);
         assert_eq!(ret.unwrap().0, 268_435_455);
     }
 }

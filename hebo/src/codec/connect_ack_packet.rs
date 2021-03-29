@@ -143,14 +143,13 @@ impl EncodePacket for ConnectAckPacket {
 
 #[cfg(test)]
 mod tests {
-    use super::base::DecodePacket;
-    use super::connect_ack_packet::ConnectAckPacket;
+    use super::{ByteArray, ConnectAckPacket, DecodePacket};
 
     #[test]
     fn test_decode() {
         let buf: Vec<u8> = vec![0x20, 0x02, 0x00, 0x00];
-        let mut offset = 0;
-        let packet = ConnectAckPacket::decode(&buf, &mut offset);
+        let mut ba = ByteArray::new(&buf);
+        let packet = ConnectAckPacket::decode(&mut ba);
         assert!(packet.is_ok());
         let packet = packet.unwrap();
         assert_eq!(packet.session_present, false);

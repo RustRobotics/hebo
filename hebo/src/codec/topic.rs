@@ -80,22 +80,22 @@ impl Topic {
     /// Rules are defined in `MQTT chapter-4.7 Topic Name and Filters`
     /// ```
     /// let name = "sport/tennis/player/#";
-    /// assert_eq!(validate_sub_topic(name), true);
+    /// assert_eq!(Topic::validate_sub_topic(name), true);
     ///
     /// let name = "sport/tennis/player#";
-    /// assert_eq!(validate_sub_topic(name), false);
+    /// assert_eq!(Topic::validate_sub_topic(name), false);
     ///
     /// let name = "#";
-    /// assert_eq!(validate_sub_topic(name), true);
+    /// assert_eq!(Topic::validate_sub_topic(name), true);
     ///
     /// let name = "sport/#/player/ranking";
-    /// assert_eq!(validate_sub_topic(name), false);
+    /// assert_eq!(Topic::validate_sub_topic(name), false);
     ///
     /// let name = "+";
-    /// assert_eq!(validate_sub_topic(name), true);
+    /// assert_eq!(Topic::validate_sub_topic(name), true);
     ///
     /// let name = "sport+";
-    /// assert_eq!(validate_sub_topic(name), false);
+    /// assert_eq!(Topic::validate_sub_topic(name), false);
     /// ```
     pub fn validate_sub_topic(topic: &str) -> Result<(), TopicError> {
         if topic.is_empty() {

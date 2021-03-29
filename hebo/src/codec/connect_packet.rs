@@ -490,16 +490,15 @@ impl DecodePacket for ConnectPacket {
 
 #[cfg(test)]
 mod tests {
-    use crate::base::DecodePacket;
-    use crate::connect_packet::ConnectPacket;
+    use super::{ByteArray, ConnectPacket, DecodePacket};
 
     #[test]
     fn test_decode() {
         let buf: Vec<u8> = vec![
             16, 20, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 8, 119, 118, 80, 84, 88, 99, 67, 119,
         ];
-        let mut offset = 0;
-        let packet = ConnectPacket::decode(&buf, &mut offset);
+        let mut ba = ByteArray::new(&buf);
+        let packet = ConnectPacket::decode(&mut ba);
         assert!(packet.is_ok());
         let packet = packet.unwrap();
         assert_eq!(packet.client_id(), "wvPTXcCw");
