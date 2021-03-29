@@ -1,9 +1,9 @@
 
 [workspace]
 members = [
-	"codec",
+#   "codec",
 	"hebo",
-	"ruo"
+#	"ruo"
 ]
 
 [profile.release]
