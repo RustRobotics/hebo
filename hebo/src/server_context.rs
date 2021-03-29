@@ -5,10 +5,10 @@
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
 
+use codec::{PublishPacket, SubscribePacket, SubscribeTopic};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
-use crate::codec::{PublishPacket, SubscribePacket, SubscribeTopic};
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::config::Config;
 use crate::connection_context::ConnectionContext;

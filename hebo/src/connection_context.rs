@@ -2,6 +2,11 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use codec::{
+    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, EncodePacket,
+    FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishPacket, SubscribeAck,
+    SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
+};
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -9,11 +14,6 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
-use crate::codec::{
-    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, EncodePacket,
-    FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishPacket, SubscribeAck,
-    SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
-};
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::error;
 
