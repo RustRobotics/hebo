@@ -7,13 +7,15 @@ use super::server_context::ServerContext;
 use clap::Arg;
 use std::io;
 
+use crate::error::Error;
+
 const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
 
-pub async fn run_server() -> io::Result<()> {
+pub async fn run_server() -> Result<(), Error> {
     let matches = clap::App::new("Hebo")
         .version("0.1.0")
         .author("Xu Shaohua <shaohua@biofan.org>")
-        .about("Distributed MQTT Broker")
+        .about("High Performance MQTT Server")
         .arg(
             Arg::with_name("config")
                 .short("c")

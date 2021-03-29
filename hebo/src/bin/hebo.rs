@@ -2,11 +2,10 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use hebo::server;
-use std::io;
+use hebo::{server, Error};
 
 #[tokio::main]
-async fn main() -> io::Result<()> {
+async fn main() -> Result<(), Error> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 

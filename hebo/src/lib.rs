@@ -12,4 +12,4 @@ pub mod server;
 mod server_context;
 mod sys_messages;
 
-//use error::{Error, Result};
+pub use error::Error;

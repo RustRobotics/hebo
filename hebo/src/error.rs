@@ -11,6 +11,7 @@ pub enum Error {
     EncodeError(codec::EncodeError),
     DecodeError(codec::DecodeError),
     SendError,
+    SocketError,
 }
 
 impl From<io::Error> for Error {

@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use std::io;
-use std::net::SocketAddr;
+use std::net::{SocketAddr, ToSocketAddrs};
 
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{self, Receiver, Sender};
@@ -12,6 +12,7 @@ use crate::codec::{PublishPacket, SubscribePacket, SubscribeTopic};
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::config::Config;
 use crate::connection_context::ConnectionContext;
+use crate::error::Error;
 use crate::sys_messages::SysMessage;
 
 #[derive(Debug)]
@@ -38,9 +39,19 @@ impl ServerContext {
         }
     }
 
-    pub async fn run_loop(&mut self) -> io::Result<()> {
+    pub async fn run_loop(&mut self) -> Result<(), Error> {
         log::info!("Listening at: {}", self.config.connections.mqtt);
-        let listener = TcpListener::bind(&self.config.connections.mqtt).await?;
+        let addrs = self.config.connections.mqtt.to_socket_addrs()?;
+        let mut listener = None;
+        for addr in addrs {
+            listener = Some(TcpListener::bind(&addr).await?);
+            break;
+        }
+        if listener.is_none() {
+            return Err(Error::SocketError);
+        }
+        let listener = listener.unwrap();
+
         loop {
             tokio::select! {
                 Ok((socket, address)) = listener.accept() => {
