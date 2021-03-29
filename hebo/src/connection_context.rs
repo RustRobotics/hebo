@@ -242,7 +242,13 @@ impl ConnectionContext {
 
     async fn disconnect(&mut self, _buf: &[u8]) -> error::Result<()> {
         self.status = Status::Disconnected;
-        // TODO(Shaohua): Send disconnect to server to unsubscribe any topics.
+        if let Err(err) = self
+            .sender
+            .send(ConnectionCommand::Disconnect(self.connection_id))
+            .await
+        {
+            log::warn!("Failed to send disconnect command to server: {:?}", err);
+        }
         Ok(())
     }
 
