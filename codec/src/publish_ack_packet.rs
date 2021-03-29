@@ -2,14 +2,12 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io;
-
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use crate::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, RemainingLength, ToNetPacket,
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    PacketType, RemainingLength,
 };
-use crate::error::Error;
 
 /// Acknowledge packet for Publish message in QoS 1.
 ///
@@ -26,7 +24,7 @@ use crate::error::Error;
 /// ```
 ///
 /// This type of packet does not contain payload.
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct PublishAckPacket {
     packet_id: PacketId,
 }
@@ -41,30 +39,30 @@ impl PublishAckPacket {
     }
 }
 
-impl FromNetPacket for PublishAckPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
-        assert_eq!(fixed_header.packet_type, PacketType::PublishAck);
-        assert_eq!(fixed_header.remaining_length.0, 2);
-
-        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
-        *offset += 2;
-
-        Ok(PublishAckPacket { packet_id })
-    }
-}
-
-impl ToNetPacket for PublishAckPacket {
-    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+impl EncodePacket for PublishAckPacket {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
         let fixed_header = FixedHeader {
             packet_type: PacketType::PublishAck,
-            packet_flags: PacketFlags::PublishAck,
             remaining_length: RemainingLength(2),
         };
-        fixed_header.to_net(buf)?;
+        fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)
+    }
+}
+
+impl DecodePacket for PublishAckPacket {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+        if fixed_header.packet_type != PacketType::PublishAck {
+            Err(DecodeError::InvalidPacketType)
+        } else if fixed_header.remaining_length.0 != 2 {
+            Err(DecodeError::InvalidRemainingLength)
+        } else {
+            let packet_id = BigEndian::read_u16(ba.read_bytes(2)?) as PacketId;
+            Ok(PublishAckPacket { packet_id })
+        }
     }
 }

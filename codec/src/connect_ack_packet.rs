@@ -2,17 +2,15 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io;
-
-use crate::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketType, RemainingLength, ToNetPacket,
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType,
+    RemainingLength,
 };
-use crate::error::Error;
 
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
 /// close the network connection.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ConnectReturnCode {
     /// Connection accepted.
     Accepted = 0,
@@ -74,7 +72,7 @@ impl From<u8> for ConnectReturnCode {
 /// ```
 ///
 /// This packet does not contain payload.
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectAckPacket {
     /// Acknowledge flags is the first byte in variable header.
     /// Session Present flag is set in bit 0 of Ack flags, bits 7-1 are reserved.
@@ -110,16 +108,14 @@ impl ConnectAckPacket {
     }
 }
 
-impl FromNetPacket for ConnectAckPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
+impl DecodePacket for ConnectAckPacket {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
         assert_eq!(fixed_header.packet_type, PacketType::ConnectAck);
 
-        let ack_flags = buf[*offset];
+        let ack_flags = ba.read_byte()?;
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
-        *offset += 1;
-        let return_code = ConnectReturnCode::from(buf[*offset]);
-        *offset += 1;
+        let return_code = ConnectReturnCode::from(ba.read_byte()?);
 
         Ok(ConnectAckPacket {
             session_present,
@@ -128,15 +124,14 @@ impl FromNetPacket for ConnectAckPacket {
     }
 }
 
-impl ToNetPacket for ConnectAckPacket {
-    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+impl EncodePacket for ConnectAckPacket {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
         let fixed_header = FixedHeader {
             packet_type: PacketType::ConnectAck,
-            packet_flags: PacketFlags::ConnectAck,
             remaining_length: RemainingLength(2),
         };
-        fixed_header.to_net(buf)?;
+        fixed_header.encode(buf)?;
 
         let ack_flags = if self.session_present { 0b0000_0001 } else { 0 };
         buf.push(ack_flags);
@@ -148,14 +143,13 @@ impl ToNetPacket for ConnectAckPacket {
 
 #[cfg(test)]
 mod tests {
-    use crate::connect_ack_packet::ConnectAckPacket;
-    use crate::base::FromNetPacket;
+    use super::{ByteArray, ConnectAckPacket, DecodePacket};
 
     #[test]
-    fn test_from_net() {
+    fn test_decode() {
         let buf: Vec<u8> = vec![0x20, 0x02, 0x00, 0x00];
-        let mut offset = 0;
-        let packet = ConnectAckPacket::from_net(&buf, &mut offset);
+        let mut ba = ByteArray::new(&buf);
+        let packet = ConnectAckPacket::decode(&mut ba);
         assert!(packet.is_ok());
         let packet = packet.unwrap();
         assert_eq!(packet.session_present, false);

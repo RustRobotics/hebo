@@ -2,7 +2,6 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-mod codec;
 mod commands;
 mod config;
 mod connection_context;

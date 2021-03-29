@@ -2,19 +2,16 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io;
+use byteorder::{BigEndian, WriteBytesExt};
 
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
-
-use crate::base::{
-    FixedHeader, FromNetPacket, PacketFlags, PacketId, PacketType, QoS, RemainingLength,
-    ToNetPacket,
+use super::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    PacketType, QoS, RemainingLength,
 };
-use crate::error::Error;
 
 /// Reply to each subscribed topic.
 #[repr(u8)]
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum SubscribeAck {
     /// Maximum level of QoS the Server granted for this topic.
     QoS(QoS),
@@ -47,7 +44,7 @@ impl Default for SubscribeAck {
 /// | Ack N ...                 |
 /// +---------------------------+
 /// ```
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SubscribeAckPacket {
     /// `packet_id` field is identical in Subscribe packet.
     packet_id: PacketId,
@@ -74,27 +71,28 @@ impl SubscribeAckPacket {
     }
 }
 
-impl FromNetPacket for SubscribeAckPacket {
-    fn from_net(buf: &[u8], offset: &mut usize) -> Result<Self, Error> {
-        let fixed_header = FixedHeader::from_net(buf, offset)?;
-        assert_eq!(fixed_header.packet_type, PacketType::SubscribeAck);
+impl DecodePacket for SubscribeAckPacket {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+        if fixed_header.packet_type != PacketType::SubscribeAck {
+            return Err(DecodeError::InvalidPacketType);
+        }
 
-        let packet_id = BigEndian::read_u16(&buf[*offset..*offset + 2]) as PacketId;
-        *offset += 2;
+        let packet_id = ba.read_u16()? as PacketId;
 
         let mut acknowledgements = Vec::new();
         let mut remaining_length = 2;
 
         while remaining_length < fixed_header.remaining_length.0 {
-            let payload = buf[*offset];
-            *offset += 1;
+            let payload = ba.read_byte()?;
             remaining_length += 1;
             match payload & 0b1000_0011 {
                 0b1000_0000 => acknowledgements.push(SubscribeAck::Failed),
                 0b0000_0010 => acknowledgements.push(SubscribeAck::QoS(QoS::ExactOnce)),
                 0b0000_0001 => acknowledgements.push(SubscribeAck::QoS(QoS::AtLeastOnce)),
                 0b0000_0000 => acknowledgements.push(SubscribeAck::QoS(QoS::AtMostOnce)),
-                _ => return Err(Error::InvalidQoS),
+
+                _ => return Err(DecodeError::InvalidQoS),
             }
         }
 
@@ -105,15 +103,14 @@ impl FromNetPacket for SubscribeAckPacket {
     }
 }
 
-impl ToNetPacket for SubscribeAckPacket {
-    fn to_net(&self, buf: &mut Vec<u8>) -> io::Result<usize> {
+impl EncodePacket for SubscribeAckPacket {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
         let fixed_header = FixedHeader {
             packet_type: PacketType::SubscribeAck,
-            packet_flags: PacketFlags::SubscribeAck,
             remaining_length: RemainingLength(3),
         };
-        fixed_header.to_net(buf)?;
+        fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
 
         for ack in &self.acknowledgements {
