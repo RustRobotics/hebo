@@ -62,7 +62,7 @@ pub fn validate_utf8_string(s: &str) -> Result<(), StringError> {
         //    return Err(StringError::InvalidStringSerious);
         //}
 
-        if (c >= '\u{0001}' && c <= '\u{001f}') || ('\u{007f}'..'\u{009f}').contains(&c) {
+        if ('\u{0001}'..='\u{001f}').contains(&c) || ('\u{007f}'..='\u{009f}').contains(&c) {
             return Err(StringError::InvalidChar);
         }
     }

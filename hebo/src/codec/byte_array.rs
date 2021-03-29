@@ -34,8 +34,7 @@ impl<'a> ByteArray<'a> {
 
     pub fn remaining_bytes(&self) -> usize {
         assert!(self.offset <= self.data.len());
-        let remain = self.data.len() - self.offset;
-        remain
+        self.data.len() - self.offset
     }
 
     // TODO(Shaohua): Add ByteArrayError
@@ -54,7 +53,7 @@ impl<'a> ByteArray<'a> {
 
     pub fn read_string(&mut self, len: usize) -> Result<String, ByteArrayError> {
         let bytes = self.read_bytes(len)?;
-        utils::to_utf8_string(bytes).map_err(|err| ByteArrayError::from(err))
+        utils::to_utf8_string(bytes).map_err(ByteArrayError::from)
     }
 
     pub fn read_bytes(&mut self, len: usize) -> Result<&[u8], ByteArrayError> {

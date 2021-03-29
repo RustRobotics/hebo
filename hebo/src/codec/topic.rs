@@ -59,7 +59,7 @@ impl Topic {
                 TopicPart::MultiWildcard => return true,
             }
         }
-        return true;
+        true
     }
 
     pub fn str(&self) -> &str {
@@ -143,13 +143,7 @@ impl Topic {
             return Err(TopicError::TooManyData);
         }
 
-        if topic
-            .as_bytes()
-            .iter()
-            .filter(|c| c == &&b'+' || c == &&b'#')
-            .next()
-            == None
-        {
+        if topic.as_bytes().iter().find(|c| c == &&b'+' || c == &&b'#') == None {
             Ok(())
         } else {
             Err(TopicError::InvalidChar)
@@ -194,11 +188,11 @@ impl TopicPart {
             "#" => Ok(TopicPart::MultiWildcard),
             _ => {
                 if TopicPart::has_wildcard(s) {
-                    return Err(TopicError::ContainsWildChar);
+                    Err(TopicError::ContainsWildChar)
                 } else if TopicPart::is_internal(s) {
-                    return Ok(TopicPart::Internal(s.to_string()));
+                    Ok(TopicPart::Internal(s.to_string()))
                 } else {
-                    return Ok(TopicPart::Normal(s.to_string()));
+                    Ok(TopicPart::Normal(s.to_string()))
                 }
             }
         }

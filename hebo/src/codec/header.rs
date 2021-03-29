@@ -134,7 +134,7 @@ impl TryFrom<u8> for PacketType {
             13 => Ok(PacketType::PingResponse),
             14 => Ok(PacketType::Disconnect),
 
-            _ => return Err(DecodeError::InvalidPacketType),
+            _ => Err(DecodeError::InvalidPacketType),
         }
     }
 }

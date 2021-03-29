@@ -354,9 +354,9 @@ pub fn validate_client_id(id: &str) -> Result<(), StringError> {
         return Err(StringError::InvalidLength);
     }
     for byte in id.bytes() {
-        if !((byte >= b'0' && byte <= b'9')
-            || (byte >= b'a' && byte <= b'z')
-            || (byte >= b'A' && byte <= b'Z'))
+        if !((b'0'..=b'9').contains(&byte)
+            || (b'a'..=b'z').contains(&byte)
+            || (b'A'..=b'Z').contains(&byte))
         {
             return Err(StringError::InvalidChar);
         }

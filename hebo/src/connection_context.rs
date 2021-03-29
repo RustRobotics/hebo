@@ -100,8 +100,9 @@ impl ConnectionContext {
             .await
         {
             log::error!(
-                "Failed to send disconnect cmd to server, connection_id: {}",
-                self.connection_id
+                "Failed to send disconnect cmd to server, connection_id: {}, err: {:?}",
+                self.connection_id,
+                err
             );
         }
     }
