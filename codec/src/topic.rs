@@ -79,23 +79,24 @@ impl Topic {
     /// Validate topic filter.
     /// Rules are defined in `MQTT chapter-4.7 Topic Name and Filters`
     /// ```
+    /// use codec::Topic;
     /// let name = "sport/tennis/player/#";
-    /// assert_eq!(Topic::validate_sub_topic(name), true);
+    /// assert!(Topic::validate_sub_topic(name).is_ok());
     ///
     /// let name = "sport/tennis/player#";
-    /// assert_eq!(Topic::validate_sub_topic(name), false);
+    /// assert!(Topic::validate_sub_topic(name).is_err());
     ///
     /// let name = "#";
-    /// assert_eq!(Topic::validate_sub_topic(name), true);
+    /// assert!(Topic::validate_sub_topic(name).is_ok());
     ///
     /// let name = "sport/#/player/ranking";
-    /// assert_eq!(Topic::validate_sub_topic(name), false);
+    /// assert!(Topic::validate_sub_topic(name).is_err());
     ///
     /// let name = "+";
-    /// assert_eq!(Topic::validate_sub_topic(name), true);
+    /// assert!(Topic::validate_sub_topic(name).is_ok());
     ///
     /// let name = "sport+";
-    /// assert_eq!(Topic::validate_sub_topic(name), false);
+    /// assert!(Topic::validate_sub_topic(name).is_err());
     /// ```
     pub fn validate_sub_topic(topic: &str) -> Result<(), TopicError> {
         if topic.is_empty() {
@@ -129,11 +130,12 @@ impl Topic {
 
     /// Check whether topic name contains wildchard characters.
     /// ```
+    /// use codec::Topic;
     /// let name = "sport/tennis/player/#";
-    /// assert_eq!(Topic::validate_pub_topic(name), false);
+    /// assert!(Topic::validate_pub_topic(name).is_err());
     ///
     /// let name = "sport/tennis/player/ranking";
-    /// assert_eq!(Topic::validate_pub_topic(name), true);
+    /// assert!(Topic::validate_pub_topic(name).is_ok());
     /// ```
     pub fn validate_pub_topic(topic: &str) -> Result<(), TopicError> {
         if topic.is_empty() {

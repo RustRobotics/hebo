@@ -7,17 +7,16 @@ use std::io::Write;
 
 use byteorder::{BigEndian, WriteBytesExt};
 
-use super::topic::Topic;
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
-    PacketType, QoS, RemainingLength,
+    PacketType, QoS, RemainingLength, Topic,
 };
 
 /// Topic/QoS pair.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SubscribeTopic {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
-    pub topic: Topic,
+    pub topic: String,
 
     /// Maximum level of QoS of packet the Server can send to the Client.
     pub qos: QoS,
@@ -72,12 +71,14 @@ pub struct SubscribePacket {
 }
 
 impl SubscribePacket {
-    pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> SubscribePacket {
-        let topic = Topic::parse(topic).unwrap();
-        SubscribePacket {
+    pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> Result<SubscribePacket, DecodeError> {
+        // TODO(Shaohua): Do not copy topic string.
+        Topic::validate_sub_topic(&topic)?;
+        let topic = topic.to_string();
+        Ok(SubscribePacket {
             packet_id,
             topics: vec![SubscribeTopic { topic, qos }],
-        }
+        })
     }
 
     pub fn packet_id(&self) -> PacketId {
@@ -112,7 +113,6 @@ impl DecodePacket for SubscribePacket {
 
             let topic = ba.read_string(topic_len)?;
             Topic::validate_sub_topic(&topic)?;
-            let topic = Topic::parse(&topic)?;
             remaining_length += topic_len as u32;
 
             let qos_flag = ba.read_byte()?;
