@@ -4,13 +4,12 @@
 
 #include "controllers/main_controller.h"
 
-#include <QTranslator>
 #include <QDir>
 #include <QGuiApplication>
 #include <QLibraryInfo>
-#include <QQmlContext>
+#include <QTranslator>
 
-#include "ui/ui.h"
+#include "frames/main_window.h"
 
 namespace hebo {
 
@@ -31,14 +30,11 @@ MainController::~MainController() {
   this->updater_thread_->deleteLater();
 }
 
-void MainController::showMainWindow(QQmlApplicationEngine* engine) {
-  auto* context = engine->rootContext();
-  context->setContextProperty("logManager", this->log_manager_);
-  context->setContextProperty("updateManager", this->update_manager_);
-  context->setContextProperty("settingsManager", this->settings_manager_);
-  context->setContextProperty("connectManager", this->connect_manager_);
-
-  engine->load(kUiMainWindow);
+void MainController::showMainWindow() {
+  auto* main_window = new MainWindow();
+  connect(main_window, &MainWindow::destroyed,
+          main_window, &MainWindow::deleteLater);
+  main_window->show();
 }
 
 void MainController::installTranslators() {

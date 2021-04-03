@@ -17,8 +17,7 @@ add_library(controllers-static STATIC
     ${SOURCES}
     )
 target_link_libraries(controllers-static
-    Qt5::Gui
-    Qt5::Qml
+    Qt5::Widgets
 
     CuteLogger
 

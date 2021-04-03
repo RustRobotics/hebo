@@ -6,7 +6,6 @@
 #define HEBOUI_SRC_CONTROLLERS_MAIN_CONTROLLER_H_
 
 #include <QObject>
-#include <QQmlApplicationEngine>
 #include <QThread>
 
 #include "controllers/log_manager.h"
@@ -22,7 +21,8 @@ class MainController : public QObject {
   explicit MainController(QObject* parent = nullptr);
   ~MainController() override;
 
-  void showMainWindow(QQmlApplicationEngine* engine);
+ public slots:
+  void showMainWindow();
 
  private:
   void installTranslators();
