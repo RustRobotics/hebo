@@ -15,13 +15,8 @@ namespace hebo {
 
 MainController::MainController(QObject* parent)
     : QObject(parent),
-      updater_thread_(new QThread()),
-      log_manager_(new LogManager(this)),
-      update_manager_(new UpdateManager()),
-      settings_manager_(new SettingsManager(this)),
-      connect_manager_(new ConnectManager(this)) {
+      updater_thread_(new QThread()) {
   this->installTranslators();
-  update_manager_->moveToThread(updater_thread_);
   updater_thread_->start();
 }
 

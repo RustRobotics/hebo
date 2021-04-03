@@ -8,10 +8,10 @@
 #include <QObject>
 #include <QThread>
 
-#include "controllers/log_manager.h"
-#include "controllers/connect_manager.h"
-#include "controllers/settings_manager.h"
-#include "controllers/update_manager.h"
+//#include "controllers/log_manager.h"
+//#include "controllers/connect_manager.h"
+//#include "controllers/settings_manager.h"
+//#include "controllers/update_manager.h"
 
 namespace hebo {
 
@@ -29,10 +29,10 @@ class MainController : public QObject {
 
   QThread* updater_thread_;
 
-  LogManager* log_manager_;
-  UpdateManager* update_manager_;
-  SettingsManager* settings_manager_;
-  ConnectManager* connect_manager_;
+//  LogManager* log_manager_;
+//  UpdateManager* update_manager_;
+//  SettingsManager* settings_manager_;
+//  ConnectManager* connect_manager_;
 };
 
 }  // namespace hebo

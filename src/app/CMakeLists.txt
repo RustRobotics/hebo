@@ -1,5 +1,5 @@
 set(UI_FILES
-    ../ui/ui.qrc
+    ../resources/images/images.qrc
     ${CMAKE_BINARY_DIR}/i18n/hebo.qrc
     )
 
