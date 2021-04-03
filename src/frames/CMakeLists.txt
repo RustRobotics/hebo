@@ -4,6 +4,8 @@ set(SOURCES
     about_windows.h
     left_panel.cpp
     left_panel.h
+    log_window.cpp
+    log_window.h
     main_window.cpp
     main_window.h
     new_connection_window.cpp
