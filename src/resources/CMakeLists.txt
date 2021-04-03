@@ -1,5 +1,6 @@
 
 set(SOURCE_FILES
+    fonts/fonts.h
     images/images.h
     )
 

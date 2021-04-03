@@ -27,6 +27,7 @@ class MainController : public QObject {
  private:
   void installTranslators();
 
+
   QThread* updater_thread_;
 
 //  LogManager* log_manager_;
@@ -34,6 +35,8 @@ class MainController : public QObject {
 //  SettingsManager* settings_manager_;
 //  ConnectManager* connect_manager_;
 };
+
+void loadExternalFonts();
 
 }  // namespace hebo
 

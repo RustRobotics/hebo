@@ -6,11 +6,13 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QFontDatabase>
 #include <QGuiApplication>
 #include <QLibraryInfo>
 #include <QTranslator>
 
 #include "frames/main_window.h"
+#include "resources/fonts/fonts.h"
 
 namespace hebo {
 namespace {
@@ -23,6 +25,7 @@ MainController::MainController(QObject* parent)
     : QObject(parent),
       updater_thread_(new QThread()) {
   this->installTranslators();
+  loadExternalFonts();
   updater_thread_->start();
 }
 
@@ -46,7 +49,12 @@ void MainController::installTranslators() {
   } else {
     qWarning() << "Failed to load translator file:" << file;
   }
+}
 
+void loadExternalFonts() {
+  for (const char* font : kExternalFonts) {
+    QFontDatabase::addApplicationFont(font);
+  }
 }
 
 }  // namespace hebo
