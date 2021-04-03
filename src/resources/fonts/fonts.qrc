@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource prefix="/fonts">
+    <file>element-icons.ttf</file>
+    <file>iconfont.ttf</file>
+  </qresource>
+</RCC>

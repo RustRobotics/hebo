@@ -9,8 +9,6 @@ namespace hebo {
 
 int runShell(int argc, char** argv);
 
-void registerComponents();
-
 }  // namespace hebo
 
 #endif  // HEBOUI_SRC_CONTROLLERS_SHELL_H_

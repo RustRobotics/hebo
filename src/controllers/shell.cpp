@@ -6,11 +6,10 @@
 
 #include <ConsoleAppender.h>
 #include <Logger.h>
-#include <QGuiApplication>
+#include <QApplication>
+#include <QSharedPointer>
 
 #include "controllers/main_controller.h"
-#include "mqtt/connect_config.h"
-#include "mqtt/mqtt_client.h"
 
 namespace hebo {
 
@@ -24,31 +23,12 @@ int runShell(int argc, char** argv) {
   QGuiApplication::setOrganizationName("HeboUi");
 //  QGuiApplication::setWindowIcon(QIcon(kHeboUiIcon));
 
-  QGuiApplication application(argc, argv);
-  registerComponents();
+  QApplication application(argc, argv);
   cuteLogger->registerAppender(new ConsoleAppender());
+  auto controller = QSharedPointer<MainController>::create();
+  controller->showMainWindow();
 
-  QQmlApplicationEngine engine{};
-  auto* controller = new MainController(&engine);
-  controller->showMainWindow(&engine);
-
-  return QGuiApplication::exec();
-}
-
-void registerComponents() {
-  constexpr const char* kComponentUri = "org.biofan.hebo";
-  constexpr int kVersionMajor = 1;
-  constexpr int kVersionMinor = 0;
-  qmlRegisterInterface<MqttClient>(kComponentUri, kVersionMajor);
-  qmlRegisterUncreatableType<MqttClient>(kComponentUri, kVersionMajor, kVersionMinor,
-                                         "MqttClient",
-                                         "Cannot create a MqttClient instance");
-//  qmlRegisterUncreatableType<HeboEnums>(kComponentUri, kVersionMajor, kVersionMinor,
-//                                        "HeboEnums",
-//                                        "Cannot create a HeboEnums instance");
-  qmlRegisterUncreatableType<ConnectManager>(kComponentUri, kVersionMajor, kVersionMinor,
-                                             "ConnectManager",
-                                             "Cannot create a ConnectManager instance");
+  return QApplication::exec();
 }
 
 }  // namespace hebo

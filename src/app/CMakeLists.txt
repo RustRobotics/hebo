@@ -1,11 +1,11 @@
-set(UI_FILES
+set(RESOURCES_FILES
     ../resources/images/images.qrc
     ${CMAKE_BINARY_DIR}/i18n/hebo.qrc
     )
 
 add_executable(hebo
     hebo_main.cpp
-    ${UI_FILES}
+    ${RESOURCES_FILES}
     )
 target_link_libraries(hebo
     Qt5::Core

@@ -4,6 +4,7 @@
 
 #include "controllers/main_controller.h"
 
+#include <QDebug>
 #include <QDir>
 #include <QGuiApplication>
 #include <QLibraryInfo>
@@ -12,6 +13,11 @@
 #include "frames/main_window.h"
 
 namespace hebo {
+namespace {
+
+constexpr const char* kI18Template = ":/i18n/hebo-%1.qm";
+
+}  // namespace
 
 MainController::MainController(QObject* parent)
     : QObject(parent),
@@ -33,7 +39,6 @@ void MainController::showMainWindow() {
 }
 
 void MainController::installTranslators() {
-  constexpr const char* kI18Template = ":/i18n/hebo-%1.qm";
   auto* local_translator = new QTranslator(this);
   const QString file = QString(kI18Template).arg(QLocale().name());
   if (local_translator->load(file)) {
