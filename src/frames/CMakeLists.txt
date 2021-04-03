@@ -4,6 +4,8 @@ set(SOURCES
     about_windows.h
     main_window.cpp
     main_window.h
+    settings_window.cpp
+    settings_window.h
     )
 
 add_library(frames-static STATIC
