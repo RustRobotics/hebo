@@ -4,6 +4,8 @@ set(SOURCES
     about_windows.h
     main_window.cpp
     main_window.h
+    new_connection_window.cpp
+    new_connection_window.h
     settings_window.cpp
     settings_window.h
     )
