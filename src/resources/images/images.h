@@ -9,6 +9,7 @@ namespace hebo {
 
 constexpr const char* kImageConnections = ":/images/connections.png";
 constexpr const char* kImageHebo = ":/images/hebo.svg";
+constexpr const char* kImageHeboX128 = ":/images/hebo-x128.svg";
 
 }  // namespace hebo
 

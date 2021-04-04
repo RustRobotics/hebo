@@ -3,5 +3,6 @@
   <qresource prefix="/images">
     <file>connections.png</file>
     <file>hebo.svg</file>
+    <file>hebo-x128.svg</file>
   </qresource>
 </RCC>

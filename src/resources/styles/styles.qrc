@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
   <qresource prefix="/styles">
+    <file>about-window.css</file>
     <file>round-font-button.css</file>
   </qresource>
 </RCC>
