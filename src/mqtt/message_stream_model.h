@@ -2,8 +2,8 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#ifndef HEBOUI_SRC_MQTT_MESSAGE_STREAM_MODEL_H_
-#define HEBOUI_SRC_MQTT_MESSAGE_STREAM_MODEL_H_
+#ifndef HEBO_SRC_MQTT_MESSAGE_STREAM_MODEL_H_
+#define HEBO_SRC_MQTT_MESSAGE_STREAM_MODEL_H_
 
 #include <QAbstractListModel>
 
@@ -50,4 +50,4 @@ class MessageStreamModel : public QAbstractListModel {
 
 }  // namespace hebo
 
-#endif  // HEBOUI_SRC_MQTT_MESSAGE_STREAM_MODEL_H_
+#endif  // HEBO_SRC_MQTT_MESSAGE_STREAM_MODEL_H_

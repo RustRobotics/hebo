@@ -2,8 +2,8 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#ifndef HEBOUI_SRC_CONTROLLERS_UPDATE_MANAGER_H_
-#define HEBOUI_SRC_CONTROLLERS_UPDATE_MANAGER_H_
+#ifndef HEBO_SRC_CONTROLLERS_UPDATE_MANAGER_H_
+#define HEBO_SRC_CONTROLLERS_UPDATE_MANAGER_H_
 
 #include <QObject>
 
@@ -25,4 +25,4 @@ class UpdateManager : public QObject {
 
 }  // namespace hebo
 
-#endif  // HEBOUI_SRC_CONTROLLERS_UPDATE_MANAGER_H_
+#endif  // HEBO_SRC_CONTROLLERS_UPDATE_MANAGER_H_

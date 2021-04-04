@@ -15,12 +15,12 @@ namespace hebo {
 
 int runShell(int argc, char** argv) {
   QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-  QGuiApplication::setApplicationDisplayName("Hebo UI");
-  QGuiApplication::setApplicationName("HeboUi");
+  QGuiApplication::setApplicationDisplayName("Hebo");
+  QGuiApplication::setApplicationName("Hebo");
   QGuiApplication::setApplicationVersion("0.1.0");
   QGuiApplication::setDesktopFileName("hebo-ui");
   QGuiApplication::setOrganizationDomain("biofan.org");
-  QGuiApplication::setOrganizationName("HeboUi");
+  QGuiApplication::setOrganizationName("Hebo");
 //  QGuiApplication::setWindowIcon(QIcon(kHeboUiIcon));
 
   QApplication application(argc, argv);

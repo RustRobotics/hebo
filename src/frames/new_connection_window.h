@@ -2,8 +2,8 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#ifndef HEBOUI_SRC_FRAMES_NEW_CONNECTION_WINDOW_H_
-#define HEBOUI_SRC_FRAMES_NEW_CONNECTION_WINDOW_H_
+#ifndef HEBO_SRC_FRAMES_NEW_CONNECTION_WINDOW_H_
+#define HEBO_SRC_FRAMES_NEW_CONNECTION_WINDOW_H_
 
 #include <QWidget>
 
@@ -17,4 +17,4 @@ class NewConnectionWindow : public QWidget {
 
 }  // namespace hebo
 
-#endif  // HEBOUI_SRC_FRAMES_NEW_CONNECTION_WINDOW_H_
+#endif  // HEBO_SRC_FRAMES_NEW_CONNECTION_WINDOW_H_

@@ -2,8 +2,8 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#ifndef HEBOUI_SRC_MQTT_CONNECT_CONFIG_H_
-#define HEBOUI_SRC_MQTT_CONNECT_CONFIG_H_
+#ifndef HEBO_SRC_MQTT_CONNECT_CONFIG_H_
+#define HEBO_SRC_MQTT_CONNECT_CONFIG_H_
 
 #include <QDebug>
 #include <QJsonObject>
@@ -79,4 +79,4 @@ bool dumpConnectConfigs(const QString& file, const ConnectConfigList& list);
 Q_DECLARE_METATYPE(hebo::MqttEnums::ConnectionState);
 Q_DECLARE_METATYPE(hebo::MqttEnums::QoS);
 
-#endif  // HEBOUI_SRC_MQTT_CONNECT_CONFIG_H_
+#endif  // HEBO_SRC_MQTT_CONNECT_CONFIG_H_

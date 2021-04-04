@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(HeboUi VERSION 0.1.1)
+project(Hebo VERSION 0.1.2)
 
 set(CMAKE_CONFIGURATION_TYPES Debug Release)
 if (NOT CMAKE_BUILD_TYPE)

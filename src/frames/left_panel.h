@@ -2,8 +2,8 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#ifndef HEBOUI_SRC_FRAMES_LEFT_PANEL_H_
-#define HEBOUI_SRC_FRAMES_LEFT_PANEL_H_
+#ifndef HEBO_SRC_FRAMES_LEFT_PANEL_H_
+#define HEBO_SRC_FRAMES_LEFT_PANEL_H_
 
 #include <QButtonGroup>
 #include <QWidget>
@@ -43,4 +43,4 @@ class LeftPanel : public QWidget {
 
 }  // namespace hebo
 
-#endif  // HEBOUI_SRC_FRAMES_LEFT_PANEL_H_
+#endif  // HEBO_SRC_FRAMES_LEFT_PANEL_H_
