@@ -1,11 +1,6 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
   <qresource prefix="/images">
-    <file>app-logo.png</file>
     <file>connections.png</file>
-    <file>emqx-logo.png</file>
-    <file>mqttx-dark.png</file>
-    <file>mqttx-light.png</file>
-    <file>wx_qr_code.png</file>
   </qresource>
 </RCC>

@@ -24,13 +24,25 @@ void LeftPanel::initUi() {
   this->btn_group_ = new QButtonGroup(this);
   this->btn_group_->setExclusive(true);
 
+  auto* messages_btn = new RoundFontButton(tr("Messages"));
+  this->btn_group_->addButton(messages_btn, ButtonId::kMessages);
+  main_layout->addWidget(messages_btn);
+
+  auto* benchmark_btn = new RoundFontButton(tr("Benchmark"));
+  this->btn_group_->addButton(benchmark_btn, ButtonId::kBenchmark);
+  main_layout->addWidget(benchmark_btn);
+
+  auto* bag_btn = new RoundFontButton("🎅");
+  this->btn_group_->addButton(bag_btn, ButtonId::kBag);
+  main_layout->addWidget(bag_btn);
+
   main_layout->addStretch();
 
-  auto* about_btn = new RoundFontButton(tr("About"));
+  auto* about_btn = new RoundFontButton("\ue6c9");
   this->btn_group_->addButton(about_btn, ButtonId::kAbout);
   main_layout->addWidget(about_btn);
 
-  auto* settings_btn = new RoundFontButton(tr("Settings"));
+  auto* settings_btn = new RoundFontButton("click me 🤣️");
   this->btn_group_->addButton(settings_btn);
   main_layout->addWidget(settings_btn, ButtonId::kSettings);
 }

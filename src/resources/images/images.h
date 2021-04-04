@@ -7,13 +7,7 @@
 
 namespace hebo {
 
-constexpr const char* kImageAppLogo = ":/images//app-logo.png";
 constexpr const char* kImageConnections = ":/images//connections.png";
-constexpr const char* kImageEmqxLogo = ":/images//emqx-logo.png";
-constexpr const char* kImageImages = ":/images//images.qrc";
-constexpr const char* kImageMqttxDark = ":/images//mqttx-dark.png";
-constexpr const char* kImageMqttxLight = ":/images//mqttx-light.png";
-constexpr const char* kImageWx_qr_code = ":/images//wx_qr_code.png";
 
 }  // namespace hebo
 

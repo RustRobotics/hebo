@@ -12,7 +12,6 @@ namespace hebo {
 class RoundFontButton : public QPushButton {
   Q_OBJECT
  public:
-  explicit RoundFontButton(QWidget* parent = nullptr);
   explicit RoundFontButton(const QString& text, QWidget* parent = nullptr);
   ~RoundFontButton() override = default;
 };
