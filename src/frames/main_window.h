@@ -5,15 +5,15 @@
 #ifndef HEBOUI_SRC_FRAMES_MAIN_WINDOW_H_
 #define HEBOUI_SRC_FRAMES_MAIN_WINDOW_H_
 
-#include <QMainWindow>
-#include <QStackedWidget>
+#include <QWidget>
+#include <QStackedLayout>
 
 #include "frames/left_panel.h"
-#include "frames/log_window.h";
+#include "frames/log_window.h"
 
 namespace hebo {
 
-class MainWindow : public QMainWindow {
+class MainWindow : public QWidget {
   Q_OBJECT
  public:
   explicit MainWindow(QWidget* parent = nullptr);
@@ -21,11 +21,9 @@ class MainWindow : public QMainWindow {
  private:
   void initUi();
   void initSignals();
-  void initMenu();
 
   LeftPanel* left_panel_{nullptr};
-  QStackedWidget* stacked_widget_{nullptr};
-
+  QStackedLayout* stacked_layout_{nullptr};
 };
 
 }  // namespace hebo

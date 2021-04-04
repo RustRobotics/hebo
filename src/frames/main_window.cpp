@@ -4,26 +4,29 @@
 
 #include "frames/main_window.h"
 
+#include <QDebug>
+
 namespace hebo {
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
+MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
   this->initUi();
-  this->initMenu();
   this->initSignals();
 }
 
 void MainWindow::initUi() {
-  this->left_panel_ = new LeftPanel();
+  auto* main_layout = new QHBoxLayout();
+  main_layout->setSpacing(0);
+  main_layout->setContentsMargins(0, 0, 0, 0);
+  this->setLayout(main_layout);
 
-  this->stacked_widget_ = new QStackedWidget(this);
-  this->setCentralWidget(this->stacked_widget_);
+  this->left_panel_ = new LeftPanel();
+  main_layout->addWidget(this->left_panel_);
+
+  this->stacked_layout_ = new QStackedLayout();
+  main_layout->addLayout(this->stacked_layout_);
 }
 
 void MainWindow::initSignals() {
-
 }
 
-void MainWindow::initMenu() {
-
-}
 }  // namespace hebo

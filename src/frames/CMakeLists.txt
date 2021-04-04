@@ -23,4 +23,6 @@ add_library(frames-static STATIC
     )
 target_link_libraries(frames-static
     Qt5::Widgets
+
+    widgets-static
     )

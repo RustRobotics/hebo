@@ -5,14 +5,39 @@
 #ifndef HEBOUI_SRC_FRAMES_LEFT_PANEL_H_
 #define HEBOUI_SRC_FRAMES_LEFT_PANEL_H_
 
+#include <QButtonGroup>
 #include <QWidget>
 
 namespace hebo {
 
 class LeftPanel : public QWidget {
   Q_OBJECT
+  Q_PROPERTY(ButtonId button READ activeButton WRITE setActiveButton NOTIFY activeChanged)
  public:
+  enum ButtonId : uint8_t {
+    kMessages,
+    kBenchmark,
+    kBag,
+    kAbout,
+    kSettings,
+  };
+  Q_ENUM(ButtonId);
+
   explicit LeftPanel(QWidget* parent = nullptr);
+
+  [[nodiscard]] ButtonId activeButton() const;
+
+ public slots:
+  void setActiveButton(ButtonId id);
+
+ signals:
+  void activeChanged(ButtonId id);
+
+ private:
+  void initUi();
+  void initSignals();
+
+  QButtonGroup* btn_group_{nullptr};
 };
 
 }  // namespace hebo
