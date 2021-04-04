@@ -7,9 +7,11 @@
 #include <ConsoleAppender.h>
 #include <Logger.h>
 #include <QApplication>
+#include <QIcon>
 #include <QSharedPointer>
 
 #include "controllers/main_controller.h"
+#include "resources/images/images.h"
 
 namespace hebo {
 
@@ -17,11 +19,11 @@ int runShell(int argc, char** argv) {
   QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QGuiApplication::setApplicationDisplayName("Hebo");
   QGuiApplication::setApplicationName("Hebo");
-  QGuiApplication::setApplicationVersion("0.1.0");
+  QGuiApplication::setApplicationVersion("0.1.2");
   QGuiApplication::setDesktopFileName("hebo-ui");
   QGuiApplication::setOrganizationDomain("biofan.org");
   QGuiApplication::setOrganizationName("Hebo");
-//  QGuiApplication::setWindowIcon(QIcon(kHeboUiIcon));
+  QGuiApplication::setWindowIcon(QIcon(kImageHebo));
 
   QApplication application(argc, argv);
   cuteLogger->registerAppender(new ConsoleAppender());
