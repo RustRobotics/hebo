@@ -26,25 +26,34 @@ void MainWindow::initUi() {
   main_layout->addLayout(this->stacked_layout_);
 
   this->messages_window_ = new MessagesWindow();
-  this->stacked_layout_->addWidget(this->messages_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kMessages, this->messages_window_);
 
   this->benchmark_window_ = new BenchmarkWindow();
-  this->stacked_layout_->addWidget(this->benchmark_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kBenchmark, this->benchmark_window_);
 
   this->bag_window_ = new BagWindow();
-  this->stacked_layout_->addWidget(this->bag_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kBag, this->bag_window_);
 
   this->log_window_ = new LogWindow();
-  this->stacked_layout_->addWidget(this->log_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kLog, this->log_window_);
 
   this->about_window_ = new AboutWindows();
-  this->stacked_layout_->addWidget(this->about_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kAbout, this->about_window_);
 
   this->settings_window_ = new SettingsWindow();
-  this->stacked_layout_->addWidget(this->settings_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kSettings, this->settings_window_);
 }
 
 void MainWindow::initSignals() {
+  connect(this->left_panel_, &LeftPanel::activeChanged, [=](LeftPanel::ButtonId id) {
+    this->stacked_layout_->setCurrentIndex(id);
+    auto* widget = this->stacked_layout_->widget(id);
+    if (widget != nullptr) {
+      this->setWindowTitle(widget->windowTitle());
+    } else {
+      qCritical() << "widget is null, id:" << id;
+    }
+  });
 }
 
 }  // namespace hebo

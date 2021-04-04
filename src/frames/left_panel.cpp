@@ -47,8 +47,8 @@ void LeftPanel::initUi() {
   main_layout->addWidget(about_btn);
 
   auto* settings_btn = new RoundFontButton("\ue6ca");
-  this->btn_group_->addButton(settings_btn);
-  main_layout->addWidget(settings_btn, ButtonId::kSettings);
+  this->btn_group_->addButton(settings_btn, ButtonId::kSettings);
+  main_layout->addWidget(settings_btn);
 }
 
 void LeftPanel::initSignals() {

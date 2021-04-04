@@ -13,6 +13,10 @@ class AboutWindows : public QWidget {
   Q_OBJECT
  public:
   explicit AboutWindows(QWidget* parent = nullptr);
+
+ private:
+  void initUi();
+  void initSignals();
 };
 
 }  // namespace hebo

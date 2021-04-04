@@ -7,6 +7,15 @@
 namespace hebo {
 
 AboutWindows::AboutWindows(QWidget* parent) : QWidget(parent) {
+  this->initUi();
+  this->initSignals();
+}
+
+void AboutWindows::initUi() {
+  this->setWindowTitle(tr("About"));
+}
+
+void AboutWindows::initSignals() {
 
 }
 
