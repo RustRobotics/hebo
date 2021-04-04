@@ -20,6 +20,8 @@ namespace {
 constexpr const char* kReleasesUrl = "https://github.com/xushaohua/hebo-ui/releases";
 constexpr const char* kIssueUrl = "https://github.com/xushaohua/hebo-ui/issue";
 
+constexpr const int kContentMaxWidth = 580;
+
 }  // namespace
 
 AboutWindow::AboutWindow(QWidget* parent) : QFrame(parent) {
@@ -68,6 +70,39 @@ void AboutWindow::initUi() {
   this->support_button_->setObjectName("support-button");
   update_layout->addWidget(this->support_button_);
   update_layout->addStretch();
+
+  auto* server_note_label = new QLabel(tr(
+      R"(<p>To run MQTT broker locally,
+<a href="https://biofan.org" style="text-decoration: none; color: #34c388;">Hebo</a>
+is recommended.
+<a href="https://biofan.org" style="text-decoration: none; color: #34c388;">Hebo</a>
+is a fully open source, highly scalable, highly available distributed MQTT 5.0 messaging broker for IoT,
+M2M and mobile applications.</p>)"));
+  server_note_label->setTextFormat(Qt::RichText);
+  server_note_label->setFixedSize(kContentMaxWidth, 48);
+  server_note_label->setObjectName("server-note-label");
+  server_note_label->setOpenExternalLinks(true);
+  server_note_label->setAlignment(Qt::AlignLeft);
+  server_note_label->setWordWrap(true);
+  main_layout->addSpacing(32);
+  main_layout->addWidget(server_note_label, 0, Qt::AlignHCenter);
+
+  auto* docker_note_label = new QLabel(tr("Install Hebo by using Docker:"));
+  docker_note_label->setObjectName("docker-note-label");
+  docker_note_label->setFixedWidth(kContentMaxWidth);
+  docker_note_label->setAlignment(Qt::AlignLeft);
+  main_layout->addSpacing(10);
+  main_layout->addWidget(docker_note_label, 0, Qt::AlignHCenter);
+
+  auto* docker_cmd_label = new QLabel(
+      R"(docker run -d --name hebo -p 1883:1883 -p 8083:8083 -p 8883:8883
+-p 8084:8084 -p 18083:18083 hebo/hebo)");
+  docker_cmd_label->setObjectName("docker-cmd-label");
+  docker_cmd_label->setFixedWidth(kContentMaxWidth);
+  docker_cmd_label->setWordWrap(true);
+  docker_cmd_label->setTextInteractionFlags(Qt::TextSelectableByKeyboard | Qt::TextSelectableByMouse);
+  main_layout->addSpacing(10);
+  main_layout->addWidget(docker_cmd_label, 0, Qt::AlignHCenter);
 
   main_layout->addStretch();
 }

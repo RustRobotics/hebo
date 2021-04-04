@@ -13,3 +13,16 @@
     font-size: 16px;
     color: #34c388;
 }
+
+#server-note-label, #docker-note-label {
+    font-size: 14px;
+    color: black;
+}
+
+#docker-cmd-label {
+    padding: 10px;
+    font-family: monospace;
+    font-size: 14px;
+    border-radius: 6px;
+    background-color: #e7e7e7;
+}
