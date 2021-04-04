@@ -18,23 +18,27 @@ LeftPanel::LeftPanel(QWidget* parent) : QWidget(parent) {
 void LeftPanel::initUi() {
   auto* main_layout = new QVBoxLayout();
   main_layout->setContentsMargins(0, 0, 0, 0);
-  main_layout->setSpacing(36);
+  main_layout->setSpacing(16);
   this->setLayout(main_layout);
 
   this->btn_group_ = new QButtonGroup(this);
   this->btn_group_->setExclusive(true);
 
-  auto* messages_btn = new RoundFontButton(tr("M"));
+  auto* messages_btn = new RoundFontButton("\ue787");
   this->btn_group_->addButton(messages_btn, ButtonId::kMessages);
   main_layout->addWidget(messages_btn);
 
-  auto* benchmark_btn = new RoundFontButton(tr("B"));
+  auto* benchmark_btn = new RoundFontButton("\ue710");
   this->btn_group_->addButton(benchmark_btn, ButtonId::kBenchmark);
   main_layout->addWidget(benchmark_btn);
 
-  auto* bag_btn = new RoundFontButton("🎅");
+  auto* bag_btn = new RoundFontButton("\ue74b");
   this->btn_group_->addButton(bag_btn, ButtonId::kBag);
   main_layout->addWidget(bag_btn);
+
+  auto* log_btn = new RoundFontButton("\ue725");
+  this->btn_group_->addButton(log_btn, ButtonId::kLog);
+  main_layout->addWidget(log_btn);
 
   main_layout->addStretch();
 
@@ -42,7 +46,7 @@ void LeftPanel::initUi() {
   this->btn_group_->addButton(about_btn, ButtonId::kAbout);
   main_layout->addWidget(about_btn);
 
-  auto* settings_btn = new RoundFontButton("🤣️");
+  auto* settings_btn = new RoundFontButton("\ue6ca");
   this->btn_group_->addButton(settings_btn);
   main_layout->addWidget(settings_btn, ButtonId::kSettings);
 }

@@ -12,7 +12,7 @@
 namespace hebo {
 
 RoundFontButton::RoundFontButton(const QString& text, QWidget* parent) : QPushButton(text, parent) {
-  this->setFixedSize(32, 32);
+  this->setFixedSize(46, 46);
   this->setStyleSheet(readTextFile(kStyleRoundFontButton));
 }
 

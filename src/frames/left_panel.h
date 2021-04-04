@@ -18,6 +18,7 @@ class LeftPanel : public QWidget {
     kMessages,
     kBenchmark,
     kBag,
+    kLog,
     kAbout,
     kSettings,
   };
