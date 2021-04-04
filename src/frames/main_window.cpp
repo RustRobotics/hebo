@@ -6,8 +6,24 @@
 
 namespace hebo {
 
-MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
+  this->initUi();
+  this->initMenu();
+  this->initSignals();
+}
+
+void MainWindow::initUi() {
+  this->left_panel_ = new LeftPanel();
+
+  this->stacked_widget_ = new QStackedWidget(this);
+  this->setCentralWidget(this->stacked_widget_);
+}
+
+void MainWindow::initSignals() {
 
 }
 
+void MainWindow::initMenu() {
+
+}
 }  // namespace hebo
