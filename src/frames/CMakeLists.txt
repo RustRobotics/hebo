@@ -1,7 +1,7 @@
 
 set(SOURCES
-    about_windows.cpp
-    about_windows.h
+    about_window.cpp
+    about_window.h
     bag_window.cpp
     bag_window.h
     benchmark_window.cpp

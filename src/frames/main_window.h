@@ -8,7 +8,7 @@
 #include <QWidget>
 #include <QStackedLayout>
 
-#include "frames/about_windows.h"
+#include "frames/about_window.h"
 #include "frames/bag_window.h"
 #include "frames/benchmark_window.h"
 #include "frames/left_panel.h"
@@ -29,7 +29,7 @@ class MainWindow : public QWidget {
 
   LeftPanel* left_panel_{nullptr};
   QStackedLayout* stacked_layout_{nullptr};
-  AboutWindows* about_window_{nullptr};
+  AboutWindow* about_window_{nullptr};
   BagWindow* bag_window_{nullptr};
   BenchmarkWindow* benchmark_window_{nullptr};
   LogWindow* log_window_{nullptr};

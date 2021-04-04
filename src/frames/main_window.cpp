@@ -37,7 +37,7 @@ void MainWindow::initUi() {
   this->log_window_ = new LogWindow();
   this->stacked_layout_->insertWidget(LeftPanel::kLog, this->log_window_);
 
-  this->about_window_ = new AboutWindows();
+  this->about_window_ = new AboutWindow();
   this->stacked_layout_->insertWidget(LeftPanel::kAbout, this->about_window_);
 
   this->settings_window_ = new SettingsWindow();

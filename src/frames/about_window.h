@@ -11,10 +11,13 @@
 
 namespace hebo {
 
-class AboutWindows : public QWidget {
+class AboutWindow : public QFrame {
   Q_OBJECT
  public:
-  explicit AboutWindows(QWidget* parent = nullptr);
+  explicit AboutWindow(QWidget* parent = nullptr);
+
+ signals:
+  void requestUpdate();
 
  private:
   void initUi();

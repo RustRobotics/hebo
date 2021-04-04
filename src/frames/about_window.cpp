@@ -4,7 +4,10 @@
 
 #include "frames/about_window.h"
 
+#include <QDebug>
+#include <QDesktopServices>
 #include <QLabel>
+#include <QUrl>
 #include <QVBoxLayout>
 
 #include "base/file.h"
@@ -12,13 +15,19 @@
 #include "resources/styles/styles.h"
 
 namespace hebo {
+namespace {
 
-AboutWindows::AboutWindows(QWidget* parent) : QWidget(parent) {
+constexpr const char* kReleasesUrl = "https://github.com/xushaohua/hebo-ui/releases";
+constexpr const char* kIssueUrl = "https://github.com/xushaohua/hebo-ui/issue";
+
+}  // namespace
+
+AboutWindow::AboutWindow(QWidget* parent) : QFrame(parent) {
   this->initUi();
   this->initSignals();
 }
 
-void AboutWindows::initUi() {
+void AboutWindow::initUi() {
   this->setWindowTitle(tr("About"));
   this->setObjectName("about-window");
   this->setStyleSheet(readTextFile(kStyleAboutWindow));
@@ -41,10 +50,9 @@ void AboutWindows::initUi() {
   version_label->setAlignment(Qt::AlignHCenter);
   main_layout->addWidget(version_label, 0, Qt::AlignHCenter);
 
-  main_layout->addStretch();
-
   auto* update_layout = new QHBoxLayout();
-  update_layout->setSpacing(10);
+  update_layout->setSpacing(24);
+  main_layout->addSpacing(10);
   main_layout->addLayout(update_layout);
 
   this->update_button_ = new TextButton(tr("Check for Update"));
@@ -59,16 +67,27 @@ void AboutWindows::initUi() {
   this->support_button_ = new TextButton(tr("Support"));
   this->support_button_->setObjectName("support-button");
   update_layout->addWidget(this->support_button_);
-
   update_layout->addStretch();
+
+  main_layout->addStretch();
 }
 
-void AboutWindows::initSignals() {
-
+void AboutWindow::initSignals() {
+  connect(this->update_button_, &TextButton::clicked,
+          this, &AboutWindow::requestUpdate);
+  connect(this->releases_button_, &TextButton::clicked, [=]() {
+    this->openExternalUrl(kReleasesUrl);
+  });
+  connect(this->support_button_, &TextButton::clicked, [=]() {
+    this->openExternalUrl(kIssueUrl);
+  });
 }
 
-void AboutWindows::openExternalUrl(const QString& url) {
-  Q_UNUSED(url);
+void AboutWindow::openExternalUrl(const QString& url) {
+  const bool ok = QDesktopServices::openUrl(QUrl(url));
+  if (!ok) {
+    qWarning() << "Failed to open url:" << url;
+  }
 }
 
 }  // namespace hebo
