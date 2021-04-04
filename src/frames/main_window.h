@@ -8,8 +8,13 @@
 #include <QWidget>
 #include <QStackedLayout>
 
+#include "frames/about_windows.h"
+#include "frames/bag_window.h"
+#include "frames/benchmark_window.h"
 #include "frames/left_panel.h"
 #include "frames/log_window.h"
+#include "frames/messages_window.h"
+#include "frames/settings_window.h"
 
 namespace hebo {
 
@@ -24,6 +29,12 @@ class MainWindow : public QWidget {
 
   LeftPanel* left_panel_{nullptr};
   QStackedLayout* stacked_layout_{nullptr};
+  AboutWindows* about_window_{nullptr};
+  BagWindow* bag_window_{nullptr};
+  BenchmarkWindow* benchmark_window_{nullptr};
+  LogWindow* log_window_{nullptr};
+  MessagesWindow* messages_window_{nullptr};
+  SettingsWindow* settings_window_{nullptr};
 };
 
 }  // namespace hebo

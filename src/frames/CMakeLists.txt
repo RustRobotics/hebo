@@ -12,6 +12,8 @@ set(SOURCES
     log_window.h
     main_window.cpp
     main_window.h
+    messages_window.cpp
+    messages_window.h
     new_connection_window.cpp
     new_connection_window.h
     settings_window.cpp

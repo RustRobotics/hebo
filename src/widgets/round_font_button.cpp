@@ -4,8 +4,6 @@
 
 #include "widgets/round_font_button.h"
 
-#include <QFont>
-
 #include "base/file.h"
 #include "resources/styles/styles.h"
 

@@ -24,6 +24,24 @@ void MainWindow::initUi() {
 
   this->stacked_layout_ = new QStackedLayout();
   main_layout->addLayout(this->stacked_layout_);
+
+  this->messages_window_ = new MessagesWindow();
+  this->stacked_layout_->addWidget(this->messages_window_);
+
+  this->benchmark_window_ = new BenchmarkWindow();
+  this->stacked_layout_->addWidget(this->benchmark_window_);
+
+  this->bag_window_ = new BagWindow();
+  this->stacked_layout_->addWidget(this->bag_window_);
+
+  this->log_window_ = new LogWindow();
+  this->stacked_layout_->addWidget(this->log_window_);
+
+  this->about_window_ = new AboutWindows();
+  this->stacked_layout_->addWidget(this->about_window_);
+
+  this->settings_window_ = new SettingsWindow();
+  this->stacked_layout_->addWidget(this->settings_window_);
 }
 
 void MainWindow::initSignals() {

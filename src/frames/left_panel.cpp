@@ -18,7 +18,7 @@ LeftPanel::LeftPanel(QWidget* parent) : QWidget(parent) {
 void LeftPanel::initUi() {
   auto* main_layout = new QVBoxLayout();
   main_layout->setContentsMargins(0, 0, 0, 0);
-  main_layout->setSpacing(16);
+  main_layout->setSpacing(12);
   this->setLayout(main_layout);
 
   this->btn_group_ = new QButtonGroup(this);
@@ -36,7 +36,7 @@ void LeftPanel::initUi() {
   this->btn_group_->addButton(bag_btn, ButtonId::kBag);
   main_layout->addWidget(bag_btn);
 
-  auto* log_btn = new RoundFontButton("\ue725");
+  auto* log_btn = new RoundFontButton("\ue759");
   this->btn_group_->addButton(log_btn, ButtonId::kLog);
   main_layout->addWidget(log_btn);
 
