@@ -6,21 +6,14 @@
 
 #include <QFont>
 
-#include "resources/fonts/fonts.h"
+#include "base/file.h"
+#include "resources/styles/styles.h"
 
 namespace hebo {
 
 RoundFontButton::RoundFontButton(const QString& text, QWidget* parent) : QPushButton(text, parent) {
-  QFont font(this->font());
-  font.setFamilies({
-    "Noto Color Emoji",
-    "GSUB"
-  });
-  font.setPixelSize(12);
-  this->setFont(font);
-  
-  this->resize(24, 24);
-  this->setStyleSheet("border-radius: 12px;");
+  this->setFixedSize(32, 32);
+  this->setStyleSheet(readTextFile(kStyleRoundFontButton));
 }
 
 }  // namespace hebo

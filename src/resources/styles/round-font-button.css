@@ -1,0 +1,8 @@
+/* Used by RoundFontButton */
+
+QPushButton {
+    font-size: 16px;
+    font-family:  element, "Noto Color Emoji";
+    border-radius: 16px;
+    background-color: red;
+}

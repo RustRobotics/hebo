@@ -1,6 +1,7 @@
 set(RESOURCES_FILES
     ../resources/fonts/fonts.qrc
     ../resources/images/images.qrc
+    ../resources/styles/styles.qrc
     ${CMAKE_BINARY_DIR}/i18n/hebo.qrc
     )
 

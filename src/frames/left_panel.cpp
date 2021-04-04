@@ -18,17 +18,17 @@ LeftPanel::LeftPanel(QWidget* parent) : QWidget(parent) {
 void LeftPanel::initUi() {
   auto* main_layout = new QVBoxLayout();
   main_layout->setContentsMargins(0, 0, 0, 0);
-  main_layout->setSpacing(0);
+  main_layout->setSpacing(36);
   this->setLayout(main_layout);
 
   this->btn_group_ = new QButtonGroup(this);
   this->btn_group_->setExclusive(true);
 
-  auto* messages_btn = new RoundFontButton(tr("Messages"));
+  auto* messages_btn = new RoundFontButton(tr("M"));
   this->btn_group_->addButton(messages_btn, ButtonId::kMessages);
   main_layout->addWidget(messages_btn);
 
-  auto* benchmark_btn = new RoundFontButton(tr("Benchmark"));
+  auto* benchmark_btn = new RoundFontButton(tr("B"));
   this->btn_group_->addButton(benchmark_btn, ButtonId::kBenchmark);
   main_layout->addWidget(benchmark_btn);
 
@@ -42,7 +42,7 @@ void LeftPanel::initUi() {
   this->btn_group_->addButton(about_btn, ButtonId::kAbout);
   main_layout->addWidget(about_btn);
 
-  auto* settings_btn = new RoundFontButton("click me 🤣️");
+  auto* settings_btn = new RoundFontButton("🤣️");
   this->btn_group_->addButton(settings_btn);
   main_layout->addWidget(settings_btn, ButtonId::kSettings);
 }
