@@ -7,7 +7,7 @@
 
 namespace hebo {
 
-constexpr const char* kStyleRoundFontButton = ":/styles//round-font-button.css";
+constexpr const char* kStyleRoundFontButton = ":/styles/round-font-button.css";
 
 }  // namespace hebo
 

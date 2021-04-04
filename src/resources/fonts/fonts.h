@@ -7,7 +7,7 @@
 
 namespace hebo {
 
-constexpr const char* kFontElementIcons = ":/fonts//element-icons.ttf";
+constexpr const char* kFontElementIcons = ":/fonts/element-icons.ttf";
 
 constexpr const char* kExternalFonts[] = {
     kFontElementIcons,

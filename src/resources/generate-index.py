@@ -7,6 +7,8 @@ import os
 import sys
 
 def parse_folder(target_dir):
+    if target_dir.endswith("/"):
+        target_dir = target_dir[:-1]
     files = sorted(os.listdir(target_dir))
     parts = target_dir.removeprefix(".").split("/")
     parts[0] = parts[0].removesuffix("s")
