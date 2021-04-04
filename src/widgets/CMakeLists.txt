@@ -2,6 +2,8 @@
 set(SOURCE_FILES
     round_font_button.cpp
     round_font_button.h
+    text_button.cpp
+    text_button.h
     )
 
 add_library(widgets-static STATIC

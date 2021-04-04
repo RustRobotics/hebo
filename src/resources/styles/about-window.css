@@ -1,2 +1,15 @@
 /* Used by AboutWindow */
 
+#about-window {
+    background-color: white;
+}
+
+#version-label {
+    font-size: 18px;
+    color: #606060;
+}
+
+#update-button, #releases-button, #support-button {
+    font-size: 16px;
+    color: #34c388;
+}
