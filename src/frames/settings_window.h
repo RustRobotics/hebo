@@ -9,6 +9,8 @@
 #include <QFrame>
 #include <QSpinBox>
 
+#include "widgets/switch_button.h"
+
 namespace hebo {
 
 class SettingsWindow : public QFrame {
@@ -21,13 +23,11 @@ class SettingsWindow : public QFrame {
   void initSignals();
 
   QComboBox* languages_box_{nullptr};
-
+  SwitchButton* auto_update_button_{nullptr};
   QSpinBox* retry_connections_box_{nullptr};
   QComboBox* theme_box_{nullptr};
 
-  QStringList locale_names_{};
   QStringList locales_{};
-  QStringList theme_names_{};
   QStringList themes_{};
 };
 
