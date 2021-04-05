@@ -38,6 +38,7 @@ void MainController::showMainWindow() {
   auto* main_window = new MainWindow();
   connect(main_window, &MainWindow::destroyed,
           main_window, &MainWindow::deleteLater);
+  main_window->resize(1020, 720);
   main_window->show();
 }
 

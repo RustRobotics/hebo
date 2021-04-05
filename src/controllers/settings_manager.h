@@ -12,17 +12,11 @@ namespace hebo {
 
 class SettingsManager : public QObject {
   Q_OBJECT
-  Q_PROPERTY(bool autoUpdate READ autoUpdate WRITE setAutoUpdate NOTIFY autoUpdateChanged)
-
+  Q_PROPERTY(bool autoUpdate READ autoUpdate WRITE setAutoUpdate NOTIFY autoUpdateChanged);
   Q_PROPERTY(int retryConnections READ retryConnections WRITE setRetryConnections
-             NOTIFY retryConnectionsChanged)
-
-  Q_PROPERTY(int localeIndex READ localeIndex WRITE setLocaleIndex NOTIFY localeIndexChanged)
-  Q_PROPERTY(QStringList localeNames READ localeNames NOTIFY localeNamesChanged);
-
-  Q_PROPERTY(QStringList themeNames READ themeNames NOTIFY themeNamesChanged)
-  Q_PROPERTY(int themeIndex READ themeIndex WRITE setThemeIndex NOTIFY themeIndexChanged)
-
+             NOTIFY retryConnectionsChanged);
+  Q_PROPERTY(QString locale READ locale WRITE setLocale NOTIFY localeChanged);
+  Q_PROPERTY(QString theme READ theme WRITE setTheme NOTIFY themeChanged);
  public:
   explicit SettingsManager(QObject* parent = nullptr);
 
@@ -32,47 +26,30 @@ class SettingsManager : public QObject {
 
   int retryConnections();
 
-  [[nodiscard]] const QStringList& localeNames() const {
-    return this->locale_names_;
-  }
+  QString locale();
 
-  int localeIndex();
-
-  [[nodiscard]] const QStringList& themeNames() const {
-    return this->theme_names_;
-  }
-
-  int themeIndex();
+  QString theme();
 
  public slots:
   void setAutoUpdate(bool enable);
 
   void setRetryConnections(int retries);
 
-  void setLocaleIndex(int index);
+  void setLocale(const QString& locale);
 
-  void setThemeIndex(int index);
+  void setTheme(const QString& theme);
 
  signals:
   void autoUpdateChanged(bool enable);
 
   void retryConnectionsChanged(int retries);
 
-  void localeNamesChanged(const QStringList& list);
+  void localeChanged(const QString& locale);
 
-  void localeIndexChanged(int index);
-
-  void themeNamesChanged(const QStringList& list);
-
-  void themeIndexChanged(int index);
+  void themeChanged(const QString& theme);
 
  private:
   QSettings* settings_;
-  QStringList locale_names_{};
-  QStringList locales_{};
-
-  QStringList theme_names_{};
-  QStringList themes_{};
 };
 
 }  // namespace hebo

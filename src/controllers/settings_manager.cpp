@@ -23,10 +23,6 @@ constexpr const char* kDefaultTheme = "light";
 SettingsManager::SettingsManager(QObject* parent)
     : QObject(parent),
       settings_(new QSettings(this)) {
-  locale_names_ << "English" << "简体中文";
-  locales_ << "en_US" << "zh_CN";
-  theme_names_ << tr("Light") << tr("Dark") << tr("Night");
-  themes_ << "light" << "dark" << "night";
 }
 
 bool SettingsManager::sync() {
@@ -52,30 +48,22 @@ void SettingsManager::setRetryConnections(int retries) {
   emit this->retryConnectionsChanged(retries);
 }
 
-int SettingsManager::localeIndex() {
-  const QString locale = this->settings_->value(kLocale, kDefaultLocale).toString();
-  const int index = this->locales_.indexOf(locale);
-  Q_ASSERT(index > -1);
-  return index;
+QString SettingsManager::locale() {
+  return this->settings_->value(kLocale, kDefaultLocale).toString();
 }
 
-void SettingsManager::setLocaleIndex(int index) {
-  Q_ASSERT(index > -1 && index < this->locales_.length());
-  this->settings_->setValue(kLocale, this->locales_.at(index));
-  emit this->localeIndexChanged(index);
+void SettingsManager::setLocale(const QString& locale) {
+  this->settings_->setValue(kLocale, locale);
+  emit this->localeChanged(locale);
 }
 
-int SettingsManager::themeIndex() {
-  const QString theme = this->settings_->value(kTheme, kDefaultTheme).toString();
-  const int index = this->themes_.indexOf(theme);
-  Q_ASSERT(index > -1);
-  return index;
+QString SettingsManager::theme() {
+  return this->settings_->value(kTheme, kDefaultTheme).toString();
 }
 
-void SettingsManager::setThemeIndex(int index) {
-  Q_ASSERT(index > -1 && index < this->themes_.length());
-  this->settings_->setValue(kTheme, this->themes_.at(index));
-  emit this->themeIndexChanged(index);
+void SettingsManager::setTheme(const QString& theme) {
+  this->settings_->setValue(kTheme, theme);
+  emit this->themeChanged(theme);
 }
 
 }  // namespace hebo
