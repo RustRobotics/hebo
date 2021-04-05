@@ -8,7 +8,6 @@ namespace hebo {
 
 SwitchButton::SwitchButton(QWidget* parent)
     : QAbstractButton(parent),
-      checked_(false),
       x_(8),
       y_(8),
       height_(16),
@@ -16,6 +15,8 @@ SwitchButton::SwitchButton(QWidget* parent)
       thumb_("#d5d5d5"),
       brush_(QColor("#009688")),
       animation_(new QPropertyAnimation(this, "offset", this)) {
+  this->setCheckable(true);
+  this->setChecked(false);
 }
 
 void SwitchButton::paintEvent(QPaintEvent* event) {
@@ -24,8 +25,8 @@ void SwitchButton::paintEvent(QPaintEvent* event) {
   QPainter p(this);
   p.setPen(Qt::NoPen);
   if (isEnabled()) {
-    p.setBrush(checked_ ? brush_ : Qt::black);
-    p.setOpacity(checked_ ? 0.5 : 0.38);
+    p.setBrush(this->isChecked() ? brush_ : Qt::black);
+    p.setOpacity(this->isChecked() ? 0.5 : 0.38);
     p.setRenderHint(QPainter::Antialiasing, true);
     p.drawRoundedRect(QRect(margin_, margin_, width() - 2 * margin_,
                             height() - 2 * margin_), 8.0, 8.0);
@@ -46,10 +47,11 @@ void SwitchButton::paintEvent(QPaintEvent* event) {
 }
 
 void SwitchButton::mouseReleaseEvent(QMouseEvent* event) {
+  QAbstractButton::mouseReleaseEvent(event);
+
   if (event->button() & Qt::LeftButton) {
-    checked_ = !checked_;
-    thumb_ = checked_ ? brush_ : QBrush("#d5d5d5");
-    if (checked_) {
+    thumb_ = this->isChecked() ? brush_ : QBrush("#d5d5d5");
+    if (this->isChecked()) {
       animation_->setStartValue(height_ / 2);
       animation_->setEndValue(width() - height_);
       animation_->setDuration(120);
@@ -61,11 +63,10 @@ void SwitchButton::mouseReleaseEvent(QMouseEvent* event) {
       animation_->start();
     }
   }
-  QAbstractButton::mouseReleaseEvent(event);
 }
 
 void SwitchButton::enterEvent(QEvent* event) {
-  setCursor(Qt::PointingHandCursor);
+  this->setCursor(Qt::PointingHandCursor);
   QAbstractButton::enterEvent(event);
 }
 

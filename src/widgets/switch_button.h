@@ -12,30 +12,19 @@ namespace hebo {
 class SwitchButton : public QAbstractButton {
  Q_OBJECT
   Q_PROPERTY(int offset READ offset WRITE setOffset)
-  Q_PROPERTY(bool checked READ checked WRITE setChecked NOTIFY checkedChanged);
  public:
   explicit SwitchButton(QWidget* parent = nullptr);
   ~SwitchButton() override = default;
 
   [[nodiscard]] QSize sizeHint() const override;
 
-  [[nodiscard]] bool checked() const { return this->checked_; }
-
   [[nodiscard]] int offset() const { return this->x_; }
 
  public slots:
-  void setChecked(bool checked) {
-    this->checked_ = checked;
-    this->update();
-  };
-
   void setOffset(int offset) {
     this->x_ = offset;
     this->update();
   }
-
- signals:
-  void checkedChanged(bool checked);
 
  protected:
   void paintEvent(QPaintEvent*) override;
@@ -45,7 +34,6 @@ class SwitchButton : public QAbstractButton {
   void enterEvent(QEvent*) override;
 
  private:
-  bool checked_;
   int x_;
   int y_;
   int height_;
