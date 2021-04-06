@@ -4,9 +4,26 @@
 
 #include "frames/client_frame.h"
 
+#include <QLabel>
+#include <QVBoxLayout>
+
 namespace hebo {
 
-ClientFrame::ClientFrame(QWidget* parent) : QFrame(parent) {
+ClientFrame::ClientFrame(const QString& client_id, QWidget* parent)
+    : QFrame(parent),
+      client_id_(client_id) {
+  this->initUi();
+  this->initSignals();
+}
+
+void ClientFrame::initUi() {
+  auto* main_layout = new QVBoxLayout();
+  this->setLayout(main_layout);
+
+  main_layout->addWidget(new QLabel(this->client_id_));
+}
+
+void ClientFrame::initSignals() {
 
 }
 

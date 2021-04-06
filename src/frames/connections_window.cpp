@@ -16,8 +16,8 @@ void ConnectionsWindow::initUi() {
   this->connections_list_view_ = new ConnectionsListView();
   this->addWidget(this->connections_list_view_);
 
-  this->client_frame_ = new ClientFrame();
-  this->addWidget(this->client_frame_);
+  this->stacked_widget_ = new QStackedWidget();
+  this->addWidget(this->stacked_widget_);
 }
 
 void ConnectionsWindow::setConnectionsModel(ConnectionsModel* model) {
@@ -26,6 +26,20 @@ void ConnectionsWindow::setConnectionsModel(ConnectionsModel* model) {
 
 void ConnectionsWindow::connectClient(const QString& client_id) {
   qDebug() << client_id;
+  this->showClientById(client_id);
+}
+
+void ConnectionsWindow::showClientById(const QString& client_id) {
+  qDebug() << __func__ << client_id;
+  if (!this->clients_.contains(client_id)) {
+    auto* client_frame = new ClientFrame(client_id);
+    client_frame->show();
+    this->stacked_widget_->addWidget(client_frame);
+  }
+
+  auto* target_frame = this->clients_.value(client_id);
+  Q_ASSERT(target_frame != nullptr);
+  this->stacked_widget_->setCurrentWidget(target_frame);
 }
 
 }  // namespace hebo

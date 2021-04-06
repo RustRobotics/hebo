@@ -16,6 +16,7 @@ ConnectionsListView::ConnectionsListView(QWidget* parent) : QListView(parent) {
 void ConnectionsListView::initUi() {
   auto* delegate = new ConnectionsDelegate(this);
   this->setItemDelegate(delegate);
+  this->setSelectionMode(QListView::SelectionMode::SingleSelection);
 }
 
 void ConnectionsListView::initSignals() {

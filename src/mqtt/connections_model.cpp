@@ -93,6 +93,7 @@ QVariant ConnectionsModel::data(const QModelIndex& index, int role) const {
     case kCleanSessionRole: {
       return info.clean_session;
     }
+    case Qt::DisplayRole:  // fall through
     case kDescriptionRole: {
       return info.description;
     }
@@ -107,7 +108,6 @@ QVariant ConnectionsModel::data(const QModelIndex& index, int role) const {
       }
     }
     default: {
-      qWarning() << "Invalid role:" << role;
       return {};
     }
   }
