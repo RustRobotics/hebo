@@ -14,13 +14,19 @@ ConnectionsListView::ConnectionsListView(QWidget* parent) : QListView(parent) {
 }
 
 void ConnectionsListView::initUi() {
-  auto* delegate = new ConnectionsDelegate(this);
-  this->setItemDelegate(delegate);
+//  auto* delegate = new ConnectionsDelegate(this);
+//  this->setItemDelegate(delegate);
   this->setSelectionMode(QListView::SelectionMode::SingleSelection);
 }
 
 void ConnectionsListView::initSignals() {
+  connect(this, &ConnectionsListView::clicked,
+          this, &ConnectionsListView::onClicked);
+}
 
+void ConnectionsListView::onClicked(const QModelIndex& index) {
+  const QString client_id = index.data(ConnectionsModel::kIdRole).toString();
+  emit this->rowClicked(client_id);
 }
 
 }  // namespace hebo

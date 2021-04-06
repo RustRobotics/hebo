@@ -16,10 +16,19 @@ class ConnectionsListView : public QListView {
  public:
   explicit ConnectionsListView(QWidget* parent = nullptr);
 
+  void setConnectionsModel(ConnectionsModel* model) {
+    this->setModel(model);
+  }
+
+ signals:
+  void rowClicked(const QString& client_id);
+
+ private:
+  void onClicked(const QModelIndex& index);
+
  private:
   void initUi();
   void initSignals();
-
 };
 
 }  // namespace hebo

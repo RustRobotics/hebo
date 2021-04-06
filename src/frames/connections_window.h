@@ -29,6 +29,7 @@ class ConnectionsWindow : public QSplitter {
 
  private:
   void initUi();
+  void initSignals();
 
   ConnectionsListView* connections_list_view_{nullptr};
   QStackedWidget* stacked_widget_{nullptr};
