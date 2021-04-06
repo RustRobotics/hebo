@@ -5,14 +5,17 @@
 #ifndef HEBO_SRC_FRAMES_NEW_CONNECTION_WINDOW_H_
 #define HEBO_SRC_FRAMES_NEW_CONNECTION_WINDOW_H_
 
-#include <QWidget>
+#include <QFrame>
 
 namespace hebo {
 
-class NewConnectionWindow : public QWidget {
+class NewConnectionWindow : public QFrame {
   Q_OBJECT
  public:
   explicit NewConnectionWindow(QWidget* parent = nullptr);
+
+ private:
+  void initUi();
 };
 
 }  // namespace hebo

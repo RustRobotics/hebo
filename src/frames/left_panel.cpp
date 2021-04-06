@@ -24,9 +24,13 @@ void LeftPanel::initUi() {
   this->btn_group_ = new QButtonGroup(this);
   this->btn_group_->setExclusive(true);
 
-  auto* messages_btn = new RoundFontButton("\ue787");
-  this->btn_group_->addButton(messages_btn, ButtonId::kConnectionsButton);
-  main_layout->addWidget(messages_btn);
+  auto* connections_btn = new RoundFontButton("\ue787");
+  this->btn_group_->addButton(connections_btn, ButtonId::kConnectionsButton);
+  main_layout->addWidget(connections_btn);
+
+  auto* new_connection_btn = new RoundFontButton("\ue723");
+  this->btn_group_->addButton(new_connection_btn, ButtonId::kNewConnectionButton);
+  main_layout->addWidget(new_connection_btn);
 
   auto* benchmark_btn = new RoundFontButton("\ue710");
   this->btn_group_->addButton(benchmark_btn, ButtonId::kBenchmarkButton);

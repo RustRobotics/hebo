@@ -6,8 +6,12 @@
 
 namespace hebo {
 
-NewConnectionWindow::NewConnectionWindow(QWidget* parent) : QWidget(parent) {
+NewConnectionWindow::NewConnectionWindow(QWidget* parent) : QFrame(parent) {
+  this->initUi();
+}
 
+void NewConnectionWindow::initUi() {
+  this->setWindowTitle(tr("New Connection"));
 }
 
 }  // namespace hebo

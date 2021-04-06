@@ -6,8 +6,12 @@
 
 namespace hebo {
 
-BenchmarkWindow::BenchmarkWindow(QWidget* parent) : QWidget(parent) {
+BenchmarkWindow::BenchmarkWindow(QWidget* parent) : QFrame(parent) {
+  this->initUi();
+}
 
+void BenchmarkWindow::initUi() {
+  this->setWindowTitle(tr("Benchmark"));
 }
 
 }  // namespace hebo

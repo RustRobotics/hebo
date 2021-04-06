@@ -11,9 +11,10 @@
 #include "frames/about_window.h"
 #include "frames/bag_window.h"
 #include "frames/benchmark_window.h"
+#include "frames/connections_window.h"
 #include "frames/left_panel.h"
 #include "frames/log_window.h"
-#include "frames/connections_window.h"
+#include "frames/new_connection_window.h"
 #include "frames/settings_window.h"
 #include "mqtt/connections_model.h"
 
@@ -42,6 +43,7 @@ class MainWindow : public QWidget {
   BenchmarkWindow* benchmark_window_{nullptr};
   ConnectionsWindow* connections_window_{nullptr};
   LogWindow* log_window_{nullptr};
+  NewConnectionWindow* new_connection_window_{nullptr};
   SettingsWindow* settings_window_{nullptr};
 };
 

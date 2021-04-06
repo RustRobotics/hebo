@@ -11,6 +11,7 @@ LogWindow::LogWindow(QWidget* parent) : QPlainTextEdit(parent) {
 }
 
 void LogWindow::initUi() {
+  this->setWindowTitle(tr("Logs"));
   this->setReadOnly(true);
 }
 

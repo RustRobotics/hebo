@@ -30,6 +30,9 @@ void MainWindow::initUi() {
   this->connections_window_ = new ConnectionsWindow();
   this->stacked_layout_->insertWidget(LeftPanel::kConnectionsButton, this->connections_window_);
 
+  this->new_connection_window_ = new NewConnectionWindow();
+  this->stacked_layout_->insertWidget(LeftPanel::kNewConnectionButton, this->new_connection_window_);
+
   this->benchmark_window_ = new BenchmarkWindow();
   this->stacked_layout_->insertWidget(LeftPanel::kBenchmarkButton, this->benchmark_window_);
 

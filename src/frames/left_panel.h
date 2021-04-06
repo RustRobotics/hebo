@@ -16,6 +16,7 @@ class LeftPanel : public QWidget {
  public:
   enum ButtonId : uint8_t {
     kConnectionsButton,
+    kNewConnectionButton,
     kBenchmarkButton,
     kBagButton,
     kLogButton,
