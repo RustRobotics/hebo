@@ -27,6 +27,7 @@ class ConnectionForm : public QFrame {
  private slots:
   void onResetButtonClicked();
   void onConnectButtonClicked();
+  void regenerateClientId();
 
  private:
   void initUi();
@@ -38,6 +39,7 @@ class ConnectionForm : public QFrame {
 
   QLineEdit* name_edit_{nullptr};
   QLineEdit* client_id_edit_{nullptr};
+  QPushButton* random_client_id_button_{nullptr};
   QComboBox* protocol_box_{nullptr};
   ProtocolModel* protocol_model_{nullptr};
   QLineEdit* hostname_edit_{nullptr};

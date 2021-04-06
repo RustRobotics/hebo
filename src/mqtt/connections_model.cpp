@@ -219,10 +219,6 @@ MqttClient* ConnectionsModel::client(const QString& config_id) {
   return nullptr;
 }
 
-QString ConnectionsModel::newClientId() const {
-  return "hebo_" + randomClientId();
-}
-
 void ConnectionsModel::deleteRow(const QString& config_id) {
   Q_ASSERT(!config_id.isEmpty());
   if (this->clients_.contains(config_id)) {

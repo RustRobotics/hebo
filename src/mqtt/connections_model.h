@@ -48,8 +48,6 @@ class ConnectionsModel : public QAbstractListModel {
 
   Q_INVOKABLE hebo::MqttClient* client(const QString& config_id);
 
-  Q_INVOKABLE [[nodiscard]] QString newClientId() const;
-
  public slots:
   // Connections management
   // Protocol V3.1.1

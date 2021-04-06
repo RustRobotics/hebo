@@ -7,6 +7,8 @@
 #include <QFormLayout>
 #include <QLabel>
 
+#include "base/random.h"
+
 namespace hebo {
 namespace {
 
@@ -22,6 +24,8 @@ constexpr int kMaxKeepalive = 1 << 20;
 
 ConnectionForm::ConnectionForm(QWidget* parent) : QFrame(parent) {
   this->initUi();
+  this->initSignals();
+  this->regenerateClientId();
 }
 
 void ConnectionForm::initUi() {
@@ -51,8 +55,12 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   this->name_edit_ = new QLineEdit();
   layout->addRow(new QLabel(tr("Name")), this->name_edit_);
 
+  auto* client_id_layout = new QHBoxLayout();
   this->client_id_edit_ = new QLineEdit();
-  layout->addRow(new QLabel(tr("Client ID")), this->client_id_edit_);
+  this->random_client_id_button_ = new QPushButton("Refresh");
+  client_id_layout->addWidget(this->client_id_edit_);
+  client_id_layout->addWidget(this->random_client_id_button_);
+  layout->addRow(new QLabel(tr("Client ID")), client_id_layout);
 
   this->protocol_box_ = new QComboBox();
   this->protocol_model_ = new ProtocolModel(this);
@@ -136,12 +144,13 @@ void ConnectionForm::initSignals() {
           this, &ConnectionForm::onResetButtonClicked);
   connect(this->connect_button_, &QPushButton::clicked,
           this, &ConnectionForm::onConnectButtonClicked);
+  connect(this->random_client_id_button_, &QPushButton::clicked,
+          this, &ConnectionForm::regenerateClientId);
 }
 
 void ConnectionForm::onResetButtonClicked() {
   this->name_edit_->clear();
-  this->client_id_edit_->clear();
-  // TODO(Shaohua): Regenerate random id.
+  this->regenerateClientId();
   this->protocol_box_->setCurrentIndex(0);
   this->hostname_edit_->setText(kDefaultHostname);
   this->port_box_->setValue(kDefaultPort);
@@ -163,6 +172,11 @@ void ConnectionForm::onResetButtonClicked() {
 
 void ConnectionForm::onConnectButtonClicked() {
 
+}
+
+void ConnectionForm::regenerateClientId() {
+  const QString client_id = "hebo_" + randomClientId();
+  this->client_id_edit_->setText(client_id);
 }
 
 }  // namespace hebo
