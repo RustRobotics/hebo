@@ -10,6 +10,7 @@ add_subdirectory(third_party/mqtt_cpp)
 
 add_subdirectory(app)
 add_subdirectory(base)
+add_subdirectory(config)
 add_subdirectory(controllers)
 add_subdirectory(formats)
 add_subdirectory(frames)
