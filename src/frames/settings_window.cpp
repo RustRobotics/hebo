@@ -33,19 +33,19 @@ void SettingsWindow::initUi() {
   main_layout->addStretch();
 
   grid_layout->addWidget(new QLabel(tr("Language")), 0, 0, Qt::AlignRight);
-  this->languages_box_ = new QComboBox();
+  this->locale_box_ = new QComboBox();
   this->locales_ << "en_US" << "zh_CN";
-  this->languages_box_->addItems({"English", "简体中文"});
-  grid_layout->addWidget(this->languages_box_, 0, 1, Qt::AlignLeft);
+  this->locale_box_->addItems({"English", "简体中文"});
+  grid_layout->addWidget(this->locale_box_, 0, 1, Qt::AlignLeft);
 
   grid_layout->addWidget(new QLabel(tr("Auto check update")), 1, 0, Qt::AlignRight);
   this->auto_update_button_ = new SwitchButton();
   grid_layout->addWidget(this->auto_update_button_, 1, 1, Qt::AlignLeft);
 
   grid_layout->addWidget(new QLabel(tr("Max retry Connections")), 2, 0, Qt::AlignRight);
-  this->retry_connections_box_ = new QSpinBox();
-  this->retry_connections_box_->setRange(0, kRetryConnectionsMax);
-  grid_layout->addWidget(this->retry_connections_box_, 2, 1, Qt::AlignLeft);
+  this->retry_connection_box_ = new QSpinBox();
+  this->retry_connection_box_->setRange(0, kRetryConnectionsMax);
+  grid_layout->addWidget(this->retry_connection_box_, 2, 1, Qt::AlignLeft);
 
   grid_layout->addWidget(new QLabel(tr("Theme")), 3, 0, Qt::AlignRight);
   this->theme_box_ = new QComboBox();
@@ -59,7 +59,34 @@ void SettingsWindow::initUi() {
 }
 
 void SettingsWindow::initSignals() {
+  connect(this->locale_box_, &QComboBox::currentTextChanged,
+          this, &SettingsWindow::localeChanged);
+  connect(this->auto_update_button_, &SwitchButton::toggled,
+          this, &SettingsWindow::autoUpdateChanged);
+  connect(this->retry_connection_box_, QOverload<int>::of(&QSpinBox::valueChanged),
+          this, &SettingsWindow::retryConnectionChanged);
+  connect(this->theme_box_, &QComboBox::currentTextChanged,
+          this, &SettingsWindow::themeChanged);
+}
 
+void SettingsWindow::setLocale(const QString& locale) {
+  QSignalBlocker blocker(this->locale_box_);
+  this->locale_box_->setCurrentText(locale);
+}
+
+void SettingsWindow::setAutoUpdate(bool auto_update) {
+  QSignalBlocker blocker(this->auto_update_button_);
+  this->auto_update_button_->setChecked(auto_update);
+}
+
+void SettingsWindow::setRetryConnection(int retry) {
+  QSignalBlocker blocker(this->retry_connection_box_);
+  this->retry_connection_box_->setValue(retry);
+}
+
+void SettingsWindow::setTheme(const QString& theme) {
+  QSignalBlocker blocker(this->theme_box_);
+  this->theme_box_->setCurrentText(theme);
 }
 
 }  // namespace hebo

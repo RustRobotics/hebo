@@ -23,6 +23,8 @@ class MainWindow : public QWidget {
  public:
   explicit MainWindow(QWidget* parent = nullptr);
 
+  [[nodiscard]] SettingsWindow* settingsWindow() const { return this->settings_window_; }
+
  private:
   void initUi();
   void initSignals();

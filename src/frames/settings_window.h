@@ -18,13 +18,25 @@ class SettingsWindow : public QFrame {
  public:
   explicit SettingsWindow(QWidget* parent = nullptr);
 
+ public slots:
+  void setLocale(const QString& locale);
+  void setAutoUpdate(bool auto_update);
+  void setRetryConnection(int retry);
+  void setTheme(const QString& theme);
+
+ signals:
+  void localeChanged(const QString& locale);
+  void autoUpdateChanged(bool auto_update);
+  void retryConnectionChanged(int retry);
+  void themeChanged(const QString& theme);
+
  private:
   void initUi();
   void initSignals();
 
-  QComboBox* languages_box_{nullptr};
+  QComboBox* locale_box_{nullptr};
   SwitchButton* auto_update_button_{nullptr};
-  QSpinBox* retry_connections_box_{nullptr};
+  QSpinBox* retry_connection_box_{nullptr};
   QComboBox* theme_box_{nullptr};
 
   QStringList locales_{};

@@ -12,6 +12,7 @@
 #include <QTranslator>
 
 #include "frames/main_window.h"
+#include "frames/settings_window.h"
 #include "resources/fonts/fonts.h"
 
 namespace hebo {
@@ -23,23 +24,46 @@ constexpr const char* kI18Template = ":/i18n/hebo-%1.qm";
 
 MainController::MainController(QObject* parent)
     : QObject(parent),
-      updater_thread_(new QThread()) {
-  this->installTranslators();
+      settings_manager_(new SettingsManager(this)),
+      update_manager_(new UpdateManager()),
+      update_thread_(new QThread()) {
+  this->update_manager_->moveToThread(this->update_thread_);
   loadExternalFonts();
-  updater_thread_->start();
+  this->installTranslators();
+  this->initSignals();
+  this->update_thread_->start();
 }
 
 MainController::~MainController() {
-  this->updater_thread_->exit();
-  this->updater_thread_->deleteLater();
+  this->update_thread_->exit();
+  this->update_thread_->deleteLater();
 }
 
 void MainController::showMainWindow() {
   auto* main_window = new MainWindow();
-  connect(main_window, &MainWindow::destroyed,
-          main_window, &MainWindow::deleteLater);
+  this->initWindow(main_window);
   main_window->resize(1020, 720);
   main_window->show();
+}
+
+void MainController::initWindow(MainWindow* window) {
+  connect(window, &MainWindow::destroyed,
+          window, &MainWindow::deleteLater);
+
+  auto* settings_window = window->settingsWindow();
+  Q_ASSERT(settings_window != nullptr);
+  connect(this->settings_manager_, &SettingsManager::localeChanged,
+          settings_window, &SettingsWindow::setLocale);
+  connect(this->settings_manager_, &SettingsManager::retryConnectionsChanged,
+          settings_window, &SettingsWindow::setRetryConnection);
+  connect(this->settings_manager_, &SettingsManager::autoUpdateChanged,
+          settings_window, &SettingsWindow::setAutoUpdate);
+  connect(this->settings_manager_, &SettingsManager::themeChanged,
+          settings_window, &SettingsWindow::setTheme);
+  settings_window->setLocale(this->settings_manager_->locale());
+  settings_window->setRetryConnection(this->settings_manager_->retryConnections());
+  settings_window->setAutoUpdate(this->settings_manager_->autoUpdate());
+  settings_window->setTheme(this->settings_manager_->theme());
 }
 
 void MainController::installTranslators() {
@@ -50,6 +74,13 @@ void MainController::installTranslators() {
   } else {
     qWarning() << "Failed to load translator file:" << file;
   }
+}
+
+void MainController::initSignals() {
+  connect(this->update_manager_, &UpdateManager::destroyed,
+          this->update_manager_, &UpdateManager::deleteLater);
+  connect(this->update_thread_, &QThread::finished,
+          this->update_thread_, &QThread::deleteLater);
 }
 
 void loadExternalFonts() {

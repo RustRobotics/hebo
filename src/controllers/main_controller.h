@@ -10,10 +10,12 @@
 
 //#include "controllers/log_manager.h"
 //#include "controllers/connect_manager.h"
-//#include "controllers/settings_manager.h"
-//#include "controllers/update_manager.h"
+#include "controllers/settings_manager.h"
+#include "controllers/update_manager.h"
 
 namespace hebo {
+
+class MainWindow;
 
 class MainController : public QObject {
   Q_OBJECT
@@ -25,15 +27,15 @@ class MainController : public QObject {
   void showMainWindow();
 
  private:
+  void initSignals();
   void installTranslators();
+  void initWindow(MainWindow* window);
 
-
-  QThread* updater_thread_;
-
-//  LogManager* log_manager_;
-//  UpdateManager* update_manager_;
-//  SettingsManager* settings_manager_;
 //  ConnectManager* connect_manager_;
+//  LogManager* log_manager_;
+  SettingsManager* settings_manager_;
+  UpdateManager* update_manager_;
+  QThread* update_thread_;
 };
 
 void loadExternalFonts();
