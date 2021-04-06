@@ -10,6 +10,8 @@ set(SOURCES
 
     models/protocol_model.cpp
     models/protocol_model.h
+    models/version_model.cpp
+    models/version_model.h
 
     about_window.cpp
     about_window.h

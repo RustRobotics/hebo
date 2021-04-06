@@ -41,6 +41,14 @@ enum class Protocol : uint8_t {
 const char* getProtocolName(Protocol protocol);
 QDebug operator<<(QDebug stream, Protocol protocol);
 
+enum class MqttVersion : uint8_t {
+  kV311 = 0,
+  kV50,
+};
+
+const char* getMqttVersionName(MqttVersion version);
+QDebug operator<<(QDebug stream, MqttVersion version);
+
 struct ConnectConfig {
   QString id{};
   QString name{};

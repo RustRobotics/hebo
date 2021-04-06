@@ -59,7 +59,26 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
 void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
   auto* title_label = new QLabel(tr("Advanced"));
   main_layout->addWidget(title_label);
-}
 
+  auto* layout = new QFormLayout();
+  main_layout->addLayout(layout);
+
+  this->timeout_box_ = new QSpinBox();
+  layout->addRow(new QLabel(tr("Connect Timeout(s)")), this->timeout_box_);
+
+  this->keepalive_box_ = new QSpinBox();
+  layout->addRow(new QLabel(tr("Keep Alive(s)")), this->keepalive_box_);
+
+  this->clean_session_btn_ = new SwitchButton();
+  layout->addRow(new QLabel(tr("Clean Session")), this->clean_session_btn_);
+
+  this->auto_reconnect_btn_ = new SwitchButton();
+  layout->addRow(new QLabel(tr("Auto Reconnect")), this->auto_reconnect_btn_);
+
+  this->mqtt_version_box_ = new QComboBox();
+  this->mqtt_version_model_ = new VersionModel();
+  this->mqtt_version_box_->setModel(this->mqtt_version_model_);
+  layout->addRow(new QLabel("MQTT Version"), this->mqtt_version_box_);
+}
 
 }  // namespace hebo

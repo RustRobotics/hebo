@@ -12,6 +12,7 @@
 #include <QVBoxLayout>
 
 #include "frames/models/protocol_model.h"
+#include "frames/models/version_model.h"
 #include "widgets/switch_button.h"
 
 namespace hebo {
@@ -35,6 +36,13 @@ class ConnectionForm : public QFrame {
   QLineEdit* username_edit_{nullptr};
   QLineEdit* password_edit_{nullptr};
   SwitchButton* tls_switch_{nullptr};
+
+  QSpinBox* timeout_box_{nullptr};
+  QSpinBox* keepalive_box_{nullptr};
+  SwitchButton* clean_session_btn_{nullptr};
+  SwitchButton* auto_reconnect_btn_{nullptr};
+  QComboBox* mqtt_version_box_{nullptr};
+  VersionModel* mqtt_version_model_{nullptr};
 };
 
 }  // namespace hebo

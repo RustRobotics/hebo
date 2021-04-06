@@ -151,6 +151,25 @@ QDebug operator<<(QDebug stream, Protocol protocol) {
   return stream;
 }
 
+const char* getMqttVersionName(MqttVersion version) {
+  switch (version) {
+    case MqttVersion::kV311: {
+      return "3.1.1";
+    }
+    case MqttVersion::kV50: {
+      return "5.0";
+    }
+    default: {
+      Q_UNREACHABLE();
+    }
+  }
+}
+
+QDebug operator<<(QDebug stream, MqttVersion version) {
+  stream << getMqttVersionName(version);
+  return stream;
+}
+
 QDebug operator<<(QDebug stream, const ConnectConfig& info) {
   stream << "ConnectConfig {"
          << "\n  id:" << info.id
