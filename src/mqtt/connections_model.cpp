@@ -131,32 +131,13 @@ QHash<int, QByteArray> ConnectionsModel::roleNames() const {
   };
 }
 
-QString ConnectionsModel::addConnection(const QString& name,
-                                        const QString& client_id,
-                                        const QString& protocol,
-                                        const QString& host,
-                                        int port,
-                                        QoS qos,
-                                        bool clean_session) {
-  ConnectConfig config{};
-  config.id = generateConfigId();
-  config.name = name;
-  config.client_id = client_id;
-  config.protocol = protocol;
-  config.host = host;
-  config.port = port;
-  config.qos = qos;
-  config.clean_session = clean_session;
-  config.description = generateConnDescription(config);
-
+void ConnectionsModel::addConnection(const ConnectConfig& config) {
   this->beginResetModel();
   this->configs_.append(config);
   this->endResetModel();
 
   // save to local file
   this->saveConnInfo();
-
-  return config.id;
 }
 
 void ConnectionsModel::saveConnInfo() {

@@ -171,7 +171,10 @@ void ConnectionForm::onResetButtonClicked() {
 }
 
 void ConnectionForm::onConnectButtonClicked() {
-
+  ConnectConfig config{};
+  config.id = generateConfigId();
+  config.description = generateConnDescription(config);
+  emit this->connectRequested(config);
 }
 
 void ConnectionForm::regenerateClientId() {

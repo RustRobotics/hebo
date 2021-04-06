@@ -7,6 +7,7 @@
 
 #include <QScrollArea>
 
+#include "mqtt/connections_model.h"
 #include "frames/internal/connection_form.h"
 
 namespace hebo {
@@ -16,10 +17,19 @@ class NewConnectionWindow : public QScrollArea {
  public:
   explicit NewConnectionWindow(QWidget* parent = nullptr);
 
+  void setConnectionsModel(ConnectionsModel* model) {
+    this->model_ = model;
+  }
+
+ private slots:
+  void addNewConnection(const ConnectConfig& config);
+
  private:
   void initUi();
+  void initSignals();
 
   ConnectionForm* form_{nullptr};
+  ConnectionsModel* model_{nullptr};
 };
 
 }  // namespace hebo

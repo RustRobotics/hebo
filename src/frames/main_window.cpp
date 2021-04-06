@@ -56,6 +56,7 @@ void MainWindow::initSignals() {
 
 void MainWindow::setConnectionsModel(ConnectionsModel* model) {
   this->connections_window_->setConnectionsModel(model);
+  this->new_connection_window_->setConnectionsModel(model);
 }
 
 void MainWindow::switchWindowBydId(LeftPanel::ButtonId id) {

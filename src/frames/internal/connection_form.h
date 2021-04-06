@@ -24,6 +24,9 @@ class ConnectionForm : public QFrame {
  public:
   explicit ConnectionForm(QWidget* parent = nullptr);
 
+ signals:
+  void connectRequested(const ConnectConfig& config);
+
  private slots:
   void onResetButtonClicked();
   void onConnectButtonClicked();

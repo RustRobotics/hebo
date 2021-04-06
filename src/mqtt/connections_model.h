@@ -49,15 +49,7 @@ class ConnectionsModel : public QAbstractListModel {
   Q_INVOKABLE hebo::MqttClient* client(const QString& config_id);
 
  public slots:
-  // Connections management
-  // Protocol V3.1.1
-  QString addConnection(const QString& name,
-                        const QString& client_id,
-                        const QString& protocol,
-                        const QString& host,
-                        int port,
-                        QoS qos,
-                        bool clean_session);
+  void addConnection(const ConnectConfig& config);
 
  void deleteRow(const QString& config_id);
 
