@@ -10,6 +10,7 @@
 #include <QIcon>
 #include <QSharedPointer>
 
+#include "config/config.h"
 #include "controllers/main_controller.h"
 #include "resources/images/images.h"
 
@@ -19,8 +20,8 @@ int runShell(int argc, char** argv) {
   QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QGuiApplication::setApplicationDisplayName("Hebo");
   QGuiApplication::setApplicationName("Hebo");
-  QGuiApplication::setApplicationVersion("0.1.2");
-  QGuiApplication::setDesktopFileName("hebo-ui");
+  QGuiApplication::setApplicationVersion(kAppVersion);
+  QGuiApplication::setDesktopFileName("hebo");
   QGuiApplication::setOrganizationDomain("biofan.org");
   QGuiApplication::setOrganizationName("Hebo");
   QGuiApplication::setWindowIcon(QIcon(kImageHebo));

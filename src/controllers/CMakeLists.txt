@@ -19,6 +19,7 @@ target_link_libraries(controllers-static
 
     CuteLogger
 
+    config-static
     frames-static
     resources-static
     mqtt-static

@@ -11,6 +11,7 @@
 #include <QVBoxLayout>
 
 #include "base/file.h"
+#include "config/config.h"
 #include "frames/software_license_window.h"
 #include "resources/images/images.h"
 #include "resources/styles/styles.h"
@@ -48,7 +49,7 @@ void AboutWindow::initUi() {
   main_layout->addWidget(logo_label, 0, Qt::AlignHCenter);
   main_layout->addSpacing(16);
 
-  auto* version_label = new QLabel("v0.1.2");
+  auto* version_label = new QLabel(QString("v%1").arg(kAppVersion));
   version_label->setObjectName("version-label");
   version_label->setAlignment(Qt::AlignHCenter);
   main_layout->addWidget(version_label, 0, Qt::AlignHCenter);
