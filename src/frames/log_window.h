@@ -5,14 +5,17 @@
 #ifndef HEBO_SRC_FRAMES_LOG_WINDOW_H_
 #define HEBO_SRC_FRAMES_LOG_WINDOW_H_
 
-#include <QWidget>
+#include <QPlainTextEdit>
 
 namespace hebo {
 
-class LogWindow : public QWidget {
+class LogWindow : public QPlainTextEdit {
   Q_OBJECT
  public:
   explicit LogWindow(QWidget* parent = nullptr);
+
+ private:
+  void initUi();
 };
 
 }  // namespace hebo

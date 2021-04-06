@@ -5,6 +5,7 @@
 #ifndef HEBO_SRC_CONTROLLERS_LOG_MANAGER_H_
 #define HEBO_SRC_CONTROLLERS_LOG_MANAGER_H_
 
+#include <QDir>
 #include <QObject>
 
 namespace hebo {
@@ -12,18 +13,13 @@ namespace hebo {
 // Make access to mqtt service log.
 class LogManager : public QObject {
   Q_OBJECT
-  Q_PROPERTY(QString log READ getLog NOTIFY logUpdated)
-
  public:
   explicit LogManager(QObject* parent = nullptr);
 
-  const QString& getLog();
-
- signals:
-  void logUpdated(const QString& log);
+  QString getLogFile(const QString& conn_id);
 
  private:
-  QString log_{"Hello, rust"};
+  QDir dir_{};
 };
 
 }  // namespace hebo

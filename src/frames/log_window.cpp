@@ -6,8 +6,12 @@
 
 namespace hebo {
 
-LogWindow::LogWindow(QWidget* parent) : QWidget(parent) {
+LogWindow::LogWindow(QWidget* parent) : QPlainTextEdit(parent) {
+  this->initUi();
+}
 
+void LogWindow::initUi() {
+  this->setReadOnly(true);
 }
 
 }  // namespace hebo

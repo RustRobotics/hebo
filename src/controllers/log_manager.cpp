@@ -9,8 +9,9 @@ namespace hebo {
 LogManager::LogManager(QObject* parent) : QObject(parent) {
 }
 
-const QString& LogManager::getLog() {
-  return this->log_;
+QString LogManager::getLogFile(const QString& conn_id) {
+  Q_UNUSED(conn_id);
+  return QString();
 }
 
 }  // namespace hebo
