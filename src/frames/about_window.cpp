@@ -11,6 +11,7 @@
 #include <QVBoxLayout>
 
 #include "base/file.h"
+#include "frames/software_license_window.h"
 #include "resources/images/images.h"
 #include "resources/styles/styles.h"
 
@@ -69,6 +70,10 @@ void AboutWindow::initUi() {
   this->support_button_ = new TextButton(tr("Support"));
   this->support_button_->setObjectName("support-button");
   update_layout->addWidget(this->support_button_);
+
+  this->third_party_software_button_ = new TextButton(tr("Open Source Software"));
+  this->third_party_software_button_->setObjectName("third-party-software-button");
+  update_layout->addWidget(this->third_party_software_button_);
   update_layout->addStretch();
 
   auto* server_note_label = new QLabel(tr(
@@ -116,6 +121,8 @@ void AboutWindow::initSignals() {
   connect(this->support_button_, &TextButton::clicked, [=]() {
     this->openExternalUrl(kIssueUrl);
   });
+  connect(this->third_party_software_button_, &TextButton::clicked,
+          this, &AboutWindow::showSoftwareLicenseWindow);
 }
 
 void AboutWindow::openExternalUrl(const QString& url) {
@@ -123,6 +130,16 @@ void AboutWindow::openExternalUrl(const QString& url) {
   if (!ok) {
     qWarning() << "Failed to open url:" << url;
   }
+}
+
+void AboutWindow::showSoftwareLicenseWindow() {
+  auto* window = new SoftwareLicenseWindow();
+  connect(window, &SoftwareLicenseWindow::requestOpenUrl,
+          this, &AboutWindow::openExternalUrl);
+  connect(window, &SoftwareLicenseWindow::destroyed,
+          window, &SoftwareLicenseWindow::deleteLater);
+  window->resize(720, 600);
+  window->show();
 }
 
 }  // namespace hebo

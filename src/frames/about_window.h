@@ -19,6 +19,9 @@ class AboutWindow : public QFrame {
  signals:
   void requestUpdate();
 
+ private slots:
+  void showSoftwareLicenseWindow();
+
  private:
   void initUi();
   void initSignals();
@@ -26,6 +29,7 @@ class AboutWindow : public QFrame {
   void openExternalUrl(const QString& url);
 
   TextButton* update_button_{nullptr};
+  TextButton* third_party_software_button_{nullptr};
   TextButton* releases_button_{nullptr};
   TextButton* support_button_{nullptr};
 };

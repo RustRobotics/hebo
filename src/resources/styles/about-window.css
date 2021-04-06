@@ -9,7 +9,7 @@
     color: #606060;
 }
 
-#update-button, #releases-button, #support-button {
+#update-button, #releases-button, #support-button, #third-party-software-button{
     font-size: 16px;
     color: #34c388;
 }
