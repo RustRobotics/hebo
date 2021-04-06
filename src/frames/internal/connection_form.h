@@ -11,6 +11,7 @@
 #include <QSpinBox>
 #include <QVBoxLayout>
 
+#include "frames/models/protocol_model.h"
 #include "widgets/switch_button.h"
 
 namespace hebo {
@@ -28,6 +29,7 @@ class ConnectionForm : public QFrame {
   QLineEdit* name_edit_{nullptr};
   QLineEdit* client_id_edit_{nullptr};
   QComboBox* protocol_box_{nullptr};
+  ProtocolModel* protocol_model_{nullptr};
   QLineEdit* hostname_edit_{nullptr};
   QSpinBox* port_box_{nullptr};
   QLineEdit* username_edit_{nullptr};

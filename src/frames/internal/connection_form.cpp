@@ -35,6 +35,8 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   layout->addRow(new QLabel(tr("Client ID")), this->client_id_edit_);
 
   this->protocol_box_ = new QComboBox();
+  this->protocol_model_ = new ProtocolModel(this);
+  this->protocol_box_->setModel(this->protocol_model_);
   this->hostname_edit_ = new QLineEdit();
   auto* host_layout = new QHBoxLayout();
   host_layout->addWidget(this->protocol_box_);

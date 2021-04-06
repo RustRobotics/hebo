@@ -8,6 +8,9 @@ set(SOURCES
     internal/connections_list_view.cpp
     internal/connections_list_view.h
 
+    models/protocol_model.cpp
+    models/protocol_model.h
+
     about_window.cpp
     about_window.h
     bag_window.cpp
