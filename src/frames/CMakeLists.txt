@@ -1,19 +1,24 @@
 
 set(SOURCES
+    internal/connections_list_view.cpp
+    internal/connections_list_view.h
+
     about_window.cpp
     about_window.h
     bag_window.cpp
     bag_window.h
     benchmark_window.cpp
     benchmark_window.h
+    client_frame.cpp
+    client_frame.h
     left_panel.cpp
     left_panel.h
     log_window.cpp
     log_window.h
     main_window.cpp
     main_window.h
-    messages_window.cpp
-    messages_window.h
+    connections_window.cpp
+    connections_window.h
     new_connection_window.cpp
     new_connection_window.h
     settings_window.cpp

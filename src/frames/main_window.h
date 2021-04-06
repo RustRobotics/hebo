@@ -13,7 +13,7 @@
 #include "frames/benchmark_window.h"
 #include "frames/left_panel.h"
 #include "frames/log_window.h"
-#include "frames/messages_window.h"
+#include "frames/connections_window.h"
 #include "frames/settings_window.h"
 
 namespace hebo {
@@ -34,8 +34,8 @@ class MainWindow : public QWidget {
   AboutWindow* about_window_{nullptr};
   BagWindow* bag_window_{nullptr};
   BenchmarkWindow* benchmark_window_{nullptr};
+  ConnectionsWindow* connections_window_{nullptr};
   LogWindow* log_window_{nullptr};
-  MessagesWindow* messages_window_{nullptr};
   SettingsWindow* settings_window_{nullptr};
 };
 

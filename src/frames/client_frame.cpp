@@ -2,11 +2,11 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#include "frames/messages_window.h"
+#include "frames/client_frame.h"
 
 namespace hebo {
 
-MessagesWindow::MessagesWindow(QWidget* parent) : QWidget(parent) {
+ClientFrame::ClientFrame(QWidget* parent) : QFrame(parent) {
 
 }
 

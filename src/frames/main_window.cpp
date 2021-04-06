@@ -25,8 +25,8 @@ void MainWindow::initUi() {
   this->stacked_layout_ = new QStackedLayout();
   main_layout->addLayout(this->stacked_layout_);
 
-  this->messages_window_ = new MessagesWindow();
-  this->stacked_layout_->insertWidget(LeftPanel::kMessages, this->messages_window_);
+  this->connections_window_ = new ConnectionsWindow();
+  this->stacked_layout_->insertWidget(LeftPanel::kMessages, this->connections_window_);
 
   this->benchmark_window_ = new BenchmarkWindow();
   this->stacked_layout_->insertWidget(LeftPanel::kBenchmark, this->benchmark_window_);

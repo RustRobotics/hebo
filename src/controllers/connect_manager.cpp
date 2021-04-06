@@ -41,6 +41,7 @@ ConnectManager::ConnectManager(QObject* parent)
     : QAbstractListModel(parent),
       conn_file_(getJsonFile()) {
   qRegisterMetaType<QoS>("QoS");
+  qRegisterMetaType<ConnectionState>("ConnectionState");
 
   // Load connections on startup.
   this->loadConnInfo();
@@ -99,9 +100,9 @@ QVariant ConnectManager::data(const QModelIndex& index, int role) const {
         auto* client = this->clients_.value(info.id);
         Q_ASSERT(client != nullptr);
         qDebug() << "client state:" << client->state();
-        return client->state();
+        return static_cast<int>(client->state());
       } else {
-        return ConnectionState::ConnectionDisconnected;
+        return static_cast<int>(ConnectionState::ConnectionDisconnected);
       }
     }
     default: {

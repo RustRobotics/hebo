@@ -2,19 +2,19 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#ifndef HEBO_SRC_FRAMES_MESSAGES_WINDOW_H_
-#define HEBO_SRC_FRAMES_MESSAGES_WINDOW_H_
+#ifndef HEBO_SRC_FRAMES_CLIENT_FRAME_H_
+#define HEBO_SRC_FRAMES_CLIENT_FRAME_H_
 
-#include <QWidget>
+#include <QFrame>
 
 namespace hebo {
 
-class MessagesWindow : public QWidget {
+class ClientFrame : public QFrame {
   Q_OBJECT
  public:
-  explicit MessagesWindow(QWidget* parent = nullptr);
+  explicit ClientFrame(QWidget* parent = nullptr);
 };
 
 }  // namespace hebo
 
-#endif  // HEBO_SRC_FRAMES_MESSAGES_WINDOW_H_
+#endif  // HEBO_SRC_FRAMES_CLIENT_FRAME_H_
