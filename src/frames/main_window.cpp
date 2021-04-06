@@ -11,6 +11,8 @@ namespace hebo {
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
   this->initUi();
   this->initSignals();
+
+  this->switchWindowBydId(LeftPanel::kConnectionsButton);
 }
 
 void MainWindow::initUi() {
@@ -26,34 +28,37 @@ void MainWindow::initUi() {
   main_layout->addLayout(this->stacked_layout_);
 
   this->connections_window_ = new ConnectionsWindow();
-  this->stacked_layout_->insertWidget(LeftPanel::kMessages, this->connections_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kConnectionsButton, this->connections_window_);
 
   this->benchmark_window_ = new BenchmarkWindow();
-  this->stacked_layout_->insertWidget(LeftPanel::kBenchmark, this->benchmark_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kBenchmarkButton, this->benchmark_window_);
 
   this->bag_window_ = new BagWindow();
-  this->stacked_layout_->insertWidget(LeftPanel::kBag, this->bag_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kBagButton, this->bag_window_);
 
   this->log_window_ = new LogWindow();
-  this->stacked_layout_->insertWidget(LeftPanel::kLog, this->log_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kLogButton, this->log_window_);
 
   this->about_window_ = new AboutWindow();
-  this->stacked_layout_->insertWidget(LeftPanel::kAbout, this->about_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kAboutButton, this->about_window_);
 
   this->settings_window_ = new SettingsWindow();
-  this->stacked_layout_->insertWidget(LeftPanel::kSettings, this->settings_window_);
+  this->stacked_layout_->insertWidget(LeftPanel::kSettingsButton, this->settings_window_);
 }
 
 void MainWindow::initSignals() {
-  connect(this->left_panel_, &LeftPanel::activeChanged, [=](LeftPanel::ButtonId id) {
-    this->stacked_layout_->setCurrentIndex(id);
-    auto* widget = this->stacked_layout_->widget(id);
-    if (widget != nullptr) {
-      this->setWindowTitle(widget->windowTitle());
-    } else {
-      qCritical() << "widget is null, id:" << id;
-    }
-  });
+  connect(this->left_panel_, &LeftPanel::activeChanged,
+          this, &MainWindow::switchWindowBydId);
+}
+
+void MainWindow::switchWindowBydId(LeftPanel::ButtonId id) {
+  this->stacked_layout_->setCurrentIndex(id);
+  auto* widget = this->stacked_layout_->widget(id);
+  if (widget != nullptr) {
+    this->setWindowTitle(widget->windowTitle());
+  } else {
+    qCritical() << "widget is null, id:" << id;
+  }
 }
 
 }  // namespace hebo

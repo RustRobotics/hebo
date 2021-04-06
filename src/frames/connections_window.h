@@ -5,17 +5,23 @@
 #ifndef HEBO_SRC_FRAMES_CONNECTIONS_WINDOW_H_
 #define HEBO_SRC_FRAMES_CONNECTIONS_WINDOW_H_
 
-#include <QWidget>
+#include <QSplitter>
+
+#include "frames/client_frame.h"
+#include "frames/internal/connections_list_view.h"
 
 namespace hebo {
 
-class ConnectionsWindow : public QWidget {
+class ConnectionsWindow : public QSplitter {
   Q_OBJECT
  public:
   explicit ConnectionsWindow(QWidget* parent = nullptr);
 
  private:
   void initUi();
+
+  ConnectionsListView* connections_list_view_{nullptr};
+  ClientFrame* client_frame_{nullptr};
 };
 
 }  // namespace hebo

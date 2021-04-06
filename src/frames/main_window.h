@@ -25,6 +25,9 @@ class MainWindow : public QWidget {
 
   [[nodiscard]] SettingsWindow* settingsWindow() const { return this->settings_window_; }
 
+ private slots:
+  void switchWindowBydId(LeftPanel::ButtonId id);
+
  private:
   void initUi();
   void initSignals();

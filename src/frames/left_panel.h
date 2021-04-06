@@ -15,12 +15,12 @@ class LeftPanel : public QWidget {
   Q_PROPERTY(ButtonId button READ activeButton WRITE setActiveButton NOTIFY activeChanged)
  public:
   enum ButtonId : uint8_t {
-    kMessages,
-    kBenchmark,
-    kBag,
-    kLog,
-    kAbout,
-    kSettings,
+    kConnectionsButton,
+    kBenchmarkButton,
+    kBagButton,
+    kLogButton,
+    kAboutButton,
+    kSettingsButton,
   };
   Q_ENUM(ButtonId);
 
