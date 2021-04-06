@@ -33,14 +33,21 @@ class SwitchButton : public QAbstractButton {
 
   void enterEvent(QEvent*) override;
 
+  void checkStateSet() override;
+
+  void resizeEvent(QResizeEvent* event) override;
+
  private:
+  void resetAnimation(bool is_checked);
+
   int x_;
   int y_;
   int height_;
   int margin_;
   QBrush thumb_;
   QBrush brush_;
-  QPropertyAnimation* animation_{nullptr};
+  qreal opacity_;
+  QPropertyAnimation* animation_;
 };
 
 }  // namespace hebo
