@@ -126,6 +126,31 @@ QDebug operator<<(QDebug stream, QoS qos) {
   return stream;
 }
 
+const char* getProtocolName(Protocol protocol) {
+  switch (protocol) {
+    case Protocol::kMqtt: {
+      return "mqtt://";
+    }
+    case Protocol::kMqtts: {
+      return "mqtts://";
+    }
+    case Protocol::kWs: {
+      return "ws://";
+    }
+    case Protocol::kWss: {
+      return "wss://";
+    }
+    default: {
+      Q_UNREACHABLE();
+    }
+  }
+}
+
+QDebug operator<<(QDebug stream, Protocol protocol) {
+  stream << getProtocolName(protocol);
+  return stream;
+}
+
 QDebug operator<<(QDebug stream, const ConnectConfig& info) {
   stream << "ConnectConfig {"
          << "\n  id:" << info.id

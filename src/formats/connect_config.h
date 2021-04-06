@@ -31,6 +31,16 @@ enum class QoS : uint8_t {
 const char* dumpQoS(QoS qos);
 QDebug operator<<(QDebug stream, QoS qos);
 
+enum class Protocol : uint8_t {
+  kMqtt = 0,
+  kMqtts,
+  kWs,
+  kWss,
+};
+
+const char* getProtocolName(Protocol protocol);
+QDebug operator<<(QDebug stream, Protocol protocol);
+
 struct ConnectConfig {
   QString id{};
   QString name{};
