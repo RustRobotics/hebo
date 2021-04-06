@@ -21,6 +21,9 @@ class NewConnectionWindow : public QScrollArea {
     this->model_ = model;
   }
 
+ signals:
+  void newConnectionAdded(const QString& client_id);
+
  private slots:
   void addNewConnection(const ConnectConfig& config);
 

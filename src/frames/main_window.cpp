@@ -52,6 +52,10 @@ void MainWindow::initUi() {
 void MainWindow::initSignals() {
   connect(this->left_panel_, &LeftPanel::activeChanged,
           this, &MainWindow::switchWindowBydId);
+  connect(this->new_connection_window_, &NewConnectionWindow::newConnectionAdded, [=](const QString& client_id) {
+    this->left_panel_->setActiveButton(LeftPanel::kConnectionsButton);
+    this->connections_window_->connectClient(client_id);
+  });
 }
 
 void MainWindow::setConnectionsModel(ConnectionsModel* model) {

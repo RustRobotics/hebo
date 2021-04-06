@@ -25,6 +25,7 @@ void NewConnectionWindow::initSignals() {
 void NewConnectionWindow::addNewConnection(const ConnectConfig& config) {
   Q_ASSERT(this->model_ != nullptr);
   this->model_->addConnection(config);
+  emit this->newConnectionAdded(config.id);
 }
 
 }  // namespace hebo

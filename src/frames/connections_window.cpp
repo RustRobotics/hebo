@@ -24,4 +24,8 @@ void ConnectionsWindow::setConnectionsModel(ConnectionsModel* model) {
   this->connections_list_view_->setModel(model);
 }
 
+void ConnectionsWindow::connectClient(const QString& client_id) {
+  qDebug() << client_id;
+}
+
 }  // namespace hebo

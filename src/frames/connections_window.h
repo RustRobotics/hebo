@@ -21,6 +21,9 @@ class ConnectionsWindow : public QSplitter {
   // This class does not take ownership of model.
   void setConnectionsModel(ConnectionsModel* model);
 
+ public slots:
+  void connectClient(const QString& client_id);
+
  private:
   void initUi();
 
