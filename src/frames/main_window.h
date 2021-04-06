@@ -15,6 +15,7 @@
 #include "frames/log_window.h"
 #include "frames/connections_window.h"
 #include "frames/settings_window.h"
+#include "mqtt/connections_model.h"
 
 namespace hebo {
 
@@ -24,6 +25,8 @@ class MainWindow : public QWidget {
   explicit MainWindow(QWidget* parent = nullptr);
 
   [[nodiscard]] SettingsWindow* settingsWindow() const { return this->settings_window_; }
+
+  void setConnectionsModel(ConnectionsModel* model);
 
  private slots:
   void switchWindowBydId(LeftPanel::ButtonId id);

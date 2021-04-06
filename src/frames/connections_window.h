@@ -9,6 +9,7 @@
 
 #include "frames/client_frame.h"
 #include "frames/internal/connections_list_view.h"
+#include "mqtt/connections_model.h"
 
 namespace hebo {
 
@@ -17,11 +18,15 @@ class ConnectionsWindow : public QSplitter {
  public:
   explicit ConnectionsWindow(QWidget* parent = nullptr);
 
+  // This class does not take ownership of model.
+  void setConnectionsModel(ConnectionsModel* model);
+
  private:
   void initUi();
 
   ConnectionsListView* connections_list_view_{nullptr};
   ClientFrame* client_frame_{nullptr};
+  ConnectionsModel* model_{nullptr};
 };
 
 }  // namespace hebo

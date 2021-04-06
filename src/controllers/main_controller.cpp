@@ -24,6 +24,7 @@ constexpr const char* kI18Template = ":/i18n/hebo-%1.qm";
 
 MainController::MainController(QObject* parent)
     : QObject(parent),
+      connections_model_(new ConnectionsModel(this)),
       settings_manager_(new SettingsManager(this)),
       update_manager_(new UpdateManager()),
       update_thread_(new QThread()) {
@@ -49,6 +50,8 @@ void MainController::showMainWindow() {
 void MainController::initWindow(MainWindow* window) {
   connect(window, &MainWindow::destroyed,
           window, &MainWindow::deleteLater);
+
+  window->setConnectionsModel(this->connections_model_);
 
   auto* settings_window = window->settingsWindow();
   Q_ASSERT(settings_window != nullptr);

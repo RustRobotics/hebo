@@ -51,6 +51,10 @@ void MainWindow::initSignals() {
           this, &MainWindow::switchWindowBydId);
 }
 
+void MainWindow::setConnectionsModel(ConnectionsModel* model) {
+  this->connections_window_->setConnectionsModel(model);
+}
+
 void MainWindow::switchWindowBydId(LeftPanel::ButtonId id) {
   this->stacked_layout_->setCurrentIndex(id);
   auto* widget = this->stacked_layout_->widget(id);

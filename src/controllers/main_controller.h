@@ -9,9 +9,9 @@
 #include <QThread>
 
 //#include "controllers/log_manager.h"
-//#include "controllers/connect_manager.h"
 #include "controllers/settings_manager.h"
 #include "controllers/update_manager.h"
+#include "mqtt/connections_model.h"
 
 namespace hebo {
 
@@ -31,7 +31,7 @@ class MainController : public QObject {
   void installTranslators();
   void initWindow(MainWindow* window);
 
-//  ConnectManager* connect_manager_;
+  ConnectionsModel* connections_model_;
 //  LogManager* log_manager_;
   SettingsManager* settings_manager_;
   UpdateManager* update_manager_;

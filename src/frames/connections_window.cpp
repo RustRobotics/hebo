@@ -4,7 +4,6 @@
 
 #include "frames/connections_window.h"
 
-
 namespace hebo {
 
 ConnectionsWindow::ConnectionsWindow(QWidget* parent) : QSplitter(parent) {
@@ -19,6 +18,10 @@ void ConnectionsWindow::initUi() {
 
   this->client_frame_ = new ClientFrame();
   this->addWidget(this->client_frame_);
+}
+
+void ConnectionsWindow::setConnectionsModel(ConnectionsModel* model) {
+  this->connections_list_view_->setModel(model);
 }
 
 }  // namespace hebo
