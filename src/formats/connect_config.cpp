@@ -104,16 +104,16 @@ QDebug operator<<(QDebug stream, ConnectionState state) {
   return stream;
 }
 
-const char* dumpQoS(QoS qos) {
+QString dumpQoS(QoS qos) {
   switch (qos) {
     case QoS::AtMostOnce: {
-      return "AtMostOnce";
+      return QObject::tr("AtMostOnce (0)");
     }
     case QoS::AtLeastOnce: {
-      return "AtLeastOnce";
+      return QObject::tr("AtLeastOnce (1)");
     }
     case QoS::ExactOnce: {
-      return "ExactOnce";
+      return QObject::tr("ExactOnce (2)");
     }
     default: {
       Q_UNREACHABLE();

@@ -11,7 +11,7 @@
 namespace hebo {
 namespace {
 
-constexpr const int kRetryConnectionsMax = 2 << 10;
+constexpr const int kRetryConnectionsMax = 1 << 10;
 
 }  // namespace
 

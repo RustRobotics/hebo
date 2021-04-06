@@ -24,8 +24,14 @@ class ConnectionForm : public QFrame {
  public:
   explicit ConnectionForm(QWidget* parent = nullptr);
 
+ private slots:
+  void onResetButtonClicked();
+  void onConnectButtonClicked();
+
  private:
   void initUi();
+  void initSignals();
+
   void initGeneralForm(QVBoxLayout* main_layout);
   void initAdvancedForm(QVBoxLayout* main_layout);
   void initLastWillForm(QVBoxLayout* main_layout);
@@ -52,6 +58,9 @@ class ConnectionForm : public QFrame {
   QoSModel* qos_model_{nullptr};
   SwitchButton* last_will_retain_button_{nullptr};
   QTextEdit* last_will_payload_edit_{nullptr};
+
+  QPushButton* reset_button_{nullptr};
+  QPushButton* connect_button_{nullptr};
 };
 
 }  // namespace hebo

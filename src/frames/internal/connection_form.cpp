@@ -8,6 +8,17 @@
 #include <QLabel>
 
 namespace hebo {
+namespace {
+
+constexpr const char* kDefaultHostname = "localhost";
+constexpr int kDefaultPort = 1883;
+constexpr int kMaxPort = 65535;
+constexpr int kDefaultConnectTimeout = 10;
+constexpr int kMaxConnectTimeout = 1 << 20;
+constexpr int kDefaultKeepalive = 60;
+constexpr int kMaxKeepalive = 1 << 20;
+
+}  // namespace
 
 ConnectionForm::ConnectionForm(QWidget* parent) : QFrame(parent) {
   this->initUi();
@@ -20,6 +31,14 @@ void ConnectionForm::initUi() {
   this->initGeneralForm(main_layout);
   this->initAdvancedForm(main_layout);
   this->initLastWillForm(main_layout);
+
+  auto* button_layout = new QHBoxLayout();
+  this->reset_button_ = new QPushButton(tr("Reset"));
+  button_layout->addWidget(this->reset_button_);
+  this->connect_button_ = new QPushButton(tr("Connect"));
+  button_layout->addWidget(this->connect_button_);
+  button_layout->addStretch();
+  main_layout->addLayout(button_layout);
 }
 
 void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
@@ -39,12 +58,15 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   this->protocol_model_ = new ProtocolModel(this);
   this->protocol_box_->setModel(this->protocol_model_);
   this->hostname_edit_ = new QLineEdit();
+  this->hostname_edit_->setText(kDefaultHostname);
   auto* host_layout = new QHBoxLayout();
   host_layout->addWidget(this->protocol_box_);
   host_layout->addWidget(this->hostname_edit_);
   layout->addRow(new QLabel("Host"), host_layout);
 
   this->port_box_ = new QSpinBox();
+  this->port_box_->setRange(1, kMaxPort);
+  this->port_box_->setValue(kDefaultPort);
   layout->addRow(new QLabel("Port"), this->port_box_);
 
   this->username_edit_ = new QLineEdit();
@@ -65,12 +87,17 @@ void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
   main_layout->addLayout(layout);
 
   this->timeout_box_ = new QSpinBox();
+  this->timeout_box_->setRange(0, kMaxConnectTimeout);
+  this->timeout_box_->setValue(kDefaultConnectTimeout);
   layout->addRow(new QLabel(tr("Connect Timeout(s)")), this->timeout_box_);
 
   this->keepalive_box_ = new QSpinBox();
+  this->keepalive_box_->setRange(0, kMaxKeepalive);
+  this->keepalive_box_->setValue(kDefaultKeepalive);
   layout->addRow(new QLabel(tr("Keep Alive(s)")), this->keepalive_box_);
 
   this->clean_session_btn_ = new SwitchButton();
+  this->clean_session_btn_->setChecked(true);
   layout->addRow(new QLabel(tr("Clean Session")), this->clean_session_btn_);
 
   this->auto_reconnect_btn_ = new SwitchButton();
@@ -102,6 +129,40 @@ void ConnectionForm::initLastWillForm(QVBoxLayout* main_layout) {
 
   this->last_will_payload_edit_ = new QTextEdit();
   layout->addRow(new QLabel(tr("Last-Will Payload")), this->last_will_payload_edit_);
+}
+
+void ConnectionForm::initSignals() {
+  connect(this->reset_button_, &QPushButton::clicked,
+          this, &ConnectionForm::onResetButtonClicked);
+  connect(this->connect_button_, &QPushButton::clicked,
+          this, &ConnectionForm::onConnectButtonClicked);
+}
+
+void ConnectionForm::onResetButtonClicked() {
+  this->name_edit_->clear();
+  this->client_id_edit_->clear();
+  // TODO(Shaohua): Regenerate random id.
+  this->protocol_box_->setCurrentIndex(0);
+  this->hostname_edit_->setText(kDefaultHostname);
+  this->port_box_->setValue(kDefaultPort);
+  this->username_edit_->clear();
+  this->password_edit_->clear();
+  this->tls_switch_->setChecked(false);
+
+  this->timeout_box_->setValue(kDefaultConnectTimeout);
+  this->keepalive_box_->setValue(kDefaultKeepalive);
+  this->clean_session_btn_->setChecked(true);
+  this->auto_reconnect_btn_->setChecked(false);
+  this->mqtt_version_box_->setCurrentIndex(0);
+
+  this->last_will_topic_edit_->clear();
+  this->last_will_qos_box_->setCurrentIndex(0);
+  this->last_will_retain_button_->setChecked(false);
+  this->last_will_payload_edit_->clear();
+}
+
+void ConnectionForm::onConnectButtonClicked() {
+
 }
 
 }  // namespace hebo

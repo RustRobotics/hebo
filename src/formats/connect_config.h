@@ -28,7 +28,7 @@ enum class QoS : uint8_t {
   ExactOnce = 2,
 };
 
-const char* dumpQoS(QoS qos);
+QString dumpQoS(QoS qos);
 QDebug operator<<(QDebug stream, QoS qos);
 
 enum class Protocol : uint8_t {
