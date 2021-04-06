@@ -33,7 +33,7 @@ void LeftPanel::initUi() {
   this->btn_group_->addButton(new_connection_btn, ButtonId::kNewConnectionButton);
   main_layout->addWidget(new_connection_btn);
 
-  auto* benchmark_btn = new RoundFontButton(kFontIconOdometer);
+  auto* benchmark_btn = new RoundFontButton(kFontIconStopwatch);
   this->btn_group_->addButton(benchmark_btn, ButtonId::kBenchmarkButton);
   main_layout->addWidget(benchmark_btn);
 
@@ -47,7 +47,7 @@ void LeftPanel::initUi() {
 
   main_layout->addStretch();
 
-  auto* about_btn = new RoundFontButton(kFontIconInfo);
+  auto* about_btn = new RoundFontButton(kFontIconWarning);
   this->btn_group_->addButton(about_btn, ButtonId::kAboutButton);
   main_layout->addWidget(about_btn);
 

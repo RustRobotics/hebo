@@ -6,12 +6,14 @@
 
 namespace hebo {
 
-NewConnectionWindow::NewConnectionWindow(QWidget* parent) : QFrame(parent) {
+NewConnectionWindow::NewConnectionWindow(QWidget* parent) : QScrollArea(parent) {
   this->initUi();
 }
 
 void NewConnectionWindow::initUi() {
   this->setWindowTitle(tr("New Connection"));
+  this->form_ = new ConnectionForm(this);
+  this->setWidget(this->form_);
 }
 
 }  // namespace hebo
