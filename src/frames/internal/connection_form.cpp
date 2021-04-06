@@ -172,6 +172,28 @@ void ConnectionForm::onResetButtonClicked() {
 
 void ConnectionForm::onConnectButtonClicked() {
   ConnectConfig config{};
+  config.name = this->name_edit_->text();
+  config.client_id = this->client_id_edit_->text();
+  // TODOS(Shaohua): Replace with protocol enum.
+  config.protocol = this->protocol_box_->currentText();
+  config.host = this->hostname_edit_->text();
+  config.port = this->port_box_->value();
+  config.username = this->username_edit_->text();
+  config.password = this->password_edit_->text();
+  config.with_tls = this->tls_switch_->isChecked();
+
+  config.timeout = this->timeout_box_->value();
+  config.keep_alive = this->keepalive_box_->value();
+  config.clean_session = this->clean_session_btn_->isChecked();
+  config.auto_reconnect = this->auto_reconnect_btn_->isChecked();
+  // TODO(Shaohua): Add version enum.
+
+  config.last_will_topic = this->last_will_topic_edit_->text();
+  const auto qos_index = this->qos_model_->index(this->last_will_qos_box_->currentIndex());
+  config.last_will_qos = this->qos_model_->data(qos_index, QoSModel::kIdRole).value<QoS>();
+  config.last_will_retain = this->last_will_retain_button_->isChecked();
+  config.last_will_payload = this->last_will_payload_edit_->toPlainText().toUtf8();
+
   config.id = generateConfigId();
   config.description = generateConnDescription(config);
   emit this->connectRequested(config);
