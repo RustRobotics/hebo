@@ -9,9 +9,11 @@
 #include <QFrame>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QTextEdit>
 #include <QVBoxLayout>
 
 #include "frames/models/protocol_model.h"
+#include "frames/models/qos_model.h"
 #include "frames/models/version_model.h"
 #include "widgets/switch_button.h"
 
@@ -26,6 +28,7 @@ class ConnectionForm : public QFrame {
   void initUi();
   void initGeneralForm(QVBoxLayout* main_layout);
   void initAdvancedForm(QVBoxLayout* main_layout);
+  void initLastWillForm(QVBoxLayout* main_layout);
 
   QLineEdit* name_edit_{nullptr};
   QLineEdit* client_id_edit_{nullptr};
@@ -43,6 +46,12 @@ class ConnectionForm : public QFrame {
   SwitchButton* auto_reconnect_btn_{nullptr};
   QComboBox* mqtt_version_box_{nullptr};
   VersionModel* mqtt_version_model_{nullptr};
+
+  QLineEdit* last_will_topic_edit_{nullptr};
+  QComboBox* last_will_qos_box_{nullptr};
+  QoSModel* qos_model_{nullptr};
+  SwitchButton* last_will_retain_button_{nullptr};
+  QTextEdit* last_will_payload_edit_{nullptr};
 };
 
 }  // namespace hebo

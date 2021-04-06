@@ -19,6 +19,7 @@ void ConnectionForm::initUi() {
 
   this->initGeneralForm(main_layout);
   this->initAdvancedForm(main_layout);
+  this->initLastWillForm(main_layout);
 }
 
 void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
@@ -79,6 +80,28 @@ void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
   this->mqtt_version_model_ = new VersionModel();
   this->mqtt_version_box_->setModel(this->mqtt_version_model_);
   layout->addRow(new QLabel("MQTT Version"), this->mqtt_version_box_);
+}
+
+void ConnectionForm::initLastWillForm(QVBoxLayout* main_layout) {
+  auto* title_label = new QLabel(tr("Last Will"));
+  main_layout->addWidget(title_label);
+
+  auto* layout = new QFormLayout();
+  main_layout->addLayout(layout);
+
+  this->last_will_topic_edit_ = new QLineEdit();
+  layout->addRow(new QLabel(tr("Last-Will Topic")), this->last_will_topic_edit_);
+
+  this->last_will_qos_box_ = new QComboBox();
+  this->qos_model_ = new QoSModel();
+  this->last_will_qos_box_->setModel(this->qos_model_);
+  layout->addRow(new QLabel(tr("Last-Will QoS")), this->last_will_qos_box_);
+
+  this->last_will_retain_button_ = new SwitchButton();
+  layout->addRow(new QLabel(tr("Last-Will Retain")), this->last_will_retain_button_);
+
+  this->last_will_payload_edit_ = new QTextEdit();
+  layout->addRow(new QLabel(tr("Last-Will Payload")), this->last_will_payload_edit_);
 }
 
 }  // namespace hebo
