@@ -2,6 +2,8 @@
 set(SOURCE_FILES
     connect_config.cpp
     connect_config.h
+    license_parser.cpp
+    license_parser.h
     )
 
 add_library(formats-static STATIC

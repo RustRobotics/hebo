@@ -2,6 +2,7 @@
 set(SOURCE_FILES
     fonts/fonts.h
     images/images.h
+    misc/misc.h
     styles/styles.h
     )
 
