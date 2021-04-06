@@ -2,7 +2,7 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#include "controllers/connect_manager.h"
+#include "connections_model.h"
 
 #include <QDebug>
 #include <QDir>
@@ -37,7 +37,7 @@ QString getJsonFile() {
 
 }  // namespace
 
-ConnectManager::ConnectManager(QObject* parent)
+ConnectionsModel::ConnectionsModel(QObject* parent)
     : QAbstractListModel(parent),
       conn_file_(getJsonFile()) {
   qRegisterMetaType<QoS>("QoS");
@@ -47,12 +47,12 @@ ConnectManager::ConnectManager(QObject* parent)
   this->loadConnInfo();
 }
 
-int ConnectManager::rowCount(const QModelIndex& parent) const {
+int ConnectionsModel::rowCount(const QModelIndex& parent) const {
   Q_UNUSED(parent);
   return this->configs_.length();
 }
 
-QVariant ConnectManager::data(const QModelIndex& index, int role) const {
+QVariant ConnectionsModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) {
     return {};
   }
@@ -112,7 +112,7 @@ QVariant ConnectManager::data(const QModelIndex& index, int role) const {
   }
 }
 
-QHash<int, QByteArray> ConnectManager::roleNames() const {
+QHash<int, QByteArray> ConnectionsModel::roleNames() const {
   // Map role index to qml property name.
   return {
       {kIdRole, kId},
@@ -131,13 +131,13 @@ QHash<int, QByteArray> ConnectManager::roleNames() const {
   };
 }
 
-QString ConnectManager::addConnection(const QString& name,
-                                      const QString& client_id,
-                                      const QString& protocol,
-                                      const QString& host,
-                                      int port,
-                                      QoS qos,
-                                      bool clean_session) {
+QString ConnectionsModel::addConnection(const QString& name,
+                                        const QString& client_id,
+                                        const QString& protocol,
+                                        const QString& host,
+                                        int port,
+                                        QoS qos,
+                                        bool clean_session) {
   ConnectConfig config{};
   config.id = generateConfigId();
   config.name = name;
@@ -159,13 +159,13 @@ QString ConnectManager::addConnection(const QString& name,
   return config.id;
 }
 
-void ConnectManager::saveConnInfo() {
+void ConnectionsModel::saveConnInfo() {
   if (!dumpConnectConfigs(this->conn_file_, this->configs_)) {
     qWarning() << "Failed to save connection info to file:" << conn_file_;
   }
 }
 
-void ConnectManager::loadConnInfo() {
+void ConnectionsModel::loadConnInfo() {
   const bool ok = parseConnectConfigs(this->conn_file_, this->configs_);
   if (!ok) {
     qWarning() << "Failed to parse conn info file:" << this->conn_file_;
@@ -173,12 +173,12 @@ void ConnectManager::loadConnInfo() {
   }
 }
 
-QString ConnectManager::configId(int index) const {
+QString ConnectionsModel::configId(int index) const {
   Q_ASSERT(index >= 0 && index < this->configs_.length());
   return this->configs_.at(index).id;
 }
 
-QVariantMap ConnectManager::config(const QString& config_id) const {
+QVariantMap ConnectionsModel::config(const QString& config_id) const {
   for (const auto& config : this->configs_) {
     if (config.id == config_id) {
       return dumpConnectConfig(config).toVariantMap();
@@ -188,7 +188,7 @@ QVariantMap ConnectManager::config(const QString& config_id) const {
   return {};
 }
 
-MqttClient* ConnectManager::client(const QString& config_id) {
+MqttClient* ConnectionsModel::client(const QString& config_id) {
   if (this->clients_.contains(config_id)) {
     auto* client = this->clients_.value(config_id);
     Q_ASSERT(client != nullptr);
@@ -219,11 +219,11 @@ MqttClient* ConnectManager::client(const QString& config_id) {
   return nullptr;
 }
 
-QString ConnectManager::newClientId() const {
+QString ConnectionsModel::newClientId() const {
   return "hebo_" + randomClientId();
 }
 
-void ConnectManager::deleteRow(const QString& config_id) {
+void ConnectionsModel::deleteRow(const QString& config_id) {
   Q_ASSERT(!config_id.isEmpty());
   if (this->clients_.contains(config_id)) {
     auto* client = this->clients_.take(config_id);

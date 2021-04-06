@@ -1,5 +1,8 @@
 
 set(SOURCES
+    delegates/connections_delegate.cpp
+    delegates/connections_delegate.h
+
     internal/connections_list_view.cpp
     internal/connections_list_view.h
 

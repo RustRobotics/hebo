@@ -3,8 +3,6 @@ set(SOURCES
     log_manager.h
     main_controller.cpp
     main_controller.h
-    connect_manager.cpp
-    connect_manager.h
     settings_manager.cpp
     settings_manager.h
     shell.cpp

@@ -7,6 +7,8 @@
 
 #include <QListView>
 
+#include "mqtt/connections_model.h"
+
 namespace hebo {
 
 class ConnectionsListView : public QListView {
@@ -17,6 +19,7 @@ class ConnectionsListView : public QListView {
  private:
   void initUi();
   void initSignals();
+
 };
 
 }  // namespace hebo

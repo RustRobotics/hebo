@@ -2,8 +2,8 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#ifndef HEBO_SRC_CONTROLLERS_CONNECT_MANAGER_H_
-#define HEBO_SRC_CONTROLLERS_CONNECT_MANAGER_H_
+#ifndef HEBO_SRC_FRAMES_MODELS_CONNECTIONS_MODEL_H_
+#define HEBO_SRC_FRAMES_MODELS_CONNECTIONS_MODEL_H_
 
 #include <QAbstractListModel>
 
@@ -12,7 +12,7 @@
 
 namespace hebo {
 
-class ConnectManager : public QAbstractListModel {
+class ConnectionsModel : public QAbstractListModel {
  Q_OBJECT
 
  public:
@@ -34,7 +34,7 @@ class ConnectManager : public QAbstractListModel {
 
   Q_ENUM(ConnectionRole);
 
-  explicit ConnectManager(QObject* parent = nullptr);
+  explicit ConnectionsModel(QObject* parent = nullptr);
 
   [[nodiscard]] int rowCount(const QModelIndex& parent) const override;
 
@@ -77,4 +77,4 @@ class ConnectManager : public QAbstractListModel {
 
 }  // namespace hebo
 
-#endif  // HEBO_SRC_CONTROLLERS_CONNECT_MANAGER_H_
+#endif  // HEBO_SRC_FRAMES_MODELS_CONNECTIONS_MODEL_H_

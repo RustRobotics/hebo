@@ -4,6 +4,8 @@
 
 #include "frames/internal/connections_list_view.h"
 
+#include "frames/delegates/connections_delegate.h"
+
 namespace hebo {
 
 ConnectionsListView::ConnectionsListView(QWidget* parent) : QListView(parent) {
@@ -12,7 +14,8 @@ ConnectionsListView::ConnectionsListView(QWidget* parent) : QListView(parent) {
 }
 
 void ConnectionsListView::initUi() {
-
+  auto* delegate = new ConnectionsDelegate(this);
+  this->setItemDelegate(delegate);
 }
 
 void ConnectionsListView::initSignals() {

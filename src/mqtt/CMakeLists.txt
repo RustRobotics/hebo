@@ -1,5 +1,7 @@
 
 set(SOURCE
+    connections_model.cpp
+    connections_model.h
     internal_client.cpp
     internal_client.h
     message_stream_model.cpp
