@@ -40,6 +40,18 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   host_layout->addWidget(this->protocol_box_);
   host_layout->addWidget(this->hostname_edit_);
   layout->addRow(new QLabel("Host"), host_layout);
+
+  this->port_box_ = new QSpinBox();
+  layout->addRow(new QLabel("Port"), this->port_box_);
+
+  this->username_edit_ = new QLineEdit();
+  layout->addRow(new QLabel("Username"), this->username_edit_);
+
+  this->password_edit_ = new QLineEdit();
+  layout->addRow(new QLabel("Password"), this->password_edit_);
+
+  this->tls_switch_ = new SwitchButton();
+  layout->addRow(new QLabel("SSL/TLS"), this->tls_switch_);
 }
 
 void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {

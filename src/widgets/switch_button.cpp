@@ -17,6 +17,7 @@ SwitchButton::SwitchButton(QWidget* parent)
       animation_(new QPropertyAnimation(this, "offset", this)) {
   this->setCheckable(true);
   this->setChecked(false);
+  this->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 }
 
 void SwitchButton::paintEvent(QPaintEvent* event) {
