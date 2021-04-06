@@ -6,6 +6,7 @@
 
 #include <QVBoxLayout>
 
+#include "resources/fonts/fonts.h"
 #include "widgets/round_font_button.h"
 
 namespace hebo {
@@ -24,33 +25,33 @@ void LeftPanel::initUi() {
   this->btn_group_ = new QButtonGroup(this);
   this->btn_group_->setExclusive(true);
 
-  auto* connections_btn = new RoundFontButton("\ue787");
+  auto* connections_btn = new RoundFontButton(kFontIconConnection);
   this->btn_group_->addButton(connections_btn, ButtonId::kConnectionsButton);
   main_layout->addWidget(connections_btn);
 
-  auto* new_connection_btn = new RoundFontButton("\ue723");
+  auto* new_connection_btn = new RoundFontButton(kFontIconCirclePlus);
   this->btn_group_->addButton(new_connection_btn, ButtonId::kNewConnectionButton);
   main_layout->addWidget(new_connection_btn);
 
-  auto* benchmark_btn = new RoundFontButton("\ue710");
+  auto* benchmark_btn = new RoundFontButton(kFontIconOdometer);
   this->btn_group_->addButton(benchmark_btn, ButtonId::kBenchmarkButton);
   main_layout->addWidget(benchmark_btn);
 
-  auto* bag_btn = new RoundFontButton("\ue74b");
+  auto* bag_btn = new RoundFontButton(kFontIconBox);
   this->btn_group_->addButton(bag_btn, ButtonId::kBagButton);
   main_layout->addWidget(bag_btn);
 
-  auto* log_btn = new RoundFontButton("\ue759");
+  auto* log_btn = new RoundFontButton(kFontIconNotebook);
   this->btn_group_->addButton(log_btn, ButtonId::kLogButton);
   main_layout->addWidget(log_btn);
 
   main_layout->addStretch();
 
-  auto* about_btn = new RoundFontButton("\ue6c9");
+  auto* about_btn = new RoundFontButton(kFontIconInfo);
   this->btn_group_->addButton(about_btn, ButtonId::kAboutButton);
   main_layout->addWidget(about_btn);
 
-  auto* settings_btn = new RoundFontButton("\ue6ca");
+  auto* settings_btn = new RoundFontButton(kFontIconSettings);
   this->btn_group_->addButton(settings_btn, ButtonId::kSettingsButton);
   main_layout->addWidget(settings_btn);
 }

@@ -13,6 +13,17 @@ constexpr const char* kExternalFonts[] = {
     kFontElementIcons,
 };
 
+constexpr const char* kFontIconConnection = "\ue736";
+constexpr const char* kFontIconCopyDocument = "\ue718";
+constexpr const char* kFontIconCirclePlus = "\ue723";
+constexpr const char* kFontIconStopwatch = "\ue710";
+constexpr const char* kFontIconOdometer = "\ue71e";
+constexpr const char* kFontIconBox = "\ue74b";
+constexpr const char* kFontIconNotebook = "\ue759";
+constexpr const char* kFontIconWarning = "\ue6c9";
+constexpr const char* kFontIconInfo = "\ue7a1";
+constexpr const char* kFontIconSettings = "\ue6ca";
+
 }  // namespace hebo
 
 #endif  // HEBO_SRC_RESOURCES_FONTS_FONTS_H_
