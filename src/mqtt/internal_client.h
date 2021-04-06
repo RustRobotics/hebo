@@ -7,7 +7,7 @@
 
 #include <QObject>
 
-#include "mqtt/connect_config.h"
+#include "formats/connect_config.h"
 #include "mqtt/message_stream_model.h"
 
 namespace hebo {

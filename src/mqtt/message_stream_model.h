@@ -7,7 +7,7 @@
 
 #include <QAbstractListModel>
 
-#include "mqtt/connect_config.h"
+#include "formats/connect_config.h"
 
 namespace hebo {
 

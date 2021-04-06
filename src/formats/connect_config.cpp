@@ -2,7 +2,7 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#include "mqtt/connect_config.h"
+#include "connect_config.h"
 
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -72,10 +72,58 @@ bool parseItems(const QJsonArray& array, ConnectConfigList& list) {
 
 }  // namespace hebo
 
-MqttEnums::MqttEnums(QObject* parent) : QObject(parent) {}
-
 QString generateConnDescription(const ConnectConfig& info) {
   return QString("%1@%2:%3").arg(info.name).arg(info.host).arg(info.port);
+}
+
+const char* dumpConnectionState(ConnectionState state) {
+  switch (state) {
+    case ConnectionState::ConnectionDisconnected: {
+      return "Disconnected";
+    }
+    case ConnectionState::ConnectionConnecting: {
+      return "Connecting";
+    }
+    case ConnectionState::ConnectionConnected: {
+      return "Connected";
+    }
+    case ConnectionState::ConnectionConnectFailed: {
+      return "ConnectFailed";
+    }
+    case ConnectionState::ConnectionDisconnecting: {
+      return "Disconnecting";
+    }
+    default: {
+      Q_UNREACHABLE();
+    }
+  }
+}
+
+QDebug operator<<(QDebug stream, ConnectionState state) {
+  stream << dumpConnectionState(state);
+  return stream;
+}
+
+const char* dumpQoS(QoS qos) {
+  switch (qos) {
+    case QoS::AtMostOnce: {
+      return "AtMostOnce";
+    }
+    case QoS::AtLeastOnce: {
+      return "AtLeastOnce";
+    }
+    case QoS::ExactOnce: {
+      return "ExactOnce";
+    }
+    default: {
+      Q_UNREACHABLE();
+    }
+  }
+}
+
+QDebug operator<<(QDebug stream, QoS qos) {
+  stream << dumpQoS(qos);
+  return stream;
 }
 
 QDebug operator<<(QDebug stream, const ConnectConfig& info) {
@@ -132,7 +180,7 @@ QJsonObject dumpConnectConfig(const ConnectConfig& info) {
   object.insert(kKeyAutoReconnect, info.auto_reconnect);
 
   object.insert(kKeyLastWillTopic, info.last_will_topic);
-  object.insert(kKeyLastWillQoS, info.last_will_qos);
+  object.insert(kKeyLastWillQoS, static_cast<int32_t>(info.last_will_qos));
   object.insert(kKeyLastWillRetain, info.last_will_retain);
   object.insert(kKeyLastWillPayload, QString(info.last_will_payload.toBase64()));
 

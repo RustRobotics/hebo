@@ -11,29 +11,25 @@
 
 namespace hebo {
 
-class MqttEnums : public QObject {
-  Q_OBJECT
- public:
-  explicit MqttEnums(QObject* parent = nullptr);
-  enum ConnectionState : int {
-    ConnectionDisconnected = 0,
-    ConnectionConnecting = 1,
-    ConnectionConnected = 2,
-    ConnectionConnectFailed = 3,
-    ConnectionDisconnecting = 4,
-  };
-  Q_ENUM(ConnectionState);
-
-  enum QoS : int {
-    AtMostOnce = 0,
-    AtLeastOnce = 1,
-    ExactOnce = 2,
-  };
-  Q_ENUM(QoS);
+enum class ConnectionState : uint8_t {
+  ConnectionDisconnected = 0,
+  ConnectionConnecting = 1,
+  ConnectionConnected = 2,
+  ConnectionConnectFailed = 3,
+  ConnectionDisconnecting = 4,
 };
 
-using ConnectionState = MqttEnums::ConnectionState;
-using QoS = MqttEnums::QoS;
+const char* dumpConnectionState(ConnectionState state);
+QDebug operator<<(QDebug stream, ConnectionState state);
+
+enum class QoS : uint8_t {
+  AtMostOnce = 0,
+  AtLeastOnce = 1,
+  ExactOnce = 2,
+};
+
+const char* dumpQoS(QoS qos);
+QDebug operator<<(QDebug stream, QoS qos);
 
 struct ConnectConfig {
   QString id{};
@@ -76,7 +72,7 @@ bool dumpConnectConfigs(const QString& file, const ConnectConfigList& list);
 
 }  // namespace hebo
 
-Q_DECLARE_METATYPE(hebo::MqttEnums::ConnectionState);
-Q_DECLARE_METATYPE(hebo::MqttEnums::QoS);
+Q_DECLARE_METATYPE(hebo::ConnectionState);
+Q_DECLARE_METATYPE(hebo::QoS);
 
 #endif  // HEBO_SRC_MQTT_CONNECT_CONFIG_H_

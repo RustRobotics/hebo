@@ -7,7 +7,7 @@
 namespace hebo {
 
 MqttClient::MqttClient(QObject* parent)
-    : MqttEnums(parent),
+    : QObject(parent),
       worker_thread_(new QThread(this)),
       subscriptions_(new SubscriptionModel(this)),
       messages_(new MessageStreamModel(this)),

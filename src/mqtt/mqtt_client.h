@@ -9,14 +9,14 @@
 #include <QObject>
 #include <QThread>
 
-#include "mqtt/connect_config.h"
+#include "formats/connect_config.h"
 #include "mqtt/internal_client.h"
 #include "mqtt/message_stream_model.h"
 #include "mqtt/subscription_model.h"
 
 namespace hebo {
 
-class MqttClient : public MqttEnums {
+class MqttClient : public QObject {
   Q_OBJECT
   Q_PROPERTY(ConnectionState state READ state NOTIFY stateChanged);
   Q_PROPERTY(SubscriptionModel* subscriptions READ subscriptions NOTIFY subscriptionsChanged);

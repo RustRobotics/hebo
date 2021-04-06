@@ -1,7 +1,5 @@
 
 set(SOURCE
-    connect_config.cpp
-    connect_config.h
     internal_client.cpp
     internal_client.h
     message_stream_model.cpp
@@ -22,4 +20,5 @@ target_link_libraries(mqtt-static
     mqtt_cpp_iface
 
     base-static
+    formats-static
     )
