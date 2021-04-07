@@ -85,7 +85,7 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   host_layout->addWidget(this->hostname_edit_);
   form_layout->addRow(new QLabel("Host"), host_layout);
 
-  this->port_box_ = new QSpinBox();
+  this->port_box_ = new IntegerLineEdit();
   this->port_box_->setRange(1, kMaxPort);
   this->port_box_->setValue(kDefaultPort);
   form_layout->addRow(new QLabel("Port"), this->port_box_);
@@ -116,12 +116,12 @@ void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
   form_section->setLayout(form_layout);
   main_layout->addWidget(form_section);
 
-  this->timeout_box_ = new QSpinBox();
+  this->timeout_box_ = new IntegerLineEdit();
   this->timeout_box_->setRange(0, kMaxConnectTimeout);
   this->timeout_box_->setValue(kDefaultConnectTimeout);
   form_layout->addRow(new QLabel(tr("Connect Timeout(s)")), this->timeout_box_);
 
-  this->keepalive_box_ = new QSpinBox();
+  this->keepalive_box_ = new IntegerLineEdit();
   this->keepalive_box_->setRange(0, kMaxKeepalive);
   this->keepalive_box_->setValue(kDefaultKeepalive);
   form_layout->addRow(new QLabel(tr("Keep Alive(s)")), this->keepalive_box_);

@@ -8,13 +8,13 @@
 #include <QComboBox>
 #include <QFrame>
 #include <QLineEdit>
-#include <QSpinBox>
 #include <QTextEdit>
 #include <QVBoxLayout>
 
 #include "frames/models/protocol_model.h"
 #include "frames/models/qos_model.h"
 #include "frames/models/version_model.h"
+#include "widgets/integer_line_edit.h"
 #include "widgets/switch_button.h"
 
 namespace hebo {
@@ -48,13 +48,13 @@ class ConnectionForm : public QFrame {
   QComboBox* protocol_box_{nullptr};
   ProtocolModel* protocol_model_{nullptr};
   QLineEdit* hostname_edit_{nullptr};
-  QSpinBox* port_box_{nullptr};
+  IntegerLineEdit* port_box_{nullptr};
   QLineEdit* username_edit_{nullptr};
   QLineEdit* password_edit_{nullptr};
   SwitchButton* tls_switch_{nullptr};
 
-  QSpinBox* timeout_box_{nullptr};
-  QSpinBox* keepalive_box_{nullptr};
+  IntegerLineEdit* timeout_box_{nullptr};
+  IntegerLineEdit* keepalive_box_{nullptr};
   SwitchButton* clean_session_btn_{nullptr};
   SwitchButton* auto_reconnect_btn_{nullptr};
   QComboBox* mqtt_version_box_{nullptr};
