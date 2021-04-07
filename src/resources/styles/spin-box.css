@@ -1,0 +1,28 @@
+/** Used by SpinBox class */
+
+QSpinBox {
+    padding: 2px 18px;
+    font-size: 18px;
+    background-color: white;
+    border: 1px solid #385d8a;
+}
+
+QSpinBox::down-button {
+    image: url(:/images/black-minus.svg);
+    subcontrol-position: left;
+    width: 16px;
+    height: 100%;
+    border: none;
+    padding: 0 0 0 1px;
+    margin: 0;
+}
+
+QSpinBox::up-button {
+    image: url(:/images/black-plus.svg);
+    subcontrol-position: right;
+    width: 16px;
+    height: 100%;
+    border: none;
+    padding: 0 0 0 1px;
+    margin: 0;
+}

@@ -45,7 +45,7 @@ void SettingsWindow::initUi() {
   this->auto_update_button_ = new SwitchButton();
   form_layout->addRow(new QLabel(tr("Auto check update")), this->auto_update_button_);
 
-  this->retry_connection_box_ = new IntegerLineEdit();
+  this->retry_connection_box_ = new SpinBox();
   this->retry_connection_box_->setRange(0, kRetryConnectionsMax);
   form_layout->addRow(new QLabel(tr("Max retry Connections")), this->retry_connection_box_);
 
@@ -64,8 +64,8 @@ void SettingsWindow::initSignals() {
           this, &SettingsWindow::localeChanged);
   connect(this->auto_update_button_, &SwitchButton::toggled,
           this, &SettingsWindow::autoUpdateChanged);
-  connect(this->retry_connection_box_, &IntegerLineEdit::valueChanged,
-          this, &SettingsWindow::retryConnectionChanged);
+//  connect(this->retry_connection_box_, &IntegerLineEdit::valueChanged,
+//          this, &SettingsWindow::retryConnectionChanged);
   connect(this->theme_box_, &QComboBox::currentTextChanged,
           this, &SettingsWindow::themeChanged);
 }
