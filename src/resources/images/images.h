@@ -7,9 +7,13 @@
 
 namespace hebo {
 
+constexpr const char* kImageBlackMinus = ":/images/black-minus.svg";
+constexpr const char* kImageBlackPlus = ":/images/black-plus.svg";
 constexpr const char* kImageConnections = ":/images/connections.png";
-constexpr const char* kImageHebo = ":/images/hebo.svg";
 constexpr const char* kImageHeboX128 = ":/images/hebo-x128.svg";
+constexpr const char* kImageHebo = ":/images/hebo.svg";
+constexpr const char* kImageWhiteMinus = ":/images/white-minus.svg";
+constexpr const char* kImageWhitePlus = ":/images/white-plus.svg";
 
 }  // namespace hebo
 
