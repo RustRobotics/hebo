@@ -24,6 +24,9 @@ class ClientFrame : public QFrame {
 
   [[nodiscard]] const QString& clientId() const { return this->client_id_; }
 
+ private slots:
+  void onClientStateChanged(ConnectionState state);
+
  private:
   void initUi();
   void initSignals();
@@ -34,6 +37,7 @@ class ClientFrame : public QFrame {
   QFrame* tool_bar_{nullptr};
   QLabel* title_label_{nullptr};
   FontIconButton* connect_button_{nullptr};
+  FontIconButton* disconnect_button_{nullptr};
   FontIconButton* edit_button_{nullptr};
   FontIconButton* options_button_{nullptr};
 

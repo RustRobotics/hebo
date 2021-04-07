@@ -41,6 +41,10 @@ void ClientFrame::initUi() {
   this->connect_button_ = new FontIconButton(kFontElIconCaretRight);
   tool_bar_layout->addWidget(this->connect_button_);
 
+  this->disconnect_button_ = new FontIconButton(kFontElIconSwitchButton);
+  tool_bar_layout->addWidget(this->disconnect_button_);
+  this->disconnect_button_->hide();
+
   this->edit_button_ = new FontIconButton(kFontElIconEditOutline);
   tool_bar_layout->addWidget(this->edit_button_);
 
@@ -73,7 +77,35 @@ void ClientFrame::initUi() {
 }
 
 void ClientFrame::initSignals() {
+  Q_ASSERT(this->client_ != nullptr);
+  connect(this->connect_button_, &FontIconButton::clicked,
+          this->client_, &MqttClient::requestConnect);
+  connect(this->disconnect_button_, &FontIconButton::clicked,
+          this->client_, &MqttClient::requestDisconnect);
+  connect(this->client_, &MqttClient::stateChanged,
+          this, &ClientFrame::onClientStateChanged);
+}
 
+void ClientFrame::onClientStateChanged(ConnectionState state) {
+  switch (state) {
+    case ConnectionState::ConnectionConnecting:  // fall through
+    case ConnectionState::ConnectionConnected: {
+      this->connect_button_->hide();
+      this->disconnect_button_->show();
+      break;
+    }
+    case ConnectionState::ConnectionConnectFailed:  // fall through
+    case ConnectionState::ConnectionDisconnecting:  // fall through
+    case ConnectionState::ConnectionDisconnected: {
+      this->connect_button_->show();
+      this->disconnect_button_->hide();
+      break;
+    }
+    default: {
+      Q_UNREACHABLE();
+      break;
+    }
+  }
 }
 
 }  // namespace hebo
