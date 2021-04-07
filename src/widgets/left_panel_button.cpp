@@ -42,7 +42,11 @@ void LeftPanelButton::paintEvent(QPaintEvent* event) {
   }
 
   // Now draw text
-  pen.setColor("#a9acac");
+  if (!this->isChecked()) {
+    pen.setColor("#a9acac");
+  } else {
+    pen.setColor(Qt::white);
+  }
   painter.setPen(pen);
   QFont font(painter.font());
   font.setPixelSize(22);
