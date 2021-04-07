@@ -1,7 +1,7 @@
 
 set(SOURCE_FILES
-    font_button.cpp
-    font_button.h
+    font_icon_button.cpp
+    font_icon_button.h
     form_section.cpp
     form_section.h
     form_section_title.cpp

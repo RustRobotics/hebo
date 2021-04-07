@@ -9,7 +9,7 @@
 
 #include "base/random.h"
 #include "resources/fonts/fonts.h"
-#include "widgets/font_button.h"
+#include "widgets/font_icon_button.h"
 #include "widgets/form_section.h"
 #include "widgets/form_section_title.h"
 
@@ -69,7 +69,7 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
 
   auto* client_id_layout = new QHBoxLayout();
   this->client_id_edit_ = new QLineEdit();
-  this->random_client_id_button_ = new FontButton(kFontIconRefresh);
+  this->random_client_id_button_ = new FontIconButton(kFontIconRefresh);
   client_id_layout->addWidget(this->client_id_edit_);
   client_id_layout->addSpacing(12);
   client_id_layout->addWidget(this->random_client_id_button_);

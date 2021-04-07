@@ -36,6 +36,7 @@ class ConnectionsWindow : public QSplitter {
 
   QListView* connections_list_view_{nullptr};
   QStackedWidget* stacked_widget_{nullptr};
+  ConnectionsModel* model_{nullptr};
 
   // Map of ClientID => ClientFrame
   QMap<QString, ClientFrame*> clients_{};

@@ -29,6 +29,7 @@ void ConnectionsWindow::initUi() {
 
 void ConnectionsWindow::setConnectionsModel(ConnectionsModel* model) {
   this->connections_list_view_->setModel(model);
+  this->model_ = model;
 }
 
 void ConnectionsWindow::connectClient(const QString& client_id) {
@@ -37,7 +38,9 @@ void ConnectionsWindow::connectClient(const QString& client_id) {
 
 void ConnectionsWindow::showClientById(const QString& client_id) {
   if (!this->clients_.contains(client_id)) {
-    auto* client_frame = new ClientFrame(client_id);
+    auto* client = this->model_->client(client_id);
+    Q_ASSERT(client != nullptr);
+    auto* client_frame = new ClientFrame(client_id, client);
     client_frame->show();
     this->clients_.insert(client_id, client_frame);
     this->stacked_widget_->addWidget(client_frame);

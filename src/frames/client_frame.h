@@ -6,17 +6,21 @@
 #define HEBO_SRC_FRAMES_CLIENT_FRAME_H_
 
 #include <QFrame>
+#include <QLabel>
 #include <QLineEdit>
 #include <QListView>
 #include <QPlainTextEdit>
 #include <QTextEdit>
+
+#include "mqtt/mqtt_client.h"
+#include "widgets/font_icon_button.h"
 
 namespace hebo {
 
 class ClientFrame : public QFrame {
   Q_OBJECT
  public:
-  explicit ClientFrame(const QString& client_id, QWidget* parent = nullptr);
+  ClientFrame(const QString& client_id, MqttClient* client, QWidget* parent = nullptr);
 
   [[nodiscard]] const QString& clientId() const { return this->client_id_; }
 
@@ -25,7 +29,14 @@ class ClientFrame : public QFrame {
   void initSignals();
 
   QString client_id_;
+  MqttClient* client_;
+
   QFrame* tool_bar_{nullptr};
+  QLabel* title_label_{nullptr};
+  FontIconButton* connect_button_{nullptr};
+  FontIconButton* edit_button_{nullptr};
+  FontIconButton* options_button_{nullptr};
+
   QListView* subscriptions_list_view_{nullptr};
   QPlainTextEdit* messages_edit_{nullptr};
   QLineEdit* topic_edit_{nullptr};

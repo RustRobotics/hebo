@@ -19,12 +19,15 @@ namespace hebo {
 class MqttClient : public QObject {
   Q_OBJECT
   Q_PROPERTY(ConnectionState state READ state NOTIFY stateChanged);
+  // TODO(Shaohua): Remove these properties.
   Q_PROPERTY(SubscriptionModel* subscriptions READ subscriptions NOTIFY subscriptionsChanged);
   Q_PROPERTY(MessageStreamModel* messages READ messages NOTIFY messagesChanged);
 
  public:
   explicit MqttClient(QObject* parent = nullptr);
   ~MqttClient() override;
+
+  [[nodiscard]] const ConnectConfig& config() const { return this->config_; }
 
   void setConfig(const ConnectConfig& config) { this->config_ = config; }
 
