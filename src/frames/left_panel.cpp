@@ -27,34 +27,34 @@ void LeftPanel::initUi() {
   this->btn_group_ = new QButtonGroup(this);
   this->btn_group_->setExclusive(true);
 
-  auto* connections_btn = new LeftPanelButton(kFontIconConnection, tr("Connections"));
+  auto* connections_btn = new LeftPanelButton(kFontElIconConnection, tr("Connections"));
   this->btn_group_->addButton(connections_btn, ButtonId::kConnectionsButton);
   connections_btn->setChecked(true);
   main_layout->addWidget(connections_btn);
 
-  auto* new_connection_btn = new LeftPanelButton(kFontIconCirclePlus, tr("New"));
+  auto* new_connection_btn = new LeftPanelButton(kFontElIconCirclePlusOutline, tr("New"));
   this->btn_group_->addButton(new_connection_btn, ButtonId::kNewConnectionButton);
   main_layout->addWidget(new_connection_btn);
 
-  auto* benchmark_btn = new LeftPanelButton(kFontIconStopwatch, tr("Benchmark"));
+  auto* benchmark_btn = new LeftPanelButton(kFontElIconStopwatch, tr("Benchmark"));
   this->btn_group_->addButton(benchmark_btn, ButtonId::kBenchmarkButton);
   main_layout->addWidget(benchmark_btn);
 
-  auto* bag_btn = new LeftPanelButton(kFontIconBox, tr("Bag"));
+  auto* bag_btn = new LeftPanelButton(kFontElIconBox, tr("Bag"));
   this->btn_group_->addButton(bag_btn, ButtonId::kBagButton);
   main_layout->addWidget(bag_btn);
 
-  auto* log_btn = new LeftPanelButton(kFontIconNotebook, tr("Log"));
+  auto* log_btn = new LeftPanelButton(kFontElIconNotebook1, tr("Log"));
   this->btn_group_->addButton(log_btn, ButtonId::kLogButton);
   main_layout->addWidget(log_btn);
 
   main_layout->addStretch();
 
-  auto* about_btn = new LeftPanelButton(kFontIconWarning, tr("About"));
+  auto* about_btn = new LeftPanelButton(kFontElIconWarningOutline, tr("About"));
   this->btn_group_->addButton(about_btn, ButtonId::kAboutButton);
   main_layout->addWidget(about_btn);
 
-  auto* settings_btn = new LeftPanelButton(kFontIconSettings, tr("Settings"));
+  auto* settings_btn = new LeftPanelButton(kFontElIconSetting, tr("Settings"));
   this->btn_group_->addButton(settings_btn, ButtonId::kSettingsButton);
   main_layout->addWidget(settings_btn);
 

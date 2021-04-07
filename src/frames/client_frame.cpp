@@ -29,7 +29,7 @@ void ClientFrame::initUi() {
   this->tool_bar_->setFixedHeight(48);
   auto* tool_bar_layout = new QHBoxLayout();
   tool_bar_layout->setContentsMargins(0, 0, 0, 0);
-  tool_bar_layout->setSpacing(0);
+  tool_bar_layout->setSpacing(12);
   this->tool_bar_->setLayout(tool_bar_layout);
   main_layout->addWidget(this->tool_bar_);
 
@@ -38,13 +38,13 @@ void ClientFrame::initUi() {
   tool_bar_layout->addWidget(this->title_label_);
 
   tool_bar_layout->addStretch();
-  this->connect_button_ = new FontIconButton(kFontIconCaretRight);
+  this->connect_button_ = new FontIconButton(kFontElIconCaretRight);
   tool_bar_layout->addWidget(this->connect_button_);
 
-  this->edit_button_ = new FontIconButton(kFontIconEditOutline);
+  this->edit_button_ = new FontIconButton(kFontElIconEditOutline);
   tool_bar_layout->addWidget(this->edit_button_);
 
-  this->options_button_ = new FontIconButton("");
+  this->options_button_ = new FontIconButton(kFontElIconMoreOutline);
   tool_bar_layout->addWidget(this->options_button_);
 
   auto* bottom_layout = new QHBoxLayout();
