@@ -6,6 +6,8 @@ set(SOURCE_FILES
     form_section.h
     form_section_title.cpp
     form_section_title.h
+    integer_line_edit.cpp
+    integer_line_edit.h
     left_panel_button.cpp
     left_panel_button.h
     round_font_button.cpp

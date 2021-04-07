@@ -9,6 +9,7 @@
 #include <QFrame>
 #include <QSpinBox>
 
+#include "widgets/integer_line_edit.h"
 #include "widgets/switch_button.h"
 
 namespace hebo {
@@ -36,7 +37,7 @@ class SettingsWindow : public QFrame {
 
   QComboBox* locale_box_{nullptr};
   SwitchButton* auto_update_button_{nullptr};
-  QSpinBox* retry_connection_box_{nullptr};
+  IntegerLineEdit* retry_connection_box_{nullptr};
   QComboBox* theme_box_{nullptr};
 
   QStringList locales_{};
