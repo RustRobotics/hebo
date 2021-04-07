@@ -1,0 +1,6 @@
+/** Used for FormSectionTitle class */
+
+QLabel {
+    font-size: 22px;
+    color: black;
+}

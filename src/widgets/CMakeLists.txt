@@ -1,5 +1,7 @@
 
 set(SOURCE_FILES
+    form_section_title.cpp
+    form_section_title.h
     left_panel_button.cpp
     left_panel_button.h
     round_font_button.cpp

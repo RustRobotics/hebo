@@ -8,6 +8,7 @@
 #include <QLabel>
 
 #include "base/random.h"
+#include "widgets/form_section_title.h"
 
 namespace hebo {
 namespace {
@@ -46,14 +47,14 @@ void ConnectionForm::initUi() {
 }
 
 void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
-  auto* title_label = new QLabel(tr("General"));
+  auto* title_label = new FormSectionTitle(tr("General"));
   main_layout->addWidget(title_label);
 
   auto* form_layout = new QFormLayout();
   form_layout->setHorizontalSpacing(24);
   form_layout->setVerticalSpacing(12);
   form_layout->setFormAlignment(Qt::AlignHCenter | Qt::AlignTop);
-  form_layout->setLabelAlignment(Qt::AlignRight);
+  form_layout->setLabelAlignment(Qt::AlignLeft);
   form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
   form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
   main_layout->addLayout(form_layout);
@@ -95,14 +96,14 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
 
 void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
   main_layout->addSpacing(24);
-  auto* title_label = new QLabel(tr("Advanced"));
+  auto* title_label = new FormSectionTitle(tr("Advanced"));
   main_layout->addWidget(title_label);
 
   auto* form_layout = new QFormLayout();
   form_layout->setHorizontalSpacing(24);
   form_layout->setVerticalSpacing(12);
   form_layout->setFormAlignment(Qt::AlignHCenter | Qt::AlignTop);
-  form_layout->setLabelAlignment(Qt::AlignRight);
+  form_layout->setLabelAlignment(Qt::AlignLeft);
   form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
   form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
   main_layout->addLayout(form_layout);
@@ -132,14 +133,14 @@ void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
 
 void ConnectionForm::initLastWillForm(QVBoxLayout* main_layout) {
   main_layout->addSpacing(24);
-  auto* title_label = new QLabel(tr("Last Will"));
+  auto* title_label = new FormSectionTitle(tr("Last Will"));
   main_layout->addWidget(title_label);
 
   auto* form_layout = new QFormLayout();
   form_layout->setHorizontalSpacing(24);
   form_layout->setVerticalSpacing(12);
   form_layout->setFormAlignment(Qt::AlignHCenter | Qt::AlignTop);
-  form_layout->setLabelAlignment(Qt::AlignRight);
+  form_layout->setLabelAlignment(Qt::AlignLeft);
   form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
   form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
   main_layout->addLayout(form_layout);
