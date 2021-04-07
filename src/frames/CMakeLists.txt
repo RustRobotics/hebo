@@ -7,8 +7,6 @@ set(SOURCES
 
     internal/connection_form.cpp
     internal/connection_form.h
-    internal/subscriptions_list_view.cpp
-    internal/subscriptions_list_view.h
 
     models/protocol_model.cpp
     models/protocol_model.h

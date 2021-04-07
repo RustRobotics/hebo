@@ -17,10 +17,11 @@ void ConnectionsWindow::initUi() {
   this->setWindowTitle(tr("Connections"));
 
   this->connections_list_view_ = new QListView();
+  this->connections_list_view_->setFixedWidth(260);
   this->addWidget(this->connections_list_view_);
   
-  auto* delegate = new ConnectionsDelegate(this);
-  this->connections_list_view_->setItemDelegate(delegate);
+//  auto* delegate = new ConnectionsDelegate(this);
+//  this->connections_list_view_->setItemDelegate(delegate);
 
   this->stacked_widget_ = new QStackedWidget();
   this->addWidget(this->stacked_widget_);

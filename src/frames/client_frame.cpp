@@ -4,7 +4,7 @@
 
 #include "frames/client_frame.h"
 
-#include <QLabel>
+#include <QHBoxLayout>
 #include <QVBoxLayout>
 
 namespace hebo {
@@ -18,9 +18,33 @@ ClientFrame::ClientFrame(const QString& client_id, QWidget* parent)
 
 void ClientFrame::initUi() {
   auto* main_layout = new QVBoxLayout();
+  main_layout->setContentsMargins(0, 0, 0, 0);
+  main_layout->setSpacing(0);
   this->setLayout(main_layout);
 
-  main_layout->addWidget(new QLabel(this->client_id_));
+  this->tool_bar_ = new QFrame();
+  this->tool_bar_->setFixedHeight(48);
+  auto* tool_bar_layout = new QHBoxLayout();
+  this->tool_bar_->setLayout(tool_bar_layout);
+
+  auto* bottom_layout = new QHBoxLayout();
+  main_layout->addLayout(bottom_layout);
+
+  this->subscriptions_list_view_ = new QListView();
+  this->subscriptions_list_view_->setFixedWidth(230);
+  bottom_layout->addWidget(this->subscriptions_list_view_);
+
+  auto* messages_layout = new QVBoxLayout();
+  bottom_layout->addLayout(messages_layout);
+
+  this->messages_edit_ = new QPlainTextEdit();
+  messages_layout->addWidget(this->messages_edit_);
+
+  this->topic_edit_ = new QLineEdit();
+  messages_layout->addWidget(this->topic_edit_);
+
+  this->payload_edit_ = new QTextEdit();
+  messages_layout->addWidget(this->payload_edit_);
 }
 
 void ClientFrame::initSignals() {
