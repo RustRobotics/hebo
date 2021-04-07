@@ -16,6 +16,7 @@ void NewConnectionWindow::initUi() {
   this->form_ = new ConnectionForm();
   this->form_->regenerateClientId();
   this->setWidget(this->form_);
+  this->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 }
 
 void NewConnectionWindow::initSignals() {
