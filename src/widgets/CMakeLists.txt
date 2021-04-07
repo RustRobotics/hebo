@@ -1,5 +1,7 @@
 
 set(SOURCE_FILES
+    form_section.cpp
+    form_section.h
     form_section_title.cpp
     form_section_title.h
     left_panel_button.cpp

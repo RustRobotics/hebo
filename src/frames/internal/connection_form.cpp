@@ -8,6 +8,7 @@
 #include <QLabel>
 
 #include "base/random.h"
+#include "widgets/form_section.h"
 #include "widgets/form_section_title.h"
 
 namespace hebo {
@@ -57,7 +58,9 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   form_layout->setLabelAlignment(Qt::AlignLeft);
   form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
   form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
-  main_layout->addLayout(form_layout);
+  auto* form_section = new FormSection();
+  form_section->setLayout(form_layout);
+  main_layout->addWidget(form_section);
 
   this->name_edit_ = new QLineEdit();
   form_layout->addRow(new QLabel(tr("Name")), this->name_edit_);
@@ -106,7 +109,9 @@ void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
   form_layout->setLabelAlignment(Qt::AlignLeft);
   form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
   form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
-  main_layout->addLayout(form_layout);
+  auto* form_section = new FormSection();
+  form_section->setLayout(form_layout);
+  main_layout->addWidget(form_section);
 
   this->timeout_box_ = new QSpinBox();
   this->timeout_box_->setRange(0, kMaxConnectTimeout);
@@ -143,7 +148,9 @@ void ConnectionForm::initLastWillForm(QVBoxLayout* main_layout) {
   form_layout->setLabelAlignment(Qt::AlignLeft);
   form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
   form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
-  main_layout->addLayout(form_layout);
+  auto* form_section = new FormSection();
+  form_section->setLayout(form_layout);
+  main_layout->addWidget(form_section);
 
   this->last_will_topic_edit_ = new QLineEdit();
   form_layout->addRow(new QLabel(tr("Last-Will Topic")), this->last_will_topic_edit_);
