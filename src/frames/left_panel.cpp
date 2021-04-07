@@ -6,12 +6,14 @@
 
 #include <QVBoxLayout>
 
+#include "base/file.h"
 #include "resources/fonts/fonts.h"
+#include "resources/styles/styles.h"
 #include "widgets/left_panel_button.h"
 
 namespace hebo {
 
-LeftPanel::LeftPanel(QWidget* parent) : QWidget(parent) {
+LeftPanel::LeftPanel(QWidget* parent) : QFrame(parent) {
   this->initUi();
   this->initSignals();
 }
@@ -55,6 +57,9 @@ void LeftPanel::initUi() {
   auto* settings_btn = new LeftPanelButton(kFontIconSettings, tr("Settings"));
   this->btn_group_->addButton(settings_btn, ButtonId::kSettingsButton);
   main_layout->addWidget(settings_btn);
+
+  this->setObjectName("left-panel");
+  this->setStyleSheet(readTextFile(kStyleLeftPanel));
 }
 
 void LeftPanel::initSignals() {

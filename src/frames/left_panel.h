@@ -6,11 +6,11 @@
 #define HEBO_SRC_FRAMES_LEFT_PANEL_H_
 
 #include <QButtonGroup>
-#include <QWidget>
+#include <QFrame>
 
 namespace hebo {
 
-class LeftPanel : public QWidget {
+class LeftPanel : public QFrame {
   Q_OBJECT
   Q_PROPERTY(ButtonId button READ activeButton WRITE setActiveButton NOTIFY activeChanged)
  public:
