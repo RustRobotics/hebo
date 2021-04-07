@@ -28,7 +28,11 @@ void LeftPanelButton::paintEvent(QPaintEvent* event) {
 
   QPen pen(painter.pen());
   if (!this->isChecked()) {
-    painter.fillRect(this->rect(), QColor("#404142"));
+   if (this->underMouse()) {
+     painter.fillRect(this->rect(), QColor("#5e5f60"));
+   } else {
+     painter.fillRect(this->rect(), QColor("#404142"));
+   }
   } else {
     painter.fillRect(this->rect(), QColor("#222222"));
     pen.setColor(Qt::white);
