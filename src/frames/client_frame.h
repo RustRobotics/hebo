@@ -24,6 +24,9 @@ class ClientFrame : public QFrame {
 
   [[nodiscard]] const QString& clientId() const { return this->client_id_; }
 
+ protected:
+  void resizeEvent(QResizeEvent* event) override;
+
  private slots:
   void onClientStateChanged(ConnectionState state);
 
@@ -40,6 +43,7 @@ class ClientFrame : public QFrame {
   FontIconButton* disconnect_button_{nullptr};
   FontIconButton* edit_button_{nullptr};
   FontIconButton* options_button_{nullptr};
+  FontIconButton* publish_button_{nullptr};
 
   QListView* subscriptions_list_view_{nullptr};
   QPlainTextEdit* messages_edit_{nullptr};

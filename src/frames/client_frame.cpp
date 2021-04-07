@@ -5,6 +5,7 @@
 #include "frames/client_frame.h"
 
 #include <QHBoxLayout>
+#include <QResizeEvent>
 #include <QVBoxLayout>
 
 #include "resources/fonts/fonts.h"
@@ -70,10 +71,15 @@ void ClientFrame::initUi() {
   messages_layout->addWidget(this->messages_edit_);
 
   this->topic_edit_ = new QLineEdit();
+  this->topic_edit_->setPlaceholderText(tr("Topic"));
   messages_layout->addWidget(this->topic_edit_);
 
   this->payload_edit_ = new QTextEdit();
+  this->payload_edit_->setFixedHeight(110);
   messages_layout->addWidget(this->payload_edit_);
+
+  this->publish_button_ = new FontIconButton(kFontElIconPosition, this);
+  this->publish_button_->show();
 }
 
 void ClientFrame::initSignals() {
@@ -106,6 +112,12 @@ void ClientFrame::onClientStateChanged(ConnectionState state) {
       break;
     }
   }
+}
+
+void ClientFrame::resizeEvent(QResizeEvent* event) {
+  QWidget::resizeEvent(event);
+  this->publish_button_->move(event->size().width() - 72,
+                              event->size().height() - 36);
 }
 
 }  // namespace hebo
