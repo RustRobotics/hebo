@@ -4,6 +4,11 @@
 
 #include "frames/delegates/connections_delegate.h"
 
+#include <QPainter>
+#include <QStyleOptionViewItem>
+
+#include "mqtt/connections_model.h"
+
 namespace hebo {
 
 ConnectionsDelegate::ConnectionsDelegate(QObject* parent) : QStyledItemDelegate(parent) {
@@ -12,7 +17,8 @@ ConnectionsDelegate::ConnectionsDelegate(QObject* parent) : QStyledItemDelegate(
 
 void ConnectionsDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option,
                                 const QModelIndex& index) const {
-  QStyledItemDelegate::paint(painter, option, index);
+  const QString description = index.data(ConnectionsModel::kDescriptionRole).toString();
+  painter->drawText(option.rect, description);
 }
 
 QSize ConnectionsDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const {

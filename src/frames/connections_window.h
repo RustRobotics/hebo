@@ -6,6 +6,7 @@
 #define HEBO_SRC_FRAMES_CONNECTIONS_WINDOW_H_
 
 #include <QSplitter>
+#include <QStackedWidget>
 
 #include "frames/client_frame.h"
 #include "frames/internal/connections_list_view.h"
@@ -24,12 +25,17 @@ class ConnectionsWindow : public QSplitter {
  public slots:
   void connectClient(const QString& client_id);
 
+  void showClientById(const QString& client_id);
+
  private:
   void initUi();
+  void initSignals();
 
   ConnectionsListView* connections_list_view_{nullptr};
-  ClientFrame* client_frame_{nullptr};
-  ConnectionsModel* model_{nullptr};
+  QStackedWidget* stacked_widget_{nullptr};
+
+  // Map of ClientID => ClientFrame
+  QMap<QString, ClientFrame*> clients_{};
 };
 
 }  // namespace hebo
