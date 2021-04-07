@@ -5,6 +5,7 @@
 #ifndef HEBO_SRC_WIDGETS_NUMBER_LINE_EDIT_H
 #define HEBO_SRC_WIDGETS_NUMBER_LINE_EDIT_H
 
+#include <QAction>
 #include <QIntValidator>
 #include <QLineEdit>
 
@@ -22,6 +23,8 @@ class IntegerLineEdit : public QLineEdit {
 
   [[nodiscard]] int value() const;
 
+  QSize sizeHint() const override;
+
  public slots:
   void setValue(int integer);
 
@@ -33,11 +36,17 @@ class IntegerLineEdit : public QLineEdit {
 
  private slots:
   void onTextChanged(const QString& text);
+  void onPlusClicked();
+  void onMinusClicked();
 
  private:
+  void initUi();
+  void initSignals();
   bool validateInteger(int integer);
 
   QIntValidator* validator_;
+  QAction* plus_action_{nullptr};
+  QAction* minus_action_{nullptr};
 };
 
 }  // namespace hebo

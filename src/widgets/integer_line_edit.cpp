@@ -8,6 +8,8 @@
 #include <QIntValidator>
 #include <QKeyEvent>
 
+#include "resources/images/images.h"
+
 namespace hebo {
 namespace {
 
@@ -19,9 +21,23 @@ constexpr const int kDefaultMax = 100;
 IntegerLineEdit::IntegerLineEdit(QWidget* parent)
   : QLineEdit(parent),
     validator_(new QIntValidator(kDefaultMin, kDefaultMax, this)) {
+  this->initUi();
+  this->initSignals();
+}
+
+void IntegerLineEdit::initUi() {
   this->setValidator(this->validator_);
+  this->plus_action_ = this->addAction(QIcon(kImageBlackPlus), QLineEdit::TrailingPosition);
+  this->minus_action_ = this->addAction(QIcon(kImageBlackMinus), QLineEdit::TrailingPosition);
+}
+
+void IntegerLineEdit::initSignals() {
   connect(this, &IntegerLineEdit::textChanged,
           this, &IntegerLineEdit::onTextChanged);
+  connect(this->plus_action_, &QAction::triggered,
+          this, &IntegerLineEdit::onPlusClicked);
+  connect(this->minus_action_, &QAction::triggered,
+          this, &IntegerLineEdit::onMinusClicked);
 }
 
 void IntegerLineEdit::setRange(int min, int max) {
@@ -45,6 +61,14 @@ void IntegerLineEdit::onTextChanged(const QString& text) {
   }
 }
 
+void IntegerLineEdit::onPlusClicked() {
+  this->setValue(this->value() + 1);
+}
+
+void IntegerLineEdit::onMinusClicked() {
+  this->setValue(this->value() - 1);
+}
+
 void IntegerLineEdit::keyPressEvent(QKeyEvent* event) {
   QLineEdit::keyPressEvent(event);
   switch (event->key()) {
@@ -63,6 +87,12 @@ void IntegerLineEdit::keyPressEvent(QKeyEvent* event) {
 
 bool IntegerLineEdit::validateInteger(int integer) {
   return integer >= this->validator_->bottom() && integer <= this->validator_->top();
+}
+
+QSize IntegerLineEdit::sizeHint() const {
+  const QSize default_size = QLineEdit::sizeHint();
+  // TODO(Shaohua): Size hint based on range of value.
+  return {108, default_size.height()};
 }
 
 }  // namespace hebo
