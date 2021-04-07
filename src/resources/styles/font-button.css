@@ -1,0 +1,12 @@
+/** Used by FontButton class */
+
+QPushButton {
+    font-size: 22px;
+    font-family:  element;
+    border-radius: 22px;
+    /*border: gray 1px solid;*/
+}
+
+QPushButton::pressed {
+    background-color: white;
+}

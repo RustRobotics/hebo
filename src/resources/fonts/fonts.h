@@ -23,6 +23,7 @@ constexpr const char* kFontIconNotebook = "\ue759";
 constexpr const char* kFontIconWarning = "\ue6c9";
 constexpr const char* kFontIconInfo = "\ue7a1";
 constexpr const char* kFontIconSettings = "\ue6ca";
+constexpr const char* kFontIconRefresh = "\ue6d0";
 
 }  // namespace hebo
 
