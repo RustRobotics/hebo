@@ -64,8 +64,8 @@ void SettingsWindow::initSignals() {
           this, &SettingsWindow::localeChanged);
   connect(this->auto_update_button_, &SwitchButton::toggled,
           this, &SettingsWindow::autoUpdateChanged);
-//  connect(this->retry_connection_box_, &IntegerLineEdit::valueChanged,
-//          this, &SettingsWindow::retryConnectionChanged);
+  connect(this->retry_connection_box_, QOverload<int>::of(&SpinBox::valueChanged),
+          this, &SettingsWindow::retryConnectionChanged);
   connect(this->theme_box_, &QComboBox::currentTextChanged,
           this, &SettingsWindow::themeChanged);
 }
