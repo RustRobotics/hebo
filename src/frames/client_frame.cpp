@@ -16,6 +16,7 @@ ClientFrame::ClientFrame(const QString& client_id, MqttClient* client, QWidget* 
     : QFrame(parent),
       client_id_(client_id),
       client_(client) {
+  Q_ASSERT(this->client_ != nullptr);
   this->initUi();
   this->initSignals();
 }
@@ -90,6 +91,8 @@ void ClientFrame::initSignals() {
           this->client_, &MqttClient::requestDisconnect);
   connect(this->client_, &MqttClient::stateChanged,
           this, &ClientFrame::onClientStateChanged);
+  connect(this->publish_button_, &FontIconButton::clicked,
+          this, &ClientFrame::onPublishButtonClicked);
 }
 
 void ClientFrame::onClientStateChanged(ConnectionState state) {
@@ -118,6 +121,17 @@ void ClientFrame::resizeEvent(QResizeEvent* event) {
   QWidget::resizeEvent(event);
   this->publish_button_->move(event->size().width() - 72,
                               event->size().height() - 36);
+}
+
+void ClientFrame::onPublishButtonClicked() {
+  const QString topic = this->topic_edit_->text();
+  if (topic.isEmpty()) {
+    return;
+  }
+  const QString payload = this->payload_edit_->toPlainText();
+  const QoS qos = QoS::AtMostOnce;
+  const bool retain = false;
+  this->client_->requestPublish(topic, payload.toUtf8(), qos, retain);
 }
 
 }  // namespace hebo

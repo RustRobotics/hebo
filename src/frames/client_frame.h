@@ -30,6 +30,8 @@ class ClientFrame : public QFrame {
  private slots:
   void onClientStateChanged(ConnectionState state);
 
+  void onPublishButtonClicked();
+
  private:
   void initUi();
   void initSignals();
