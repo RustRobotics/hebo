@@ -11,8 +11,7 @@ namespace hebo {
 MainWindow::MainWindow(QWidget* parent) : QWidget(parent) {
   this->initUi();
   this->initSignals();
-
-  this->switchWindowBydId(LeftPanel::kConnectionsButton);
+  this->left_panel_->setActiveButton(LeftPanel::kConnectionsButton);
 }
 
 void MainWindow::initUi() {

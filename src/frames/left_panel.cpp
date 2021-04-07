@@ -29,6 +29,7 @@ void LeftPanel::initUi() {
 
   auto* connections_btn = new LeftPanelButton(kFontIconConnection, tr("Connections"));
   this->btn_group_->addButton(connections_btn, ButtonId::kConnectionsButton);
+  connections_btn->setChecked(true);
   main_layout->addWidget(connections_btn);
 
   auto* new_connection_btn = new LeftPanelButton(kFontIconCirclePlus, tr("New"));
