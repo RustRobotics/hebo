@@ -4,6 +4,8 @@
 
 #include "frames/connections_window.h"
 
+#include "frames/delegates/connections_delegate.h"
+
 namespace hebo {
 
 ConnectionsWindow::ConnectionsWindow(QWidget* parent) : QSplitter(parent) {
@@ -14,15 +16,18 @@ ConnectionsWindow::ConnectionsWindow(QWidget* parent) : QSplitter(parent) {
 void ConnectionsWindow::initUi() {
   this->setWindowTitle(tr("Connections"));
 
-  this->connections_list_view_ = new ConnectionsListView();
+  this->connections_list_view_ = new QListView();
   this->addWidget(this->connections_list_view_);
+  
+  auto* delegate = new ConnectionsDelegate(this);
+  this->connections_list_view_->setItemDelegate(delegate);
 
   this->stacked_widget_ = new QStackedWidget();
   this->addWidget(this->stacked_widget_);
 }
 
 void ConnectionsWindow::setConnectionsModel(ConnectionsModel* model) {
-  this->connections_list_view_->setConnectionsModel(model);
+  this->connections_list_view_->setModel(model);
 }
 
 void ConnectionsWindow::connectClient(const QString& client_id) {
@@ -43,8 +48,14 @@ void ConnectionsWindow::showClientById(const QString& client_id) {
 }
 
 void ConnectionsWindow::initSignals() {
-  connect(this->connections_list_view_, &ConnectionsListView::rowClicked,
-          this, &ConnectionsWindow::showClientById);
+  connect(this->connections_list_view_, &QListView::clicked,
+          this, &ConnectionsWindow::onConnectionsClicked);
+}
+
+void ConnectionsWindow::onConnectionsClicked(const QModelIndex& index) {
+  const QString client_id = index.data(ConnectionsModel::kIdRole).toString();
+  Q_ASSERT(!client_id.isEmpty());
+  this->showClientById(client_id);
 }
 
 }  // namespace hebo
