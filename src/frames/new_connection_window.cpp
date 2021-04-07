@@ -13,7 +13,8 @@ NewConnectionWindow::NewConnectionWindow(QWidget* parent) : QScrollArea(parent) 
 
 void NewConnectionWindow::initUi() {
   this->setWindowTitle(tr("New Connection"));
-  this->form_ = new ConnectionForm(this);
+  this->form_ = new ConnectionForm();
+  this->form_->regenerateClientId();
   this->setWidget(this->form_);
 }
 

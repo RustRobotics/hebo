@@ -25,7 +25,6 @@ constexpr int kMaxKeepalive = 1 << 20;
 ConnectionForm::ConnectionForm(QWidget* parent) : QFrame(parent) {
   this->initUi();
   this->initSignals();
-  this->regenerateClientId();
 }
 
 void ConnectionForm::initUi() {
@@ -36,6 +35,7 @@ void ConnectionForm::initUi() {
   this->initAdvancedForm(main_layout);
   this->initLastWillForm(main_layout);
 
+  main_layout->addSpacing(24);
   auto* button_layout = new QHBoxLayout();
   this->reset_button_ = new QPushButton(tr("Reset"));
   button_layout->addWidget(this->reset_button_);
@@ -49,18 +49,24 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   auto* title_label = new QLabel(tr("General"));
   main_layout->addWidget(title_label);
 
-  auto* layout = new QFormLayout();
-  main_layout->addLayout(layout);
+  auto* form_layout = new QFormLayout();
+  form_layout->setHorizontalSpacing(24);
+  form_layout->setVerticalSpacing(12);
+  form_layout->setFormAlignment(Qt::AlignHCenter | Qt::AlignTop);
+  form_layout->setLabelAlignment(Qt::AlignRight);
+  form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
+  form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+  main_layout->addLayout(form_layout);
 
   this->name_edit_ = new QLineEdit();
-  layout->addRow(new QLabel(tr("Name")), this->name_edit_);
+  form_layout->addRow(new QLabel(tr("Name")), this->name_edit_);
 
   auto* client_id_layout = new QHBoxLayout();
   this->client_id_edit_ = new QLineEdit();
   this->random_client_id_button_ = new QPushButton("Refresh");
   client_id_layout->addWidget(this->client_id_edit_);
   client_id_layout->addWidget(this->random_client_id_button_);
-  layout->addRow(new QLabel(tr("Client ID")), client_id_layout);
+  form_layout->addRow(new QLabel(tr("Client ID")), client_id_layout);
 
   this->protocol_box_ = new QComboBox();
   this->protocol_model_ = new ProtocolModel(this);
@@ -70,73 +76,87 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   auto* host_layout = new QHBoxLayout();
   host_layout->addWidget(this->protocol_box_);
   host_layout->addWidget(this->hostname_edit_);
-  layout->addRow(new QLabel("Host"), host_layout);
+  form_layout->addRow(new QLabel("Host"), host_layout);
 
   this->port_box_ = new QSpinBox();
   this->port_box_->setRange(1, kMaxPort);
   this->port_box_->setValue(kDefaultPort);
-  layout->addRow(new QLabel("Port"), this->port_box_);
+  form_layout->addRow(new QLabel("Port"), this->port_box_);
 
   this->username_edit_ = new QLineEdit();
-  layout->addRow(new QLabel("Username"), this->username_edit_);
+  form_layout->addRow(new QLabel("Username"), this->username_edit_);
 
   this->password_edit_ = new QLineEdit();
-  layout->addRow(new QLabel("Password"), this->password_edit_);
+  form_layout->addRow(new QLabel("Password"), this->password_edit_);
 
   this->tls_switch_ = new SwitchButton();
-  layout->addRow(new QLabel("SSL/TLS"), this->tls_switch_);
+  form_layout->addRow(new QLabel("SSL/TLS"), this->tls_switch_);
 }
 
 void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
+  main_layout->addSpacing(24);
   auto* title_label = new QLabel(tr("Advanced"));
   main_layout->addWidget(title_label);
 
-  auto* layout = new QFormLayout();
-  main_layout->addLayout(layout);
+  auto* form_layout = new QFormLayout();
+  form_layout->setHorizontalSpacing(24);
+  form_layout->setVerticalSpacing(12);
+  form_layout->setFormAlignment(Qt::AlignHCenter | Qt::AlignTop);
+  form_layout->setLabelAlignment(Qt::AlignRight);
+  form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
+  form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+  main_layout->addLayout(form_layout);
 
   this->timeout_box_ = new QSpinBox();
   this->timeout_box_->setRange(0, kMaxConnectTimeout);
   this->timeout_box_->setValue(kDefaultConnectTimeout);
-  layout->addRow(new QLabel(tr("Connect Timeout(s)")), this->timeout_box_);
+  form_layout->addRow(new QLabel(tr("Connect Timeout(s)")), this->timeout_box_);
 
   this->keepalive_box_ = new QSpinBox();
   this->keepalive_box_->setRange(0, kMaxKeepalive);
   this->keepalive_box_->setValue(kDefaultKeepalive);
-  layout->addRow(new QLabel(tr("Keep Alive(s)")), this->keepalive_box_);
+  form_layout->addRow(new QLabel(tr("Keep Alive(s)")), this->keepalive_box_);
 
   this->clean_session_btn_ = new SwitchButton();
   this->clean_session_btn_->setChecked(true);
-  layout->addRow(new QLabel(tr("Clean Session")), this->clean_session_btn_);
+  form_layout->addRow(new QLabel(tr("Clean Session")), this->clean_session_btn_);
 
   this->auto_reconnect_btn_ = new SwitchButton();
-  layout->addRow(new QLabel(tr("Auto Reconnect")), this->auto_reconnect_btn_);
+  form_layout->addRow(new QLabel(tr("Auto Reconnect")), this->auto_reconnect_btn_);
 
   this->mqtt_version_box_ = new QComboBox();
   this->mqtt_version_model_ = new VersionModel();
   this->mqtt_version_box_->setModel(this->mqtt_version_model_);
-  layout->addRow(new QLabel("MQTT Version"), this->mqtt_version_box_);
+  form_layout->addRow(new QLabel("MQTT Version"), this->mqtt_version_box_);
 }
 
 void ConnectionForm::initLastWillForm(QVBoxLayout* main_layout) {
+  main_layout->addSpacing(24);
   auto* title_label = new QLabel(tr("Last Will"));
   main_layout->addWidget(title_label);
 
-  auto* layout = new QFormLayout();
-  main_layout->addLayout(layout);
+  auto* form_layout = new QFormLayout();
+  form_layout->setHorizontalSpacing(24);
+  form_layout->setVerticalSpacing(12);
+  form_layout->setFormAlignment(Qt::AlignHCenter | Qt::AlignTop);
+  form_layout->setLabelAlignment(Qt::AlignRight);
+  form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
+  form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+  main_layout->addLayout(form_layout);
 
   this->last_will_topic_edit_ = new QLineEdit();
-  layout->addRow(new QLabel(tr("Last-Will Topic")), this->last_will_topic_edit_);
+  form_layout->addRow(new QLabel(tr("Last-Will Topic")), this->last_will_topic_edit_);
 
   this->last_will_qos_box_ = new QComboBox();
   this->qos_model_ = new QoSModel();
   this->last_will_qos_box_->setModel(this->qos_model_);
-  layout->addRow(new QLabel(tr("Last-Will QoS")), this->last_will_qos_box_);
+  form_layout->addRow(new QLabel(tr("Last-Will QoS")), this->last_will_qos_box_);
 
   this->last_will_retain_button_ = new SwitchButton();
-  layout->addRow(new QLabel(tr("Last-Will Retain")), this->last_will_retain_button_);
+  form_layout->addRow(new QLabel(tr("Last-Will Retain")), this->last_will_retain_button_);
 
   this->last_will_payload_edit_ = new QTextEdit();
-  layout->addRow(new QLabel(tr("Last-Will Payload")), this->last_will_payload_edit_);
+  form_layout->addRow(new QLabel(tr("Last-Will Payload")), this->last_will_payload_edit_);
 }
 
 void ConnectionForm::initSignals() {

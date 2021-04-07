@@ -45,7 +45,6 @@ void LeftPanel::initUi() {
   main_layout->addWidget(bag_btn);
 
   auto* log_btn = new LeftPanelButton(kFontIconNotebook, tr("Log"));
-  log_btn->setToolTip(tr(""));
   this->btn_group_->addButton(log_btn, ButtonId::kLogButton);
   main_layout->addWidget(log_btn);
 

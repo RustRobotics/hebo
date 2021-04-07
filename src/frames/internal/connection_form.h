@@ -24,13 +24,15 @@ class ConnectionForm : public QFrame {
  public:
   explicit ConnectionForm(QWidget* parent = nullptr);
 
+ public slots:
+  void regenerateClientId();
+
  signals:
   void connectRequested(const ConnectConfig& config);
 
  private slots:
   void onResetButtonClicked();
   void onConnectButtonClicked();
-  void regenerateClientId();
 
  private:
   void initUi();
