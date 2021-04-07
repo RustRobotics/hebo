@@ -1,5 +1,7 @@
 
 set(SOURCE_FILES
+    left_panel_button.cpp
+    left_panel_button.h
     round_font_button.cpp
     round_font_button.h
     switch_button.cpp

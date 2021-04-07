@@ -7,7 +7,7 @@
 #include <QVBoxLayout>
 
 #include "resources/fonts/fonts.h"
-#include "widgets/round_font_button.h"
+#include "widgets/left_panel_button.h"
 
 namespace hebo {
 
@@ -19,39 +19,40 @@ LeftPanel::LeftPanel(QWidget* parent) : QWidget(parent) {
 void LeftPanel::initUi() {
   auto* main_layout = new QVBoxLayout();
   main_layout->setContentsMargins(0, 0, 0, 0);
-  main_layout->setSpacing(12);
+  main_layout->setSpacing(0);
   this->setLayout(main_layout);
 
   this->btn_group_ = new QButtonGroup(this);
   this->btn_group_->setExclusive(true);
 
-  auto* connections_btn = new RoundFontButton(kFontIconConnection);
+  auto* connections_btn = new LeftPanelButton(kFontIconConnection, tr("Connections"));
   this->btn_group_->addButton(connections_btn, ButtonId::kConnectionsButton);
   main_layout->addWidget(connections_btn);
 
-  auto* new_connection_btn = new RoundFontButton(kFontIconCirclePlus);
+  auto* new_connection_btn = new LeftPanelButton(kFontIconCirclePlus, tr("New"));
   this->btn_group_->addButton(new_connection_btn, ButtonId::kNewConnectionButton);
   main_layout->addWidget(new_connection_btn);
 
-  auto* benchmark_btn = new RoundFontButton(kFontIconStopwatch);
+  auto* benchmark_btn = new LeftPanelButton(kFontIconStopwatch, tr("Benchmark"));
   this->btn_group_->addButton(benchmark_btn, ButtonId::kBenchmarkButton);
   main_layout->addWidget(benchmark_btn);
 
-  auto* bag_btn = new RoundFontButton(kFontIconBox);
+  auto* bag_btn = new LeftPanelButton(kFontIconBox, tr("Bag"));
   this->btn_group_->addButton(bag_btn, ButtonId::kBagButton);
   main_layout->addWidget(bag_btn);
 
-  auto* log_btn = new RoundFontButton(kFontIconNotebook);
+  auto* log_btn = new LeftPanelButton(kFontIconNotebook, tr("Log"));
+  log_btn->setToolTip(tr(""));
   this->btn_group_->addButton(log_btn, ButtonId::kLogButton);
   main_layout->addWidget(log_btn);
 
   main_layout->addStretch();
 
-  auto* about_btn = new RoundFontButton(kFontIconWarning);
+  auto* about_btn = new LeftPanelButton(kFontIconWarning, tr("About"));
   this->btn_group_->addButton(about_btn, ButtonId::kAboutButton);
   main_layout->addWidget(about_btn);
 
-  auto* settings_btn = new RoundFontButton(kFontIconSettings);
+  auto* settings_btn = new LeftPanelButton(kFontIconSettings, tr("Settings"));
   this->btn_group_->addButton(settings_btn, ButtonId::kSettingsButton);
   main_layout->addWidget(settings_btn);
 }
