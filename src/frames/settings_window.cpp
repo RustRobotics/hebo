@@ -4,7 +4,7 @@
 
 #include "frames/settings_window.h"
 
-#include <QGridLayout>
+#include <QFormLayout>
 #include <QLabel>
 #include <QVBoxLayout>
 
@@ -23,31 +23,32 @@ SettingsWindow::SettingsWindow(QWidget* parent) : QFrame(parent) {
 void SettingsWindow::initUi() {
   this->setWindowTitle(tr("Settings"));
   auto* main_layout = new QVBoxLayout();
+  main_layout->setContentsMargins(0, 0, 108, 0);
   this->setLayout(main_layout);
   main_layout->addSpacing(32);
 
-  auto* grid_layout = new QGridLayout();
-  grid_layout->setHorizontalSpacing(16);
-  grid_layout->setVerticalSpacing(24);
-  main_layout->addLayout(grid_layout);
+  auto* form_layout = new QFormLayout();
+  form_layout->setHorizontalSpacing(24);
+  form_layout->setVerticalSpacing(12);
+  form_layout->setFormAlignment(Qt::AlignHCenter | Qt::AlignTop);
+  form_layout->setLabelAlignment(Qt::AlignRight);
+  form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
+  form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+  main_layout->addLayout(form_layout);
   main_layout->addStretch();
 
-  grid_layout->addWidget(new QLabel(tr("Language")), 0, 0, Qt::AlignRight);
   this->locale_box_ = new QComboBox();
   this->locales_ << "en_US" << "zh_CN";
   this->locale_box_->addItems({"English", "简体中文"});
-  grid_layout->addWidget(this->locale_box_, 0, 1, Qt::AlignLeft);
+  form_layout->addRow(new QLabel(tr("Language")), this->locale_box_);
 
-  grid_layout->addWidget(new QLabel(tr("Auto check update")), 1, 0, Qt::AlignRight);
   this->auto_update_button_ = new SwitchButton();
-  grid_layout->addWidget(this->auto_update_button_, 1, 1, Qt::AlignLeft);
+  form_layout->addRow(new QLabel(tr("Auto check update")), this->auto_update_button_);
 
-  grid_layout->addWidget(new QLabel(tr("Max retry Connections")), 2, 0, Qt::AlignRight);
   this->retry_connection_box_ = new QSpinBox();
   this->retry_connection_box_->setRange(0, kRetryConnectionsMax);
-  grid_layout->addWidget(this->retry_connection_box_, 2, 1, Qt::AlignLeft);
+  form_layout->addRow(new QLabel(tr("Max retry Connections")), this->retry_connection_box_);
 
-  grid_layout->addWidget(new QLabel(tr("Theme")), 3, 0, Qt::AlignRight);
   this->theme_box_ = new QComboBox();
   this->themes_ << "light" << "dark" << "night";
   this->theme_box_->addItems({
@@ -55,7 +56,7 @@ void SettingsWindow::initUi() {
     tr("Dark"),
     tr("Night")
   });
-  grid_layout->addWidget(this->theme_box_, 3, 1, Qt::AlignLeft);
+  form_layout->addRow(new QLabel(tr("Theme")), this->theme_box_);
 }
 
 void SettingsWindow::initSignals() {

@@ -26,12 +26,10 @@ void ConnectionsWindow::setConnectionsModel(ConnectionsModel* model) {
 }
 
 void ConnectionsWindow::connectClient(const QString& client_id) {
-  qDebug() << client_id;
   this->showClientById(client_id);
 }
 
 void ConnectionsWindow::showClientById(const QString& client_id) {
-  qDebug() << __func__ << client_id;
   if (!this->clients_.contains(client_id)) {
     auto* client_frame = new ClientFrame(client_id);
     client_frame->show();
