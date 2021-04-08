@@ -1,5 +1,8 @@
 
 set(SOURCE_FILES
+    models/color_palette_model.cpp
+    models/color_palette_model.h
+
     color_channel_line_edit.cpp
     color_channel_line_edit.h
     color_label.cpp
