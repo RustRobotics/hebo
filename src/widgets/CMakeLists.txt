@@ -1,5 +1,7 @@
 
 set(SOURCE_FILES
+    color_channel_line_edit.cpp
+    color_channel_line_edit.h
     font_icon_button.cpp
     font_icon_button.h
     form_section.cpp
