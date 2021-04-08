@@ -8,6 +8,7 @@
 namespace hebo {
 
 constexpr const char* kStyleAboutWindow = ":/styles/about-window.css";
+constexpr const char* kStyleColorLineEdit = ":/styles/color-line-edit.css";
 constexpr const char* kStyleFontButton = ":/styles/font-button.css";
 constexpr const char* kStyleFormSection = ":/styles/form-section.css";
 constexpr const char* kStyleFormSectionTitle = ":/styles/form-section-title.css";

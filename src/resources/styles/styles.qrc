@@ -2,6 +2,7 @@
 <RCC version="1.0">
   <qresource prefix="/styles">
     <file>about-window.css</file>
+    <file>color-line-edit.css</file>
     <file>font-button.css</file>
     <file>form-section.css</file>
     <file>form-section-title.css</file>

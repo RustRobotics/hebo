@@ -1,0 +1,15 @@
+/** Used for NumberLineEdit, ColorLineEdit and ColorChannelLineEdit **/
+
+QLineEdit {
+    /*background-color: rgb(202, 202, 227);*/
+    border: 1px solid #595b5c;
+    border-radius: 4px;
+    padding: 4px 2px 3px 2px;
+    /*selection-background-color: darkgray;*/
+    font-size: 11px;
+    color: #292b2c;
+}
+
+QLineEdit:focus {
+    /*background-color: rgb(192, 192, 255);*/
+}
