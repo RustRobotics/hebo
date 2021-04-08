@@ -7,6 +7,8 @@ set(SOURCES
     delegates/software_license_delegate.cpp
     delegates/software_license_delegate.h
 
+    internal/color_chooser_window.cpp
+    internal/color_chooser_window.h
     internal/connection_form.cpp
     internal/connection_form.h
 
