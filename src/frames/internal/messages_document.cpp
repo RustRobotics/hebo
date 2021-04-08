@@ -36,16 +36,32 @@ void MessagesDocument::onRowsInserted(const QModelIndex& index, int first, int l
     QTextCursor cursor(this);
     cursor.movePosition(QTextCursor::End);
     auto block_fmt = cursor.blockFormat();
-    block_fmt.setAlignment(Qt::AlignLeft | Qt::AlignTop);
-    block_fmt.setBackground(msg.is_publish ? this->pub_bg_color_ : this->sub_bg_color_);
-    cursor.setBlockFormat(block_fmt);
+    if (msg.is_publish) {
+      block_fmt.setAlignment(Qt::AlignLeft);
+      block_fmt.setBackground(this->pub_bg_color_);
+      block_fmt.setLeftMargin(100);
+    } else {
+      block_fmt.setAlignment(Qt::AlignLeft);
+      block_fmt.setBackground(this->sub_bg_color_);
+    }
+    QTextCharFormat char_fmt(cursor.charFormat());
 
     const QString header = QString("Topic: %1  QoS: %2\n")
         .arg(msg.topic)
         .arg(static_cast<int>(msg.qos));
+//    block_fmt.setLineHeight(150, QTextBlockFormat::ProportionalHeight);
+    cursor.setBlockFormat(block_fmt);
+    char_fmt.setFontPointSize(12);
+    cursor.setCharFormat(char_fmt);
     cursor.insertText(header);
+
+//    block_fmt.setLineHeight(100, QTextBlockFormat::ProportionalHeight);
+//    cursor.setBlockFormat(block_fmt);
     cursor.insertText(QString::fromUtf8(msg.payload));
+
     const QString ts = msg.timestamp.toString();
+    char_fmt.setFontPointSize(9);
+    cursor.setCharFormat(char_fmt);
     cursor.insertText("\n");
     cursor.insertText(ts);
 

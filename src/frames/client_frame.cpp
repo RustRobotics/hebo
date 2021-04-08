@@ -74,6 +74,7 @@ void ClientFrame::initUi() {
   auto* doc = new MessagesDocument(this->client_->messages(), this);
   this->messages_edit_->setDocument(doc);
   this->messages_edit_->setContentsMargins(0, 0, 0, 0);
+  this->messages_edit_->setReadOnly(true);
   messages_layout->addWidget(this->messages_edit_);
 
   this->topic_edit_ = new QLineEdit();
