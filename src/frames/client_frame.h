@@ -12,6 +12,7 @@
 #include <QPlainTextEdit>
 #include <QTextEdit>
 
+#include "frames/internal/new_subscription_window.h"
 #include "mqtt/mqtt_client.h"
 #include "widgets/font_icon_button.h"
 
@@ -32,6 +33,8 @@ class ClientFrame : public QFrame {
 
   void onPublishButtonClicked();
 
+  void onSubscribeButtonClicked();
+
  private:
   void initUi();
   void initSignals();
@@ -47,7 +50,10 @@ class ClientFrame : public QFrame {
   FontIconButton* options_button_{nullptr};
   FontIconButton* publish_button_{nullptr};
 
+  NewSubscriptionWindow* new_subscription_window_{nullptr};
+  QPushButton* subscribe_button_{nullptr};
   QListView* subscriptions_list_view_{nullptr};
+
   QTextEdit* messages_edit_{nullptr};
   QLineEdit* topic_edit_{nullptr};
   QPlainTextEdit* payload_edit_{nullptr};

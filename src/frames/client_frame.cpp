@@ -60,10 +60,19 @@ void ClientFrame::initUi() {
   bottom_layout->setSpacing(0);
   main_layout->addLayout(bottom_layout);
 
+  auto* subscribe_layout = new QVBoxLayout();
+  subscribe_layout->setSpacing(0);
+  subscribe_layout->setContentsMargins(0, 0, 0, 0);
+  bottom_layout->addLayout(subscribe_layout);
+
+  this->new_subscription_window_ = new NewSubscriptionWindow();
+
+  this->subscribe_button_ = new QPushButton(tr("Subscribe"));
+  subscribe_layout->addWidget(this->subscribe_button_);
   this->subscriptions_list_view_ = new QListView();
   this->subscriptions_list_view_->setFixedWidth(230);
-  bottom_layout->addWidget(this->subscriptions_list_view_);
   this->subscriptions_list_view_->setModel(this->client_->subscriptions());
+  subscribe_layout->addWidget(this->subscriptions_list_view_);
 
   auto* messages_layout = new QVBoxLayout();
   messages_layout->setContentsMargins(0, 0, 0, 0);
@@ -94,6 +103,12 @@ void ClientFrame::initUi() {
 
 void ClientFrame::initSignals() {
   Q_ASSERT(this->client_ != nullptr);
+
+  connect(this->new_subscription_window_, &NewSubscriptionWindow::destroyed,
+          this->new_subscription_window_, &NewSubscriptionWindow::deleteLater);
+
+  connect(this->subscribe_button_, &QPushButton::clicked,
+          this, &ClientFrame::onSubscribeButtonClicked);
   connect(this->connect_button_, &FontIconButton::clicked,
           this->client_, &MqttClient::requestConnect);
   connect(this->disconnect_button_, &FontIconButton::clicked,
@@ -144,6 +159,10 @@ void ClientFrame::onPublishButtonClicked() {
   const QoS qos = QoS::AtMostOnce;
   const bool retain = false;
   this->client_->requestPublish(topic, payload.toUtf8(), qos, retain);
+}
+
+void ClientFrame::onSubscribeButtonClicked() {
+  this->new_subscription_window_->show();
 }
 
 }  // namespace hebo

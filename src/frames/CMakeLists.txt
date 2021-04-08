@@ -13,6 +13,8 @@ set(SOURCES
     internal/connection_form.h
     internal/messages_document.cpp
     internal/messages_document.h
+    internal/new_subscription_window.cpp
+    internal/new_subscription_window.h
 
     models/protocol_model.cpp
     models/protocol_model.h
