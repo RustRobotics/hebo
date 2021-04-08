@@ -1,5 +1,8 @@
 
 set(SOURCE_FILES
+    delegates/color_palette_delegate.cpp
+    delegates/color_palette_delegate.h
+
     models/color_palette_model.cpp
     models/color_palette_model.h
 
