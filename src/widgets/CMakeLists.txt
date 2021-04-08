@@ -6,6 +6,8 @@ set(SOURCE_FILES
     color_label.h
     color_line_edit.cpp
     color_line_edit.h
+    color_palette_list_view.cpp
+    color_palette_list_view.h
     color_validator.cpp
     color_validator.h
     font_icon_button.cpp
