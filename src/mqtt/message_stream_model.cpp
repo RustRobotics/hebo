@@ -31,10 +31,12 @@ QVariant MessageStreamModel::data(const QModelIndex& index, int role) const {
   const auto& msg = this->messages_.at(index.row());
   switch (role) {
     case kTopicRole: { return msg.topic; }
+    case kTopicLengthRole: { return msg.topic.length(); }
     case kQoSRole: { return static_cast<int>(msg.qos); }
     case kIsPublishRole: { return msg.is_publish; }
     case kTimestampRole: { return msg.timestamp; }
     case kPayloadRole: { return msg.payload; }
+    case kPayloadLengthRole: { return msg.payload.length(); }
     default: { return {}; }
   }
 }

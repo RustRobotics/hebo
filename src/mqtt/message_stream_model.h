@@ -26,10 +26,12 @@ class MessageStreamModel : public QAbstractListModel {
  public:
   enum MessageRole : int32_t {
     kTopicRole = Qt::UserRole + 1,
+    kTopicLengthRole,
     kQoSRole,
     kIsPublishRole,
     kTimestampRole,
     kPayloadRole,
+    kPayloadLengthRole,
   };
   Q_ENUM(MessageRole);
 

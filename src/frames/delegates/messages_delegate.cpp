@@ -24,7 +24,7 @@ void MessagesDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opti
   const QoS qos = index.data(MessageStreamModel::kQoSRole).value<QoS>();
   const bool is_publish = index.data(MessageStreamModel::kIsPublishRole).toBool();
   const auto timestamp = index.data(MessageStreamModel::kTimestampRole).value<QDateTime>();
-  const QByteArray payload = index.data(MessageStreamModel::kPayloadRole).toByteArray();
+  const QByteArray payload_bytes = index.data(MessageStreamModel::kPayloadRole).toByteArray();
 
   QRect rect{option.rect};
   painter->fillRect(rect, is_publish ? this->pub_bg_color_ : this->sub_bg_color_);
@@ -44,14 +44,23 @@ void MessagesDelegate::paint(QPainter* painter, const QStyleOptionViewItem& opti
 
   const QRect payload_rect{bounding_rect.bottomLeft(),
                            QSize{rect.width(), rect.height() - bounding_rect.height()}};
+  const QString payload = QString::fromUtf8(payload_bytes);
   painter->drawText(payload_rect, kTextFlag, payload);
 
   const QString ts = timestamp.toString();
-  painter->drawText(rect, ts);
+  const QRect ts_rect{payload_rect.bottomLeft(),
+                      QSize{rect.width(), 16}};
+  painter->drawText(ts_rect, kTextFlag, ts);
 }
 
 QSize MessagesDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const {
-  return QStyledItemDelegate::sizeHint(option, index);
+  const int topic_length = index.data(MessageStreamModel::kTopicLengthRole).toInt();
+  const int payload_length = index.data(MessageStreamModel::kPayloadLengthRole).toInt();
+  const QSize default_size = QStyledItemDelegate::sizeHint(option, index);
+
+  const int height = topic_length * 3 + payload_length * 2;
+  qDebug() << "height:" << height;
+  return {default_size.width(), height};
 }
 
 }  // namespace hebo
