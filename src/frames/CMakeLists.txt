@@ -11,6 +11,8 @@ set(SOURCES
     internal/color_chooser_window.h
     internal/connection_form.cpp
     internal/connection_form.h
+    internal/messages_document.cpp
+    internal/messages_document.h
 
     models/protocol_model.cpp
     models/protocol_model.h

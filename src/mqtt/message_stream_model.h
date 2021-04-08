@@ -43,6 +43,14 @@ class MessageStreamModel : public QAbstractListModel {
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
+  bool row(int row, MqttMessage& msg) const {
+    if (row >= 0 && row < this->messages_.length()) {
+      msg = this->messages_.at(row);
+      return true;
+    }
+    return false;
+  }
+
  public slots:
   void addMessage(const MqttMessage& message);
 

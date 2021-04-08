@@ -9,6 +9,7 @@
 #include <QVBoxLayout>
 
 #include "frames/delegates/messages_delegate.h"
+#include "frames/internal/messages_document.h"
 #include "resources/fonts/fonts.h"
 
 namespace hebo {
@@ -69,12 +70,11 @@ void ClientFrame::initUi() {
   messages_layout->setSpacing(0);
   bottom_layout->addLayout(messages_layout);
 
-  this->messages_list_view_ = new QListView();
-  this->messages_list_view_->setSpacing(12);
-  auto* messages_delegate = new MessagesDelegate(this);
-  this->messages_list_view_->setItemDelegate(messages_delegate);
-  this->messages_list_view_->setModel(this->client_->messages());
-  messages_layout->addWidget(this->messages_list_view_);
+  this->messages_edit_ = new QTextEdit();
+  auto* doc = new MessagesDocument(this->client_->messages(), this);
+  this->messages_edit_->setDocument(doc);
+  this->messages_edit_->setContentsMargins(0, 0, 0, 0);
+  messages_layout->addWidget(this->messages_edit_);
 
   this->topic_edit_ = new QLineEdit();
   this->topic_edit_->setPlaceholderText(tr("Topic"));
