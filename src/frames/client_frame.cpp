@@ -70,6 +70,7 @@ void ClientFrame::initUi() {
   bottom_layout->addLayout(messages_layout);
 
   this->messages_list_view_ = new QListView();
+  this->messages_list_view_->setSpacing(12);
   auto* messages_delegate = new MessagesDelegate(this);
   this->messages_list_view_->setItemDelegate(messages_delegate);
   this->messages_list_view_->setModel(this->client_->messages());
@@ -79,11 +80,14 @@ void ClientFrame::initUi() {
   this->topic_edit_->setPlaceholderText(tr("Topic"));
   messages_layout->addWidget(this->topic_edit_);
 
-  this->payload_edit_ = new QTextEdit();
+  this->payload_edit_ = new QPlainTextEdit();
   this->payload_edit_->setFixedHeight(110);
+  this->payload_edit_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  this->payload_edit_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   messages_layout->addWidget(this->payload_edit_);
 
   this->publish_button_ = new FontIconButton(kFontElIconPosition, this);
+  this->publish_button_->setFixedSize(20, 20);
   this->publish_button_->show();
 }
 
@@ -123,11 +127,14 @@ void ClientFrame::onClientStateChanged(ConnectionState state) {
 
 void ClientFrame::resizeEvent(QResizeEvent* event) {
   QWidget::resizeEvent(event);
-  this->publish_button_->move(event->size().width() - 72,
+  this->publish_button_->move(event->size().width() - 36,
                               event->size().height() - 36);
 }
 
 void ClientFrame::onPublishButtonClicked() {
+  if (this->client_->state() != ConnectionState::ConnectionConnected) {
+    return;
+  }
   const QString topic = this->topic_edit_->text();
   if (topic.isEmpty()) {
     return;

@@ -23,6 +23,7 @@ class MessagesDelegate : public QStyledItemDelegate {
   QColor sub_bg_color_;
   QColor pub_font_color_;
   QColor sub_font_color_;
+  QFont font_;
 };
 
 }  // namespace hebo
