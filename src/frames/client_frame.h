@@ -48,7 +48,7 @@ class ClientFrame : public QFrame {
   FontIconButton* publish_button_{nullptr};
 
   QListView* subscriptions_list_view_{nullptr};
-  QPlainTextEdit* messages_edit_{nullptr};
+  QListView* messages_list_view_{nullptr};
   QLineEdit* topic_edit_{nullptr};
   QTextEdit* payload_edit_{nullptr};
 };

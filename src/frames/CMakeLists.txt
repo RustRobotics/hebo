@@ -2,6 +2,8 @@
 set(SOURCES
     delegates/connections_delegate.cpp
     delegates/connections_delegate.h
+    delegates/messages_delegate.cpp
+    delegates/messages_delegate.h
     delegates/software_license_delegate.cpp
     delegates/software_license_delegate.h
 
