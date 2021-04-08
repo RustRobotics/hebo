@@ -60,12 +60,12 @@ bool SubscriptionModel::hasSubscription(const QString& topic) {
   return false;
 }
 
-bool SubscriptionModel::addSubscription(const QString& topic, int qos, const QString& color) {
+bool SubscriptionModel::addSubscription(const QString& topic, QoS qos, const QColor& color) {
   if (this->hasSubscription(topic)) {
     return false;
   }
   this->beginResetModel();
-  this->list_.append({topic, parseColor(color), static_cast<QoS>(qos)});
+  this->list_.append({topic, qos, color});
   this->endResetModel();
   return true;
 }

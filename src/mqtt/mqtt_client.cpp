@@ -64,9 +64,7 @@ void MqttClient::requestDisconnect() {
   emit this->internal_->requestDisconnect();
 }
 
-void MqttClient::requestSubscribe(const QString& topic, int qos, const QString& color) {
-  qDebug() << __func__ << topic;
-
+void MqttClient::requestSubscribe(const QString& topic, QoS qos, const QColor& color) {
   Q_ASSERT(this->state_ == ConnectionState::ConnectionConnected);
   if (this->state_ != ConnectionState::ConnectionConnected) {
     qWarning() << "Invalid state:" << this->state_;

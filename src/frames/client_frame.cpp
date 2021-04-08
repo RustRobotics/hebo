@@ -106,6 +106,8 @@ void ClientFrame::initSignals() {
 
   connect(this->new_subscription_window_, &NewSubscriptionWindow::destroyed,
           this->new_subscription_window_, &NewSubscriptionWindow::deleteLater);
+  connect(this->new_subscription_window_, &NewSubscriptionWindow::confirmed,
+          this, &ClientFrame::onNewSubscriptionWindowConfirmed);
 
   connect(this->subscribe_button_, &QPushButton::clicked,
           this, &ClientFrame::onSubscribeButtonClicked);
@@ -163,6 +165,14 @@ void ClientFrame::onPublishButtonClicked() {
 
 void ClientFrame::onSubscribeButtonClicked() {
   this->new_subscription_window_->show();
+}
+
+void ClientFrame::onNewSubscriptionWindowConfirmed() {
+  this->new_subscription_window_->hide();
+  const QString topic = this->new_subscription_window_->topic();
+  const QoS qos = this->new_subscription_window_->qos();
+  const QColor color = this->new_subscription_window_->color();
+  this->client_->requestSubscribe(topic, qos, color);
 }
 
 }  // namespace hebo

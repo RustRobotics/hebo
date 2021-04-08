@@ -35,6 +35,8 @@ class ClientFrame : public QFrame {
 
   void onSubscribeButtonClicked();
 
+  void onNewSubscriptionWindowConfirmed();
+
  private:
   void initUi();
   void initSignals();

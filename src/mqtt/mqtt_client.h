@@ -40,7 +40,7 @@ class MqttClient : public QObject {
  public slots:
   void requestConnect();
   void requestDisconnect();
-  void requestSubscribe(const QString& topic, int qos, const QString& color);
+  void requestSubscribe(const QString& topic, QoS qos, const QColor& color);
   void requestUnsubscribe(const QString& topic);
   void requestPublish(const QString& topic, const QByteArray& payload, QoS qos, bool retain);
 

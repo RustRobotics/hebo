@@ -14,8 +14,8 @@ namespace hebo {
 
 struct Subscription {
   QString topic{};
-  QColor color{};
   QoS qos{};
+  QColor color{};
 };
 using SubscriptionList = QVector<Subscription>;
 
@@ -39,7 +39,7 @@ class SubscriptionModel : public QAbstractListModel {
 
   bool hasSubscription(const QString& topic);
 
-  bool addSubscription(const QString& topic, int qos, const QString& color);
+  bool addSubscription(const QString& topic, QoS qos, const QColor& color);
 
   bool removeSubscription(const QString& topic);
 
