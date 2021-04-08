@@ -16,6 +16,8 @@ set(SOURCE_FILES
     color_palette_list_view.h
     color_validator.cpp
     color_validator.h
+    flat_button.cpp
+    flat_button.h
     font_icon_button.cpp
     font_icon_button.h
     form_section.cpp
