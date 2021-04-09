@@ -34,6 +34,10 @@ class NewSubscriptionWindow : public QDialog {
   void confirmed();
 
  private:
+  void onColorChooserButtonClicked();
+  void generateRandomColor();
+
+ private:
   void initUi();
   void initSignals();
 

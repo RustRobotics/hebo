@@ -7,6 +7,7 @@
 #include <QFormLayout>
 #include <QLabel>
 
+#include "base/color.h"
 #include "resources/fonts/fonts.h"
 #include "resources/misc/misc.h"
 
@@ -16,6 +17,7 @@ NewSubscriptionWindow::NewSubscriptionWindow(QWidget* parent) : QDialog(parent) 
   this->initUi();
   this->initSignals();
   this->setModal(true);
+  this->generateRandomColor();
 }
 
 void NewSubscriptionWindow::initUi() {
@@ -42,6 +44,7 @@ void NewSubscriptionWindow::initUi() {
   this->color_chooser_window_->setSolidColorPalette(palette);
   auto* color_layout = new QHBoxLayout();
   this->color_chooser_button_ = new ColorChooserButton();
+
   color_layout->addWidget(this->color_chooser_button_);
   this->refresh_color_button_ = new FontIconButton(kFontElIconRefresh);
   this->refresh_color_button_->setFixedSize(24, 24);
@@ -67,9 +70,21 @@ void NewSubscriptionWindow::initSignals() {
   connect(this->ok_button_, &QPushButton::clicked,
           this, &NewSubscriptionWindow::confirmed);
   connect(this->color_chooser_button_, &ColorChooserButton::clicked,
-          this->color_chooser_window_, &ColorChooserWindow::show);
+          this, &NewSubscriptionWindow::onColorChooserButtonClicked);
   connect(this->color_chooser_window_, &ColorChooserWindow::colorChanged,
           this->color_chooser_button_, &ColorChooserButton::setColor);
+  connect(this->refresh_color_button_, &FontIconButton::clicked,
+          this, &NewSubscriptionWindow::generateRandomColor);
+}
+
+void NewSubscriptionWindow::onColorChooserButtonClicked() {
+  this->color_chooser_window_->setColor(this->color_chooser_button_->color());
+  this->color_chooser_window_->show();
+}
+
+void NewSubscriptionWindow::generateRandomColor() {
+  const auto color = randomColor();
+  this->color_chooser_button_->setColor(color);
 }
 
 }  // namespace hebo
