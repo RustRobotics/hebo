@@ -18,6 +18,7 @@ namespace hebo {
 ColorChooserWindow::ColorChooserWindow(QWidget* parent) : QDialog(parent) {
   this->initUi();
   this->initSignals();
+  this->setModal(true);
 }
 
 void ColorChooserWindow::initUi() {
