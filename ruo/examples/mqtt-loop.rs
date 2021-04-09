@@ -17,7 +17,7 @@ fn on_connect(client: &mut Client) {
     let payload = std::include_str!("../src/client.rs");
     loop {
         count += 1;
-        if count == 200_000 {
+        if count == 100_000 {
             break;
         }
         log::info!("count: {}", count);
@@ -25,6 +25,7 @@ fn on_connect(client: &mut Client) {
             log::error!("got error: {:?}", err);
         }
     }
+    std::process::exit(0);
 }
 
 fn main() {
