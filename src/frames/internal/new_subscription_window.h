@@ -35,6 +35,7 @@ class NewSubscriptionWindow : public QDialog {
 
  private:
   void onColorChooserButtonClicked();
+
   void generateRandomColor();
 
  private:

@@ -4,27 +4,33 @@
 
 #include "frames/connections_window.h"
 
+#include <QHBoxLayout>
+
 #include "frames/delegates/connections_delegate.h"
 
 namespace hebo {
 
-ConnectionsWindow::ConnectionsWindow(QWidget* parent) : QSplitter(parent) {
+ConnectionsWindow::ConnectionsWindow(QWidget* parent) : QFrame(parent) {
   this->initUi();
   this->initSignals();
 }
 
 void ConnectionsWindow::initUi() {
   this->setWindowTitle(tr("Connections"));
+  auto* main_layout = new QHBoxLayout();
+  main_layout->setContentsMargins(0, 0, 0, 0);
+  main_layout->setSpacing(0);
+  this->setLayout(main_layout);
 
   this->connections_list_view_ = new QListView();
   this->connections_list_view_->setFixedWidth(260);
-  this->addWidget(this->connections_list_view_);
-  
+  this->connections_list_view_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  main_layout->addWidget(this->connections_list_view_);
 //  auto* delegate = new ConnectionsDelegate(this);
 //  this->connections_list_view_->setItemDelegate(delegate);
 
   this->stacked_widget_ = new QStackedWidget();
-  this->addWidget(this->stacked_widget_);
+  main_layout->addWidget(this->stacked_widget_);
 }
 
 void ConnectionsWindow::setConnectionsModel(ConnectionsModel* model) {

@@ -6,7 +6,7 @@
 #define HEBO_SRC_FRAMES_CONNECTIONS_WINDOW_H_
 
 #include <QListView>
-#include <QSplitter>
+#include <QFrame>
 #include <QStackedWidget>
 
 #include "frames/client_frame.h"
@@ -14,7 +14,7 @@
 
 namespace hebo {
 
-class ConnectionsWindow : public QSplitter {
+class ConnectionsWindow : public QFrame {
   Q_OBJECT
  public:
   explicit ConnectionsWindow(QWidget* parent = nullptr);
