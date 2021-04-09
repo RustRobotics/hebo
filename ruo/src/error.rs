@@ -7,7 +7,8 @@ use std::io;
 #[derive(Debug)]
 pub enum Error {
     IoError(io::Error),
-    CodecError(codec::Error),
+    DecodeError(codec::DecodeError),
+    EncodeError(codec::EncodeError),
     SendError,
 }
 
@@ -17,10 +18,14 @@ impl From<io::Error> for Error {
     }
 }
 
-impl From<codec::Error> for Error {
-    fn from(err: codec::Error) -> Self {
-        Error::CodecError(err)
+impl From<codec::EncodeError> for Error {
+    fn from(err: codec::EncodeError) -> Self {
+        Error::EncodeError(err)
     }
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
+impl From<codec::DecodeError> for Error {
+    fn from(err: codec::DecodeError) -> Self {
+        Error::DecodeError(err)
+    }
+}
