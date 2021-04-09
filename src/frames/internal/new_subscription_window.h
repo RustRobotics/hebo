@@ -10,8 +10,9 @@
 #include <QFrame>
 #include <QLineEdit>
 
+#include "frames/internal/color_chooser_window.h"
 #include "frames/models/qos_model.h"
-#include "widgets/color_line_edit.h"
+#include "widgets/color_chooser_button.h"
 #include "widgets/font_icon_button.h"
 
 namespace hebo {
@@ -26,7 +27,7 @@ class NewSubscriptionWindow : public QFrame {
     const auto index = this->qos_model_->index(this->qos_box_->currentIndex(), 0);
     return this->qos_model_->data(index, QoSModel::kIdRole).value<QoS>();
   }
-  [[nodiscard]] QColor color() const { return this->color_edit_->color(); }
+  [[nodiscard]] QColor color() const { return this->color_chooser_button_->color(); }
   [[nodiscard]] QString alias() const { return this->alias_edit_->text(); }
 
  signals:
@@ -39,7 +40,8 @@ class NewSubscriptionWindow : public QFrame {
   QLineEdit* topic_edit_{nullptr};
   QComboBox* qos_box_{nullptr};
   QoSModel* qos_model_{nullptr};
-  ColorLineEdit* color_edit_{nullptr};
+  ColorChooserWindow* color_chooser_window_{nullptr};
+  ColorChooserButton* color_chooser_button_{nullptr};
   FontIconButton* refresh_color_button_{nullptr};
   QLineEdit* alias_edit_{nullptr};
 

@@ -11,7 +11,7 @@ namespace hebo {
 
 class ColorChooserButton : public QWidget {
   Q_OBJECT
-  Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+  Q_PROPERTY(QColor color READ color WRITE setColor)
 
  public:
   explicit ColorChooserButton(QWidget* parent = nullptr);
@@ -22,7 +22,7 @@ class ColorChooserButton : public QWidget {
   void setColor(const QColor& color);
 
  signals:
-  void colorChanged(const QColor& color);
+  void clicked();
 
  protected:
   void paintEvent(QPaintEvent* event) override;
@@ -34,10 +34,6 @@ class ColorChooserButton : public QWidget {
   void leaveEvent(QEvent* event) override;
 
  private:
-  void initUi();
-
-  void initSignals();
-
   QColor color_;
 };
 

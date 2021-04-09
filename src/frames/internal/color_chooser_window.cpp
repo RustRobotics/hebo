@@ -15,9 +15,7 @@
 
 namespace hebo {
 
-ColorChooserWindow::ColorChooserWindow(QWidget* parent) : QWidget(parent) {
-  this->setWindowFlags(Qt::Popup);
-
+ColorChooserWindow::ColorChooserWindow(QWidget* parent) : QDialog(parent) {
   this->initUi();
   this->initSignals();
 }

@@ -13,8 +13,6 @@
 namespace hebo {
 
 ColorChooserButton::ColorChooserButton(QWidget* parent) : QWidget(parent) {
-  this->initUi();
-  this->initSignals();
   this->setFixedSize(48, 22);
   this->setMouseTracking(true);
 }
@@ -40,15 +38,7 @@ void ColorChooserButton::paintEvent(QPaintEvent* event) {
 
 void ColorChooserButton::mousePressEvent(QMouseEvent* event) {
   Q_UNUSED(event);
-  emit this->colorChanged(this->color_);
-}
-
-void ColorChooserButton::initUi() {
-
-}
-
-void ColorChooserButton::initSignals() {
-
+  emit this->clicked();
 }
 
 void ColorChooserButton::enterEvent(QEvent* event) {

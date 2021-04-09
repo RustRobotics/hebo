@@ -33,9 +33,10 @@ void NewSubscriptionWindow::initUi() {
   this->qos_box_->setModel(this->qos_model_);
   form_layout->addRow(new QLabel(tr("QoS")), this->qos_box_);
 
+  this->color_chooser_window_ = new ColorChooserWindow();
   auto* color_layout = new QHBoxLayout();
-  this->color_edit_ = new ColorLineEdit();
-  color_layout->addWidget(this->color_edit_);
+  this->color_chooser_button_ = new ColorChooserButton();
+  color_layout->addWidget(this->color_chooser_button_);
   this->refresh_color_button_ = new FontIconButton(kFontElIconRefresh);
   color_layout->addWidget(this->refresh_color_button_);
   form_layout->addRow(new QLabel(tr("Color")), color_layout);
@@ -57,6 +58,10 @@ void NewSubscriptionWindow::initSignals() {
           this, &NewSubscriptionWindow::hide);
   connect(this->ok_button_, &QPushButton::clicked,
           this, &NewSubscriptionWindow::confirmed);
+  connect(this->color_chooser_window_, &ColorChooserWindow::destroyed,
+          this->color_chooser_window_, &ColorChooserWindow::deleteLater);
+  connect(this->color_chooser_button_, &ColorChooserButton::clicked,
+          this->color_chooser_window_, &ColorChooserWindow::show);
 }
 
 }  // namespace hebo

@@ -6,7 +6,7 @@
 #define HEBO_SRC_FRAMES_COLOR_CHOOSER_WINDOW_H_
 
 #include <QStackedLayout>
-#include <QWidget>
+#include <QDialog>
 
 #include "formats/color_palette.h"
 #include "widgets/color_channel_line_edit.h"
@@ -18,7 +18,7 @@
 
 namespace hebo {
 
-class ColorChooserWindow : public QWidget {
+class ColorChooserWindow : public QDialog {
  Q_OBJECT
  Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged);
 
@@ -47,13 +47,10 @@ class ColorChooserWindow : public QWidget {
   void initUi();
   void initSignals();
 
-  QWidget* solid_page_{nullptr};
   QColor solid_color_{};
   ColorPaletteListView* color_palette_list_view_{nullptr};
   HSVColorPicker* color_picker_{nullptr};
   ColorLineEdit* color_line_edit_{nullptr};
-
-  ColorLabel* a_label_{nullptr};
 };
 
 }  // namespace hebo
