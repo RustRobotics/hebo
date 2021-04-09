@@ -8,6 +8,7 @@
 namespace hebo {
 
 constexpr const char* kMiscCanvasPalette = ":/misc/canvas-palette.json";
+constexpr const char* kMiscGtkPalette = ":/misc/gtk-palette.json";
 constexpr const char* kMiscShapePalette = ":/misc/shape-palette.json";
 constexpr const char* kMiscSoftwareLicense = ":/misc/software-license.json";
 

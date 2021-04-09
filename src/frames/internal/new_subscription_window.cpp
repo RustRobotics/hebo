@@ -37,7 +37,7 @@ void NewSubscriptionWindow::initUi() {
 
   this->color_chooser_window_ = new ColorChooserWindow(this);
   bool ok = true;
-  const auto palette = parseColorPalette(kMiscShapePalette, &ok);
+  const auto palette = parseColorPalette(kMiscGtkPalette, &ok);
   Q_ASSERT(ok);
   this->color_chooser_window_->setSolidColorPalette(palette);
   auto* color_layout = new QHBoxLayout();

@@ -26,7 +26,7 @@ void ColorChooserWindow::initUi() {
   main_layout->setContentsMargins(0, 0, 0, 0);
   main_layout->setSpacing(6);
   this->setLayout(main_layout);
-  this->setFixedWidth(290);
+  this->setFixedWidth(265);
 
   this->color_picker_ = new HSVColorPicker();
   main_layout->addWidget(this->color_picker_);
