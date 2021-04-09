@@ -14,6 +14,7 @@
 #include <QTextEdit>
 
 #include "frames/internal/new_subscription_window.h"
+#include "frames/models/payload_type_model.h"
 #include "frames/models/qos_model.h"
 #include "mqtt/mqtt_client.h"
 #include "widgets/font_icon_button.h"
@@ -60,6 +61,7 @@ class ClientFrame : public QFrame {
 
   QTextEdit* messages_edit_{nullptr};
   QComboBox* payload_type_box_{nullptr};
+  PayloadTypeModel* payload_type_model_{nullptr};
   QoSModel* qos_model_{nullptr};
   QComboBox* qos_box_{nullptr};
   QCheckBox* retain_box_{nullptr};

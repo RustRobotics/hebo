@@ -90,7 +90,9 @@ void ClientFrame::initUi() {
   payload_type_layout->setSpacing(4);
   messages_layout->addLayout(payload_type_layout);
 
-  payload_type_box_ = new QComboBox();
+  this->payload_type_box_ = new QComboBox();
+  this->payload_type_model_ = new PayloadTypeModel(this);
+  this->payload_type_box_->setModel(this->payload_type_model_);
   payload_type_layout->addWidget(new QLabel(tr("Payload:")));
   payload_type_layout->addWidget(this->payload_type_box_);
   payload_type_layout->addSpacing(20);

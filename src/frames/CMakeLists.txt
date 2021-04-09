@@ -16,6 +16,8 @@ set(SOURCES
     internal/new_subscription_window.cpp
     internal/new_subscription_window.h
 
+    models/payload_type_model.cpp
+    models/payload_type_model.h
     models/protocol_model.cpp
     models/protocol_model.h
     models/qos_model.cpp
