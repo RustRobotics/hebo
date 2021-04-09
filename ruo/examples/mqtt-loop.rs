@@ -12,11 +12,19 @@ fn on_connect(client: &mut Client) {
         client.connect_option().client_id()
     );
 
-    // self.subscribe("hello", QoS::AtMostOnce).await;
-    client.subscribe("hello", QoS::AtMostOnce).unwrap();
-    client
-        .publish("hello", QoS::AtMostOnce, b"Hello, world")
-        .unwrap();
+    //client.subscribe("hello", QoS::AtMostOnce).unwrap();
+    let mut count = 0;
+    let payload = std::include_str!("../src/client.rs");
+    loop {
+        count += 1;
+        if count == 200_000 {
+            break;
+        }
+        log::info!("count: {}", count);
+        if let Err(err) = client.publish("hello", QoS::AtMostOnce, payload.as_bytes()) {
+            log::error!("got error: {:?}", err);
+        }
+    }
 }
 
 fn main() {
