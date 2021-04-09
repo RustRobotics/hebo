@@ -8,7 +8,7 @@ namespace hebo {
 
 PayloadTypeModel::PayloadTypeModel(QObject* parent)
   : QAbstractListModel(parent),
-    type_list_({"PlainText", "Base64", "JSOn", "Hex"}) {
+    type_list_({"PlainText", "Base64", "JSON", "Hex"}) {
 }
 
 int PayloadTypeModel::rowCount(const QModelIndex& parent) const {

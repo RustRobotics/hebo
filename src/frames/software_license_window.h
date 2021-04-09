@@ -5,15 +5,15 @@
 #ifndef HEBO_SRC_FRAMES_SOFTWARE_LICENSE_WINDOW_H_
 #define HEBO_SRC_FRAMES_SOFTWARE_LICENSE_WINDOW_H_
 
+#include <QDialog>
 #include <QPushButton>
 #include <QTableView>
-#include <QWidget>
 
 #include "frames/models/software_license_model.h"
 
 namespace hebo {
 
-class SoftwareLicenseWindow : public QWidget {
+class SoftwareLicenseWindow : public QDialog {
   Q_OBJECT
  public:
   explicit SoftwareLicenseWindow(QWidget* parent = nullptr);

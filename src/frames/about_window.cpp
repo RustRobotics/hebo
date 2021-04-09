@@ -134,7 +134,7 @@ void AboutWindow::openExternalUrl(const QString& url) {
 }
 
 void AboutWindow::showSoftwareLicenseWindow() {
-  auto* window = new SoftwareLicenseWindow();
+  auto* window = new SoftwareLicenseWindow(this);
   connect(window, &SoftwareLicenseWindow::requestOpenUrl,
           this, &AboutWindow::openExternalUrl);
   connect(window, &SoftwareLicenseWindow::destroyed,

@@ -13,9 +13,10 @@
 
 namespace hebo {
 
-SoftwareLicenseWindow::SoftwareLicenseWindow(QWidget* parent) : QWidget(parent) {
+SoftwareLicenseWindow::SoftwareLicenseWindow(QWidget* parent) : QDialog(parent) {
   this->initUi();
   this->initSignals();
+  this->setModal(true);
 }
 
 void SoftwareLicenseWindow::initUi() {
