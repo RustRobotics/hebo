@@ -12,6 +12,8 @@ namespace hebo {
 
 QColor parseColor(QString val);
 
+QColor randomColor();
+
 }  // namespace hebo
 
 #endif  // HEBO_SRC_BASE_COLOR_H_

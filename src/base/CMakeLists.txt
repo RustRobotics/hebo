@@ -8,6 +8,7 @@ set(SOURCE
     random.h
     )
 set(TEST_FILES
+    color_test.cpp
     random_test.cpp
     )
 
