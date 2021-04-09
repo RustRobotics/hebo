@@ -13,7 +13,6 @@
 namespace hebo {
 
 ColorChooserButton::ColorChooserButton(QWidget* parent) : QWidget(parent) {
-  this->setFixedSize(48, 22);
   this->setMouseTracking(true);
 }
 
