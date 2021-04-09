@@ -7,7 +7,7 @@
 
 #include <QComboBox>
 #include <QMessageBox>
-#include <QFrame>
+#include <QDialog>
 #include <QLineEdit>
 
 #include "frames/internal/color_chooser_window.h"
@@ -17,7 +17,7 @@
 
 namespace hebo {
 
-class NewSubscriptionWindow : public QFrame {
+class NewSubscriptionWindow : public QDialog {
   Q_OBJECT
  public:
   explicit NewSubscriptionWindow(QWidget* parent = nullptr);

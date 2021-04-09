@@ -65,7 +65,7 @@ void ClientFrame::initUi() {
   subscribe_layout->setContentsMargins(0, 0, 0, 0);
   bottom_layout->addLayout(subscribe_layout);
 
-  this->new_subscription_window_ = new NewSubscriptionWindow();
+  this->new_subscription_window_ = new NewSubscriptionWindow(this);
 
   this->subscribe_button_ = new QPushButton(tr("Subscribe"));
   subscribe_layout->addWidget(this->subscribe_button_);
@@ -104,8 +104,6 @@ void ClientFrame::initUi() {
 void ClientFrame::initSignals() {
   Q_ASSERT(this->client_ != nullptr);
 
-  connect(this->new_subscription_window_, &NewSubscriptionWindow::destroyed,
-          this->new_subscription_window_, &NewSubscriptionWindow::deleteLater);
   connect(this->new_subscription_window_, &NewSubscriptionWindow::confirmed,
           this, &ClientFrame::onNewSubscriptionWindowConfirmed);
 
@@ -164,6 +162,9 @@ void ClientFrame::onPublishButtonClicked() {
 }
 
 void ClientFrame::onSubscribeButtonClicked() {
+  if (this->client_->state() != ConnectionState::ConnectionConnected) {
+    return;
+  }
   this->new_subscription_window_->show();
 }
 

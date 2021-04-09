@@ -12,9 +12,10 @@
 
 namespace hebo {
 
-NewSubscriptionWindow::NewSubscriptionWindow(QWidget* parent) : QFrame(parent) {
+NewSubscriptionWindow::NewSubscriptionWindow(QWidget* parent) : QDialog(parent) {
   this->initUi();
   this->initSignals();
+  this->setModal(true);
 }
 
 void NewSubscriptionWindow::initUi() {
