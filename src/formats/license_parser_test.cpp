@@ -7,11 +7,11 @@
 #include "formats/license_parser.h"
 #include "resources/misc/misc.h"
 
-namespace publisher {
+namespace hebo {
 
 TEST(LicenseParserTest, TestParseLicenseFile) {
   const auto list = parseAppLicense(kMiscSoftwareLicense);
   ASSERT_FALSE(list.isEmpty());
 }
 
-}  // namespace publisher
+}  // namespace hebo
