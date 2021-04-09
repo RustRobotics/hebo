@@ -29,10 +29,15 @@ QVariant SubscriptionModel::data(const QModelIndex& index, int role) const {
   }
   const auto& sub = this->list_.at(index.row());
   switch (role) {
-    case Qt::DisplayRole:  // fall through
     case kTopicRole: {
       return sub.topic;
     }
+    case Qt::ToolTipRole:  // fall through
+    case Qt::DisplayRole:  // fall through
+    case kDescriptionRole: {
+      return QString("%1 (qos=%2)").arg(sub.topic).arg(static_cast<int>(sub.qos));
+    }
+    case Qt::DecorationRole:  // fall through
     case kColorRole: {
       return sub.color;
     }

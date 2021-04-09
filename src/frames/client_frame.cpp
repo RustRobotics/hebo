@@ -165,6 +165,7 @@ void ClientFrame::onSubscribeButtonClicked() {
   if (this->client_->state() != ConnectionState::ConnectionConnected) {
     return;
   }
+  this->new_subscription_window_->resetForm();
   this->new_subscription_window_->show();
 }
 

@@ -17,7 +17,6 @@ NewSubscriptionWindow::NewSubscriptionWindow(QWidget* parent) : QDialog(parent) 
   this->initUi();
   this->initSignals();
   this->setModal(true);
-  this->generateRandomColor();
 }
 
 void NewSubscriptionWindow::initUi() {
@@ -85,6 +84,13 @@ void NewSubscriptionWindow::onColorChooserButtonClicked() {
 void NewSubscriptionWindow::generateRandomColor() {
   const auto color = randomColor();
   this->color_chooser_button_->setColor(color);
+}
+
+void NewSubscriptionWindow::resetForm() {
+  this->topic_edit_->clear();
+  this->qos_box_->setCurrentIndex(0);
+  this->generateRandomColor();
+  this->alias_edit_->clear();
 }
 
 }  // namespace hebo

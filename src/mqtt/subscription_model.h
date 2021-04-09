@@ -24,6 +24,7 @@ class SubscriptionModel : public QAbstractListModel {
  public:
   enum SubscriptionRole : int32_t {
     kTopicRole = Qt::UserRole + 1,
+    kDescriptionRole,
     kColorRole,
     kQoSRole,
   };

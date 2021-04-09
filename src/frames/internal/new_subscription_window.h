@@ -30,6 +30,8 @@ class NewSubscriptionWindow : public QDialog {
   [[nodiscard]] QColor color() const { return this->color_chooser_button_->color(); }
   [[nodiscard]] QString alias() const { return this->alias_edit_->text(); }
 
+  void resetForm();
+
  signals:
   void confirmed();
 
