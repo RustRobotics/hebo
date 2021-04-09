@@ -5,6 +5,7 @@
 #ifndef HEBO_SRC_FRAMES_CLIENT_FRAME_H_
 #define HEBO_SRC_FRAMES_CLIENT_FRAME_H_
 
+#include <QCheckBox>
 #include <QFrame>
 #include <QLabel>
 #include <QLineEdit>
@@ -13,6 +14,7 @@
 #include <QTextEdit>
 
 #include "frames/internal/new_subscription_window.h"
+#include "frames/models/qos_model.h"
 #include "mqtt/mqtt_client.h"
 #include "widgets/font_icon_button.h"
 
@@ -57,6 +59,10 @@ class ClientFrame : public QFrame {
   QListView* subscriptions_list_view_{nullptr};
 
   QTextEdit* messages_edit_{nullptr};
+  QComboBox* payload_type_box_{nullptr};
+  QoSModel* qos_model_{nullptr};
+  QComboBox* qos_box_{nullptr};
+  QCheckBox* retain_box_{nullptr};
   QLineEdit* topic_edit_{nullptr};
   QPlainTextEdit* payload_edit_{nullptr};
 };

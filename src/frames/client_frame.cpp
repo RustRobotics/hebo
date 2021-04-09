@@ -86,6 +86,26 @@ void ClientFrame::initUi() {
   this->messages_edit_->setReadOnly(true);
   messages_layout->addWidget(this->messages_edit_);
 
+  auto* payload_type_layout = new QHBoxLayout();
+  payload_type_layout->setSpacing(4);
+  messages_layout->addLayout(payload_type_layout);
+
+  payload_type_box_ = new QComboBox();
+  payload_type_layout->addWidget(new QLabel(tr("Payload:")));
+  payload_type_layout->addWidget(this->payload_type_box_);
+  payload_type_layout->addSpacing(20);
+
+  payload_type_layout->addWidget(new QLabel(tr("QoS:")));
+  this->qos_box_ = new QComboBox();
+  this->qos_model_ = new QoSModel(this);
+  this->qos_box_->setModel(this->qos_model_);
+  payload_type_layout->addWidget(this->qos_box_);
+  payload_type_layout->addSpacing(20);
+
+  this->retain_box_ = new QCheckBox(tr("Retain"));
+  payload_type_layout->addWidget(this->retain_box_);
+  payload_type_layout->addStretch();
+
   this->topic_edit_ = new QLineEdit();
   this->topic_edit_->setPlaceholderText(tr("Topic"));
   messages_layout->addWidget(this->topic_edit_);
