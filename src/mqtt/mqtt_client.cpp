@@ -38,14 +38,6 @@ void MqttClient::initSignals() {
 
   connect(this->internal_, &InternalClient::messageReceived,
           this->messages_, &MessageStreamModel::addMessage);
-
-  connect(this->subscriptions_, &SubscriptionModel::dataChanged, [=]() {
-    emit this->subscriptionsChanged(this->subscriptions_);
-  });
-
-  connect(this->messages_, &MessageStreamModel::dataChanged, [=]() {
-    emit this->messagesChanged(this->messages_);
-  });
 }
 
 void MqttClient::setState(ConnectionState state) {

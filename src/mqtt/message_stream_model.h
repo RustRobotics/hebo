@@ -41,8 +41,6 @@ class MessageStreamModel : public QAbstractListModel {
 
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
 
-  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
-
   bool row(int row, MqttMessage& msg) const {
     if (row >= 0 && row < this->messages_.length()) {
       msg = this->messages_.at(row);

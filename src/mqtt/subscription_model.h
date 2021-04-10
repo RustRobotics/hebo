@@ -36,8 +36,6 @@ class SubscriptionModel : public QAbstractListModel {
 
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override;
 
-  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
-
   bool hasSubscription(const QString& topic);
 
   bool addSubscription(const QString& topic, QoS qos, const QColor& color);

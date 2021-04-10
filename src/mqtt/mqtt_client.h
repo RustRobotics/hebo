@@ -19,9 +19,6 @@ namespace hebo {
 class MqttClient : public QObject {
   Q_OBJECT
   Q_PROPERTY(ConnectionState state READ state NOTIFY stateChanged);
-  // TODO(Shaohua): Remove these properties.
-  Q_PROPERTY(SubscriptionModel* subscriptions READ subscriptions NOTIFY subscriptionsChanged);
-  Q_PROPERTY(MessageStreamModel* messages READ messages NOTIFY messagesChanged);
 
  public:
   explicit MqttClient(QObject* parent = nullptr);
@@ -52,8 +49,6 @@ class MqttClient : public QObject {
   void publishResult(const QString& topic, bool ok, const QString& error);
 
   void stateChanged(ConnectionState state);
-  void subscriptionsChanged(SubscriptionModel* model);
-  void messagesChanged(MessageStreamModel* model);
 
  private:
   void initSignals();

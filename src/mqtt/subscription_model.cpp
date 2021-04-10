@@ -7,13 +7,6 @@
 #include "base/color.h"
 
 namespace hebo {
-namespace {
-
-constexpr const char* kTopic = "topic";
-constexpr const char* kColor = "color";
-constexpr const char* kQoS = "qos";
-
-}  // namespace
 
 SubscriptionModel::SubscriptionModel(QObject* parent) : QAbstractListModel(parent) {
 }
@@ -48,21 +41,10 @@ QVariant SubscriptionModel::data(const QModelIndex& index, int role) const {
   }
 }
 
-QHash<int, QByteArray> SubscriptionModel::roleNames() const {
-  return {
-      {kTopicRole, kTopic},
-      {kColorRole, kColor},
-      {kQoSRole, kQoS},
-  };
-}
-
 bool SubscriptionModel::hasSubscription(const QString& topic) {
-  for (const auto& sub : this->list_) {
-    if (sub.topic == topic) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(this->list_.begin(), this->list_.end(), [&](const Subscription& sub) {
+    return sub.topic == topic;
+  });
 }
 
 bool SubscriptionModel::addSubscription(const QString& topic, QoS qos, const QColor& color) {

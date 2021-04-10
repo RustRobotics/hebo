@@ -5,15 +5,6 @@
 #include "mqtt/message_stream_model.h"
 
 namespace hebo {
-namespace {
-
-constexpr const char* kTopic = "topic";
-constexpr const char* kQoS = "qos";
-constexpr const char* kIsPublish = "isPublish";
-constexpr const char* kTimestamp = "timestamp";
-constexpr const char* kPayload = "payload";
-
-}  // namespace
 
 MessageStreamModel::MessageStreamModel(QObject* parent) : QAbstractListModel(parent) {
   qRegisterMetaType<MqttMessage>("MqttMessage");
@@ -39,16 +30,6 @@ QVariant MessageStreamModel::data(const QModelIndex& index, int role) const {
     case kPayloadLengthRole: { return msg.payload.length(); }
     default: { return {}; }
   }
-}
-
-QHash<int, QByteArray> MessageStreamModel::roleNames() const {
-  return {
-      {kTopicRole, kTopic},
-      {kQoSRole, kQoS},
-      {kIsPublishRole, kIsPublish},
-      {kTimestampRole, kTimestamp},
-      {kPayloadRole, kPayload},
-  };
 }
 
 void MessageStreamModel::addMessage(const MqttMessage& message) {
