@@ -126,7 +126,7 @@ void ClientFrame::initUi() {
 void ClientFrame::initSignals() {
   Q_ASSERT(this->client_ != nullptr);
 
-  connect(this->new_subscription_window_, &NewSubscriptionWindow::confirmed,
+  connect(this->new_subscription_window_, &NewSubscriptionWindow::accepted,
           this, &ClientFrame::onNewSubscriptionWindowConfirmed);
 
   connect(this->subscribe_button_, &QPushButton::clicked,
@@ -192,7 +192,6 @@ void ClientFrame::onSubscribeButtonClicked() {
 }
 
 void ClientFrame::onNewSubscriptionWindowConfirmed() {
-  this->new_subscription_window_->hide();
   const QString topic = this->new_subscription_window_->topic();
   const QoS qos = this->new_subscription_window_->qos();
   const QColor color = this->new_subscription_window_->color();

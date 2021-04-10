@@ -9,11 +9,12 @@ namespace hebo {
 PayloadTypeModel::PayloadTypeModel(QObject* parent)
   : QAbstractListModel(parent),
     type_list_({"PlainText", "Base64", "JSON", "Hex"}) {
+  Q_ASSERT(this->type_list_.length() == static_cast<int>(PayloadType::kPayloadTypeMax));
 }
 
 int PayloadTypeModel::rowCount(const QModelIndex& parent) const {
   Q_UNUSED(parent);
-  return this->type_list_.length();
+  return static_cast<int>(PayloadType::kPayloadTypeMax);
 }
 
 QVariant PayloadTypeModel::data(const QModelIndex& index, int role) const {

@@ -54,6 +54,11 @@ void NewSubscriptionWindow::initUi() {
   this->alias_edit_ = new QLineEdit();
   form_layout->addRow(new QLabel(tr("Alias")), this->alias_edit_);
 
+  this->payload_type_box_ = new QComboBox();
+  this->payload_type_model_ = new PayloadTypeModel(this);
+  this->payload_type_box_->setModel(this->payload_type_model_);
+  form_layout->addRow(new QLabel(tr("Payload:")), this->payload_type_box_);
+
   auto* buttons_layout = new QHBoxLayout();
   main_layout->addSpacing(12);
   main_layout->addLayout(buttons_layout);
@@ -67,7 +72,7 @@ void NewSubscriptionWindow::initSignals() {
   connect(this->cancel_button_, &QPushButton::clicked,
           this, &NewSubscriptionWindow::hide);
   connect(this->ok_button_, &QPushButton::clicked,
-          this, &NewSubscriptionWindow::confirmed);
+          this, &NewSubscriptionWindow::accept);
   connect(this->color_chooser_button_, &ColorChooserButton::clicked,
           this, &NewSubscriptionWindow::onColorChooserButtonClicked);
   connect(this->color_chooser_window_, &ColorChooserWindow::colorChanged,
@@ -91,6 +96,11 @@ void NewSubscriptionWindow::resetForm() {
   this->qos_box_->setCurrentIndex(0);
   this->generateRandomColor();
   this->alias_edit_->clear();
+}
+
+PayloadType NewSubscriptionWindow::payloadType() const {
+  const auto index = this->payload_type_model_->index(this->payload_type_box_->currentIndex(), 0);
+  return this->payload_type_model_->data(index, PayloadTypeModel::kIdRole).value<PayloadType>();
 }
 
 }  // namespace hebo

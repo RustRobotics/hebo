@@ -10,7 +10,9 @@
 #include <QDialog>
 #include <QLineEdit>
 
+#include "formats/payload_type.h"
 #include "frames/internal/color_chooser_window.h"
+#include "frames/models/payload_type_model.h"
 #include "frames/models/qos_model.h"
 #include "widgets/color_chooser_button.h"
 #include "widgets/font_icon_button.h"
@@ -30,10 +32,9 @@ class NewSubscriptionWindow : public QDialog {
   [[nodiscard]] QColor color() const { return this->color_chooser_button_->color(); }
   [[nodiscard]] QString alias() const { return this->alias_edit_->text(); }
 
-  void resetForm();
+  [[nodiscard]] PayloadType payloadType() const;
 
- signals:
-  void confirmed();
+  void resetForm();
 
  private:
   void onColorChooserButtonClicked();
@@ -51,6 +52,8 @@ class NewSubscriptionWindow : public QDialog {
   ColorChooserButton* color_chooser_button_{nullptr};
   FontIconButton* refresh_color_button_{nullptr};
   QLineEdit* alias_edit_{nullptr};
+  QComboBox* payload_type_box_{nullptr};
+  PayloadTypeModel* payload_type_model_{nullptr};
 
   QPushButton* cancel_button_{nullptr};
   QPushButton* ok_button_{nullptr};

@@ -7,6 +7,8 @@
 
 #include <QAbstractListModel>
 
+#include "formats/payload_type.h"
+
 namespace hebo {
 
 class PayloadTypeModel : public QAbstractListModel {
