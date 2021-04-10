@@ -13,6 +13,7 @@
 #include <QPlainTextEdit>
 #include <QTextEdit>
 
+#include "frames/internal/messages_document.h"
 #include "frames/internal/new_subscription_window.h"
 #include "frames/models/payload_type_model.h"
 #include "frames/models/qos_model.h"
@@ -40,6 +41,8 @@ class ClientFrame : public QFrame {
 
   void onNewSubscriptionWindowConfirmed();
 
+  void onMessageAdded();
+
  private:
   void initUi();
   void initSignals();
@@ -52,6 +55,7 @@ class ClientFrame : public QFrame {
   FontIconButton* connect_button_{nullptr};
   FontIconButton* disconnect_button_{nullptr};
   FontIconButton* edit_button_{nullptr};
+  FontIconButton* live_messages_button_{nullptr};
   FontIconButton* options_button_{nullptr};
   FontIconButton* publish_button_{nullptr};
 
@@ -60,6 +64,7 @@ class ClientFrame : public QFrame {
   QListView* subscriptions_list_view_{nullptr};
 
   QTextEdit* messages_edit_{nullptr};
+  MessagesDocument* messages_doc_{nullptr};
   QComboBox* payload_type_box_{nullptr};
   PayloadTypeModel* payload_type_model_{nullptr};
   QoSModel* qos_model_{nullptr};

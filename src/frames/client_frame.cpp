@@ -6,10 +6,10 @@
 
 #include <QHBoxLayout>
 #include <QResizeEvent>
+#include <QScrollBar>
 #include <QVBoxLayout>
 
 #include "frames/delegates/messages_delegate.h"
-#include "frames/internal/messages_document.h"
 #include "resources/fonts/fonts.h"
 
 namespace hebo {
@@ -52,6 +52,11 @@ void ClientFrame::initUi() {
   this->edit_button_ = new FontIconButton(kFontElIconEditOutline);
   tool_bar_layout->addWidget(this->edit_button_);
 
+  this->live_messages_button_ = new FontIconButton(kFontElIconBottom);
+  this->live_messages_button_->setToolTip(tr("Automatically scroll to latest message"));
+  this->live_messages_button_->setCheckable(true);
+  tool_bar_layout->addWidget(this->live_messages_button_);
+
   this->options_button_ = new FontIconButton(kFontElIconMoreOutline);
   tool_bar_layout->addWidget(this->options_button_);
 
@@ -80,8 +85,8 @@ void ClientFrame::initUi() {
   bottom_layout->addLayout(messages_layout);
 
   this->messages_edit_ = new QTextEdit();
-  auto* doc = new MessagesDocument(this->client_->messages(), this);
-  this->messages_edit_->setDocument(doc);
+  this->messages_doc_ = new MessagesDocument(this->client_->messages(), this);
+  this->messages_edit_->setDocument(this->messages_doc_);
   this->messages_edit_->setContentsMargins(0, 0, 0, 0);
   this->messages_edit_->setReadOnly(true);
   messages_layout->addWidget(this->messages_edit_);
@@ -135,6 +140,9 @@ void ClientFrame::initSignals() {
           this->client_, &MqttClient::requestConnect);
   connect(this->disconnect_button_, &FontIconButton::clicked,
           this->client_, &MqttClient::requestDisconnect);
+  connect(this->messages_doc_, &MessagesDocument::messageAdded,
+          this, &ClientFrame::onMessageAdded);
+
   connect(this->client_, &MqttClient::stateChanged,
           this, &ClientFrame::onClientStateChanged);
   connect(this->publish_button_, &FontIconButton::clicked,
@@ -196,6 +204,13 @@ void ClientFrame::onNewSubscriptionWindowConfirmed() {
   const QoS qos = this->new_subscription_window_->qos();
   const QColor color = this->new_subscription_window_->color();
   this->client_->requestSubscribe(topic, qos, color);
+}
+
+void ClientFrame::onMessageAdded() {
+  if (this->live_messages_button_->isChecked()) {
+    auto* scrollbar = this->messages_edit_->verticalScrollBar();
+    scrollbar->setValue(scrollbar->maximum());
+  }
 }
 
 }  // namespace hebo

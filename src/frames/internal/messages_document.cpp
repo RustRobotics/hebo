@@ -67,6 +67,8 @@ void MessagesDocument::onRowsInserted(const QModelIndex& index, int first, int l
     cursor.setBlockFormat(block_fmt);
     cursor.insertText("\n\n");
   }
+
+  emit this->messageAdded();
 }
 
 }  // namespace hebo

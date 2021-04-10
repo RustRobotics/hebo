@@ -17,6 +17,9 @@ class MessagesDocument : public QTextDocument {
  public:
   explicit MessagesDocument(MessageStreamModel* model, QObject* parent = nullptr);
 
+ signals:
+  void messageAdded();
+
  private slots:
   void onRowsInserted(const QModelIndex& index, int first, int last);
 
