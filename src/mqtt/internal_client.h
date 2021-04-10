@@ -6,6 +6,7 @@
 #define HEBO_SRC_MQTT_INTERNAL_CLIENT_H_
 
 #include <QObject>
+#include <QTimer>
 
 #include "formats/connect_config.h"
 #include "mqtt/message_stream_model.h"
@@ -29,7 +30,7 @@ class InternalClient : public QObject {
 
   void stateChanged(ConnectionState state);
 
-  void messageReceived(const MqttMessage& message);
+  void messagesReceived(const MqttMessages& messages);
 
  protected:
   void timerEvent(QTimerEvent* event) override;
@@ -41,10 +42,15 @@ class InternalClient : public QObject {
   void doUnsubscribe(const QString& topic);
   void doPublish(const QString& topic, const QByteArray& payload, QoS qos, bool retain);
 
+  void onQueuedMessagesTimeout();
+
  private:
   void initSignals();
   MqttClientPrivate* p_;
   int timer_id_{-1};
+
+  QTimer* queued_messages_timer_{nullptr};
+  MqttMessages queued_messages_{};
 };
 
 }  // namespace hebo

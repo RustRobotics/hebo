@@ -36,8 +36,8 @@ void MqttClient::initSignals() {
   connect(this->internal_, &InternalClient::stateChanged,
           this, &MqttClient::setState);
 
-  connect(this->internal_, &InternalClient::messageReceived,
-          this->messages_, &MessageStreamModel::addMessage);
+  connect(this->internal_, &InternalClient::messagesReceived,
+          this->messages_, &MessageStreamModel::addMessages);
 }
 
 void MqttClient::setState(ConnectionState state) {

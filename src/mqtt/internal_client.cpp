@@ -10,6 +10,8 @@
 namespace hebo {
 namespace {
 
+constexpr const int kQueueTimeoutInMillis = 10;
+
 using ClientRef = std::shared_ptr<
     MQTT_NS::callable_overlay<MQTT_NS::async_client<
         MQTT_NS::tcp_endpoint<as::ip::tcp::socket,
@@ -24,8 +26,10 @@ struct MqttClientPrivate {
 
 InternalClient::InternalClient(QObject* parent)
     : QObject(parent),
-      p_(new MqttClientPrivate()) {
+      p_(new MqttClientPrivate()),
+      queued_messages_timer_(new QTimer(this)) {
   this->initSignals();
+  this->queued_messages_timer_->setInterval(kQueueTimeoutInMillis);
 }
 
 InternalClient::~InternalClient() {
@@ -44,6 +48,9 @@ void InternalClient::initSignals() {
           this, &InternalClient::doUnsubscribe);
   connect(this, &InternalClient::requestPublish,
           this, &InternalClient::doPublish);
+
+  connect(this->queued_messages_timer_, &QTimer::timeout,
+          this, &InternalClient::onQueuedMessagesTimeout);
 }
 
 void InternalClient::doConnect(const ConnectConfig& config) {
@@ -76,7 +83,11 @@ void InternalClient::doConnect(const ConnectConfig& config) {
     message.qos = static_cast<QoS>(pubopts.get_qos());
     message.is_publish = false;
     message.payload.append(contents.data(), contents.size());
-    emit this->messageReceived(message);
+
+    this->queued_messages_.append(message);
+    if (!this->queued_messages_timer_->isActive()) {
+      this->queued_messages_timer_->start();
+    }
 
     return true;
   });
@@ -137,6 +148,11 @@ void InternalClient::doPublish(const QString& topic, const QByteArray& payload, 
 void InternalClient::timerEvent(QTimerEvent* event) {
   QObject::timerEvent(event);
   this->p_->context.poll();
+}
+
+void InternalClient::onQueuedMessagesTimeout() {
+  emit this->messagesReceived(this->queued_messages_);
+  this->queued_messages_ = MqttMessages();
 }
 
 }  // namespace hebo

@@ -6,6 +6,8 @@
 #define HEBO_SRC_MQTT_MESSAGE_STREAM_MODEL_H_
 
 #include <QAbstractListModel>
+#include <QSharedPointer>
+#include <QVector>
 
 #include "formats/connect_config.h"
 
@@ -20,6 +22,7 @@ struct MqttMessage {
 };
 
 using MqttMessages = QVector<MqttMessage>;
+using MqttMessagesPtr = QSharedPointer<MqttMessages>;
 
 class MessageStreamModel : public QAbstractListModel {
   Q_OBJECT
@@ -51,6 +54,8 @@ class MessageStreamModel : public QAbstractListModel {
 
  public slots:
   void addMessage(const MqttMessage& message);
+
+  void addMessages(const MqttMessages& messages);
 
  private:
   MqttMessages messages_{};

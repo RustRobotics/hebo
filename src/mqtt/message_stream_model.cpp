@@ -6,8 +6,10 @@
 
 namespace hebo {
 
-MessageStreamModel::MessageStreamModel(QObject* parent) : QAbstractListModel(parent) {
+MessageStreamModel::MessageStreamModel(QObject* parent)
+  : QAbstractListModel(parent) {
   qRegisterMetaType<MqttMessage>("MqttMessage");
+  qRegisterMetaType<MqttMessages>("MqttMessages");
 }
 
 int MessageStreamModel::rowCount(const QModelIndex& parent) const {
@@ -33,9 +35,18 @@ QVariant MessageStreamModel::data(const QModelIndex& index, int role) const {
 }
 
 void MessageStreamModel::addMessage(const MqttMessage& message) {
-  const int pos = this->messages_.length();
-  this->beginInsertRows(QModelIndex(), pos, pos);
+  const int begin = this->messages_.length();
+  const int end = begin;
+  this->beginInsertRows(QModelIndex(), begin, end);
   this->messages_.append(message);
+  this->endInsertRows();
+}
+
+void MessageStreamModel::addMessages(const MqttMessages& messages) {
+  const int begin = this->messages_.length();
+  const int end = begin + messages.length();
+  this->beginInsertRows(QModelIndex(), begin, end);
+  this->messages_.append(messages);
   this->endInsertRows();
 }
 
