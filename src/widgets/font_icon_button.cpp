@@ -10,7 +10,7 @@
 namespace hebo {
 
 FontIconButton::FontIconButton(const QString& text, QWidget* parent) : QPushButton(text, parent) {
-  this->setStyleSheet(readTextFile(kStyleFontButton));
+  this->setStyleSheet(readTextFile(kStyleFontIconButton));
 }
 
 }  // namespace hebo
