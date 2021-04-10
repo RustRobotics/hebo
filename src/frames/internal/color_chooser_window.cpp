@@ -23,10 +23,7 @@ ColorChooserWindow::ColorChooserWindow(QWidget* parent) : QDialog(parent) {
 
 void ColorChooserWindow::initUi() {
   auto* main_layout = new QVBoxLayout();
-  main_layout->setContentsMargins(0, 0, 0, 0);
-  main_layout->setSpacing(6);
   this->setLayout(main_layout);
-  this->setFixedWidth(265);
 
   this->color_picker_ = new HSVColorPicker();
   main_layout->addWidget(this->color_picker_);
@@ -37,10 +34,12 @@ void ColorChooserWindow::initUi() {
   main_layout->addLayout(grid_layout);
   this->color_line_edit_ = new ColorLineEdit();
   grid_layout->addWidget(this->color_line_edit_, 0, 0);
-  main_layout->addWidget(new SeparatorLine(Qt::Horizontal));
 
   this->color_palette_list_view_ = new ColorPaletteListView();
   main_layout->addWidget(this->color_palette_list_view_);
+
+  this->close_button_ = new QPushButton(tr("Close"));
+  main_layout->addWidget(this->close_button_, 0, Qt::AlignRight);
 }
 
 void ColorChooserWindow::initSignals() {
@@ -50,6 +49,9 @@ void ColorChooserWindow::initSignals() {
           this, &ColorChooserWindow::updateColorEdit);
   connect(this->color_line_edit_, &ColorLineEdit::colorChanged,
           this, &ColorChooserWindow::updateColorEdit);
+
+  connect(this->close_button_, &QPushButton::clicked,
+          this, &ColorChooserWindow::close);
 }
 
 void ColorChooserWindow::setSolidColorPalette(const ColorPalette& palette) {
@@ -59,11 +61,6 @@ void ColorChooserWindow::setSolidColorPalette(const ColorPalette& palette) {
 void ColorChooserWindow::updateColorEdit(const QColor& color) {
   this->setColor(color);
   emit this->colorChanged(color);
-}
-
-void ColorChooserWindow::focusOutEvent(QFocusEvent* event) {
-  QWidget::focusOutEvent(event);
-  emit this->lostFocus();
 }
 
 void ColorChooserWindow::setColor(const QColor& color) {

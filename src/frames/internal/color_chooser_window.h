@@ -2,11 +2,12 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#ifndef HEBO_SRC_FRAMES_COLOR_CHOOSER_WINDOW_H_
-#define HEBO_SRC_FRAMES_COLOR_CHOOSER_WINDOW_H_
+#ifndef HEBO_SRC_FRAMES_INTERNAL_COLOR_CHOOSER_WINDOW_H_
+#define HEBO_SRC_FRAMES_INTERNAL_COLOR_CHOOSER_WINDOW_H_
 
-#include <QStackedLayout>
 #include <QDialog>
+#include <QPushButton>
+#include <QStackedLayout>
 
 #include "formats/color_palette.h"
 #include "widgets/color_channel_line_edit.h"
@@ -35,11 +36,6 @@ class ColorChooserWindow : public QDialog {
  signals:
   void colorChanged(const QColor& color);
 
-  void lostFocus();
-
- protected:
-  void focusOutEvent(QFocusEvent* event) override;
-
  private slots:
   void updateColorEdit(const QColor& color);
 
@@ -51,8 +47,9 @@ class ColorChooserWindow : public QDialog {
   ColorPaletteListView* color_palette_list_view_{nullptr};
   HSVColorPicker* color_picker_{nullptr};
   ColorLineEdit* color_line_edit_{nullptr};
+  QPushButton* close_button_{nullptr};
 };
 
 }  // namespace hebo
 
-#endif  // HEBO_SRC_FRAMES_COLOR_CHOOSER_WINDOW_H_
+#endif  // HEBO_SRC_FRAMES_INTERNAL_COLOR_CHOOSER_WINDOW_H_

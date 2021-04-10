@@ -16,7 +16,7 @@ ColorPaletteListView::ColorPaletteListView(QWidget* parent) : QListView(parent) 
 void ColorPaletteListView::initUi() {
   this->setViewMode(QListView::ViewMode::IconMode);
   this->setFrameShape(QFrame::Shape::NoFrame);
-  this->setSpacing(8);
+  this->setSpacing(6);
   this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->setAcceptDrops(false);
