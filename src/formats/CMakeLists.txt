@@ -6,6 +6,8 @@ set(SOURCE_FILES
     connect_config.h
     license_parser.cpp
     license_parser.h
+    payload_type.cpp
+    payload_type.h
     )
 set(TEST_FILES
     color_palette_test.cpp
