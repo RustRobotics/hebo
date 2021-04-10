@@ -69,6 +69,7 @@ impl ConnectionContext {
     }
 
     pub async fn run_loop(mut self) {
+        // TODO(Shaohua): Set buffer cap based on settings
         let mut buf = Vec::with_capacity(512);
         // TODO(Shaohua): Handle timeout
         let mut timer = interval(Duration::from_secs(10));

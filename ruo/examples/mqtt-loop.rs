@@ -5,6 +5,7 @@
 use codec::QoS;
 use ruo::client::Client;
 use ruo::connect_options::ConnectOptions;
+use std::time::Instant;
 
 fn on_connect(client: &mut Client) {
     log::info!(
@@ -15,9 +16,10 @@ fn on_connect(client: &mut Client) {
     //client.subscribe("hello", QoS::AtMostOnce).unwrap();
     let mut count = 0;
     let payload = std::include_str!("../src/client.rs");
+    let now = Instant::now();
     loop {
         count += 1;
-        if count == 100_000 {
+        if count == 1_000_000 {
             break;
         }
         log::info!("count: {}", count);
@@ -25,6 +27,7 @@ fn on_connect(client: &mut Client) {
             log::error!("got error: {:?}", err);
         }
     }
+    log::info!("elapsed: {}", now.elapsed().as_millis());
     std::process::exit(0);
 }
 
