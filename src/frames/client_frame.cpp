@@ -41,6 +41,10 @@ void ClientFrame::initUi() {
   this->title_label_->setText(this->client_->config().name);
   tool_bar_layout->addWidget(this->title_label_);
 
+  this->message_count_label_ = new QLabel();
+  tool_bar_layout->addSpacing(12);
+  tool_bar_layout->addWidget(this->message_count_label_);
+
   tool_bar_layout->addStretch();
   this->connect_button_ = new FontIconButton(kFontElIconCaretRight);
   tool_bar_layout->addWidget(this->connect_button_);
@@ -207,6 +211,8 @@ void ClientFrame::onNewSubscriptionWindowConfirmed() {
 }
 
 void ClientFrame::onMessageAdded() {
+  const int row = this->client_->messages()->rowCount(QModelIndex());
+  this->message_count_label_->setText(QString("(%1)").arg(row));
   if (this->live_messages_button_->isChecked()) {
     auto* scrollbar = this->messages_edit_->verticalScrollBar();
     scrollbar->setValue(scrollbar->maximum());

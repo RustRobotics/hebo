@@ -52,6 +52,7 @@ class ClientFrame : public QFrame {
 
   QFrame* tool_bar_{nullptr};
   QLabel* title_label_{nullptr};
+  QLabel* message_count_label_{nullptr};
   FontIconButton* connect_button_{nullptr};
   FontIconButton* disconnect_button_{nullptr};
   FontIconButton* edit_button_{nullptr};
