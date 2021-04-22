@@ -13,6 +13,7 @@ class FormSection : public QFrame {
   Q_OBJECT
  public:
   explicit FormSection(QWidget* parent = nullptr);
+  ~FormSection() override = default;
 };
 
 }  // namespace hebo

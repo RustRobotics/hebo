@@ -13,6 +13,7 @@ class FontIconButton : public QPushButton {
   Q_OBJECT
  public:
   explicit FontIconButton(const QString& text, QWidget* parent = nullptr);
+  ~FontIconButton() override = default;
 };
 
 }  // namespace hebo
