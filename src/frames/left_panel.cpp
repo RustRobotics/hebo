@@ -6,9 +6,7 @@
 
 #include <QVBoxLayout>
 
-#include "base/file.h"
 #include "resources/fonts/fonts.h"
-#include "resources/styles/styles.h"
 #include "widgets/left_panel_button.h"
 
 namespace hebo {
@@ -58,8 +56,7 @@ void LeftPanel::initUi() {
   this->btn_group_->addButton(settings_btn, ButtonId::kSettingsButton);
   main_layout->addWidget(settings_btn);
 
-  this->setObjectName("left-panel");
-  this->setStyleSheet(readTextFile(kStyleLeftPanel));
+  // style: left-panel.css
 }
 
 void LeftPanel::initSignals() {
