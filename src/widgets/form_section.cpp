@@ -4,13 +4,10 @@
 
 #include "widgets/form_section.h"
 
-#include "base/file.h"
-#include "resources/styles/styles.h"
-
 namespace hebo {
 
 FormSection::FormSection(QWidget* parent) : QFrame(parent) {
-  this->setStyleSheet(readTextFile(kStyleFormSection));
+  // style: form-section.css
 }
 
 }  // namespace hebo
