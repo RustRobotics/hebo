@@ -15,7 +15,7 @@ targets = ["deb"]
 arch = ["x86-64"]
 
 files = [
-	{from = "src/app/hebo", to = "usr/bin/hebo"},
+	{from = "src/app/hebo-ui", to = "usr/bin/hebo-ui"},
 	{from = "../pkg/hebo-ui.svg", to = "usr/share/icons/hicolor/scalable/apps/org.biofan.HeboUi.svg"},
 	{from = "../pkg/hebo-ui.desktop", to = "usr/share/applications/org.biofan.HeboUi.desktop"},
 ]

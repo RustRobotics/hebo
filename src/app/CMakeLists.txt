@@ -6,15 +6,15 @@ set(RESOURCES_FILES
     ${CMAKE_BINARY_DIR}/i18n/hebo.qrc
     )
 
-add_executable(hebo
+add_executable(hebo-ui
     hebo_main.cpp
     ${RESOURCES_FILES}
     )
-target_link_libraries(hebo
+target_link_libraries(hebo-ui
     Qt5::Core
     controllers-static
     )
-add_dependencies(hebo generate-i18n-files)
+add_dependencies(hebo-ui generate-i18n-files)
 
 add_executable(mqtt-client-demo
     mqtt_client_demo.cpp
