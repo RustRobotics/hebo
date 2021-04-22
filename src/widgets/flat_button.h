@@ -13,6 +13,7 @@ class FlatButton : public QPushButton {
   Q_OBJECT
  public:
   explicit FlatButton(const QString& text, QWidget* parent = nullptr);
+  ~FlatButton() override = default;
 };
 
 }  // namespace hebo

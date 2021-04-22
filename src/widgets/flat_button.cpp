@@ -4,13 +4,10 @@
 
 #include "widgets/flat_button.h"
 
-#include "base/file.h"
-#include "resources/styles/styles.h"
-
 namespace hebo {
 
 FlatButton::FlatButton(const QString& text, QWidget* parent) : QPushButton(text, parent) {
-  this->setStyleSheet(readTextFile(kStyleFlatButton));
+  // style: flat-button.css
 }
 
 }  // namespace hebo
