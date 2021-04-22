@@ -17,6 +17,8 @@ constexpr const char* kStyleLeftPanel = ":/styles/left-panel.css";
 constexpr const char* kStyleRoundFontButton = ":/styles/round-font-button.css";
 constexpr const char* kStyleSpinBox = ":/styles/spin-box.css";
 
+constexpr const char* kStyleNightNightTheme = ":/styles/night/night-theme.css";
+
 }  // namespace hebo
 
 #endif  // HEBO_SRC_RESOURCES_STYLES_STYLES_H_

@@ -23,6 +23,8 @@ class MainController : public QObject {
   explicit MainController(QObject* parent = nullptr);
   ~MainController() override;
 
+  QString theme() const;
+
  public slots:
   void showMainWindow();
 

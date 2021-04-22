@@ -4,16 +4,16 @@
 
 #include "controllers/main_controller.h"
 
-#include <QDebug>
-#include <QDir>
 #include <QFontDatabase>
 #include <QGuiApplication>
 #include <QLibraryInfo>
 #include <QTranslator>
 
+#include "base/theme.h"
 #include "frames/main_window.h"
 #include "frames/settings_window.h"
 #include "resources/fonts/fonts.h"
+#include "resources/styles/styles.h"
 
 namespace hebo {
 namespace {
@@ -38,6 +38,10 @@ MainController::MainController(QObject* parent)
 MainController::~MainController() {
   this->update_thread_->exit();
   this->update_thread_->deleteLater();
+}
+
+QString MainController::theme() const {
+  return readThemeFile(kStyleNightNightTheme);
 }
 
 void MainController::showMainWindow() {

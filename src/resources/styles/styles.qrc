@@ -10,5 +10,7 @@
     <file>left-panel.css</file>
     <file>round-font-button.css</file>
     <file>spin-box.css</file>
+
+    <file>night/night-theme.css</file>
   </qresource>
 </RCC>
