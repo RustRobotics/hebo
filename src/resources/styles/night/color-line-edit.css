@@ -1,6 +1,7 @@
-/** Used for NumberLineEdit, ColorLineEdit and ColorChannelLineEdit **/
+/** Used for ColorLineEdit and ColorChannelLineEdit **/
 
-QLineEdit {
+hebo--ColorChannelLineEdit,
+hebo--ColorLineEdit {
     /*background-color: rgb(202, 202, 227);*/
     border: 1px solid #595b5c;
     border-radius: 4px;
@@ -10,6 +11,7 @@ QLineEdit {
     color: #292b2c;
 }
 
-QLineEdit:focus {
+hebo--ColorChannelLineEdit,
+hebo--ColorLineEdit:focus {
     /*background-color: rgb(192, 192, 255);*/
 }

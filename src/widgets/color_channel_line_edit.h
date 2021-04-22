@@ -12,9 +12,9 @@ namespace hebo {
 class ColorChannelLineEdit : public QLineEdit {
   Q_OBJECT
   Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
-
  public:
   explicit ColorChannelLineEdit(QWidget* parent = nullptr);
+  ~ColorChannelLineEdit() override = default;
 
   [[nodiscard]] int value() const;
 

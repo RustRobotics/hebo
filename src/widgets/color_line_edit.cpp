@@ -6,8 +6,6 @@
 
 #include <QDebug>
 
-#include "base/file.h"
-#include "resources/styles/styles.h"
 #include "widgets/color_validator.h"
 
 namespace hebo {
@@ -26,10 +24,10 @@ ColorLineEdit::ColorLineEdit(QWidget* parent) : QLineEdit(parent) {
       "- SVG color keyword names provided by the World Wide Web Consortium\n"
       "- transparent"));
 
-  this->setStyleSheet(readTextFile(kStyleColorLineEdit));
-
   connect(this, &ColorLineEdit::editingFinished,
           this, &ColorLineEdit::onTextChanged);
+
+  // style: color-line-edit.css
 }
 
 QColor ColorLineEdit::color() const {

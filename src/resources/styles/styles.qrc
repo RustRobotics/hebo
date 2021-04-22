@@ -2,7 +2,7 @@
 <RCC version="1.0">
   <qresource prefix="/styles">
     <file>about-window.css</file>
-    <file>color-line-edit.css</file>
+    <file>night/color-line-edit.css</file>
     <file>night/flat-button.css</file>
     <file>night/font-icon-button.css</file>
     <file>night/form-section.css</file>

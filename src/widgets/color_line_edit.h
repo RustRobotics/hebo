@@ -11,11 +11,10 @@ namespace hebo {
 
 class ColorLineEdit : public QLineEdit {
   Q_OBJECT
-
   Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
-
  public:
   explicit ColorLineEdit(QWidget* parent = nullptr);
+  ~ColorLineEdit() override = default;
 
   [[nodiscard]] QColor color() const;
 

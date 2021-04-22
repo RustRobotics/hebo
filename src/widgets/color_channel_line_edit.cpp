@@ -8,9 +8,6 @@
 #include <QKeyEvent>
 #include <QPainter>
 
-#include "base/file.h"
-#include "resources/styles/styles.h"
-
 namespace hebo {
 namespace {
 
@@ -24,10 +21,10 @@ ColorChannelLineEdit::ColorChannelLineEdit(QWidget* parent) : QLineEdit(parent) 
   this->setValidator(validator);
   this->setFixedWidth(36);
 
-  this->setStyleSheet(readTextFile(kStyleColorLineEdit));
-
   connect(this, &ColorChannelLineEdit::editingFinished,
           this, &ColorChannelLineEdit::onTextChanged);
+
+  // style: color-line-edit.css
 }
 
 int ColorChannelLineEdit::value() const {
