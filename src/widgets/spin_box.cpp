@@ -4,13 +4,10 @@
 
 #include "widgets/spin_box.h"
 
-#include "base/file.h"
-#include "resources/styles/styles.h"
-
 namespace hebo {
 
 SpinBox::SpinBox(QWidget* parent) : QSpinBox(parent) {
-  this->setStyleSheet(readTextFile(kStyleSpinBox));
+  // style: spin-box.css
 }
 
 }  // namespace hebo
