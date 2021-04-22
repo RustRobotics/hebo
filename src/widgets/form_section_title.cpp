@@ -4,15 +4,10 @@
 
 #include "widgets/form_section_title.h"
 
-#include "base/file.h"
-#include "resources/styles/styles.h"
-#include "form_section_title.h"
-
 namespace hebo {
 
-hebo::FormSectionTitle::FormSectionTitle(const QString& text, QWidget* parent)
-    : QLabel(text, parent) {
-  this->setStyleSheet(readTextFile(kStyleFormSectionTitle));
+FormSectionTitle::FormSectionTitle(const QString& text, QWidget* parent) : QLabel(text, parent) {
+  // style: form-section-title.css
 }
 
 }  // namespace hebo
