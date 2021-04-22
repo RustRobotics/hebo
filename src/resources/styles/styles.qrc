@@ -1,6 +1,8 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
   <qresource prefix="/styles">
+    <file>day/day-theme.css</file>
+
     <file>night/about-window.css</file>
     <file>night/color-line-edit.css</file>
     <file>night/flat-button.css</file>
