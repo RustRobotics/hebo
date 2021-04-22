@@ -7,8 +7,6 @@
 
 namespace hebo {
 
-constexpr const char* kStyleAboutWindow = ":/styles/about-window.css";
-
 constexpr const char* kStyleNightNightTheme = ":/styles/night/night-theme.css";
 
 }  // namespace hebo

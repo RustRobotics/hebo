@@ -1,25 +1,29 @@
 /* Used by AboutWindow */
 
-#about-window {
+hebo--AboutWindow {
     background-color: white;
 }
 
-#version-label {
+#about-window-version-label {
     font-size: 18px;
     color: #606060;
 }
 
-#update-button, #releases-button, #support-button, #third-party-software-button{
+#about-window-update-button,
+#about-window-releases-button,
+#about-window-support-button,
+#about-window-third-party-software-button {
     font-size: 16px;
     color: #34c388;
 }
 
-#server-note-label, #docker-note-label {
+#about-window-server-note-label,
+#about-window-docker-note-label {
     font-size: 14px;
     color: black;
 }
 
-#docker-cmd-label {
+#about-window-docker-cmd-label {
     padding: 10px;
     font-family: monospace;
     font-size: 14px;
