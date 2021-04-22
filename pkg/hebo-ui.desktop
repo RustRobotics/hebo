@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Hebo
+GenericName=Mqtt GUI Client
+Comment=Debug mqtt protocol so easy
+Keywords=image;editor;vector;drawing;
+Type=Application
+Categories=Graphics;VectorGraphics;Qt;
+Exec=hebo-ui %F
+TryExec=hebo-ui
+Terminal=false
+StartupNotify=true
+Icon=org.biofan.HeboUi
