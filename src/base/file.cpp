@@ -39,6 +39,21 @@ QString readTextFile(const QString& path) {
   return "";
 }
 
+bool readTextFile(const QString& path, QString& content) {
+  QFile file(path);
+  if (file.exists()) {
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+      qWarning() << "failed to open file:" << path;
+      return false;
+    }
+    content = file.readAll();
+    file.close();
+    return true;
+  }
+  qWarning() << "file not found:" << path;
+  return false;
+}
+
 bool writeBinaryFile(const QString& path, const QByteArray& bytes) {
   QFile file(path);
   if (!file.open(QIODevice::WriteOnly)) {

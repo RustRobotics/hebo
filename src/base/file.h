@@ -13,6 +13,8 @@ QByteArray readBinaryFile(const QString& path);
 
 QString readTextFile(const QString& path);
 
+bool readTextFile(const QString& path, QString& content);
+
 bool writeBinaryFile(const QString& path, const QByteArray& bytes);
 
 }  // namespace hebo

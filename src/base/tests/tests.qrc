@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource prefix="/tests">
+    <file>night-theme.css</file>
+    <file>flat-button.css</file>
+  </qresource>
+</RCC>
