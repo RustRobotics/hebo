@@ -4,14 +4,11 @@
 
 #include "widgets/round_font_button.h"
 
-#include "base/file.h"
-#include "resources/styles/styles.h"
-
 namespace hebo {
 
 RoundFontButton::RoundFontButton(const QString& text, QWidget* parent) : QPushButton(text, parent) {
   this->setFixedSize(46, 46);
-  this->setStyleSheet(readTextFile(kStyleRoundFontButton));
+  // style: round-font-button.css
 }
 
 }  // namespace hebo

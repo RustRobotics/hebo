@@ -14,7 +14,6 @@ constexpr const char* kStyleFontIconButton = ":/styles/font-icon-button.css";
 constexpr const char* kStyleFormSection = ":/styles/form-section.css";
 constexpr const char* kStyleFormSectionTitle = ":/styles/form-section-title.css";
 constexpr const char* kStyleLeftPanel = ":/styles/left-panel.css";
-constexpr const char* kStyleRoundFontButton = ":/styles/round-font-button.css";
 
 constexpr const char* kStyleNightNightTheme = ":/styles/night/night-theme.css";
 
