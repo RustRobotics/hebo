@@ -20,6 +20,24 @@ namespace {
 
 constexpr const char* kI18Template = ":/i18n/hebo-%1.qm";
 
+QString getThemeStyle(ThemeType theme) {
+  QString file;
+  switch (theme) {
+    case ThemeType::kDay: {
+      file = kStyleDayDayTheme;
+      break;
+    }
+    case ThemeType::kNight: {
+      file = kStyleNightNightTheme;
+      break;
+    }
+    default: {
+      Q_UNREACHABLE();
+    }
+  }
+  return readThemeFile(file);
+}
+
 }  // namespace
 
 MainController::MainController(QObject* parent)
@@ -41,7 +59,7 @@ MainController::~MainController() {
 }
 
 QString MainController::theme() const {
-  return readThemeFile(kStyleNightNightTheme);
+  return getThemeStyle(this->settings_manager_->theme());
 }
 
 void MainController::showMainWindow() {
@@ -67,6 +85,16 @@ void MainController::initWindow(MainWindow* window) {
           settings_window, &SettingsWindow::setAutoUpdate);
   connect(this->settings_manager_, &SettingsManager::themeChanged,
           settings_window, &SettingsWindow::setTheme);
+
+  connect(settings_window, &SettingsWindow::localeChanged,
+          this->settings_manager_, &SettingsManager::setLocale);
+  connect(settings_window, &SettingsWindow::retryConnectionChanged,
+          this->settings_manager_, &SettingsManager::setRetryConnections);
+  connect(settings_window, &SettingsWindow::autoUpdateChanged,
+          this->settings_manager_, &SettingsManager::setAutoUpdate);
+  connect(settings_window, &SettingsWindow::themeChanged,
+          this->settings_manager_, &SettingsManager::setTheme);
+
   settings_window->setLocale(this->settings_manager_->locale());
   settings_window->setRetryConnection(this->settings_manager_->retryConnections());
   settings_window->setAutoUpdate(this->settings_manager_->autoUpdate());
@@ -88,12 +116,20 @@ void MainController::initSignals() {
           this->update_manager_, &UpdateManager::deleteLater);
   connect(this->update_thread_, &QThread::finished,
           this->update_thread_, &QThread::deleteLater);
+
+  connect(this->settings_manager_, &SettingsManager::themeChanged,
+          this, &MainController::onThemeChanged);
 }
 
 void loadExternalFonts() {
   for (const char* font : kExternalFonts) {
     QFontDatabase::addApplicationFont(font);
   }
+}
+
+void MainController::onThemeChanged(ThemeType theme) {
+  const QString style = getThemeStyle(theme);
+  qApp->setStyleSheet(style);
 }
 
 }  // namespace hebo

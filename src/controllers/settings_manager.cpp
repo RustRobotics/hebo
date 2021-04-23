@@ -16,7 +16,7 @@ constexpr const char* kMaxRetry = "retryConnections";
 constexpr int kDefaultRetries = 3;
 
 constexpr const char* kTheme = "theme";
-constexpr const char* kDefaultTheme = "light";
+constexpr ThemeType kDefaultTheme = ThemeType::kDay;
 
 }  // namespace
 
@@ -57,12 +57,14 @@ void SettingsManager::setLocale(const QString& locale) {
   emit this->localeChanged(locale);
 }
 
-QString SettingsManager::theme() {
-  return this->settings_->value(kTheme, kDefaultTheme).toString();
+ThemeType SettingsManager::theme() {
+  QVariant default_value;
+  default_value.setValue(kDefaultTheme);
+  return this->settings_->value(kTheme, default_value).value<ThemeType>();
 }
 
-void SettingsManager::setTheme(const QString& theme) {
-  this->settings_->setValue(kTheme, theme);
+void SettingsManager::setTheme(ThemeType theme) {
+  this->settings_->setValue(kTheme, static_cast<int>(theme));
   emit this->themeChanged(theme);
 }
 

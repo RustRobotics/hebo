@@ -9,6 +9,7 @@
 #include <QFrame>
 #include <QSpinBox>
 
+#include "formats/theme.h"
 #include "widgets/integer_line_edit.h"
 #include "widgets/spin_box.h"
 #include "widgets/switch_button.h"
@@ -24,13 +25,13 @@ class SettingsWindow : public QFrame {
   void setLocale(const QString& locale);
   void setAutoUpdate(bool auto_update);
   void setRetryConnection(int retry);
-  void setTheme(const QString& theme);
+  void setTheme(ThemeType theme);
 
  signals:
   void localeChanged(const QString& locale);
   void autoUpdateChanged(bool auto_update);
   void retryConnectionChanged(int retry);
-  void themeChanged(const QString& theme);
+  void themeChanged(ThemeType theme);
 
  private:
   void initUi();
@@ -42,7 +43,6 @@ class SettingsWindow : public QFrame {
   QComboBox* theme_box_{nullptr};
 
   QStringList locales_{};
-  QStringList themes_{};
 };
 
 }  // namespace hebo

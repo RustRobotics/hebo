@@ -50,10 +50,8 @@ void SettingsWindow::initUi() {
   form_layout->addRow(new QLabel(tr("Max retry Connections")), this->retry_connection_box_);
 
   this->theme_box_ = new QComboBox();
-  this->themes_ << "light" << "dark" << "night";
   this->theme_box_->addItems({
-    tr("Light"),
-    tr("Dark"),
+    tr("Day"),
     tr("Night")
   });
   form_layout->addRow(new QLabel(tr("Theme")), this->theme_box_);
@@ -66,8 +64,11 @@ void SettingsWindow::initSignals() {
           this, &SettingsWindow::autoUpdateChanged);
   connect(this->retry_connection_box_, QOverload<int>::of(&SpinBox::valueChanged),
           this, &SettingsWindow::retryConnectionChanged);
-  connect(this->theme_box_, &QComboBox::currentTextChanged,
-          this, &SettingsWindow::themeChanged);
+  connect(this->theme_box_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+          [=](int index) {
+    qDebug() << "fuck" << index;
+    emit this->themeChanged(static_cast<ThemeType>(index));
+  });
 }
 
 void SettingsWindow::setLocale(const QString& locale) {
@@ -85,9 +86,9 @@ void SettingsWindow::setRetryConnection(int retry) {
   this->retry_connection_box_->setValue(retry);
 }
 
-void SettingsWindow::setTheme(const QString& theme) {
+void SettingsWindow::setTheme(ThemeType theme) {
   QSignalBlocker blocker(this->theme_box_);
-  this->theme_box_->setCurrentText(theme);
+  this->theme_box_->setCurrentIndex(static_cast<int>(theme));
 }
 
 }  // namespace hebo

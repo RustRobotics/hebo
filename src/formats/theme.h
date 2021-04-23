@@ -12,7 +12,7 @@
 namespace hebo {
 
 enum class ThemeType : uint8_t {
-  kDay,
+  kDay = 0,
   kNight,
 };
 
