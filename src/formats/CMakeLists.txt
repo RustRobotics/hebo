@@ -8,6 +8,8 @@ set(SOURCE_FILES
     license_parser.h
     payload_type.cpp
     payload_type.h
+    theme.cpp
+    theme.h
     )
 set(TEST_FILES
     color_palette_test.cpp
