@@ -29,7 +29,7 @@ InternalClient::InternalClient(QObject* parent)
       p_(new MqttClientPrivate()),
       queued_messages_timer_(new QTimer(this)) {
   this->initSignals();
-  this->queued_messages_timer_->setInterval(kQueueTimeoutInMillis);
+  this->queued_messages_timer_->setSingleShot(true);
 }
 
 InternalClient::~InternalClient() {
@@ -86,7 +86,7 @@ void InternalClient::doConnect(const ConnectConfig& config) {
 
     this->queued_messages_.append(message);
     if (!this->queued_messages_timer_->isActive()) {
-      this->queued_messages_timer_->start();
+      this->queued_messages_timer_->start(kQueueTimeoutInMillis);
     }
 
     return true;

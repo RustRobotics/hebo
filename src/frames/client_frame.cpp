@@ -170,7 +170,6 @@ void ClientFrame::onClientStateChanged(ConnectionState state) {
     }
     default: {
       Q_UNREACHABLE();
-      break;
     }
   }
 }
