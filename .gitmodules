@@ -1,0 +1,3 @@
+[submodule "src/third_party/rusty"]
+	path = src/third_party/rusty
+	url = git@github.com:RustyProject/rusty
