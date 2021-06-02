@@ -5,7 +5,6 @@ set(CMAKE_AUTORCC ON)
 # Set current directory as root of header files.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory(third_party/CuteLogger)
 add_subdirectory(third_party/mqtt_cpp)
 
 add_subdirectory(app)
