@@ -16,8 +16,7 @@ add_library(controllers-static STATIC
     )
 target_link_libraries(controllers-static
     Qt5::Widgets
-
-    CuteLogger
+    rusty-static
 
     config-static
     frames-static

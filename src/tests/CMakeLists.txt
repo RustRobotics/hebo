@@ -13,7 +13,5 @@ if (BUILD_TESTING)
     Qt5::Core
     Qt5::Gui
     Qt5::Widgets
-
-    CuteLogger
     )
 endif()
