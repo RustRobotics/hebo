@@ -14,9 +14,8 @@ constexpr const char* kLocale = "locale";
 constexpr const char* kDefaultLocale = "en_US";
 constexpr const char* kMaxRetry = "retryConnections";
 constexpr int kDefaultRetries = 3;
-
-constexpr const char* kTheme = "theme";
-constexpr ThemeType kDefaultTheme = ThemeType::kDay;
+constexpr const char* kNightModeName = "nightMode";
+constexpr bool kDefaultNightMode = true;
 
 }  // namespace
 
@@ -57,15 +56,13 @@ void SettingsManager::setLocale(const QString& locale) {
   emit this->localeChanged(locale);
 }
 
-ThemeType SettingsManager::theme() {
-  QVariant default_value;
-  default_value.setValue(kDefaultTheme);
-  return this->settings_->value(kTheme, default_value).value<ThemeType>();
+bool SettingsManager::isNightMode() {
+  return this->settings_->value(kNightModeName, kDefaultNightMode).toBool();
 }
 
-void SettingsManager::setTheme(ThemeType theme) {
-  this->settings_->setValue(kTheme, static_cast<int>(theme));
-  emit this->themeChanged(theme);
+void SettingsManager::setNightMode(bool night_mode) {
+  this->settings_->setValue(kNightModeName, night_mode);
+  emit this->nightModeChanged(night_mode);
 }
 
 }  // namespace hebo

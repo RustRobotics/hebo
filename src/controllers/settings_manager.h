@@ -8,8 +8,6 @@
 #include <QObject>
 #include <QSettings>
 
-#include "formats/theme.h"
-
 namespace hebo {
 
 class SettingsManager : public QObject {
@@ -18,7 +16,7 @@ class SettingsManager : public QObject {
   Q_PROPERTY(int retryConnections READ retryConnections WRITE setRetryConnections
              NOTIFY retryConnectionsChanged);
   Q_PROPERTY(QString locale READ locale WRITE setLocale NOTIFY localeChanged);
-  Q_PROPERTY(ThemeType theme READ theme WRITE setTheme NOTIFY themeChanged);
+  Q_PROPERTY(bool nightMode READ isNightMode WRITE setNightMode NOTIFY nightModeChanged);
  public:
   explicit SettingsManager(QObject* parent = nullptr);
 
@@ -30,7 +28,7 @@ class SettingsManager : public QObject {
 
   QString locale();
 
-  ThemeType theme();
+  bool isNightMode();
 
  public slots:
   void setAutoUpdate(bool enable);
@@ -39,7 +37,7 @@ class SettingsManager : public QObject {
 
   void setLocale(const QString& locale);
 
-  void setTheme(ThemeType theme);
+  void setNightMode(bool night_mode);
 
  signals:
   void autoUpdateChanged(bool enable);
@@ -48,7 +46,7 @@ class SettingsManager : public QObject {
 
   void localeChanged(const QString& locale);
 
-  void themeChanged(ThemeType theme);
+  void nightModeChanged(bool night_mode);
 
  private:
   QSettings* settings_;

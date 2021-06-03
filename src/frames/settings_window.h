@@ -25,13 +25,13 @@ class SettingsWindow : public QFrame {
   void setLocale(const QString& locale);
   void setAutoUpdate(bool auto_update);
   void setRetryConnection(int retry);
-  void setTheme(ThemeType theme);
+  void setNightMode(bool night_mode);
 
  signals:
   void localeChanged(const QString& locale);
   void autoUpdateChanged(bool auto_update);
   void retryConnectionChanged(int retry);
-  void themeChanged(ThemeType theme);
+  void nightModeChanged(bool night_mode);
 
  private:
   void initUi();

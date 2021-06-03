@@ -67,7 +67,7 @@ void SettingsWindow::initSignals() {
   connect(this->theme_box_, QOverload<int>::of(&QComboBox::currentIndexChanged),
           [=](int index) {
     qDebug() << "fuck" << index;
-    emit this->themeChanged(static_cast<ThemeType>(index));
+    emit this->nightModeChanged(static_cast<ThemeType>(index));
   });
 }
 
@@ -86,7 +86,7 @@ void SettingsWindow::setRetryConnection(int retry) {
   this->retry_connection_box_->setValue(retry);
 }
 
-void SettingsWindow::setTheme(ThemeType theme) {
+void SettingsWindow::setNightMode(ThemeType theme) {
   QSignalBlocker blocker(this->theme_box_);
   this->theme_box_->setCurrentIndex(static_cast<int>(theme));
 }

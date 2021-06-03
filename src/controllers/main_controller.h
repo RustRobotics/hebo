@@ -8,7 +8,6 @@
 #include <QObject>
 #include <QThread>
 
-//#include "controllers/log_manager.h"
 #include "controllers/settings_manager.h"
 #include "controllers/update_manager.h"
 #include "formats/theme.h"
@@ -24,13 +23,11 @@ class MainController : public QObject {
   explicit MainController(QObject* parent = nullptr);
   ~MainController() override;
 
-  QString theme() const;
-
  public slots:
   void showMainWindow();
 
  private:
-  void onThemeChanged(ThemeType theme);
+  void onNightModeChanged(bool night_mode);
 
  private:
   void initSignals();

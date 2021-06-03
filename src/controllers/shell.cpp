@@ -29,7 +29,6 @@ int runShell(int argc, char** argv) {
   QApplication application(argc, argv);
   cuteLogger->registerAppender(new ConsoleAppender());
   auto controller = QSharedPointer<MainController>::create();
-  application.setStyleSheet(controller->theme());
   controller->showMainWindow();
 
   return QApplication::exec();

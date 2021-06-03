@@ -4,12 +4,13 @@
 
 #include "controllers/main_controller.h"
 
+#include <QApplication>
 #include <QFontDatabase>
-#include <QGuiApplication>
 #include <QLibraryInfo>
 #include <QTranslator>
+#include <rusty/widgets/adwaita_style.h>
+#include <rusty/widgets/theme_manager.h>
 
-#include "base/theme.h"
 #include "frames/main_window.h"
 #include "frames/settings_window.h"
 #include "resources/fonts/fonts.h"
@@ -19,24 +20,6 @@ namespace hebo {
 namespace {
 
 constexpr const char* kI18Template = ":/i18n/hebo-%1.qm";
-
-QString getThemeStyle(ThemeType theme) {
-  QString file;
-  switch (theme) {
-    case ThemeType::kDay: {
-      file = kStyleDayDayTheme;
-      break;
-    }
-    case ThemeType::kNight: {
-      file = kStyleNightNightTheme;
-      break;
-    }
-    default: {
-      Q_UNREACHABLE();
-    }
-  }
-  return readThemeFile(file);
-}
 
 }  // namespace
 
@@ -51,15 +34,14 @@ MainController::MainController(QObject* parent)
   this->installTranslators();
   this->initSignals();
   this->update_thread_->start();
+
+  const bool night_mode = this->settings_manager_->isNightMode();
+  QApplication::setStyle(new rusty::AdwaitaStyle(night_mode));
 }
 
 MainController::~MainController() {
   this->update_thread_->exit();
   this->update_thread_->deleteLater();
-}
-
-QString MainController::theme() const {
-  return getThemeStyle(this->settings_manager_->theme());
 }
 
 void MainController::showMainWindow() {
@@ -83,8 +65,8 @@ void MainController::initWindow(MainWindow* window) {
           settings_window, &SettingsWindow::setRetryConnection);
   connect(this->settings_manager_, &SettingsManager::autoUpdateChanged,
           settings_window, &SettingsWindow::setAutoUpdate);
-  connect(this->settings_manager_, &SettingsManager::themeChanged,
-          settings_window, &SettingsWindow::setTheme);
+  connect(this->settings_manager_, &SettingsManager::nightModeChanged,
+          settings_window, &SettingsWindow::setNightMode);
 
   connect(settings_window, &SettingsWindow::localeChanged,
           this->settings_manager_, &SettingsManager::setLocale);
@@ -92,13 +74,13 @@ void MainController::initWindow(MainWindow* window) {
           this->settings_manager_, &SettingsManager::setRetryConnections);
   connect(settings_window, &SettingsWindow::autoUpdateChanged,
           this->settings_manager_, &SettingsManager::setAutoUpdate);
-  connect(settings_window, &SettingsWindow::themeChanged,
-          this->settings_manager_, &SettingsManager::setTheme);
+  connect(settings_window, &SettingsWindow::nightModeChanged,
+          this->settings_manager_, &SettingsManager::setNightMode);
 
   settings_window->setLocale(this->settings_manager_->locale());
   settings_window->setRetryConnection(this->settings_manager_->retryConnections());
   settings_window->setAutoUpdate(this->settings_manager_->autoUpdate());
-  settings_window->setTheme(this->settings_manager_->theme());
+  settings_window->setNightMode(this->settings_manager_->isNightMode());
 }
 
 void MainController::installTranslators() {
@@ -117,8 +99,8 @@ void MainController::initSignals() {
   connect(this->update_thread_, &QThread::finished,
           this->update_thread_, &QThread::deleteLater);
 
-  connect(this->settings_manager_, &SettingsManager::themeChanged,
-          this, &MainController::onThemeChanged);
+  connect(this->settings_manager_, &SettingsManager::nightModeChanged,
+          this, &MainController::onNightModeChanged);
 }
 
 void loadExternalFonts() {
@@ -127,9 +109,8 @@ void loadExternalFonts() {
   }
 }
 
-void MainController::onThemeChanged(ThemeType theme) {
-  const QString style = getThemeStyle(theme);
-  qApp->setStyleSheet(style);
+void MainController::onNightModeChanged(bool night_mode) {
+  QApplication::setStyle(new rusty::AdwaitaStyle(night_mode));
 }
 
 }  // namespace hebo
