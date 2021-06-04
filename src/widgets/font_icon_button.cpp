@@ -4,10 +4,15 @@
 
 #include "widgets/font_icon_button.h"
 
+#include <QFont>
+
 namespace hebo {
 
 FontIconButton::FontIconButton(const QString& text, QWidget* parent) : QPushButton(text, parent) {
-  // style: font-icon-button.css
+  QFont font = this->font();
+  font.setFamily("element");
+  font.setPixelSize(22);
+  this->setFont(font);
 }
 
 }  // namespace hebo

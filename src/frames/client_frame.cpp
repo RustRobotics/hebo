@@ -128,7 +128,7 @@ void ClientFrame::initUi() {
   messages_layout->addWidget(this->payload_edit_);
 
   this->publish_button_ = new FontIconButton(kFontElIconPosition, this);
-  this->publish_button_->setFixedSize(20, 20);
+  this->publish_button_->setFixedSize(32, 32);
   this->publish_button_->show();
 }
 
