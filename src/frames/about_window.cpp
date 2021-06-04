@@ -8,10 +8,11 @@
 #include <QLabel>
 #include <QUrl>
 #include <QVBoxLayout>
+#include <rusty/frames/software_license_window.h>
 
 #include "config/config.h"
-#include "frames/software_license_window.h"
 #include "resources/images/images.h"
+#include "resources/misc/misc.h"
 
 namespace hebo {
 namespace {
@@ -130,11 +131,12 @@ void AboutWindow::openExternalUrl(const QString& url) {
 }
 
 void AboutWindow::showSoftwareLicenseWindow() {
-  auto* window = new SoftwareLicenseWindow(this);
-  connect(window, &SoftwareLicenseWindow::requestOpenUrl,
+  auto* window = new rusty::SoftwareLicenseWindow();
+  window->setLicenseFile(kMiscSoftwareLicense);
+  connect(window, &rusty::SoftwareLicenseWindow::requestOpenUrl,
           this, &AboutWindow::openExternalUrl);
-  connect(window, &SoftwareLicenseWindow::destroyed,
-          window, &SoftwareLicenseWindow::deleteLater);
+  connect(window, &rusty::SoftwareLicenseWindow::destroyed,
+          window, &rusty::SoftwareLicenseWindow::deleteLater);
   window->resize(720, 600);
   window->show();
 }

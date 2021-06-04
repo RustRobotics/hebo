@@ -4,14 +4,11 @@ set(SOURCE_FILES
     color_palette.h
     connect_config.cpp
     connect_config.h
-    license_parser.cpp
-    license_parser.h
     payload_type.cpp
     payload_type.h
     )
 set(TEST_FILES
     color_palette_test.cpp
-    license_parser_test.cpp
 
     ../resources/misc/misc.qrc
     )
