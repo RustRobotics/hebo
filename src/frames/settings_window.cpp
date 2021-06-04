@@ -47,7 +47,7 @@ void SettingsWindow::initUi() {
   this->auto_update_button_ = new rusty::SwitchButton();
   form_layout->addRow(new QLabel(tr("Auto check update")), this->auto_update_button_);
 
-  this->retry_connection_box_ = new SpinBox();
+  this->retry_connection_box_ = new QSpinBox();
   this->retry_connection_box_->setRange(0, kRetryConnectionsMax);
   form_layout->addRow(new QLabel(tr("Max retry Connections")), this->retry_connection_box_);
 
@@ -64,7 +64,7 @@ void SettingsWindow::initSignals() {
           this, &SettingsWindow::localeChanged);
   connect(this->auto_update_button_, &rusty::SwitchButton::toggled,
           this, &SettingsWindow::autoUpdateChanged);
-  connect(this->retry_connection_box_, QOverload<int>::of(&SpinBox::valueChanged),
+  connect(this->retry_connection_box_, QOverload<int>::of(&QSpinBox::valueChanged),
           this, &SettingsWindow::retryConnectionChanged);
   connect(this->theme_box_, QOverload<int>::of(&QComboBox::currentIndexChanged),
           [=](int index) {

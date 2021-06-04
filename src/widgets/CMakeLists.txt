@@ -34,8 +34,6 @@ set(SOURCE_FILES
     left_panel_button.h
     round_font_button.cpp
     round_font_button.h
-    spin_box.cpp
-    spin_box.h
     text_button.cpp
     text_button.h
     )

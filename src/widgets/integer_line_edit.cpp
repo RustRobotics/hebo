@@ -27,17 +27,17 @@ IntegerLineEdit::IntegerLineEdit(QWidget* parent)
 
 void IntegerLineEdit::initUi() {
   this->setValidator(this->validator_);
-  this->plus_action_ = this->addAction(QIcon(kImageBlackPlus), QLineEdit::TrailingPosition);
-  this->minus_action_ = this->addAction(QIcon(kImageBlackMinus), QLineEdit::TrailingPosition);
+//  this->plus_action_ = this->addAction(QIcon(kImageBlackPlus), QLineEdit::TrailingPosition);
+//  this->minus_action_ = this->addAction(QIcon(kImageBlackMinus), QLineEdit::TrailingPosition);
 }
 
 void IntegerLineEdit::initSignals() {
   connect(this, &IntegerLineEdit::textChanged,
           this, &IntegerLineEdit::onTextChanged);
-  connect(this->plus_action_, &QAction::triggered,
-          this, &IntegerLineEdit::onPlusClicked);
-  connect(this->minus_action_, &QAction::triggered,
-          this, &IntegerLineEdit::onMinusClicked);
+//  connect(this->plus_action_, &QAction::triggered,
+//          this, &IntegerLineEdit::onPlusClicked);
+//  connect(this->minus_action_, &QAction::triggered,
+//          this, &IntegerLineEdit::onMinusClicked);
 }
 
 void IntegerLineEdit::setRange(int min, int max) {

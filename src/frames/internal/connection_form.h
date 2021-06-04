@@ -8,6 +8,7 @@
 #include <QComboBox>
 #include <QFrame>
 #include <QLineEdit>
+#include <QSpinBox>
 #include <QTextEdit>
 #include <QVBoxLayout>
 #include <rusty/widgets/switch_button.h>
@@ -15,7 +16,6 @@
 #include "frames/models/protocol_model.h"
 #include "frames/models/qos_model.h"
 #include "frames/models/version_model.h"
-#include "widgets/spin_box.h"
 
 namespace hebo {
 
@@ -48,13 +48,13 @@ class ConnectionForm : public QFrame {
   QComboBox* protocol_box_{nullptr};
   ProtocolModel* protocol_model_{nullptr};
   QLineEdit* hostname_edit_{nullptr};
-  SpinBox* port_box_{nullptr};
+  QSpinBox* port_box_{nullptr};
   QLineEdit* username_edit_{nullptr};
   QLineEdit* password_edit_{nullptr};
   rusty::SwitchButton* tls_switch_{nullptr};
 
-  SpinBox* timeout_box_{nullptr};
-  SpinBox* keepalive_box_{nullptr};
+  QSpinBox* timeout_box_{nullptr};
+  QSpinBox* keepalive_box_{nullptr};
   rusty::SwitchButton* clean_session_btn_{nullptr};
   rusty::SwitchButton* auto_reconnect_btn_{nullptr};
   QComboBox* mqtt_version_box_{nullptr};

@@ -11,7 +11,6 @@
 #include <rusty/widgets/switch_button.h>
 
 #include "widgets/integer_line_edit.h"
-#include "widgets/spin_box.h"
 
 namespace hebo {
 
@@ -38,7 +37,7 @@ class SettingsWindow : public QWidget {
 
   QComboBox* locale_box_{nullptr};
   rusty::SwitchButton* auto_update_button_{nullptr};
-  SpinBox* retry_connection_box_{nullptr};
+  QSpinBox* retry_connection_box_{nullptr};
   QComboBox* theme_box_{nullptr};
 
   QStringList locales_{};
