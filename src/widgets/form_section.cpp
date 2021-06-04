@@ -7,7 +7,7 @@
 namespace hebo {
 
 FormSection::FormSection(QWidget* parent) : QFrame(parent) {
-  // style: form-section.css
+  this->setFrameShape(QFrame::Panel);
 }
 
 }  // namespace hebo
