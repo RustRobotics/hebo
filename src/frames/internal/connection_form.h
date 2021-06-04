@@ -10,12 +10,12 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QVBoxLayout>
+#include <rusty/widgets/switch_button.h>
 
 #include "frames/models/protocol_model.h"
 #include "frames/models/qos_model.h"
 #include "frames/models/version_model.h"
 #include "widgets/spin_box.h"
-#include "widgets/switch_button.h"
 
 namespace hebo {
 
@@ -51,19 +51,19 @@ class ConnectionForm : public QFrame {
   SpinBox* port_box_{nullptr};
   QLineEdit* username_edit_{nullptr};
   QLineEdit* password_edit_{nullptr};
-  SwitchButton* tls_switch_{nullptr};
+  rusty::SwitchButton* tls_switch_{nullptr};
 
   SpinBox* timeout_box_{nullptr};
   SpinBox* keepalive_box_{nullptr};
-  SwitchButton* clean_session_btn_{nullptr};
-  SwitchButton* auto_reconnect_btn_{nullptr};
+  rusty::SwitchButton* clean_session_btn_{nullptr};
+  rusty::SwitchButton* auto_reconnect_btn_{nullptr};
   QComboBox* mqtt_version_box_{nullptr};
   VersionModel* mqtt_version_model_{nullptr};
 
   QLineEdit* last_will_topic_edit_{nullptr};
   QComboBox* last_will_qos_box_{nullptr};
   QoSModel* qos_model_{nullptr};
-  SwitchButton* last_will_retain_button_{nullptr};
+  rusty::SwitchButton* last_will_retain_button_{nullptr};
   QTextEdit* last_will_payload_edit_{nullptr};
 
   QPushButton* reset_button_{nullptr};

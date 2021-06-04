@@ -44,7 +44,7 @@ void SettingsWindow::initUi() {
   this->locale_box_->addItems({"English", "简体中文"});
   form_layout->addRow(new QLabel(tr("Language")), this->locale_box_);
 
-  this->auto_update_button_ = new SwitchButton();
+  this->auto_update_button_ = new rusty::SwitchButton();
   form_layout->addRow(new QLabel(tr("Auto check update")), this->auto_update_button_);
 
   this->retry_connection_box_ = new SpinBox();
@@ -62,7 +62,7 @@ void SettingsWindow::initUi() {
 void SettingsWindow::initSignals() {
   connect(this->locale_box_, &QComboBox::currentTextChanged,
           this, &SettingsWindow::localeChanged);
-  connect(this->auto_update_button_, &SwitchButton::toggled,
+  connect(this->auto_update_button_, &rusty::SwitchButton::toggled,
           this, &SettingsWindow::autoUpdateChanged);
   connect(this->retry_connection_box_, QOverload<int>::of(&SpinBox::valueChanged),
           this, &SettingsWindow::retryConnectionChanged);

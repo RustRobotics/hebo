@@ -96,7 +96,7 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   this->password_edit_ = new QLineEdit();
   form_layout->addRow(new QLabel("Password"), this->password_edit_);
 
-  this->tls_switch_ = new SwitchButton();
+  this->tls_switch_ = new rusty::SwitchButton();
   form_layout->addRow(new QLabel("SSL/TLS"), this->tls_switch_);
 }
 
@@ -126,11 +126,11 @@ void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
   this->keepalive_box_->setValue(kDefaultKeepalive);
   form_layout->addRow(new QLabel(tr("Keep Alive(s)")), this->keepalive_box_);
 
-  this->clean_session_btn_ = new SwitchButton();
+  this->clean_session_btn_ = new rusty::SwitchButton();
   this->clean_session_btn_->setChecked(true);
   form_layout->addRow(new QLabel(tr("Clean Session")), this->clean_session_btn_);
 
-  this->auto_reconnect_btn_ = new SwitchButton();
+  this->auto_reconnect_btn_ = new rusty::SwitchButton();
   form_layout->addRow(new QLabel(tr("Auto Reconnect")), this->auto_reconnect_btn_);
 
   this->mqtt_version_box_ = new QComboBox();
@@ -163,7 +163,7 @@ void ConnectionForm::initLastWillForm(QVBoxLayout* main_layout) {
   this->last_will_qos_box_->setModel(this->qos_model_);
   form_layout->addRow(new QLabel(tr("Last-Will QoS")), this->last_will_qos_box_);
 
-  this->last_will_retain_button_ = new SwitchButton();
+  this->last_will_retain_button_ = new rusty::SwitchButton();
   form_layout->addRow(new QLabel(tr("Last-Will Retain")), this->last_will_retain_button_);
 
   this->last_will_payload_edit_ = new QTextEdit();
