@@ -4,10 +4,14 @@
 
 #include "widgets/form_section_title.h"
 
+#include <QFont>
+
 namespace hebo {
 
 FormSectionTitle::FormSectionTitle(const QString& text, QWidget* parent) : QLabel(text, parent) {
-  // style: form-section-title.css
+  QFont font(this->font());
+  font.setPixelSize(22);
+  this->setFont(font);
 }
 
 }  // namespace hebo
