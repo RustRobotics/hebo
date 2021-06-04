@@ -12,6 +12,8 @@ namespace hebo {
 namespace {
 
 constexpr const int kRetryConnectionsMax = 1 << 10;
+constexpr const int kDayModeIndex = 0;
+constexpr const int kNightModeIndex = 1;
 
 }  // namespace
 
@@ -66,8 +68,7 @@ void SettingsWindow::initSignals() {
           this, &SettingsWindow::retryConnectionChanged);
   connect(this->theme_box_, QOverload<int>::of(&QComboBox::currentIndexChanged),
           [=](int index) {
-    qDebug() << "fuck" << index;
-    emit this->nightModeChanged(static_cast<ThemeType>(index));
+    emit this->nightModeChanged(index == kNightModeIndex);
   });
 }
 
@@ -86,9 +87,9 @@ void SettingsWindow::setRetryConnection(int retry) {
   this->retry_connection_box_->setValue(retry);
 }
 
-void SettingsWindow::setNightMode(ThemeType theme) {
+void SettingsWindow::setNightMode(bool night_mode) {
   QSignalBlocker blocker(this->theme_box_);
-  this->theme_box_->setCurrentIndex(static_cast<int>(theme));
+  this->theme_box_->setCurrentIndex(night_mode ? kNightModeIndex : kDayModeIndex);
 }
 
 }  // namespace hebo

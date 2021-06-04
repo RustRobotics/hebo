@@ -10,7 +10,6 @@
 
 #include "controllers/settings_manager.h"
 #include "controllers/update_manager.h"
-#include "formats/theme.h"
 #include "mqtt/connections_model.h"
 
 namespace hebo {
