@@ -4,8 +4,6 @@
 
 #include "mqtt/subscription_model.h"
 
-#include "base/color.h"
-
 namespace hebo {
 
 SubscriptionModel::SubscriptionModel(QObject* parent) : QAbstractListModel(parent) {

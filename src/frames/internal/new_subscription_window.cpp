@@ -6,8 +6,8 @@
 
 #include <QFormLayout>
 #include <QLabel>
+#include <rusty/gui/color.h>
 
-#include "base/color.h"
 #include "resources/fonts/fonts.h"
 #include "resources/misc/misc.h"
 
@@ -87,7 +87,7 @@ void NewSubscriptionWindow::onColorChooserButtonClicked() {
 }
 
 void NewSubscriptionWindow::generateRandomColor() {
-  const auto color = randomColor();
+  const auto color = rusty::randomColor();
   this->color_chooser_button_->setColor(color);
 }
 

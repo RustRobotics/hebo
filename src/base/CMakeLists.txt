@@ -1,12 +1,9 @@
 
 set(SOURCE
-    color.cpp
-    color.h
     random.cpp
     random.h
     )
 set(TEST_FILES
-    color_test.cpp
     random_test.cpp
 
     tests/tests.qrc

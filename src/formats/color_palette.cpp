@@ -8,8 +8,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <rusty/base/file.h>
-
-#include "base/color.h"
+#include <rusty/gui/color.h>
 
 namespace hebo {
 
@@ -33,7 +32,7 @@ ColorPalette parseColorPalette(const QString& json_file, bool* ok) {
 
   const QJsonArray array = document.array();
   for (const QJsonValue& value : array) {
-    const QColor color = parseColor(value.toString());
+    const QColor color = rusty::parseColor(value.toString());
     palette.append(color);
   }
 
