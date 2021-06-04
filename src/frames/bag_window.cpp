@@ -6,7 +6,7 @@
 
 namespace hebo {
 
-BagWindow::BagWindow(QWidget* parent) : QFrame(parent) {
+BagWindow::BagWindow(QWidget* parent) : QWidget(parent) {
   this->initUi();
 }
 

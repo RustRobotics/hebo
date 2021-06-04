@@ -10,7 +10,7 @@
 
 namespace hebo {
 
-ConnectionsWindow::ConnectionsWindow(QWidget* parent) : QFrame(parent) {
+ConnectionsWindow::ConnectionsWindow(QWidget* parent) : QWidget(parent) {
   this->initUi();
   this->initSignals();
 }

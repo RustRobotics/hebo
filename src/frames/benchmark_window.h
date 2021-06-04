@@ -5,11 +5,11 @@
 #ifndef HEBO_SRC_FRAMES_BENCHMARK_WINDOW_H_
 #define HEBO_SRC_FRAMES_BENCHMARK_WINDOW_H_
 
-#include <QFrame>
+#include <QWidget>
 
 namespace hebo {
 
-class BenchmarkWindow : public QFrame {
+class BenchmarkWindow : public QWidget {
   Q_OBJECT
  public:
   explicit BenchmarkWindow(QWidget* parent = nullptr);

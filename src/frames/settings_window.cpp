@@ -17,7 +17,7 @@ constexpr const int kNightModeIndex = 1;
 
 }  // namespace
 
-SettingsWindow::SettingsWindow(QWidget* parent) : QFrame(parent) {
+SettingsWindow::SettingsWindow(QWidget* parent) : QWidget(parent) {
   this->initUi();
   this->initSignals();
 }

@@ -6,15 +6,15 @@
 #define HEBO_SRC_FRAMES_CONNECTIONS_WINDOW_H_
 
 #include <QListView>
-#include <QFrame>
 #include <QStackedWidget>
+#include <QWidget>
 
 #include "frames/client_frame.h"
 #include "mqtt/connections_model.h"
 
 namespace hebo {
 
-class ConnectionsWindow : public QFrame {
+class ConnectionsWindow : public QWidget {
   Q_OBJECT
  public:
   explicit ConnectionsWindow(QWidget* parent = nullptr);

@@ -6,8 +6,8 @@
 #define HEBO_SRC_FRAMES_SETTINGS_WINDOW_H_
 
 #include <QComboBox>
-#include <QFrame>
 #include <QSpinBox>
+#include <QWidget>
 #include <rusty/widgets/switch_button.h>
 
 #include "widgets/integer_line_edit.h"
@@ -15,7 +15,7 @@
 
 namespace hebo {
 
-class SettingsWindow : public QFrame {
+class SettingsWindow : public QWidget {
   Q_OBJECT
  public:
   explicit SettingsWindow(QWidget* parent = nullptr);

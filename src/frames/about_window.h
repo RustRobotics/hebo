@@ -11,7 +11,7 @@
 
 namespace hebo {
 
-class AboutWindow : public QFrame {
+class AboutWindow : public QWidget {
   Q_OBJECT
  public:
   explicit AboutWindow(QWidget* parent = nullptr);

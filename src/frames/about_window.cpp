@@ -23,7 +23,7 @@ constexpr const int kContentMaxWidth = 580;
 
 }  // namespace
 
-AboutWindow::AboutWindow(QWidget* parent) : QFrame(parent) {
+AboutWindow::AboutWindow(QWidget* parent) : QWidget(parent) {
   this->initUi();
   this->initSignals();
 }

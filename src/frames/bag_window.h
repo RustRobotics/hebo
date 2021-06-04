@@ -5,11 +5,11 @@
 #ifndef HEBO_SRC_FRAMES_BAG_WINDOW_H_
 #define HEBO_SRC_FRAMES_BAG_WINDOW_H_
 
-#include <QFrame>
+#include <QWidget>
 
 namespace hebo {
 
-class BagWindow : public QFrame {
+class BagWindow : public QWidget {
   Q_OBJECT
  public:
   explicit BagWindow(QWidget* parent = nullptr);

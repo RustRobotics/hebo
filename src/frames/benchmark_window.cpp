@@ -6,7 +6,7 @@
 
 namespace hebo {
 
-BenchmarkWindow::BenchmarkWindow(QWidget* parent) : QFrame(parent) {
+BenchmarkWindow::BenchmarkWindow(QWidget* parent) : QWidget(parent) {
   this->initUi();
 }
 
