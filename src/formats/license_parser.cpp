@@ -8,8 +8,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-
-#include "base/file.h"
+#include <rusty/base/file.h>
 
 namespace hebo {
 namespace {
@@ -36,7 +35,7 @@ QDebug operator<<(QDebug stream, const SoftwareLicense& license) {
 SoftwareLicenseList parseAppLicense(const QString& file) {
   SoftwareLicenseList list{};
 
-  const QByteArray bytes = readBinaryFile(file);
+  const QByteArray bytes = rusty::readBinaryFile(file);
   const QJsonDocument document = QJsonDocument::fromJson(bytes);
   if (!document.isArray()) {
     qWarning() << "Failed to parse app license file:" << file;

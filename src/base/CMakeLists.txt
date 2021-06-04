@@ -2,8 +2,6 @@
 set(SOURCE
     color.cpp
     color.h
-    file.cpp
-    file.h
     random.cpp
     random.h
     )

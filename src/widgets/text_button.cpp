@@ -7,7 +7,6 @@
 #include <QCursor>
 #include <QStyle>
 
-#include "base/file.h"
 #include "resources/styles/styles.h"
 
 namespace hebo {

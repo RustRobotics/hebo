@@ -22,6 +22,7 @@ add_library(formats-static STATIC
 target_link_libraries(formats-static
     Qt5::Core
     Qt5::Gui
+    rusty-static
 
     base-static
     )

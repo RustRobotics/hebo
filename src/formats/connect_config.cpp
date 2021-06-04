@@ -6,8 +6,7 @@
 
 #include <QJsonArray>
 #include <QJsonDocument>
-
-#include "base/file.h"
+#include <rusty/base/file.h>
 
 namespace hebo {
 namespace {
@@ -187,7 +186,7 @@ QDebug operator<<(QDebug stream, const ConnectConfig& info) {
 }
 
 bool parseConnectConfigs(const QString& file, ConnectConfigList& list) {
-  const QByteArray contents = readBinaryFile(file);
+  const QByteArray contents = rusty::readBinaryFile(file);
   const QJsonDocument document{QJsonDocument::fromJson(contents)};
   if (!document.isObject()) {
     qWarning() << "Invalid conn info file:" << file;
@@ -244,7 +243,7 @@ bool dumpConnectConfigs(const QString& file, const ConnectConfigList& list) {
   QJsonDocument document;
   document.setObject(root_object);
   const QByteArray contents = document.toJson();
-  return writeBinaryFile(file, contents);
+  return rusty::writeBinaryFile(file, contents);
 }
 
 }  // namespace hebo

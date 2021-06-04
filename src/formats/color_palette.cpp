@@ -7,9 +7,9 @@
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <rusty/base/file.h>
 
 #include "base/color.h"
-#include "base/file.h"
 
 namespace hebo {
 
@@ -18,7 +18,7 @@ ColorPalette parseColorPalette(const QString& json_file, bool* ok) {
   ColorPalette palette;
   *ok = true;
 
-  const QByteArray bytes = readBinaryFile(json_file);
+  const QByteArray bytes = rusty::readBinaryFile(json_file);
   if (bytes.isEmpty()) {
     qWarning() << "Failed to open file:" << json_file;
     *ok = false;
