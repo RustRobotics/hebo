@@ -14,7 +14,6 @@
 #include "widgets/color_label.h"
 #include "widgets/color_line_edit.h"
 #include "widgets/color_palette_list_view.h"
-#include "widgets/flat_button.h"
 #include "widgets/hsv_color_picker.h"
 
 namespace hebo {
