@@ -9,9 +9,7 @@
 #include <QGridLayout>
 #include <QVBoxLayout>
 
-#include "resources/images/images.h"
 #include "widgets/color_chooser_button.h"
-#include "widgets/separator_line.h"
 
 namespace hebo {
 
