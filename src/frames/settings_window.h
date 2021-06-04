@@ -9,7 +9,6 @@
 #include <QFrame>
 #include <QSpinBox>
 
-#include "formats/theme.h"
 #include "widgets/integer_line_edit.h"
 #include "widgets/spin_box.h"
 #include "widgets/switch_button.h"

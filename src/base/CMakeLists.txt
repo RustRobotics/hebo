@@ -6,13 +6,10 @@ set(SOURCE
     file.h
     random.cpp
     random.h
-    theme.cpp
-    theme.h
     )
 set(TEST_FILES
     color_test.cpp
     random_test.cpp
-    theme_test.cpp
 
     tests/tests.qrc
     )
