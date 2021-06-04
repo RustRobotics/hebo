@@ -28,8 +28,6 @@ set(SOURCE_FILES
     form_section_title.h
     hsv_color_picker.cpp
     hsv_color_picker.h
-    integer_line_edit.cpp
-    integer_line_edit.h
     left_panel_button.cpp
     left_panel_button.h
     round_font_button.cpp

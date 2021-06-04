@@ -10,8 +10,6 @@
 #include <QWidget>
 #include <rusty/widgets/switch_button.h>
 
-#include "widgets/integer_line_edit.h"
-
 namespace hebo {
 
 class SettingsWindow : public QWidget {
