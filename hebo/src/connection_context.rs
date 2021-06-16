@@ -86,7 +86,7 @@ impl ConnectionContext {
                     }
                 }
                 _ = timer.tick() => {
-                    //log::info!("tick()");
+                    log::info!("tick()");
                 },
                 Some(cmd) = self.receiver.recv() => {
                     // TODO(Shaohua): Handle errors
