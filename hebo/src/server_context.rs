@@ -136,7 +136,7 @@ impl ServerContext {
 
     async fn on_publish(&mut self, packet: PublishPacket) {
         let cmd = ServerCommand::Publish(packet.clone());
-        // TODO(Shaohua): Replace with a tiar tree and a hash table.
+        // TODO(Shaohua): Replace with a trie tree and a hash table.
         for pipeline in self.pipelines.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {
                 if let Err(err) = pipeline.server_tx.send(cmd.clone()).await {

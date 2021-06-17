@@ -89,8 +89,9 @@ impl ConnectionContext {
                     log::info!("tick()");
                 },
                 Some(cmd) = self.receiver.recv() => {
-                    // TODO(Shaohua): Handle errors
-                    let _result = self.handle_server_packet(cmd).await;
+                    if let Err(err) = self.handle_server_packet(cmd).await {
+                        log::error!("Failed to handle server packet: {:?}", err);
+                    }
                 },
                 else => break,
             }
