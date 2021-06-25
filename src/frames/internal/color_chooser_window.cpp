@@ -9,8 +9,6 @@
 #include <QGridLayout>
 #include <QVBoxLayout>
 
-#include "widgets/color_chooser_button.h"
-
 namespace hebo {
 
 ColorChooserWindow::ColorChooserWindow(QWidget* parent) : QDialog(parent) {

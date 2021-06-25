@@ -9,12 +9,12 @@
 #include <QMessageBox>
 #include <QDialog>
 #include <QLineEdit>
+#include <rusty/widgets/color_chooser_button.h>
 
 #include "formats/payload_type.h"
 #include "frames/internal/color_chooser_window.h"
 #include "frames/models/payload_type_model.h"
 #include "frames/models/qos_model.h"
-#include "widgets/color_chooser_button.h"
 #include "widgets/font_icon_button.h"
 
 namespace hebo {
@@ -49,7 +49,7 @@ class NewSubscriptionWindow : public QDialog {
   QComboBox* qos_box_{nullptr};
   QoSModel* qos_model_{nullptr};
   ColorChooserWindow* color_chooser_window_{nullptr};
-  ColorChooserButton* color_chooser_button_{nullptr};
+  rusty::ColorChooserButton* color_chooser_button_{nullptr};
   FontIconButton* refresh_color_button_{nullptr};
   QLineEdit* alias_edit_{nullptr};
   QComboBox* payload_type_box_{nullptr};

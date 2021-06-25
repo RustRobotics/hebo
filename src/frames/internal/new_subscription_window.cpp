@@ -42,7 +42,7 @@ void NewSubscriptionWindow::initUi() {
   Q_ASSERT(ok);
   this->color_chooser_window_->setSolidColorPalette(palette);
   auto* color_layout = new QHBoxLayout();
-  this->color_chooser_button_ = new ColorChooserButton();
+  this->color_chooser_button_ = new rusty::ColorChooserButton();
 
   color_layout->addWidget(this->color_chooser_button_);
   this->refresh_color_button_ = new FontIconButton(kFontElIconRefresh);
@@ -73,10 +73,10 @@ void NewSubscriptionWindow::initSignals() {
           this, &NewSubscriptionWindow::hide);
   connect(this->ok_button_, &QPushButton::clicked,
           this, &NewSubscriptionWindow::accept);
-  connect(this->color_chooser_button_, &ColorChooserButton::clicked,
+  connect(this->color_chooser_button_, &rusty::ColorChooserButton::clicked,
           this, &NewSubscriptionWindow::onColorChooserButtonClicked);
   connect(this->color_chooser_window_, &ColorChooserWindow::colorChanged,
-          this->color_chooser_button_, &ColorChooserButton::setColor);
+          this->color_chooser_button_, &rusty::ColorChooserButton::setColor);
   connect(this->refresh_color_button_, &FontIconButton::clicked,
           this, &NewSubscriptionWindow::generateRandomColor);
 }
