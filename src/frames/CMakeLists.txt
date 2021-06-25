@@ -5,8 +5,6 @@ set(SOURCES
     delegates/messages_delegate.cpp
     delegates/messages_delegate.h
 
-    internal/color_chooser_window.cpp
-    internal/color_chooser_window.h
     internal/connection_form.cpp
     internal/connection_form.h
     internal/messages_document.cpp

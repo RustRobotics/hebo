@@ -4,11 +4,12 @@
 
 #include "frames/about_window.h"
 
+#include <QDebug>
 #include <QDesktopServices>
 #include <QLabel>
 #include <QUrl>
 #include <QVBoxLayout>
-#include <rusty/frames/software_license_window.h>
+#include <rusty/widgets/software_license_window.h>
 
 #include "config/config.h"
 #include "resources/images/images.h"

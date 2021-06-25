@@ -1,14 +1,11 @@
 
 set(SOURCE_FILES
-    color_palette.cpp
-    color_palette.h
     connect_config.cpp
     connect_config.h
     payload_type.cpp
     payload_type.h
     )
 set(TEST_FILES
-    color_palette_test.cpp
 
     ../resources/misc/misc.qrc
     )

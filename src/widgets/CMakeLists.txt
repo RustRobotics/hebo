@@ -1,21 +1,5 @@
 
 set(SOURCE_FILES
-    delegates/color_palette_delegate.cpp
-    delegates/color_palette_delegate.h
-
-    models/color_palette_model.cpp
-    models/color_palette_model.h
-
-    color_channel_line_edit.cpp
-    color_channel_line_edit.h
-    color_label.cpp
-    color_label.h
-    color_line_edit.cpp
-    color_line_edit.h
-    color_palette_list_view.cpp
-    color_palette_list_view.h
-    color_validator.cpp
-    color_validator.h
     font_icon_button.cpp
     font_icon_button.h
     hsv_color_picker.cpp

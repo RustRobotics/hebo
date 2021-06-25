@@ -12,7 +12,6 @@
 #include <rusty/widgets/color_chooser_button.h>
 
 #include "formats/payload_type.h"
-#include "frames/internal/color_chooser_window.h"
 #include "frames/models/payload_type_model.h"
 #include "frames/models/qos_model.h"
 #include "widgets/font_icon_button.h"
@@ -37,8 +36,6 @@ class NewSubscriptionWindow : public QDialog {
   void resetForm();
 
  private:
-  void onColorChooserButtonClicked();
-
   void generateRandomColor();
 
  private:
@@ -48,7 +45,6 @@ class NewSubscriptionWindow : public QDialog {
   QLineEdit* topic_edit_{nullptr};
   QComboBox* qos_box_{nullptr};
   QoSModel* qos_model_{nullptr};
-  ColorChooserWindow* color_chooser_window_{nullptr};
   rusty::ColorChooserButton* color_chooser_button_{nullptr};
   FontIconButton* refresh_color_button_{nullptr};
   QLineEdit* alias_edit_{nullptr};

@@ -36,13 +36,12 @@ void NewSubscriptionWindow::initUi() {
   this->qos_box_->setModel(this->qos_model_);
   form_layout->addRow(new QLabel(tr("QoS")), this->qos_box_);
 
-  this->color_chooser_window_ = new ColorChooserWindow(this);
   bool ok = true;
-  const auto palette = parseColorPalette(kMiscGtkPalette, &ok);
+  const auto palette = rusty::parseColorPalette(kMiscGtkPalette, &ok);
   Q_ASSERT(ok);
-  this->color_chooser_window_->setSolidColorPalette(palette);
   auto* color_layout = new QHBoxLayout();
   this->color_chooser_button_ = new rusty::ColorChooserButton();
+  this->color_chooser_button_->setColorPalette(palette);
 
   color_layout->addWidget(this->color_chooser_button_);
   this->refresh_color_button_ = new FontIconButton(kFontElIconRefresh);
@@ -73,17 +72,8 @@ void NewSubscriptionWindow::initSignals() {
           this, &NewSubscriptionWindow::hide);
   connect(this->ok_button_, &QPushButton::clicked,
           this, &NewSubscriptionWindow::accept);
-  connect(this->color_chooser_button_, &rusty::ColorChooserButton::clicked,
-          this, &NewSubscriptionWindow::onColorChooserButtonClicked);
-  connect(this->color_chooser_window_, &ColorChooserWindow::colorChanged,
-          this->color_chooser_button_, &rusty::ColorChooserButton::setColor);
   connect(this->refresh_color_button_, &FontIconButton::clicked,
           this, &NewSubscriptionWindow::generateRandomColor);
-}
-
-void NewSubscriptionWindow::onColorChooserButtonClicked() {
-  this->color_chooser_window_->setColor(this->color_chooser_button_->color());
-  this->color_chooser_window_->show();
 }
 
 void NewSubscriptionWindow::generateRandomColor() {
