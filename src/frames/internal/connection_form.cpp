@@ -6,12 +6,12 @@
 
 #include <QFormLayout>
 #include <QLabel>
+#include <rusty/widgets/form_section.h>
+#include <rusty/widgets/form_section_title.h>
 
 #include "base/random.h"
 #include "resources/fonts/fonts.h"
 #include "widgets/font_icon_button.h"
-#include "widgets/form_section.h"
-#include "widgets/form_section_title.h"
 
 namespace hebo {
 namespace {
@@ -50,7 +50,7 @@ void ConnectionForm::initUi() {
 }
 
 void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
-  auto* title_label = new FormSectionTitle(tr("General"));
+  auto* title_label = new rusty::FormSectionTitle(tr("General"));
   main_layout->addWidget(title_label);
 
   auto* form_layout = new QFormLayout();
@@ -60,7 +60,7 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
   form_layout->setLabelAlignment(Qt::AlignLeft);
   form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
   form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
-  auto* form_section = new FormSection();
+  auto* form_section = new rusty::FormSection();
   form_section->setLayout(form_layout);
   main_layout->addWidget(form_section);
 
@@ -102,7 +102,7 @@ void ConnectionForm::initGeneralForm(QVBoxLayout* main_layout) {
 
 void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
   main_layout->addSpacing(24);
-  auto* title_label = new FormSectionTitle(tr("Advanced"));
+  auto* title_label = new rusty::FormSectionTitle(tr("Advanced"));
   main_layout->addWidget(title_label);
 
   auto* form_layout = new QFormLayout();
@@ -112,7 +112,7 @@ void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
   form_layout->setLabelAlignment(Qt::AlignLeft);
   form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
   form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
-  auto* form_section = new FormSection();
+  auto* form_section = new rusty::FormSection();
   form_section->setLayout(form_layout);
   main_layout->addWidget(form_section);
 
@@ -141,7 +141,7 @@ void ConnectionForm::initAdvancedForm(QVBoxLayout* main_layout) {
 
 void ConnectionForm::initLastWillForm(QVBoxLayout* main_layout) {
   main_layout->addSpacing(24);
-  auto* title_label = new FormSectionTitle(tr("Last Will"));
+  auto* title_label = new rusty::FormSectionTitle(tr("Last Will"));
   main_layout->addWidget(title_label);
 
   auto* form_layout = new QFormLayout();
@@ -151,7 +151,7 @@ void ConnectionForm::initLastWillForm(QVBoxLayout* main_layout) {
   form_layout->setLabelAlignment(Qt::AlignLeft);
   form_layout->setRowWrapPolicy(QFormLayout::DontWrapRows);
   form_layout->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
-  auto* form_section = new FormSection();
+  auto* form_section = new rusty::FormSection();
   form_section->setLayout(form_layout);
   main_layout->addWidget(form_section);
 

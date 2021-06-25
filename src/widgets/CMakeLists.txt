@@ -20,10 +20,6 @@ set(SOURCE_FILES
     color_validator.h
     font_icon_button.cpp
     font_icon_button.h
-    form_section.cpp
-    form_section.h
-    form_section_title.cpp
-    form_section_title.h
     hsv_color_picker.cpp
     hsv_color_picker.h
     left_panel_button.cpp
