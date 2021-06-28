@@ -8,7 +8,7 @@ use clap::Arg;
 
 use crate::error::Error;
 
-const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
+const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
 
 pub async fn run_server() -> Result<(), Error> {
     let matches = clap::App::new("Hebo")

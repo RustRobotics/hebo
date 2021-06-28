@@ -19,5 +19,5 @@ futures = "0.3.15"
 log = "0.4.14"
 serde = "1.0.126"
 serde_derive = "1.0.126"
-tokio = { version = "1.7.0", features = ["full"] }
+tokio = { version = "1.7.1", features = ["full"] }
 toml = "0.5.8"

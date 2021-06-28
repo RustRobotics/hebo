@@ -14,7 +14,7 @@ futures-util = "0.3.15"
 log = "0.4.14"
 native-tls = "0.2.7"
 rustls = { version = "0.19.1", features = ["dangerous_configuration"] }
-tokio = { version = "1.7.0", features = ["full"] }
+tokio = { version = "1.7.1", features = ["full"] }
 tokio-tls = "0.3.1"
 url = "2.2.2"
 webpki = "0.22.0"

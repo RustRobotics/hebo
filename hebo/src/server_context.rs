@@ -40,6 +40,7 @@ impl ServerContext {
 
     pub async fn run_loop(&mut self) -> Result<(), Error> {
         log::info!("Listening at: {}", self.config.connections.mqtt);
+        // TODO(Shaohua): Support multiple protocols
         let addrs = self.config.connections.mqtt.to_socket_addrs()?;
         let mut listener = None;
         for addr in addrs {
