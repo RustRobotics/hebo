@@ -16,6 +16,7 @@ use tokio::time::interval;
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::error;
+use crate::listeners;
 
 #[derive(Debug)]
 enum Status {
@@ -36,8 +37,7 @@ enum Status {
 // amount of time.
 #[derive(Debug)]
 pub struct ConnectionContext {
-    stream: TcpStream,
-    remote_address: SocketAddr,
+    stream: listeners::Stream,
     connection_id: ConnectionId,
     sender: Sender<ConnectionCommand>,
     receiver: Receiver<ServerCommand>,
@@ -51,14 +51,12 @@ pub struct ConnectionContext {
 
 impl ConnectionContext {
     pub fn new(
-        stream: TcpStream,
-        remote_address: SocketAddr,
+        stream: listeners::Stream,
         connection_id: ConnectionId,
         sender: Sender<ConnectionCommand>,
         receiver: Receiver<ServerCommand>,
     ) -> ConnectionContext {
         ConnectionContext {
-            remote_address,
             stream,
             connection_id,
             sender,

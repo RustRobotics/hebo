@@ -40,10 +40,11 @@ impl ServerContext {
 
     pub async fn run_loop(&mut self) -> Result<(), Error> {
         let listener = listeners::bind_address(&self.config.listeners[0]).await?;
+        // TODO(Shaohua): Support loop through multiple listners.
         loop {
             tokio::select! {
-                Ok((socket, address)) = listener.accept() => {
-                    self.new_connection(socket, address).await;
+                Ok(stream) = listener.accept() => {
+                    self.new_connection(stream).await;
                 },
                 Some(cmd) = self.connection_rx.recv() => {
                     self.route_cmd(cmd).await;
@@ -52,18 +53,13 @@ impl ServerContext {
         }
     }
 
-    async fn new_connection(&mut self, socket: TcpStream, addr: SocketAddr) {
+    async fn new_connection(&mut self, stream: listeners::Stream) {
         let (server_tx, server_rx) = mpsc::channel(10);
         let connection_id = self.next_connection_id();
         let pipeline = Pipeline::new(server_tx, connection_id);
         self.pipelines.push(pipeline);
-        let connection = ConnectionContext::new(
-            socket,
-            addr,
-            connection_id,
-            self.connection_tx.clone(),
-            server_rx,
-        );
+        let connection =
+            ConnectionContext::new(stream, connection_id, self.connection_tx.clone(), server_rx);
         tokio::spawn(connection.run_loop());
     }
 
