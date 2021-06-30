@@ -8,20 +8,20 @@ edition = "2018"
 codec = { path = "../codec" }
 
 byteorder = "1.4.3"
-env_logger = "0.8.3"
-futures = "0.3.13"
-futures-util = "0.3.13"
+env_logger = "0.8.4"
+futures = "0.3.15"
+futures-util = "0.3.15"
 log = "0.4.14"
 native-tls = "0.2.7"
-rustls = { version = "0.19.0", features = ["dangerous_configuration"] }
-tokio = { version = "1.4.0", features = ["full"] }
+rustls = { version = "0.19.1", features = ["dangerous_configuration"] }
+tokio = { version = "1.7.1", features = ["full"] }
 tokio-tls = "0.3.1"
-url = "2.2.1"
-webpki = "0.21.4"
-webpki-roots = "0.21.0"
+url = "2.2.2"
+webpki = "0.22.0"
+webpki-roots = "0.22.0"
 
 [dev-dependencies]
-protobuf = "2.22.1"
+protobuf = "2.24.1"
 
 [build-dependencies]
-protobuf-codegen-pure = "2.22.1"
+protobuf-codegen-pure = "2.24.1"

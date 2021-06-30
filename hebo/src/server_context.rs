@@ -40,7 +40,6 @@ impl ServerContext {
 
     pub async fn run_loop(&mut self) -> Result<(), Error> {
         let listener = listeners::bind_address(&self.config.listeners[0]).await?;
-        // TODO(Shaohua): Support loop through multiple listners.
         loop {
             tokio::select! {
                 Ok(stream) = listener.accept() => {
@@ -121,7 +120,7 @@ impl ServerContext {
 
     async fn on_publish(&mut self, packet: PublishPacket) {
         let cmd = ServerCommand::Publish(packet.clone());
-        // TODO(Shaohua): Replace with a tiar tree and a hash table.
+        // TODO(Shaohua): Replace with a trie tree and a hash table.
         for pipeline in self.pipelines.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {
                 if let Err(err) = pipeline.server_tx.send(cmd.clone()).await {
