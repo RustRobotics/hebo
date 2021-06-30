@@ -1,6 +1,6 @@
 [package]
 name = "hebo"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2018"
 license = "AGPL-3.0-only"
@@ -21,3 +21,4 @@ serde = "1.0.124"
 serde_derive = "1.0.124"
 tokio = { version = "1.3.0", features = ["full"] }
 toml = "0.5.8"
+tokio-tungstenite = "0.14.0"

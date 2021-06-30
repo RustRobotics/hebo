@@ -6,45 +6,55 @@ use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
-    pub connections: Connections,
+    pub general: General,
+    pub listeners: Vec<Listener>,
     pub security: Security,
     pub storage: Storage,
     pub log: Log,
 }
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct Server {
+pub struct General {
     pub max_memory: usize,
     pub message_size_limit: usize,
     pub sys_interval: u32,
 
     /// When run as root, drop privileges to this user and its primary group.
     pub user: String,
-}
+    pub group: String,
 
-#[derive(Debug, Deserialize, Clone)]
-pub struct Connections {
-    pub bind_interface: Option<String>,
-    pub mqtt: String,
-    pub mqtts: Option<String>,
-    pub ws: Option<String>,
-    pub wss: Option<String>,
-    pub pid_file: Option<String>,
-    pub unix_socket: Option<String>,
+    /// Path to pid file.
+    pub pid_file: std::ffi::OsString,
 
     pub max_keepalive: u32,
     pub max_connections: usize,
     pub no_delay: bool,
+
+    pub max_packet_size: usize,
+    pub max_queued_messages: usize,
+    pub max_queued_bytes: usize,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Listener {
+    /// Network interface to bind to.
+    pub interface: Option<String>,
+
+    pub protocol: Protocol,
+    pub address: String,
 
     pub cert_file: Option<String>,
     pub key_file: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct Messages {
-    pub max_packet_size: usize,
-    pub max_queued_messages: usize,
-    pub max_queued_bytes: usize,
+pub enum Protocol {
+    Mqtt,
+    Mqtts,
+    Ws,
+    Wss,
+    Unix,
+    // Quic,
 }
 
 #[derive(Debug, Deserialize, Clone)]
