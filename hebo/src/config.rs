@@ -43,6 +43,7 @@ pub struct Listener {
     pub protocol: Protocol,
     pub address: String,
 
+    pub ca_file: Option<String>,
     pub cert_file: Option<String>,
     pub key_file: Option<String>,
 }
