@@ -1,0 +1,31 @@
+
+[general]
+max_memory = 0
+message_size_limit = 0
+sys_interval = 10
+
+pid_file = "/tmp/mqtt-1883.pid"
+
+max_packet_size = 0
+max_queued_messages = 0
+max_queued_bytes = 0
+
+max_keepalive = 120
+max_connections = 0
+no_delay = false
+
+[[listeners]]
+address = "0.0.0.0:8883"
+protocol = "ws"
+
+[security]
+allow_anonymous = true
+
+[storage]
+persistence = false
+auto_save_interval = 120
+auto_save_on_change = false
+
+[log]
+console_log = true
+level = "Debug"
