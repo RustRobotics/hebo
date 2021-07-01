@@ -3,19 +3,20 @@
 max_memory = 0
 message_size_limit = 0
 sys_interval = 10
-user = "hebo"
+
+pid_file = "/tmp/mqtt-1883.pid"
 
 max_packet_size = 0
 max_queued_messages = 0
 max_queued_bytes = 0
 
-[[listeners]]
-address = "0.0.0.0:1883"
-protocol = "mqtt"
-
 max_keepalive = 120
 max_connections = 0
 no_delay = false
+
+[[listeners]]
+address = "0.0.0.0:1883"
+protocol = "mqtt"
 
 [security]
 allow_anonymous = true
