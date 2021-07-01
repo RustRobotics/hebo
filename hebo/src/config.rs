@@ -20,11 +20,11 @@ pub struct General {
     pub sys_interval: u32,
 
     /// When run as root, drop privileges to this user and its primary group.
-    pub user: String,
-    pub group: String,
+    pub user: Option<String>,
+    pub group: Option<String>,
 
     /// Path to pid file.
-    pub pid_file: std::ffi::OsString,
+    pub pid_file: String,
 
     pub max_keepalive: u32,
     pub max_connections: usize,
@@ -49,11 +49,22 @@ pub struct Listener {
 
 #[derive(Debug, Deserialize, Clone)]
 pub enum Protocol {
+    /// Raw Mqtt protocol, int TCP.
+    #[serde(alias = "mqtt")]
     Mqtt,
+
+    /// Raw Mqtt protocol, int TCP with TLS encryption.
+    #[serde(alias = "mqtts")]
     Mqtts,
+
+    /// Websocket protocol
+    #[serde(alias = "ws")]
     Ws,
+
+    /// Secure Websocket protocol
+    #[serde(alias = "wss")]
     Wss,
-    Unix,
+    //Unix,
     // Quic,
 }
 
