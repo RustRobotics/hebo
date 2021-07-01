@@ -39,7 +39,7 @@ impl ServerContext {
     }
 
     pub async fn run_loop(&mut self) -> Result<(), Error> {
-        let listener = listeners::bind_address(&self.config.listeners[0]).await?;
+        let listener = listeners::Listener::bind(&self.config.listeners[0]).await?;
         loop {
             tokio::select! {
                 Ok(stream) = listener.accept() => {
