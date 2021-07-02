@@ -15,8 +15,10 @@ max_connections = 0
 no_delay = false
 
 [[listeners]]
-address = "0.0.0.0:8083"
-protocol = "ws"
+address = "0.0.0.0:8084"
+protocol = "wss"
+cert_file = "./certs/server/server.crt"
+key_file = "./certs/server/server.key"
 
 [security]
 allow_anonymous = true
