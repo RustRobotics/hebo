@@ -17,7 +17,7 @@ use tokio_rustls::TlsAcceptor;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
 use crate::config::{self, Protocol};
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 pub enum Listener {
     Mqtt(TcpListener),
@@ -34,12 +34,21 @@ pub enum Stream {
 
 impl Listener {
     fn load_certs(path: &String) -> Result<Vec<Certificate>, Error> {
-        pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|_| Error::CertError)
+        pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
+            Error::with_string(
+                ErroKind::CertError,
+                format("Failed to load cert file at: {}", &path),
+            )
+        })
     }
 
     fn load_keys(path: &String) -> Result<Vec<PrivateKey>, Error> {
-        pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?))
-            .map_err(|_| Error::CertError)
+        pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)).map_err(|err| {
+            Error::with_string(
+                ErrorKind::CertError,
+                format("Failed to load key file at: {}", &path),
+            )
+        })
     }
 
     pub async fn bind(listener: &config::Listener) -> Result<Listener, Error> {
@@ -60,7 +69,12 @@ impl Listener {
                 let mut config = ServerConfig::new(NoClientAuth::new());
                 config
                     .set_single_cert(certs, keys.remove(0))
-                    .map_err(|_| Error::CertError)?;
+                    .map_err(|err| {
+                        Error::new(
+                            ErrorKind::CertError,
+                            "Failed to init ServerConfig with specified certs and keys",
+                        )
+                    })?;
 
                 let acceptor = TlsAcceptor::from(Arc::new(config));
 
@@ -79,10 +93,12 @@ impl Listener {
             }
             _ => {
                 // TODO(Shaohua): Support more protocols
-                return Err(Error::SocketError);
             }
         }
-        Err(Error::SocketError)
+        Err(Error::with_string(
+            ErrorKind::SocketError,
+            format("Failed to create server socket with config: {:?}", listener),
+        ))
     }
 
     pub async fn accept(&self) -> Result<Stream, Error> {
