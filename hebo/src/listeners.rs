@@ -5,10 +5,9 @@
 use futures_util::{SinkExt, StreamExt};
 use std::fs::File;
 use std::io::BufReader;
-use std::net::{SocketAddr, ToSocketAddrs};
-use std::path::Path;
+use std::net::ToSocketAddrs;
 use std::sync::Arc;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio_rustls::rustls::internal::pemfile;
 use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
@@ -36,8 +35,8 @@ impl Listener {
     fn load_certs(path: &String) -> Result<Vec<Certificate>, Error> {
         pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
             Error::with_string(
-                ErroKind::CertError,
-                format("Failed to load cert file at: {}", &path),
+                ErrorKind::CertError,
+                format!("Failed to load cert file at {}, got: {:?}", &path, err),
             )
         })
     }
@@ -46,7 +45,7 @@ impl Listener {
         pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)).map_err(|err| {
             Error::with_string(
                 ErrorKind::CertError,
-                format("Failed to load key file at: {}", &path),
+                format!("Failed to load key file at {}, got {:?}", &path, err),
             )
         })
     }
@@ -61,8 +60,14 @@ impl Listener {
                 }
             }
             Protocol::Mqtts => {
-                let cert_file = listener.cert_file.as_ref().ok_or(Error::CertError)?;
-                let key_file = listener.key_file.as_ref().ok_or(Error::CertError)?;
+                let cert_file = listener
+                    .cert_file
+                    .as_ref()
+                    .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
+                let key_file = listener
+                    .key_file
+                    .as_ref()
+                    .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
 
                 let certs = Listener::load_certs(cert_file)?;
                 let mut keys = Listener::load_keys(key_file)?;
@@ -70,9 +75,9 @@ impl Listener {
                 config
                     .set_single_cert(certs, keys.remove(0))
                     .map_err(|err| {
-                        Error::new(
+                        Error::with_string(
                             ErrorKind::CertError,
-                            "Failed to init ServerConfig with specified certs and keys",
+                            format!("Failed to init ServerConfig, got {:?}", err),
                         )
                     })?;
 
@@ -97,7 +102,7 @@ impl Listener {
         }
         Err(Error::with_string(
             ErrorKind::SocketError,
-            format("Failed to create server socket with config: {:?}", listener),
+            format!("Failed to create server socket with config: {:?}", listener),
         ))
     }
 

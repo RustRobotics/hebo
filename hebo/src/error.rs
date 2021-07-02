@@ -65,12 +65,12 @@ impl From<io::Error> for Error {
 
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
-        Error::with_string(ErrorKind::EncodeError, format("{:?}", err))
+        Error::with_string(ErrorKind::EncodeError, format!("{:?}", err))
     }
 }
 
 impl From<codec::DecodeError> for Error {
     fn from(err: codec::DecodeError) -> Self {
-        Error::with_string(ErrorKind::DecodeError, format("{:?}", err))
+        Error::with_string(ErrorKind::DecodeError, format!("{:?}", err))
     }
 }

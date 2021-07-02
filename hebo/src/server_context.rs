@@ -2,8 +2,6 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::net::SocketAddr;
-use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};

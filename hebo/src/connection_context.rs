@@ -7,14 +7,12 @@ use codec::{
     FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishPacket, SubscribeAck,
     SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
 };
-use std::net::SocketAddr;
 use std::time::Duration;
-use tokio::net::TcpStream;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
-use crate::error;
+use crate::error::{Error, ErrorKind};
 use crate::listeners;
 
 #[derive(Debug)]
@@ -106,7 +104,7 @@ impl ConnectionContext {
         }
     }
 
-    async fn send<P: EncodePacket>(&mut self, packet: P) -> error::Result<()> {
+    async fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
         let mut buf = Vec::new();
         packet.encode(&mut buf).unwrap();
         self.stream
@@ -116,7 +114,7 @@ impl ConnectionContext {
             .map_err(|err| err.into())
     }
 
-    async fn handle_client_packet(&mut self, buf: &[u8]) -> error::Result<()> {
+    async fn handle_client_packet(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let fixed_header = FixedHeader::decode(&mut ba)?;
 
@@ -167,7 +165,7 @@ impl ConnectionContext {
         return Ok(());
     }
 
-    async fn connect(&mut self, buf: &[u8]) -> error::Result<()> {
+    async fn connect(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = ConnectPacket::decode(&mut ba)?;
         self.client_id = packet.client_id().to_string();
@@ -179,14 +177,14 @@ impl ConnectionContext {
         self.send(packet).await.map(drop)
     }
 
-    async fn ping(&mut self, buf: &[u8]) -> error::Result<()> {
+    async fn ping(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let _packet = PingRequestPacket::decode(&mut ba)?;
         let ping_resp_packet = PingResponsePacket::new();
         self.send(ping_resp_packet).await
     }
 
-    async fn publish(&mut self, buf: &[u8]) -> error::Result<()> {
+    async fn publish(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
         // TODO(Shaohua): Send PublishAck if qos == 0
@@ -196,10 +194,15 @@ impl ConnectionContext {
             .send(ConnectionCommand::Publish(packet))
             .await
             .map(drop)
-            .map_err(|_err| error::Error::SendError)
+            .map_err(|err| {
+                Error::with_string(
+                    ErrorKind::SendError,
+                    format!("Failed to send packet, {:?}", err),
+                )
+            })
     }
 
-    async fn subscribe(&mut self, buf: &[u8]) -> error::Result<()> {
+    async fn subscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = SubscribePacket::decode(&mut ba)?;
         let ack;
@@ -221,7 +224,7 @@ impl ConnectionContext {
         self.send(subscribe_ack_packet).await
     }
 
-    async fn unsubscribe(&mut self, buf: &[u8]) -> error::Result<()> {
+    async fn unsubscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = UnsubscribePacket::decode(&mut ba)?;
         if let Err(err) = self
@@ -239,7 +242,7 @@ impl ConnectionContext {
         self.send(unsubscribe_ack_packet).await
     }
 
-    async fn disconnect(&mut self, _buf: &[u8]) -> error::Result<()> {
+    async fn disconnect(&mut self, _buf: &[u8]) -> Result<(), Error> {
         self.status = Status::Disconnected;
         if let Err(err) = self
             .sender
@@ -251,14 +254,14 @@ impl ConnectionContext {
         Ok(())
     }
 
-    async fn handle_server_packet(&mut self, cmd: ServerCommand) -> error::Result<()> {
+    async fn handle_server_packet(&mut self, cmd: ServerCommand) -> Result<(), Error> {
         match cmd {
             ServerCommand::Publish(packet) => self.server_publish(packet).await?,
         }
         Ok(())
     }
 
-    async fn server_publish(&mut self, packet: PublishPacket) -> error::Result<()> {
+    async fn server_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
         self.send(packet).await
     }
 }
