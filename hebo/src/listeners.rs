@@ -12,6 +12,7 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio_rustls::rustls::internal::pemfile;
 use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
+use tokio_rustls::server::TlsStream;
 use tokio_rustls::TlsAcceptor;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
@@ -20,14 +21,14 @@ use crate::error::Error;
 
 pub enum Listener {
     Mqtt(TcpListener),
-    Mqtts(TcpListener),
+    Mqtts(TcpListener, TlsAcceptor),
     Ws(TcpListener),
 }
 
 #[derive(Debug)]
 pub enum Stream {
     Mqtt(TcpStream),
-    Mqtts(TcpStream),
+    Mqtts(TlsStream<TcpStream>),
     Ws(WebSocketStream<TcpStream>),
 }
 
@@ -38,7 +39,7 @@ impl Listener {
 
     fn load_keys(path: &String) -> Result<Vec<PrivateKey>, Error> {
         pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?))
-            .map_err(|_| Error::KeyError)
+            .map_err(|_| Error::CertError)
     }
 
     pub async fn bind(listener: &config::Listener) -> Result<Listener, Error> {
@@ -52,8 +53,9 @@ impl Listener {
             }
             Protocol::Mqtts => {
                 let cert_file = listener.cert_file.as_ref().ok_or(Error::CertError)?;
-                let certs = Listener::load_certs(cert_file)?;
                 let key_file = listener.key_file.as_ref().ok_or(Error::CertError)?;
+
+                let certs = Listener::load_certs(cert_file)?;
                 let mut keys = Listener::load_keys(key_file)?;
                 let mut config = ServerConfig::new(NoClientAuth::new());
                 config
@@ -65,7 +67,7 @@ impl Listener {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::Mqtts(listener));
+                    return Ok(Listener::Mqtts(listener, acceptor));
                 }
             }
             Protocol::Ws => {
@@ -89,9 +91,10 @@ impl Listener {
                 let (tcp_stream, _address) = listener.accept().await?;
                 return Ok(Stream::Mqtt(tcp_stream));
             }
-            Listener::Mqtts(listener) => {
+            Listener::Mqtts(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
-                return Ok(Stream::Mqtts(tcp_stream));
+                let tls_stream = acceptor.accept(tcp_stream).await?;
+                return Ok(Stream::Mqtts(tls_stream));
             }
             Listener::Ws(listener) => {
                 // TODO(Shaohua): Convert error type

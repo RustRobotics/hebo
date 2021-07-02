@@ -12,7 +12,6 @@ pub enum Error {
     SendError,
     SocketError,
     CertError,
-    KeyError,
 }
 
 impl From<io::Error> for Error {
