@@ -147,15 +147,14 @@ impl Listener {
                 return Ok(Stream::Mqtts(tls_stream));
             }
             Listener::Ws(listener) => {
-                // TODO(Shaohua): Convert error type
                 let (tcp_stream, _address) = listener.accept().await?;
-                let ws_stream = tokio_tungstenite::accept_async(tcp_stream).await.unwrap();
+                let ws_stream = tokio_tungstenite::accept_async(tcp_stream).await?;
                 return Ok(Stream::Ws(ws_stream));
             }
             Listener::Wss(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let tls_stream = acceptor.accept(tcp_stream).await?;
-                let ws_stream = tokio_tungstenite::accept_async(tls_stream).await.unwrap();
+                let ws_stream = tokio_tungstenite::accept_async(tls_stream).await?;
                 return Ok(Stream::Wss(ws_stream));
             }
         }
@@ -166,18 +165,11 @@ impl Stream {
     // TODO(Shaohua): Replace with bytes::BufMute
     pub async fn read_buf(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
         match self {
-            Stream::Mqtt(ref mut tcp_stream) => {
-                // TODO(Shaohua): Convert error types
-                Ok(tcp_stream.read_buf(buf).await?)
-            }
-            Stream::Mqtts(ref mut tls_stream) => {
-                // TODO(Shaohua): Convert error types
-                Ok(tls_stream.read_buf(buf).await?)
-            }
+            Stream::Mqtt(ref mut tcp_stream) => Ok(tcp_stream.read_buf(buf).await?),
+            Stream::Mqtts(ref mut tls_stream) => Ok(tls_stream.read_buf(buf).await?),
             Stream::Ws(ref mut ws_stream) => {
-                // TODO(Shaohua): Handle errors
                 if let Some(msg) = ws_stream.next().await {
-                    let msg = msg.unwrap();
+                    let msg = msg?;
                     let data = msg.into_data();
                     let data_len = data.len();
                     buf.extend(data);
@@ -189,7 +181,7 @@ impl Stream {
 
             Stream::Wss(ref mut wss_stream) => {
                 if let Some(msg) = wss_stream.next().await {
-                    let msg = msg.unwrap();
+                    let msg = msg?;
                     let data = msg.into_data();
                     let data_len = data.len();
                     buf.extend(data);
@@ -203,24 +195,16 @@ impl Stream {
 
     pub async fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
         match self {
-            Stream::Mqtt(tcp_stream) => {
-                // TODO(Shaohua): Handle errors
-                Ok(tcp_stream.write(buf).await?)
-            }
-            Stream::Mqtts(tls_stream) => {
-                // TODO(Shaohua): Handle errors
-                Ok(tls_stream.write(buf).await?)
-            }
+            Stream::Mqtt(tcp_stream) => Ok(tcp_stream.write(buf).await?),
+            Stream::Mqtts(tls_stream) => Ok(tls_stream.write(buf).await?),
             Stream::Ws(ws_stream) => {
-                // TODO(Shaohua): Handle errors
                 let msg = Message::binary(buf);
-                ws_stream.send(msg).await.unwrap();
+                ws_stream.send(msg).await?;
                 Ok(buf.len())
             }
             Stream::Wss(wss_stream) => {
-                // TODO(Shaohua): Handle errors
                 let msg = Message::binary(buf);
-                wss_stream.send(msg).await.unwrap();
+                wss_stream.send(msg).await?;
                 Ok(buf.len())
             }
         }

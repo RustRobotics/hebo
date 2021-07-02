@@ -4,6 +4,7 @@
 
 use std::fmt::{self, Display};
 use std::io;
+use tokio_tungstenite::tungstenite;
 
 /// Represent the types of errors.
 #[derive(Clone, Debug)]
@@ -59,7 +60,13 @@ impl std::error::Error for Error {}
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        Error::with_string(ErrorKind::IoError, format!("{}", err))
+        Error::with_string(ErrorKind::IoError, format!("IoError {}", err))
+    }
+}
+
+impl From<tungstenite::Error> for Error {
+    fn from(err: tungstenite::Error) -> Self {
+        Error::with_string(ErrorKind::IoError, format!("Websocket error: {}", err))
     }
 }
 
