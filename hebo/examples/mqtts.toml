@@ -17,9 +17,8 @@ no_delay = false
 [[listeners]]
 address = "0.0.0.0:8883"
 protocol = "mqtts"
-ca_file = "./certs/server/ca.crt"
-cert_file = "./certs/server/cert.pem"
-key_file = "./certs/server/key.pem"
+cert_file = "./certs/server/server.crt"
+key_file = "./certs/server/server.key"
 
 [security]
 allow_anonymous = true
