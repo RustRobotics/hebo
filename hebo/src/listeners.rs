@@ -18,6 +18,7 @@ use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 use crate::config::{self, Protocol};
 use crate::error::{Error, ErrorKind};
 
+/// Each Listener binds to a specific port
 pub enum Listener {
     Mqtt(TcpListener),
     Mqtts(TcpListener, TlsAcceptor),
@@ -25,6 +26,7 @@ pub enum Listener {
     Wss(TcpListener, TlsAcceptor),
 }
 
+/// Each Stream represents a duplex socket connection to client.
 #[derive(Debug)]
 pub enum Stream {
     Mqtt(TcpStream),

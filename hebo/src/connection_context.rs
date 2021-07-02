@@ -71,6 +71,7 @@ impl ConnectionContext {
         loop {
             tokio::select! {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
+                    log::info!("n_recv: {}", n_recv);
                     if n_recv > 0 {
                         if let Err(err) = self.handle_client_packet(&buf).await {
                             log::error!("handle_client_packet() failed: {:?}", err);
