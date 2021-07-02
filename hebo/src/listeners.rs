@@ -22,6 +22,7 @@ pub enum Listener {
     Mqtt(TcpListener),
     Mqtts(TcpListener, TlsAcceptor),
     Ws(TcpListener),
+    Wss(TcpListener, TlsAcceptor),
 }
 
 #[derive(Debug)]
@@ -29,6 +30,7 @@ pub enum Stream {
     Mqtt(TcpStream),
     Mqtts(TlsStream<TcpStream>),
     Ws(WebSocketStream<TcpStream>),
+    Wss(WebSocketStream<TlsStream<TcpStream>>),
 }
 
 impl Listener {
@@ -96,8 +98,35 @@ impl Listener {
                     return Ok(Listener::Ws(listener));
                 }
             }
-            _ => {
-                // TODO(Shaohua): Support more protocols
+            Protocol::Wss => {
+                let cert_file = listener
+                    .cert_file
+                    .as_ref()
+                    .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
+                let key_file = listener
+                    .key_file
+                    .as_ref()
+                    .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
+
+                let certs = Listener::load_certs(cert_file)?;
+                let mut keys = Listener::load_keys(key_file)?;
+                let mut config = ServerConfig::new(NoClientAuth::new());
+                config
+                    .set_single_cert(certs, keys.remove(0))
+                    .map_err(|err| {
+                        Error::with_string(
+                            ErrorKind::CertError,
+                            format!("Failed to init ServerConfig, got {:?}", err),
+                        )
+                    })?;
+
+                let acceptor = TlsAcceptor::from(Arc::new(config));
+
+                let addrs = listener.address.to_socket_addrs()?;
+                for addr in addrs {
+                    let listener = TcpListener::bind(&addr).await?;
+                    return Ok(Listener::Wss(listener, acceptor));
+                }
             }
         }
         Err(Error::with_string(
@@ -122,6 +151,12 @@ impl Listener {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let ws_stream = tokio_tungstenite::accept_async(tcp_stream).await.unwrap();
                 return Ok(Stream::Ws(ws_stream));
+            }
+            Listener::Wss(listener, acceptor) => {
+                let (tcp_stream, _address) = listener.accept().await?;
+                let tls_stream = acceptor.accept(tcp_stream).await?;
+                let ws_stream = tokio_tungstenite::accept_async(tls_stream).await.unwrap();
+                return Ok(Stream::Wss(ws_stream));
             }
         }
     }
@@ -151,6 +186,18 @@ impl Stream {
                     Ok(0)
                 }
             }
+
+            Stream::Wss(ref mut wss_stream) => {
+                if let Some(msg) = wss_stream.next().await {
+                    let msg = msg.unwrap();
+                    let data = msg.into_data();
+                    let data_len = data.len();
+                    buf.extend(data);
+                    Ok(data_len)
+                } else {
+                    Ok(0)
+                }
+            }
         }
     }
 
@@ -168,6 +215,12 @@ impl Stream {
                 // TODO(Shaohua): Handle errors
                 let msg = Message::binary(buf);
                 ws_stream.send(msg).await.unwrap();
+                Ok(buf.len())
+            }
+            Stream::Wss(wss_stream) => {
+                // TODO(Shaohua): Handle errors
+                let msg = Message::binary(buf);
+                wss_stream.send(msg).await.unwrap();
                 Ok(buf.len())
             }
         }
