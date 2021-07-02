@@ -17,6 +17,7 @@ no_delay = false
 [[listeners]]
 address = "0.0.0.0:8083"
 protocol = "ws"
+path = "/mqtt"
 
 [security]
 allow_anonymous = true

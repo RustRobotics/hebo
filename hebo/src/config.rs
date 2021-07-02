@@ -4,6 +4,7 @@
 
 use serde_derive::Deserialize;
 
+/// Server main config.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
     pub general: General,
@@ -40,13 +41,24 @@ pub struct Listener {
     /// Network interface to bind to.
     pub interface: Option<String>,
 
+    /// Binding protocol.
     pub protocol: Protocol,
+
+    /// Binding address, including domain name and port, e.g. localhost:1883
     pub address: String,
 
+    /// Url path to bind to, only used for websocket protocols.
+    #[serde(default = "listener_default_path")]
+    pub path: String,
+
+    /// Path to TLS cert file.
     pub cert_file: Option<String>,
+
+    /// Path to TLS private key file.
     pub key_file: Option<String>,
 }
 
+/// Binding protocol types.
 #[derive(Debug, Deserialize, Clone)]
 pub enum Protocol {
     /// Raw Mqtt protocol, int TCP.
@@ -94,4 +106,8 @@ pub enum LogLevel {
     Warning,
     Info,
     Debug,
+}
+
+fn listener_default_path() -> String {
+    "/".to_owned()
 }
