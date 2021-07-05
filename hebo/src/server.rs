@@ -2,11 +2,12 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use super::config::Config;
-use super::server_context::ServerContext;
 use clap::Arg;
+use tokio::runtime::Runtime;
 
+use crate::config::Config;
 use crate::error::Error;
+use crate::server_context::ServerContext;
 
 const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
 
@@ -44,6 +45,7 @@ pub async fn run_server() -> Result<(), Error> {
     let config_content = std::fs::read_to_string(config_file)?;
     let config: Config = toml::from_str(&config_content).unwrap();
 
+    let runtime = Runtime::new()?;
     let mut server = ServerContext::new(config);
-    server.run_loop().await
+    server.run_loop(runtime)
 }

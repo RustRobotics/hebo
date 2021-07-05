@@ -2,6 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use tokio::runtime::Runtime;
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
@@ -36,18 +37,25 @@ impl ServerContext {
         }
     }
 
-    pub async fn run_loop(&mut self) -> Result<(), Error> {
-        let listener = listeners::Listener::bind(&self.config.listeners[0]).await?;
-        loop {
-            tokio::select! {
-                Ok(stream) = listener.accept() => {
-                    self.new_connection(stream).await;
-                },
-                Some(cmd) = self.connection_rx.recv() => {
-                    self.route_cmd(cmd).await;
-                },
-            }
+    pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
+        for l in &self.config.listeners.clone() {
+            runtime.spawn(async {
+                let listener = listeners::Listener::bind(l)
+                    .await
+                    .expect(&format!("Failed to listen at {:?}", l));
+                match listener.accept().await {
+                    Ok(stream) => self.new_connection(stream).await,
+                    Err(err) => log::error!("Failed to accept incoming connect!"),
+                }
+            });
         }
+
+        //runtime.spawn(async {
+        //    if let Some(cmd) = self.connection_rx.recv() {
+        //        self.route_cmd(cmd).await;
+        //    }
+        //});
+        runtime.wait()
     }
 
     async fn new_connection(&mut self, stream: listeners::Stream) {
