@@ -11,7 +11,7 @@ use crate::server_context::ServerContext;
 
 const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
 
-pub async fn run_server() -> Result<(), Error> {
+pub fn run_server() -> Result<(), Error> {
     let matches = clap::App::new("Hebo")
         .version("0.1.0")
         .author("Xu Shaohua <shaohua@biofan.org>")
@@ -47,5 +47,5 @@ pub async fn run_server() -> Result<(), Error> {
 
     let runtime = Runtime::new()?;
     let mut server = ServerContext::new(config);
-    server.run_loop(runtime).await
+    server.run_loop(runtime)
 }

@@ -2,30 +2,31 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
+use codec::{PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
 use futures_util::{SinkExt, StreamExt};
+use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
+use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_rustls::rustls::internal::pemfile;
 use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
 use tokio_rustls::server::TlsStream;
 use tokio_rustls::TlsAcceptor;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
-use tokio::sync::mpsc::{self, Receiver, Sender};
-use codec::{PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
-use crate::config::{self, Protocol};
-use crate::session::Session;
+use crate::config;
 use crate::error::{Error, ErrorKind};
+use crate::session::Session;
 use crate::stream::Stream;
 
 #[derive(Debug)]
 pub struct Listener {
-    protocol: ListenerProtocol,
+    protocol: Protocol,
     pipelines: Vec<Pipeline>,
 
     connection_rx: Receiver<ConnectionCommand>,
@@ -66,16 +67,35 @@ impl Pipeline {
 }
 
 /// Each Listener binds to a specific port
-enum ListenerProtocol {
+enum Protocol {
     Mqtt(TcpListener),
     Mqtts(TcpListener, TlsAcceptor),
     Ws(TcpListener),
     Wss(TcpListener, TlsAcceptor),
 }
 
+impl fmt::Debug for Protocol {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let msg = match self {
+            Protocol::Mqtt(..) => "Mqtt",
+            Protocol::Mqtts(..) => "Mqtts",
+            Protocol::Ws(..) => "Ws",
+            Protocol::Wss(..) => "Wss",
+        };
+        write!(f, "{}", msg)
+    }
+}
+
 impl Listener {
-    fn new(protocol: ListenerProtocol) -> Self {
-        Listener { protocol }
+    fn new(protocol: Protocol) -> Self {
+        let (connection_tx, connection_rx) = mpsc::channel(10);
+        Listener {
+            protocol,
+            connection_rx,
+            connection_tx,
+            current_connection_id: 0,
+            pipelines: Vec::new(),
+        }
     }
 
     fn load_certs(path: &String) -> Result<Vec<Certificate>, Error> {
@@ -98,14 +118,14 @@ impl Listener {
 
     pub async fn bind(listener: &config::Listener) -> Result<Listener, Error> {
         match listener.protocol {
-            Protocol::Mqtt => {
+            config::Protocol::Mqtt => {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(ListenerProtocol::Mqtt(listener)));
+                    return Ok(Listener::new(Protocol::Mqtt(listener)));
                 }
             }
-            Protocol::Mqtts => {
+            config::Protocol::Mqtts => {
                 let cert_file = listener
                     .cert_file
                     .as_ref()
@@ -132,17 +152,17 @@ impl Listener {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(ListenerProtocol::Mqtts(listener, acceptor)));
+                    return Ok(Listener::new(Protocol::Mqtts(listener, acceptor)));
                 }
             }
-            Protocol::Ws => {
+            config::Protocol::Ws => {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(ListenerProtocol::Ws(listener)));
+                    return Ok(Listener::new(Protocol::Ws(listener)));
                 }
             }
-            Protocol::Wss => {
+            config::Protocol::Wss => {
                 let cert_file = listener
                     .cert_file
                     .as_ref()
@@ -169,7 +189,7 @@ impl Listener {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(ListenerProtocol::Wss(listener, acceptor)));
+                    return Ok(Listener::new(Protocol::Wss(listener, acceptor)));
                 }
             }
         }
@@ -180,22 +200,22 @@ impl Listener {
     }
 
     pub async fn accept(&self) -> Result<Stream, Error> {
-        match self.protocol {
-            ListenerProtocol::Mqtt(listener) => {
+        match &self.protocol {
+            Protocol::Mqtt(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 return Ok(Stream::Mqtt(tcp_stream));
             }
-            ListenerProtocol::Mqtts(listener, acceptor) => {
+            Protocol::Mqtts(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let tls_stream = acceptor.accept(tcp_stream).await?;
                 return Ok(Stream::Mqtts(tls_stream));
             }
-            ListenerProtocol::Ws(listener) => {
+            Protocol::Ws(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let ws_stream = tokio_tungstenite::accept_async(tcp_stream).await?;
                 return Ok(Stream::Ws(ws_stream));
             }
-            ListenerProtocol::Wss(listener, acceptor) => {
+            Protocol::Wss(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let tls_stream = acceptor.accept(tcp_stream).await?;
                 let ws_stream = tokio_tungstenite::accept_async(tls_stream).await?;
@@ -211,15 +231,14 @@ impl Listener {
         let connection_id = self.next_connection_id();
         let pipeline = Pipeline::new(server_tx, connection_id);
         self.pipelines.push(pipeline);
-        let connection =
-            Session::new(stream, connection_id, self.connection_tx.clone(), server_rx);
+        let connection = Session::new(stream, connection_id, self.connection_tx.clone(), server_rx);
         tokio::spawn(connection.run_loop());
     }
 
-    pub async fn run_loop(&mut self) -> never {
+    pub async fn run_loop(&mut self) -> ! {
         loop {
-            match listener.accept().await {
-                Ok(stream) => listener.new_connection(stream).await,
+            match self.accept().await {
+                Ok(stream) => self.new_connection(stream).await,
                 Err(err) => log::error!("Failed to accept incoming connect!"),
             }
         }

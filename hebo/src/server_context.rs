@@ -17,22 +17,15 @@ pub struct ServerContext {
 
 impl ServerContext {
     pub fn new(config: Config) -> ServerContext {
-        let (connection_tx, connection_rx) = mpsc::channel(10);
-        ServerContext {
-            config,
-            connection_rx,
-            connection_tx,
-            current_connection_id: 0,
-            sys_message: SysMessage::new(),
-        }
+        ServerContext { config }
     }
 
-    pub async fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
+    pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
         let mut handles = Vec::new();
 
-        for l in &self.config.listeners.clone() {
-            let handle = runtime.spawn(async {
-                let listener = listener::Listener::bind(l)
+        for l in self.config.listeners.clone() {
+            let handle = runtime.spawn(async move {
+                let mut listener = listener::Listener::bind(&l)
                     .await
                     .expect(&format!("Failed to listen at {:?}", l));
                 listener.run_loop().await;
@@ -45,9 +38,9 @@ impl ServerContext {
         //        self.route_cmd(cmd).await;
         //    }
         //});
-        //for handle in handles {
-        //handle.await;
-        //}
+        for handle in handles {
+            //handle.await;
+        }
         Ok(())
     }
 }

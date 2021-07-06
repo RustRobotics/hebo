@@ -4,9 +4,9 @@
 
 use hebo::{server, Error};
 
-async fn main() -> Result<(), Error> {
+fn main() -> Result<(), Error> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    server::run_server().await
+    server::run_server()
 }
