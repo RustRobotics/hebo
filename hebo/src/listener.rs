@@ -3,20 +3,16 @@
 // in the LICENSE file.
 
 use codec::{PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
-use futures_util::{SinkExt, StreamExt};
 use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
+use tokio::net::TcpListener;
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_rustls::rustls::internal::pemfile;
 use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
-use tokio_rustls::server::TlsStream;
 use tokio_rustls::TlsAcceptor;
-use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
 use crate::commands::{ConnectionId, ListenerCommand, SessionCommand};
 use crate::config;
@@ -238,14 +234,14 @@ impl Listener {
     pub async fn run_loop(&mut self) -> ! {
         loop {
             tokio::select! {
-                Ok(stream) = self.accept().await {
+                Ok(stream) = self.accept() => {
                     self.new_connection(stream).await;
                 },
 
-                Some(cmd) = self.session_rx.recv() {
-                    self.route_cmd(cmd).await;
-                },
-            };
+                //Some(cmd) = self.session_rx.recv() => {
+                //    self.route_cmd(cmd).await;
+                //},
+            }
         }
     }
 

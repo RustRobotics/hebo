@@ -13,7 +13,6 @@ use tokio::time::interval;
 
 use crate::commands::{ConnectionId, ListenerCommand, SessionCommand};
 use crate::error::{Error, ErrorKind};
-use crate::listener::Listener;
 use crate::stream::Stream;
 
 #[derive(Debug)]

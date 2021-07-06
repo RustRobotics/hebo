@@ -3,20 +3,12 @@
 // in the LICENSE file.
 
 use futures_util::{SinkExt, StreamExt};
-use std::fs::File;
-use std::io::BufReader;
-use std::net::ToSocketAddrs;
-use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
-use tokio_rustls::rustls::internal::pemfile;
-use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
+use tokio::net::TcpStream;
 use tokio_rustls::server::TlsStream;
-use tokio_rustls::TlsAcceptor;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
-use crate::config::{self, Protocol};
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
 
 /// Each Stream represents a duplex socket connection to client.
 #[derive(Debug)]
