@@ -9,12 +9,12 @@ use std::io::BufReader;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
 use tokio::net::TcpListener;
-use tokio::sync::mpsc::{self, Receiver, Sender};
+use tokio::sync::mpsc;
 use tokio_rustls::rustls::internal::pemfile;
 use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
 use tokio_rustls::TlsAcceptor;
 
-use crate::commands::{ConnectionId, ListenerCommand, SessionCommand};
+use crate::commands::{ConnectionId, ListenerToSessionCmd, SessionToListenerCmd};
 use crate::config;
 use crate::error::{Error, ErrorKind};
 use crate::session::Session;
@@ -25,8 +25,8 @@ pub struct Listener {
     protocol: Protocol,
     pipelines: Vec<Pipeline>,
 
-    session_rx: Receiver<SessionCommand>,
-    session_tx: Sender<SessionCommand>,
+    session_receiver: mpsc::Receiver<SessionToListenerCmd>,
+    session_sender: mpsc::Sender<SessionToListenerCmd>,
     current_connection_id: ConnectionId,
 }
 
@@ -52,15 +52,18 @@ impl fmt::Debug for Protocol {
 
 #[derive(Debug)]
 pub struct Pipeline {
-    server_tx: Sender<ListenerCommand>,
+    sender: mpsc::Sender<ListenerToSessionCmd>,
     topics: Vec<SubscribedTopic>,
     connection_id: ConnectionId,
 }
 
 impl Pipeline {
-    pub fn new(server_tx: Sender<ListenerCommand>, connection_id: ConnectionId) -> Pipeline {
+    pub fn new(
+        sender: mpsc::Sender<ListenerToSessionCmd>,
+        connection_id: ConnectionId,
+    ) -> Pipeline {
         Pipeline {
-            server_tx,
+            sender,
             topics: Vec::new(),
             connection_id,
         }
@@ -76,11 +79,11 @@ pub struct SubscribedTopic {
 // Initialize Listener
 impl Listener {
     fn new(protocol: Protocol) -> Self {
-        let (session_tx, session_rx) = mpsc::channel(10);
+        let (session_sender, session_receiver) = mpsc::channel(10);
         Listener {
             protocol,
-            session_rx,
-            session_tx,
+            session_receiver,
+            session_sender,
             current_connection_id: 0,
             pipelines: Vec::new(),
         }
@@ -222,7 +225,7 @@ impl Listener {
                     self.new_connection(stream).await;
                 },
 
-                //Some(cmd) = self.session_rx.recv() => {
+                //Some(cmd) = self.session_receiver.recv() => {
                 //    self.route_cmd(cmd).await;
                 //},
             }
@@ -230,25 +233,25 @@ impl Listener {
     }
 
     async fn new_connection(&mut self, stream: Stream) {
-        let (server_tx, server_rx) = mpsc::channel(10);
+        let (sender, receiver) = mpsc::channel(10);
         let connection_id = self.next_connection_id();
-        let pipeline = Pipeline::new(server_tx, connection_id);
+        let pipeline = Pipeline::new(sender, connection_id);
         self.pipelines.push(pipeline);
-        let connection = Session::new(stream, connection_id, self.session_tx.clone(), server_rx);
+        let connection = Session::new(stream, connection_id, self.session_sender.clone(), receiver);
         tokio::spawn(connection.run_loop());
     }
 
-    async fn route_cmd(&mut self, cmd: SessionCommand) {
+    async fn route_cmd(&mut self, cmd: SessionToListenerCmd) {
         log::info!("Listener::route_cmd()");
         match cmd {
-            SessionCommand::Publish(packet) => self.on_publish(packet).await,
-            SessionCommand::Subscribe(connection_id, packet) => {
+            SessionToListenerCmd::Publish(packet) => self.on_publish(packet).await,
+            SessionToListenerCmd::Subscribe(connection_id, packet) => {
                 self.on_subscribe(connection_id, packet);
             }
-            SessionCommand::Unsubscribe(connection_id, packet) => {
+            SessionToListenerCmd::Unsubscribe(connection_id, packet) => {
                 self.on_unsubscribe(connection_id, packet)
             }
-            SessionCommand::Disconnect(connection_id) => {
+            SessionToListenerCmd::Disconnect(connection_id) => {
                 if let Some(pos) = self
                     .pipelines
                     .iter()
@@ -299,12 +302,12 @@ impl Listener {
 
     async fn on_publish(&mut self, packet: PublishPacket) {
         log::info!("Listener::on_publish()");
-        let cmd = ListenerCommand::Publish(packet.clone());
+        let cmd = ListenerToSessionCmd::Publish(packet.clone());
         // TODO(Shaohua): Replace with a trie tree and a hash table.
         for pipeline in self.pipelines.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {
-                if let Err(err) = pipeline.server_tx.send(cmd.clone()).await {
-                    log::warn!("Failed to send publish packet to connection: {}", err);
+                if let Err(err) = pipeline.sender.send(cmd.clone()).await {
+                    log::warn!("Failed to send publish packet to connection: {:?}", err);
                 }
             }
         }
