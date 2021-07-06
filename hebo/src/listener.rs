@@ -23,11 +23,10 @@ use crate::stream::Stream;
 #[derive(Debug)]
 pub struct Listener {
     protocol: Protocol,
-    pipelines: Vec<Pipeline>,
-
-    session_receiver: mpsc::Receiver<SessionToListenerCmd>,
-    session_sender: mpsc::Sender<SessionToListenerCmd>,
     current_connection_id: ConnectionId,
+    pipelines: Vec<Pipeline>,
+    session_sender: mpsc::Sender<SessionToListenerCmd>,
+    session_receiver: Option<mpsc::Receiver<SessionToListenerCmd>>,
 }
 
 /// Each Listener binds to a specific port
@@ -82,10 +81,10 @@ impl Listener {
         let (session_sender, session_receiver) = mpsc::channel(10);
         Listener {
             protocol,
-            session_receiver,
-            session_sender,
             current_connection_id: 0,
             pipelines: Vec::new(),
+            session_sender,
+            session_receiver: Some(session_receiver),
         }
     }
 
@@ -219,15 +218,21 @@ impl Listener {
 // Handles commands and new connections
 impl Listener {
     pub async fn run_loop(&mut self) -> ! {
+        // Take ownership of mpsc receiver or else tokio select will raise error.
+        let mut receiver = self
+            .session_receiver
+            .take()
+            .expect("Invalid session receiver");
+
         loop {
             tokio::select! {
                 Ok(stream) = self.accept() => {
                     self.new_connection(stream).await;
                 },
 
-                //Some(cmd) = self.session_receiver.recv() => {
-                //    self.route_cmd(cmd).await;
-                //},
+                Some(cmd) = receiver.recv() => {
+                    self.route_cmd(cmd).await;
+                },
             }
         }
     }

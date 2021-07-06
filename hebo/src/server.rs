@@ -83,6 +83,7 @@ impl ServerContext {
             handles.push(storage_handle);
 
             for handle in handles {
+                // TODO(Shaohua): Handle errors
                 handle.await;
             }
         });
