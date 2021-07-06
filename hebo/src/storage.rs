@@ -5,7 +5,7 @@
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
 use crate::commands::StorageCommand;
-use crate::sys_messages::SysMessage;
+use crate::sys_message::SysMessage;
 
 #[derive(Debug)]
 pub struct Storage {

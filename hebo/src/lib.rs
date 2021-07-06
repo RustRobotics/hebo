@@ -11,6 +11,6 @@ pub mod server;
 mod session;
 mod storage;
 mod stream;
-mod sys_messages;
+mod sys_message;
 
 pub use error::Error;

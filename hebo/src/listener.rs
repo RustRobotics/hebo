@@ -30,38 +30,6 @@ pub struct Listener {
     current_connection_id: ConnectionId,
 }
 
-fn topic_match(topics: &[SubscribedTopic], topic_str: &str) -> bool {
-    for topic in topics {
-        if topic.pattern.is_match(topic_str) {
-            return true;
-        }
-    }
-    false
-}
-
-#[derive(Debug)]
-pub struct SubscribedTopic {
-    pattern: Topic,
-    qos: QoS,
-}
-
-#[derive(Debug)]
-pub struct Pipeline {
-    server_tx: Sender<ListenerCommand>,
-    topics: Vec<SubscribedTopic>,
-    connection_id: ConnectionId,
-}
-
-impl Pipeline {
-    pub fn new(server_tx: Sender<ListenerCommand>, connection_id: ConnectionId) -> Pipeline {
-        Pipeline {
-            server_tx,
-            topics: Vec::new(),
-            connection_id,
-        }
-    }
-}
-
 /// Each Listener binds to a specific port
 enum Protocol {
     Mqtt(TcpListener),
@@ -82,6 +50,30 @@ impl fmt::Debug for Protocol {
     }
 }
 
+#[derive(Debug)]
+pub struct Pipeline {
+    server_tx: Sender<ListenerCommand>,
+    topics: Vec<SubscribedTopic>,
+    connection_id: ConnectionId,
+}
+
+impl Pipeline {
+    pub fn new(server_tx: Sender<ListenerCommand>, connection_id: ConnectionId) -> Pipeline {
+        Pipeline {
+            server_tx,
+            topics: Vec::new(),
+            connection_id,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct SubscribedTopic {
+    pattern: Topic,
+    qos: QoS,
+}
+
+// Initialize Listener
 impl Listener {
     fn new(protocol: Protocol) -> Self {
         let (session_tx, session_rx) = mpsc::channel(10);
@@ -221,16 +213,8 @@ impl Listener {
     }
 }
 
+// Handles commands and new connections
 impl Listener {
-    async fn new_connection(&mut self, stream: Stream) {
-        let (server_tx, server_rx) = mpsc::channel(10);
-        let connection_id = self.next_connection_id();
-        let pipeline = Pipeline::new(server_tx, connection_id);
-        self.pipelines.push(pipeline);
-        let connection = Session::new(stream, connection_id, self.session_tx.clone(), server_rx);
-        tokio::spawn(connection.run_loop());
-    }
-
     pub async fn run_loop(&mut self) -> ! {
         loop {
             tokio::select! {
@@ -245,7 +229,17 @@ impl Listener {
         }
     }
 
+    async fn new_connection(&mut self, stream: Stream) {
+        let (server_tx, server_rx) = mpsc::channel(10);
+        let connection_id = self.next_connection_id();
+        let pipeline = Pipeline::new(server_tx, connection_id);
+        self.pipelines.push(pipeline);
+        let connection = Session::new(stream, connection_id, self.session_tx.clone(), server_rx);
+        tokio::spawn(connection.run_loop());
+    }
+
     async fn route_cmd(&mut self, cmd: SessionCommand) {
+        log::info!("Listener::route_cmd()");
         match cmd {
             SessionCommand::Publish(packet) => self.on_publish(packet).await,
             SessionCommand::Subscribe(connection_id, packet) => {
@@ -273,6 +267,7 @@ impl Listener {
     }
 
     fn on_subscribe(&mut self, connection_id: ConnectionId, packet: SubscribePacket) {
+        log::info!("Listener::on_subscribe()");
         for pipeline in self.pipelines.iter_mut() {
             if pipeline.connection_id == connection_id {
                 for topic in packet.topics() {
@@ -291,6 +286,7 @@ impl Listener {
     }
 
     fn on_unsubscribe(&mut self, connection_id: ConnectionId, packet: UnsubscribePacket) {
+        log::info!("Listener::on_unsubscribe()");
         for pipeline in self.pipelines.iter_mut() {
             if pipeline.connection_id == connection_id {
                 pipeline
@@ -302,6 +298,7 @@ impl Listener {
     }
 
     async fn on_publish(&mut self, packet: PublishPacket) {
+        log::info!("Listener::on_publish()");
         let cmd = ListenerCommand::Publish(packet.clone());
         // TODO(Shaohua): Replace with a trie tree and a hash table.
         for pipeline in self.pipelines.iter_mut() {
@@ -312,4 +309,13 @@ impl Listener {
             }
         }
     }
+}
+
+fn topic_match(topics: &[SubscribedTopic], topic_str: &str) -> bool {
+    for topic in topics {
+        if topic.pattern.is_match(topic_str) {
+            return true;
+        }
+    }
+    false
 }

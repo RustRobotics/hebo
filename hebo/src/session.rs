@@ -85,7 +85,7 @@ impl Session {
                     log::info!("tick()");
                 },
                 Some(cmd) = self.receiver.recv() => {
-                    if let Err(err) = self.handle_server_packet(cmd).await {
+                    if let Err(err) = self.handle_listener_packet(cmd).await {
                         log::error!("Failed to handle server packet: {:?}", err);
                     }
                 },
@@ -221,6 +221,8 @@ impl Session {
             // TODO(Shaohua): Handle all of topics.
             ack = SubscribeAck::QoS(packet.topics()[0].qos());
         }
+        // TODO(Shaohua): Do not send ack packet here.
+        // Instead send to listener, which will check auth.
         let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
         self.send(subscribe_ack_packet).await
     }
@@ -255,14 +257,14 @@ impl Session {
         Ok(())
     }
 
-    async fn handle_server_packet(&mut self, cmd: ListenerCommand) -> Result<(), Error> {
+    async fn handle_listener_packet(&mut self, cmd: ListenerCommand) -> Result<(), Error> {
         match cmd {
-            ListenerCommand::Publish(packet) => self.server_publish(packet).await?,
+            ListenerCommand::Publish(packet) => self.listener_publish(packet).await?,
         }
         Ok(())
     }
 
-    async fn server_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
+    async fn listener_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
         self.send(packet).await
     }
 }
