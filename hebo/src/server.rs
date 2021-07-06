@@ -7,7 +7,7 @@ use tokio::runtime::Runtime;
 
 use crate::config::Config;
 use crate::error::Error;
-use crate::server_context::ServerContext;
+use crate::listener;
 
 const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
 
@@ -48,4 +48,41 @@ pub fn run_server() -> Result<(), Error> {
     let runtime = Runtime::new()?;
     let mut server = ServerContext::new(config);
     server.run_loop(runtime)
+}
+
+/// ServerContext manages lifetime of Storage and Listeners.
+/// All kernel signals are handled here.
+#[derive(Debug)]
+pub struct ServerContext {
+    config: Config,
+}
+
+impl ServerContext {
+    pub fn new(config: Config) -> ServerContext {
+        ServerContext { config }
+    }
+
+    pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
+        let mut handles = Vec::new();
+
+        for l in self.config.listeners.clone() {
+            let handle = runtime.spawn(async move {
+                let mut listener = listener::Listener::bind(&l)
+                    .await
+                    .expect(&format!("Failed to listen at {:?}", l));
+                listener.run_loop().await;
+            });
+            handles.push(handle);
+        }
+
+        //runtime.spawn(async {
+        //    if let Some(cmd) = self.connection_rx.recv() {
+        //        self.route_cmd(cmd).await;
+        //    }
+        //});
+        for handle in handles {
+            //handle.await;
+        }
+        Ok(())
+    }
 }

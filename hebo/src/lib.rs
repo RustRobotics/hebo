@@ -4,14 +4,13 @@
 
 mod commands;
 mod config;
-mod session;
 mod error;
 mod listener;
 mod router;
 pub mod server;
-mod server_context;
+mod session;
+mod storage;
 mod stream;
 mod sys_messages;
-mod storage;
 
 pub use error::Error;
