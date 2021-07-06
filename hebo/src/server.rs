@@ -7,7 +7,8 @@ use tokio::runtime::Runtime;
 
 use crate::config::Config;
 use crate::error::Error;
-use crate::listener;
+use crate::listener::Listener;
+use crate::storage::Storage;
 
 const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
 
@@ -65,12 +66,17 @@ impl ServerContext {
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
         for l in self.config.listeners.clone() {
             let _handle = runtime.spawn(async move {
-                let mut listener = listener::Listener::bind(&l)
+                let mut listener = Listener::bind(&l)
                     .await
                     .expect(&format!("Failed to listen at {:?}", l));
                 listener.run_loop().await;
             });
         }
+
+        let _storage_handle = runtime.spawn(async {
+            let mut storage = Storage::new();
+            storage.run_loop().await;
+        });
 
         Ok(())
     }

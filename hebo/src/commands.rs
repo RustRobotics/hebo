@@ -18,3 +18,8 @@ pub enum SessionCommand {
     Unsubscribe(ConnectionId, UnsubscribePacket),
     Disconnect(ConnectionId),
 }
+
+#[derive(Debug)]
+pub enum StorageCommand {
+    Publish(PublishPacket),
+}
