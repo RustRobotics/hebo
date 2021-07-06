@@ -64,18 +64,27 @@ impl ServerContext {
     }
 
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
-        for l in self.config.listeners.clone() {
-            let _handle = runtime.spawn(async move {
-                let mut listener = Listener::bind(&l)
-                    .await
-                    .expect(&format!("Failed to listen at {:?}", l));
-                listener.run_loop().await;
-            });
-        }
+        runtime.block_on(async {
+            let mut handles = Vec::new();
+            for l in self.config.listeners.clone() {
+                let handle = runtime.spawn(async move {
+                    let mut listener = Listener::bind(&l)
+                        .await
+                        .expect(&format!("Failed to listen at {:?}", l));
+                    listener.run_loop().await;
+                });
+                handles.push(handle);
+            }
 
-        let _storage_handle = runtime.spawn(async {
-            let mut storage = Storage::new();
-            storage.run_loop().await;
+            let storage_handle = runtime.spawn(async {
+                let mut storage = Storage::new();
+                storage.run_loop().await;
+            });
+            handles.push(storage_handle);
+
+            for handle in handles {
+                handle.await;
+            }
         });
 
         Ok(())
