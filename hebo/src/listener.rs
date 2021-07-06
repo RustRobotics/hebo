@@ -18,7 +18,7 @@ use tokio_rustls::server::TlsStream;
 use tokio_rustls::TlsAcceptor;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
-use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
+use crate::commands::{ConnectionId, ListenerCommand, SessionCommand};
 use crate::config;
 use crate::error::{Error, ErrorKind};
 use crate::session::Session;
@@ -29,8 +29,8 @@ pub struct Listener {
     protocol: Protocol,
     pipelines: Vec<Pipeline>,
 
-    connection_rx: Receiver<ConnectionCommand>,
-    connection_tx: Sender<ConnectionCommand>,
+    session_rx: Receiver<SessionCommand>,
+    session_tx: Sender<SessionCommand>,
     current_connection_id: ConnectionId,
 }
 
@@ -51,13 +51,13 @@ pub struct SubscribedTopic {
 
 #[derive(Debug)]
 pub struct Pipeline {
-    server_tx: Sender<ServerCommand>,
+    server_tx: Sender<ListenerCommand>,
     topics: Vec<SubscribedTopic>,
     connection_id: ConnectionId,
 }
 
 impl Pipeline {
-    pub fn new(server_tx: Sender<ServerCommand>, connection_id: ConnectionId) -> Pipeline {
+    pub fn new(server_tx: Sender<ListenerCommand>, connection_id: ConnectionId) -> Pipeline {
         Pipeline {
             server_tx,
             topics: Vec::new(),
@@ -88,11 +88,11 @@ impl fmt::Debug for Protocol {
 
 impl Listener {
     fn new(protocol: Protocol) -> Self {
-        let (connection_tx, connection_rx) = mpsc::channel(10);
+        let (session_tx, session_rx) = mpsc::channel(10);
         Listener {
             protocol,
-            connection_rx,
-            connection_tx,
+            session_rx,
+            session_tx,
             current_connection_id: 0,
             pipelines: Vec::new(),
         }
@@ -231,29 +231,34 @@ impl Listener {
         let connection_id = self.next_connection_id();
         let pipeline = Pipeline::new(server_tx, connection_id);
         self.pipelines.push(pipeline);
-        let connection = Session::new(stream, connection_id, self.connection_tx.clone(), server_rx);
+        let connection = Session::new(stream, connection_id, self.session_tx.clone(), server_rx);
         tokio::spawn(connection.run_loop());
     }
 
     pub async fn run_loop(&mut self) -> ! {
         loop {
-            match self.accept().await {
-                Ok(stream) => self.new_connection(stream).await,
-                Err(err) => log::error!("Failed to accept incoming connect!"),
-            }
+            tokio::select! {
+                Ok(stream) = self.accept().await {
+                    self.new_connection(stream).await;
+                },
+
+                Some(cmd) = self.session_rx.recv() {
+                    self.route_cmd(cmd).await;
+                },
+            };
         }
     }
 
-    async fn route_cmd(&mut self, cmd: ConnectionCommand) {
+    async fn route_cmd(&mut self, cmd: SessionCommand) {
         match cmd {
-            ConnectionCommand::Publish(packet) => self.on_publish(packet).await,
-            ConnectionCommand::Subscribe(connection_id, packet) => {
+            SessionCommand::Publish(packet) => self.on_publish(packet).await,
+            SessionCommand::Subscribe(connection_id, packet) => {
                 self.on_subscribe(connection_id, packet);
             }
-            ConnectionCommand::Unsubscribe(connection_id, packet) => {
+            SessionCommand::Unsubscribe(connection_id, packet) => {
                 self.on_unsubscribe(connection_id, packet)
             }
-            ConnectionCommand::Disconnect(connection_id) => {
+            SessionCommand::Disconnect(connection_id) => {
                 if let Some(pos) = self
                     .pipelines
                     .iter()
@@ -301,7 +306,7 @@ impl Listener {
     }
 
     async fn on_publish(&mut self, packet: PublishPacket) {
-        let cmd = ServerCommand::Publish(packet.clone());
+        let cmd = ListenerCommand::Publish(packet.clone());
         // TODO(Shaohua): Replace with a trie tree and a hash table.
         for pipeline in self.pipelines.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {

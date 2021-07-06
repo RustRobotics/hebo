@@ -11,7 +11,7 @@ use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
-use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
+use crate::commands::{ConnectionId, ListenerCommand, SessionCommand};
 use crate::error::{Error, ErrorKind};
 use crate::listener::Listener;
 use crate::stream::Stream;
@@ -37,8 +37,8 @@ enum Status {
 pub struct Session {
     stream: Stream,
     connection_id: ConnectionId,
-    sender: Sender<ConnectionCommand>,
-    receiver: Receiver<ServerCommand>,
+    sender: Sender<SessionCommand>,
+    receiver: Receiver<ListenerCommand>,
     status: Status,
     client_id: String,
     // TODO(Shaohua): Add session flag
@@ -51,8 +51,8 @@ impl Session {
     pub fn new(
         stream: Stream,
         connection_id: ConnectionId,
-        sender: Sender<ConnectionCommand>,
-        receiver: Receiver<ServerCommand>,
+        sender: Sender<SessionCommand>,
+        receiver: Receiver<ListenerCommand>,
     ) -> Session {
         Session {
             stream,
@@ -95,7 +95,7 @@ impl Session {
         }
         if let Err(err) = self
             .sender
-            .send(ConnectionCommand::Disconnect(self.connection_id))
+            .send(SessionCommand::Disconnect(self.connection_id))
             .await
         {
             log::error!(
@@ -193,7 +193,7 @@ impl Session {
         //let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
         //self.send(publish_ack_packet).await?;
         self.sender
-            .send(ConnectionCommand::Publish(packet))
+            .send(SessionCommand::Publish(packet))
             .await
             .map(drop)
             .map_err(|err| {
@@ -210,7 +210,7 @@ impl Session {
         let ack;
         if let Err(err) = self
             .sender
-            .send(ConnectionCommand::Subscribe(
+            .send(SessionCommand::Subscribe(
                 self.connection_id,
                 packet.clone(),
             ))
@@ -231,7 +231,7 @@ impl Session {
         let packet = UnsubscribePacket::decode(&mut ba)?;
         if let Err(err) = self
             .sender
-            .send(ConnectionCommand::Unsubscribe(
+            .send(SessionCommand::Unsubscribe(
                 self.connection_id,
                 packet.clone(),
             ))
@@ -248,7 +248,7 @@ impl Session {
         self.status = Status::Disconnected;
         if let Err(err) = self
             .sender
-            .send(ConnectionCommand::Disconnect(self.connection_id))
+            .send(SessionCommand::Disconnect(self.connection_id))
             .await
         {
             log::warn!("Failed to send disconnect command to server: {:?}", err);
@@ -256,9 +256,9 @@ impl Session {
         Ok(())
     }
 
-    async fn handle_server_packet(&mut self, cmd: ServerCommand) -> Result<(), Error> {
+    async fn handle_server_packet(&mut self, cmd: ListenerCommand) -> Result<(), Error> {
         match cmd {
-            ServerCommand::Publish(packet) => self.server_publish(packet).await?,
+            ListenerCommand::Publish(packet) => self.server_publish(packet).await?,
         }
         Ok(())
     }

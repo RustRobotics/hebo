@@ -7,12 +7,12 @@ use codec::{PublishPacket, SubscribePacket, UnsubscribePacket};
 pub type ConnectionId = u64;
 
 #[derive(Clone, Debug)]
-pub enum ServerCommand {
+pub enum ListenerCommand {
     Publish(PublishPacket),
 }
 
 #[derive(Debug)]
-pub enum ConnectionCommand {
+pub enum SessionCommand {
     Publish(PublishPacket),
     Subscribe(ConnectionId, SubscribePacket),
     Unsubscribe(ConnectionId, UnsubscribePacket),

@@ -63,26 +63,15 @@ impl ServerContext {
     }
 
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
-        let mut handles = Vec::new();
-
         for l in self.config.listeners.clone() {
-            let handle = runtime.spawn(async move {
+            let _handle = runtime.spawn(async move {
                 let mut listener = listener::Listener::bind(&l)
                     .await
                     .expect(&format!("Failed to listen at {:?}", l));
                 listener.run_loop().await;
             });
-            handles.push(handle);
         }
 
-        //runtime.spawn(async {
-        //    if let Some(cmd) = self.connection_rx.recv() {
-        //        self.route_cmd(cmd).await;
-        //    }
-        //});
-        for handle in handles {
-            //handle.await;
-        }
         Ok(())
     }
 }
