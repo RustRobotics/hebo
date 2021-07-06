@@ -13,7 +13,8 @@ use tokio::time::interval;
 
 use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::error::{Error, ErrorKind};
-use crate::listeners;
+use crate::listener::Listener;
+use crate::stream::Stream;
 
 #[derive(Debug)]
 enum Status {
@@ -33,8 +34,8 @@ enum Status {
 // TODO(Shaohua): Disconnect the network if Connect Packet is not received within a reasonable
 // amount of time.
 #[derive(Debug)]
-pub struct ConnectionContext {
-    stream: listeners::Stream,
+pub struct Session {
+    stream: Stream,
     connection_id: ConnectionId,
     sender: Sender<ConnectionCommand>,
     receiver: Receiver<ServerCommand>,
@@ -46,14 +47,14 @@ pub struct ConnectionContext {
     // TODO(Shaohua): Add activiti statistics
 }
 
-impl ConnectionContext {
+impl Session {
     pub fn new(
-        stream: listeners::Stream,
+        stream: Stream,
         connection_id: ConnectionId,
         sender: Sender<ConnectionCommand>,
         receiver: Receiver<ServerCommand>,
-    ) -> ConnectionContext {
-        ConnectionContext {
+    ) -> Session {
+        Session {
             stream,
             connection_id,
             sender,

@@ -14,28 +14,70 @@ use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
 use tokio_rustls::server::TlsStream;
 use tokio_rustls::TlsAcceptor;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
+use tokio::sync::mpsc::{self, Receiver, Sender};
+use codec::{PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
 
+use crate::commands::{ConnectionCommand, ConnectionId, ServerCommand};
 use crate::config::{self, Protocol};
+use crate::session::Session;
 use crate::error::{Error, ErrorKind};
+use crate::stream::Stream;
+
+#[derive(Debug)]
+pub struct Listener {
+    protocol: ListenerProtocol,
+    pipelines: Vec<Pipeline>,
+
+    connection_rx: Receiver<ConnectionCommand>,
+    connection_tx: Sender<ConnectionCommand>,
+    current_connection_id: ConnectionId,
+}
+
+fn topic_match(topics: &[SubscribedTopic], topic_str: &str) -> bool {
+    for topic in topics {
+        if topic.pattern.is_match(topic_str) {
+            return true;
+        }
+    }
+    false
+}
+
+#[derive(Debug)]
+pub struct SubscribedTopic {
+    pattern: Topic,
+    qos: QoS,
+}
+
+#[derive(Debug)]
+pub struct Pipeline {
+    server_tx: Sender<ServerCommand>,
+    topics: Vec<SubscribedTopic>,
+    connection_id: ConnectionId,
+}
+
+impl Pipeline {
+    pub fn new(server_tx: Sender<ServerCommand>, connection_id: ConnectionId) -> Pipeline {
+        Pipeline {
+            server_tx,
+            topics: Vec::new(),
+            connection_id,
+        }
+    }
+}
 
 /// Each Listener binds to a specific port
-pub enum Listener {
+enum ListenerProtocol {
     Mqtt(TcpListener),
     Mqtts(TcpListener, TlsAcceptor),
     Ws(TcpListener),
     Wss(TcpListener, TlsAcceptor),
 }
 
-/// Each Stream represents a duplex socket connection to client.
-#[derive(Debug)]
-pub enum Stream {
-    Mqtt(TcpStream),
-    Mqtts(TlsStream<TcpStream>),
-    Ws(WebSocketStream<TcpStream>),
-    Wss(WebSocketStream<TlsStream<TcpStream>>),
-}
-
 impl Listener {
+    fn new(protocol: ListenerProtocol) -> Self {
+        Listener { protocol }
+    }
+
     fn load_certs(path: &String) -> Result<Vec<Certificate>, Error> {
         pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
             Error::with_string(
@@ -60,7 +102,7 @@ impl Listener {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::Mqtt(listener));
+                    return Ok(Listener::new(ListenerProtocol::Mqtt(listener)));
                 }
             }
             Protocol::Mqtts => {
@@ -90,14 +132,14 @@ impl Listener {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::Mqtts(listener, acceptor));
+                    return Ok(Listener::new(ListenerProtocol::Mqtts(listener, acceptor)));
                 }
             }
             Protocol::Ws => {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::Ws(listener));
+                    return Ok(Listener::new(ListenerProtocol::Ws(listener)));
                 }
             }
             Protocol::Wss => {
@@ -127,7 +169,7 @@ impl Listener {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::Wss(listener, acceptor));
+                    return Ok(Listener::new(ListenerProtocol::Wss(listener, acceptor)));
                 }
             }
         }
@@ -138,22 +180,22 @@ impl Listener {
     }
 
     pub async fn accept(&self) -> Result<Stream, Error> {
-        match self {
-            Listener::Mqtt(listener) => {
+        match self.protocol {
+            ListenerProtocol::Mqtt(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 return Ok(Stream::Mqtt(tcp_stream));
             }
-            Listener::Mqtts(listener, acceptor) => {
+            ListenerProtocol::Mqtts(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let tls_stream = acceptor.accept(tcp_stream).await?;
                 return Ok(Stream::Mqtts(tls_stream));
             }
-            Listener::Ws(listener) => {
+            ListenerProtocol::Ws(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let ws_stream = tokio_tungstenite::accept_async(tcp_stream).await?;
                 return Ok(Stream::Ws(ws_stream));
             }
-            Listener::Wss(listener, acceptor) => {
+            ListenerProtocol::Wss(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let tls_stream = acceptor.accept(tcp_stream).await?;
                 let ws_stream = tokio_tungstenite::accept_async(tls_stream).await?;
@@ -163,51 +205,90 @@ impl Listener {
     }
 }
 
-impl Stream {
-    // TODO(Shaohua): Replace with bytes::BufMute
-    pub async fn read_buf(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
-        match self {
-            Stream::Mqtt(ref mut tcp_stream) => Ok(tcp_stream.read_buf(buf).await?),
-            Stream::Mqtts(ref mut tls_stream) => Ok(tls_stream.read_buf(buf).await?),
-            Stream::Ws(ref mut ws_stream) => {
-                if let Some(msg) = ws_stream.next().await {
-                    let msg = msg?;
-                    let data = msg.into_data();
-                    let data_len = data.len();
-                    buf.extend(data);
-                    Ok(data_len)
-                } else {
-                    Ok(0)
-                }
-            }
+impl Listener {
+    async fn new_connection(&mut self, stream: Stream) {
+        let (server_tx, server_rx) = mpsc::channel(10);
+        let connection_id = self.next_connection_id();
+        let pipeline = Pipeline::new(server_tx, connection_id);
+        self.pipelines.push(pipeline);
+        let connection =
+            Session::new(stream, connection_id, self.connection_tx.clone(), server_rx);
+        tokio::spawn(connection.run_loop());
+    }
 
-            Stream::Wss(ref mut wss_stream) => {
-                if let Some(msg) = wss_stream.next().await {
-                    let msg = msg?;
-                    let data = msg.into_data();
-                    let data_len = data.len();
-                    buf.extend(data);
-                    Ok(data_len)
-                } else {
-                    Ok(0)
+    pub async fn run_loop(&mut self) -> never {
+        loop {
+            match listener.accept().await {
+                Ok(stream) => listener.new_connection(stream).await,
+                Err(err) => log::error!("Failed to accept incoming connect!"),
+            }
+        }
+    }
+
+    async fn route_cmd(&mut self, cmd: ConnectionCommand) {
+        match cmd {
+            ConnectionCommand::Publish(packet) => self.on_publish(packet).await,
+            ConnectionCommand::Subscribe(connection_id, packet) => {
+                self.on_subscribe(connection_id, packet);
+            }
+            ConnectionCommand::Unsubscribe(connection_id, packet) => {
+                self.on_unsubscribe(connection_id, packet)
+            }
+            ConnectionCommand::Disconnect(connection_id) => {
+                if let Some(pos) = self
+                    .pipelines
+                    .iter()
+                    .position(|pipe| pipe.connection_id == connection_id)
+                {
+                    log::debug!("Remove pipeline: {}", connection_id);
+                    self.pipelines.remove(pos);
                 }
             }
         }
     }
 
-    pub async fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
-        match self {
-            Stream::Mqtt(tcp_stream) => Ok(tcp_stream.write(buf).await?),
-            Stream::Mqtts(tls_stream) => Ok(tls_stream.write(buf).await?),
-            Stream::Ws(ws_stream) => {
-                let msg = Message::binary(buf);
-                ws_stream.send(msg).await?;
-                Ok(buf.len())
+    fn next_connection_id(&mut self) -> ConnectionId {
+        self.current_connection_id += 1;
+        self.current_connection_id
+    }
+
+    fn on_subscribe(&mut self, connection_id: ConnectionId, packet: SubscribePacket) {
+        for pipeline in self.pipelines.iter_mut() {
+            if pipeline.connection_id == connection_id {
+                for topic in packet.topics() {
+                    // TODO(Shaohua): Returns error
+                    match Topic::parse(topic.topic()) {
+                        Ok(pattern) => pipeline.topics.push(SubscribedTopic {
+                            pattern,
+                            qos: topic.qos(),
+                        }),
+                        Err(err) => log::error!("Invalid sub topic: {:?}, err: {:?}", topic, err),
+                    }
+                }
+                break;
             }
-            Stream::Wss(wss_stream) => {
-                let msg = Message::binary(buf);
-                wss_stream.send(msg).await?;
-                Ok(buf.len())
+        }
+    }
+
+    fn on_unsubscribe(&mut self, connection_id: ConnectionId, packet: UnsubscribePacket) {
+        for pipeline in self.pipelines.iter_mut() {
+            if pipeline.connection_id == connection_id {
+                pipeline
+                    .topics
+                    .retain(|ref topic| !packet.topics().any(|t| t == topic.pattern.topic()));
+            }
+            break;
+        }
+    }
+
+    async fn on_publish(&mut self, packet: PublishPacket) {
+        let cmd = ServerCommand::Publish(packet.clone());
+        // TODO(Shaohua): Replace with a trie tree and a hash table.
+        for pipeline in self.pipelines.iter_mut() {
+            if topic_match(&pipeline.topics, packet.topic()) {
+                if let Err(err) = pipeline.server_tx.send(cmd.clone()).await {
+                    log::warn!("Failed to send publish packet to connection: {}", err);
+                }
             }
         }
     }

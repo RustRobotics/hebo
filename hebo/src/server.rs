@@ -47,5 +47,5 @@ pub async fn run_server() -> Result<(), Error> {
 
     let runtime = Runtime::new()?;
     let mut server = ServerContext::new(config);
-    server.run_loop(runtime)
+    server.run_loop(runtime).await
 }
