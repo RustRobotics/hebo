@@ -15,10 +15,14 @@ max_connections = 0
 no_delay = false
 
 [[listeners]]
-address = "0.0.0.0:8084"
-protocol = "wss"
+address = "0.0.0.0:8883"
+protocol = "mqtts"
 cert_file = "./examples/certs/server/server.crt"
 key_file = "./examples/certs/server/server.key"
+
+[[listeners]]
+address = "0.0.0.0:1883"
+protocol = "mqtt"
 
 [security]
 allow_anonymous = true
