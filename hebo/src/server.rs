@@ -29,6 +29,13 @@ pub fn run_server() -> Result<(), Error> {
                 .help("Specify config file path"),
         )
         .arg(
+            Arg::with_name("reload")
+                .short("r")
+                .long("reload")
+                .takes_value(false)
+                .help("Reload config"),
+        )
+        .arg(
             Arg::with_name("test")
                 .short("t")
                 .long("test")
@@ -50,6 +57,12 @@ pub fn run_server() -> Result<(), Error> {
     let config: Config = toml::from_str(&config_content).unwrap();
 
     let mut server = ServerContext::new(config);
+
+    if matches.is_present("reload") {
+        log::info!("Reload is present");
+        return server.reload();
+    }
+
     let runtime = Runtime::new()?;
     server.run_loop(runtime)
 }
@@ -66,9 +79,18 @@ impl ServerContext {
         ServerContext { config }
     }
 
+    pub fn reload(&mut self) -> Result<(), Error> {
+        log::info!("reload()");
+        let mut fd = File::open(&self.config.general.pid_file)?;
+        let mut pid_str = String::new();
+        fd.read_to_string(&mut pid_str)?;
+        log::info!("pid str: {}", pid_str);
+        Ok(())
+    }
+
     fn write_pid(&self) -> Result<(), Error> {
         let pid = std::process::id();
-        let mut fd = File::open(&self.config.general.pid_file)?;
+        let mut fd = File::create(&self.config.general.pid_file)?;
         write!(fd, "{}", pid)?;
         Ok(())
     }
