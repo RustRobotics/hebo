@@ -3,6 +3,8 @@
 // in the LICENSE file.
 
 use clap::Arg;
+use std::fs::File;
+use std::io::{Read, Write};
 use tokio::runtime::Runtime;
 
 use crate::config::Config;
@@ -12,6 +14,7 @@ use crate::storage::Storage;
 
 const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
 
+/// Entry point of server
 pub fn run_server() -> Result<(), Error> {
     let matches = clap::App::new("Hebo")
         .version("0.1.0")
@@ -46,8 +49,8 @@ pub fn run_server() -> Result<(), Error> {
     let config_content = std::fs::read_to_string(config_file)?;
     let config: Config = toml::from_str(&config_content).unwrap();
 
-    let runtime = Runtime::new()?;
     let mut server = ServerContext::new(config);
+    let runtime = Runtime::new()?;
     server.run_loop(runtime)
 }
 
@@ -63,7 +66,17 @@ impl ServerContext {
         ServerContext { config }
     }
 
+    fn write_pid(&self) -> Result<(), Error> {
+        let pid = std::process::id();
+        let mut fd = File::open(&self.config.general.pid_file)?;
+        write!(fd, "{}", pid)?;
+        Ok(())
+    }
+
+    /// Init modules and run tokio runtime.
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
+        self.write_pid()?;
+
         runtime.block_on(async {
             let mut handles = Vec::new();
             for l in self.config.listeners.clone() {
