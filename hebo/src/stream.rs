@@ -4,7 +4,7 @@
 
 use futures_util::{SinkExt, StreamExt};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
+use tokio::net::{TcpStream, UnixStream};
 use tokio_rustls::server::TlsStream;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
@@ -17,6 +17,7 @@ pub enum Stream {
     Mqtts(TlsStream<TcpStream>),
     Ws(WebSocketStream<TcpStream>),
     Wss(WebSocketStream<TlsStream<TcpStream>>),
+    Uds(UnixStream),
 }
 
 impl Stream {
@@ -36,7 +37,6 @@ impl Stream {
                     Ok(0)
                 }
             }
-
             Stream::Wss(ref mut wss_stream) => {
                 if let Some(msg) = wss_stream.next().await {
                     let msg = msg?;
@@ -48,6 +48,7 @@ impl Stream {
                     Ok(0)
                 }
             }
+            Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
         }
     }
 
@@ -65,6 +66,7 @@ impl Stream {
                 wss_stream.send(msg).await?;
                 Ok(buf.len())
             }
+            Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
         }
     }
 }

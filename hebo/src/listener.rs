@@ -8,7 +8,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
-use tokio::net::TcpListener;
+use tokio::net::{TcpListener, UnixListener};
 use tokio::sync::mpsc;
 use tokio_rustls::rustls::internal::pemfile;
 use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
@@ -35,6 +35,7 @@ enum Protocol {
     Mqtts(TcpListener, TlsAcceptor),
     Ws(TcpListener),
     Wss(TcpListener, TlsAcceptor),
+    Uds(UnixListener),
 }
 
 impl fmt::Debug for Protocol {
@@ -44,6 +45,7 @@ impl fmt::Debug for Protocol {
             Protocol::Mqtts(..) => "Mqtts",
             Protocol::Ws(..) => "Ws",
             Protocol::Wss(..) => "Wss",
+            Protocol::Uds(..) => "Uds",
         };
         write!(f, "{}", msg)
     }
@@ -182,6 +184,11 @@ impl Listener {
                     return Ok(Listener::new(Protocol::Wss(listener, acceptor)));
                 }
             }
+
+            config::Protocol::Uds => {
+                let listener = UnixListener::bind(&listener.address)?;
+                return Ok(Listener::new(Protocol::Uds(listener)));
+            }
         }
         Err(Error::with_string(
             ErrorKind::SocketError,
@@ -210,6 +217,10 @@ impl Listener {
                 let tls_stream = acceptor.accept(tcp_stream).await?;
                 let ws_stream = tokio_tungstenite::accept_async(tls_stream).await?;
                 return Ok(Stream::Wss(ws_stream));
+            }
+            Protocol::Uds(listener) => {
+                let (uds_stream, _address) = listener.accept().await?;
+                return Ok(Stream::Uds(uds_stream));
             }
         }
     }

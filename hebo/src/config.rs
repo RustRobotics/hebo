@@ -45,6 +45,7 @@ pub struct Listener {
     pub protocol: Protocol,
 
     /// Binding address, including domain name and port, e.g. localhost:1883
+    /// For unix domain socket, path to socket file.
     pub address: String,
 
     /// Url path to bind to, only used for websocket protocols.
@@ -76,7 +77,10 @@ pub enum Protocol {
     /// Secure Websocket protocol
     #[serde(alias = "wss")]
     Wss,
-    //Unix,
+
+    /// Unix Domain Socket
+    #[serde(alias = "uds")]
+    Uds,
     // Quic,
 }
 
