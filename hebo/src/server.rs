@@ -117,10 +117,12 @@ impl ServerContext {
     /// Init modules and run tokio runtime.
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
         self.write_pid()?;
-        let (storage_sender, storage_receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
-        let mut listener_senders = Vec::new();
 
         runtime.block_on(async {
+            let (storage_sender, storage_receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
+            let mut listener_senders = Vec::new();
+            let mut handles = Vec::new();
+
             for l in self.config.listeners.clone() {
                 let (listener_sender, listener_receiver) =
                     mpsc::channel(constants::CHANNEL_CAPACITY);
@@ -131,14 +133,18 @@ impl ServerContext {
                 let handle = runtime.spawn(async move {
                     listener.run_loop().await;
                 });
-                let _ret = handle.await;
+                handles.push(handle);
             }
 
             let mut storage = Storage::new(storage_receiver, listener_senders);
             let storage_handle = runtime.spawn(async move {
                 storage.run_loop().await;
             });
-            let _ret = storage_handle.await;
+            handles.push(storage_handle);
+
+            for handle in handles {
+                let _ret = handle.await;
+            }
         });
 
         Ok(())

@@ -19,6 +19,7 @@ use crate::commands::{
     StorageToListenerCmd,
 };
 use crate::config;
+use crate::constants;
 use crate::error::{Error, ErrorKind};
 use crate::session::Session;
 use crate::stream::Stream;
@@ -59,16 +60,13 @@ impl fmt::Debug for Protocol {
 
 #[derive(Debug)]
 pub struct Pipeline {
-    sender: mpsc::Sender<ListenerToSessionCmd>,
+    sender: Sender<ListenerToSessionCmd>,
     topics: Vec<SubscribedTopic>,
     connection_id: ConnectionId,
 }
 
 impl Pipeline {
-    pub fn new(
-        sender: mpsc::Sender<ListenerToSessionCmd>,
-        connection_id: ConnectionId,
-    ) -> Pipeline {
+    pub fn new(sender: Sender<ListenerToSessionCmd>, connection_id: ConnectionId) -> Pipeline {
         Pipeline {
             sender,
             topics: Vec::new(),
@@ -90,7 +88,7 @@ impl Listener {
         storage_sender: Sender<ListenerToStorageCmd>,
         storage_receiver: Receiver<StorageToListenerCmd>,
     ) -> Self {
-        let (session_sender, session_receiver) = mpsc::channel(10);
+        let (session_sender, session_receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
         Listener {
             protocol,
             current_connection_id: 0,
@@ -295,7 +293,7 @@ impl Listener {
     }
 
     async fn new_connection(&mut self, stream: Stream) {
-        let (sender, receiver) = mpsc::channel(10);
+        let (sender, receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
         let connection_id = self.next_connection_id();
         let pipeline = Pipeline::new(sender, connection_id);
         self.pipelines.push(pipeline);
@@ -372,7 +370,9 @@ impl Listener {
     async fn on_session_publish(&mut self, packet: PublishPacket) {
         log::info!("Listener::on_session_publish()");
         let cmd = ListenerToStorageCmd::Publish(packet.clone());
-        self.storage_sender.send(cmd).await;
+        if let Err(err) = self.storage_sender.send(cmd).await {
+            log::error!("Listener::on_session_publish() send failed: {:?}", err);
+        }
     }
 
     async fn publish_packet(&mut self, packet: PublishPacket) {

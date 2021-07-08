@@ -40,5 +40,15 @@ impl Storage {
 
     async fn handle_listener_cmd(&mut self, cmd: ListenerToStorageCmd) {
         log::info!("handle_listener_cmd: {:?}", cmd);
+        match cmd {
+            ListenerToStorageCmd::Publish(packet) => {
+                for s in &self.listener_senders {
+                    let cmd = StorageToListenerCmd::Publish(packet.clone());
+                    if let Err(err) = s.send(cmd).await {
+                        log::error!("Storage::handle_listener_cmd() send failed: {:?}", err);
+                    }
+                }
+            }
+        }
     }
 }
