@@ -2,20 +2,13 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::fs::File;
 use std::io;
-use std::io::Read;
 use std::net::SocketAddr;
 
-use futures_util::sink::SinkExt;
-use futures_util::stream::StreamExt;
-use native_tls::Certificate;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
-use tokio_tls::TlsStream;
-use tokio_tungstenite::{tungstenite::protocol::Message, WebSocketStream};
 
-use crate::connect_options::{ConnectType, MqttsConnect, TlsType, WsConnect};
+use crate::connect_options::ConnectType;
 
 pub enum Stream {
     Mqtt(TcpStream),

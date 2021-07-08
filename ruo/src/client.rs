@@ -11,7 +11,6 @@ use codec::{
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::future::Future;
-use std::pin::Pin;
 use tokio::time::interval;
 
 use crate::connect_options::*;
@@ -27,7 +26,7 @@ enum StreamStatus {
     Disconnected,
 }
 
-type FutureConnectCb = dyn Fn(&Client) -> Future<Output = ()>;
+type FutureConnectCb = dyn Fn(&Client) -> dyn Future<Output = ()>;
 
 pub struct Client {
     connect_options: ConnectOptions,
@@ -67,7 +66,7 @@ impl Client {
         self.connect_cb = Some(callback);
     }
 
-    pub async fn start(&mut self) {
+    pub async fn start(&mut self) -> Result<(), Error> {
         log::info!("client.start()");
 
         let mut buf: Vec<u8> = Vec::with_capacity(1024);
@@ -77,7 +76,7 @@ impl Client {
 
         let conn_packet = ConnectPacket::new(self.connect_options.client_id());
         println!("connect packet client id: {}", conn_packet.client_id());
-        self.send(conn_packet).await;
+        self.send(conn_packet).await?;
         log::info!("send conn packet");
 
         loop {
@@ -93,7 +92,9 @@ impl Client {
                 }
                 _ = timer.tick() => {
                     log::info!("tick()");
-                    self.ping().await;
+                    if let Err(err) = self.ping().await {
+                        log::error!("Ping failed: {:?}", err);
+                    }
                 },
             }
         }
@@ -171,9 +172,9 @@ impl Client {
     }
 
     async fn on_connect(&self) {
-        if let Some(ref cb) = self.connect_cb {
-            //(*cb)(self).await;
-        }
+        //if let Some(ref cb) = self.connect_cb {
+        //(*cb)(self).await;
+        //}
     }
 
     async fn ping(&mut self) -> Result<(), Error> {
@@ -261,7 +262,7 @@ impl Client {
         let packet = UnsubscribeAckPacket::decode(&mut ba)?;
         let packet_id = packet.packet_id();
         if let Some(p) = self.unsubscribing_packets.get(&packet_id) {
-            //log::info!("Topics `{:?}` unsubscribe confirmed!", p.topics());
+            log::info!("Topics {:?} unsubscribe confirmed!", p);
             self.unsubscribing_packets.remove(&packet.packet_id());
         } else {
             log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
