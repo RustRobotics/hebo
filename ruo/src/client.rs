@@ -120,7 +120,11 @@ impl Client {
     async fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
-        self.stream.write_all(&buf).await.map_err(|err| err.into())
+        self.stream
+            .write(&buf)
+            .await
+            .map(drop)
+            .map_err(|err| err.into())
     }
 
     pub async fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
