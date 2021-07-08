@@ -6,13 +6,13 @@ use clap::Arg;
 use std::fs::File;
 use std::io::{Read, Write};
 use tokio::runtime::Runtime;
+use tokio::sync::mpsc;
 
 use crate::config::Config;
+use crate::constants;
 use crate::error::{Error, ErrorKind};
 use crate::listener::Listener;
 use crate::storage::Storage;
-
-const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
 
 /// Entry point of server
 pub fn run_server() -> Result<(), Error> {
@@ -44,15 +44,20 @@ pub fn run_server() -> Result<(), Error> {
         )
         .get_matches();
 
+    // TODO(Shaohua): Do not parse file.
     if matches.is_present("test") {
-        let config_file = matches.value_of("config").unwrap_or(DEFAULT_CONFIG);
+        let config_file = matches
+            .value_of("config")
+            .unwrap_or(constants::DEFAULT_CONFIG);
         let config_content = std::fs::read_to_string(config_file)?;
         let _config: Config = toml::from_str(&config_content).unwrap();
         println!("The configuration file {} syntax is Ok", config_file);
         return Ok(());
     }
 
-    let config_file = matches.value_of("config").unwrap_or(DEFAULT_CONFIG);
+    let config_file = matches
+        .value_of("config")
+        .unwrap_or(constants::DEFAULT_CONFIG);
     let config_content = std::fs::read_to_string(config_file)?;
     let config: Config = toml::from_str(&config_content).unwrap();
 
@@ -118,20 +123,25 @@ impl ServerContext {
     /// Init modules and run tokio runtime.
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
         self.write_pid()?;
+        let (storage_sender, storage_receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
+        let mut listener_senders = Vec::new();
 
         runtime.block_on(async {
             for l in self.config.listeners.clone() {
+                let (listener_sender, listener_receiver) =
+                    mpsc::channel(constants::CHANNEL_CAPACITY);
+                listener_senders.push(listener_sender);
+                let mut listener = Listener::bind(&l, storage_sender.clone(), listener_receiver)
+                    .await
+                    .expect(&format!("Failed to listen at {:?}", l));
                 let handle = runtime.spawn(async move {
-                    let mut listener = Listener::bind(&l)
-                        .await
-                        .expect(&format!("Failed to listen at {:?}", l));
                     listener.run_loop().await;
                 });
                 let _ret = handle.await;
             }
 
-            let storage_handle = runtime.spawn(async {
-                let mut storage = Storage::new();
+            let mut storage = Storage::new(storage_receiver, listener_senders);
+            let storage_handle = runtime.spawn(async move {
                 storage.run_loop().await;
             });
             let _ret = storage_handle.await;

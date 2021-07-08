@@ -20,6 +20,11 @@ pub enum SessionToListenerCmd {
 }
 
 #[derive(Debug)]
-pub enum StorageCommand {
+pub enum ListenerToStorageCmd {
+    Publish(PublishPacket),
+}
+
+#[derive(Debug)]
+pub enum StorageToListenerCmd {
     Publish(PublishPacket),
 }

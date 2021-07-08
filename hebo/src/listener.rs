@@ -9,12 +9,15 @@ use std::io::BufReader;
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
 use tokio::net::{TcpListener, UnixListener};
-use tokio::sync::mpsc;
+use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_rustls::rustls::internal::pemfile;
 use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
 use tokio_rustls::TlsAcceptor;
 
-use crate::commands::{ConnectionId, ListenerToSessionCmd, SessionToListenerCmd};
+use crate::commands::{
+    ConnectionId, ListenerToSessionCmd, ListenerToStorageCmd, SessionToListenerCmd,
+    StorageToListenerCmd,
+};
 use crate::config;
 use crate::error::{Error, ErrorKind};
 use crate::session::Session;
@@ -25,8 +28,11 @@ pub struct Listener {
     protocol: Protocol,
     current_connection_id: ConnectionId,
     pipelines: Vec<Pipeline>,
-    session_sender: mpsc::Sender<SessionToListenerCmd>,
-    session_receiver: Option<mpsc::Receiver<SessionToListenerCmd>>,
+    session_sender: Sender<SessionToListenerCmd>,
+    session_receiver: Option<Receiver<SessionToListenerCmd>>,
+
+    storage_sender: Sender<ListenerToStorageCmd>,
+    storage_receiver: Option<Receiver<StorageToListenerCmd>>,
 }
 
 /// Each Listener binds to a specific port
@@ -79,7 +85,11 @@ pub struct SubscribedTopic {
 
 // Initialize Listener
 impl Listener {
-    fn new(protocol: Protocol) -> Self {
+    fn new(
+        protocol: Protocol,
+        storage_sender: Sender<ListenerToStorageCmd>,
+        storage_receiver: Receiver<StorageToListenerCmd>,
+    ) -> Self {
         let (session_sender, session_receiver) = mpsc::channel(10);
         Listener {
             protocol,
@@ -87,6 +97,9 @@ impl Listener {
             pipelines: Vec::new(),
             session_sender,
             session_receiver: Some(session_receiver),
+
+            storage_sender,
+            storage_receiver: Some(storage_receiver),
         }
     }
 
@@ -108,13 +121,21 @@ impl Listener {
         })
     }
 
-    pub async fn bind(listener: &config::Listener) -> Result<Listener, Error> {
+    pub async fn bind(
+        listener: &config::Listener,
+        storage_sender: Sender<ListenerToStorageCmd>,
+        storage_receiver: Receiver<StorageToListenerCmd>,
+    ) -> Result<Listener, Error> {
         match listener.protocol {
             config::Protocol::Mqtt => {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(Protocol::Mqtt(listener)));
+                    return Ok(Listener::new(
+                        Protocol::Mqtt(listener),
+                        storage_sender,
+                        storage_receiver,
+                    ));
                 }
             }
             config::Protocol::Mqtts => {
@@ -144,14 +165,22 @@ impl Listener {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(Protocol::Mqtts(listener, acceptor)));
+                    return Ok(Listener::new(
+                        Protocol::Mqtts(listener, acceptor),
+                        storage_sender,
+                        storage_receiver,
+                    ));
                 }
             }
             config::Protocol::Ws => {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(Protocol::Ws(listener)));
+                    return Ok(Listener::new(
+                        Protocol::Ws(listener),
+                        storage_sender,
+                        storage_receiver,
+                    ));
                 }
             }
             config::Protocol::Wss => {
@@ -181,13 +210,21 @@ impl Listener {
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(Protocol::Wss(listener, acceptor)));
+                    return Ok(Listener::new(
+                        Protocol::Wss(listener, acceptor),
+                        storage_sender,
+                        storage_receiver,
+                    ));
                 }
             }
 
             config::Protocol::Uds => {
                 let listener = UnixListener::bind(&listener.address)?;
-                return Ok(Listener::new(Protocol::Uds(listener)));
+                return Ok(Listener::new(
+                    Protocol::Uds(listener),
+                    storage_sender,
+                    storage_receiver,
+                ));
             }
         }
         Err(Error::from_string(
