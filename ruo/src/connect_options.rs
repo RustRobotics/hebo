@@ -72,6 +72,7 @@ pub struct WsConnect {
 
 #[derive(Clone, Debug)]
 pub struct WssConnect {
+    pub domain: String,
     pub tls_type: TlsType,
     pub path: String,
 }
