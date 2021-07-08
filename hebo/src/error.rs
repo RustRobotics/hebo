@@ -26,6 +26,9 @@ pub enum ErrorKind {
 
     /// Cert files error.
     CertError,
+
+    /// Invalid pid.
+    PidError,
 }
 
 #[derive(Clone, Debug)]
@@ -45,7 +48,7 @@ impl Error {
         }
     }
 
-    pub fn with_string(kind: ErrorKind, message: String) -> Self {
+    pub fn from_string(kind: ErrorKind, message: String) -> Self {
         Error { kind, message }
     }
 }
@@ -60,24 +63,24 @@ impl std::error::Error for Error {}
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        Error::with_string(ErrorKind::IoError, format!("IoError {}", err))
+        Error::from_string(ErrorKind::IoError, format!("IoError {}", err))
     }
 }
 
 impl From<tungstenite::Error> for Error {
     fn from(err: tungstenite::Error) -> Self {
-        Error::with_string(ErrorKind::IoError, format!("Websocket error: {}", err))
+        Error::from_string(ErrorKind::IoError, format!("Websocket error: {}", err))
     }
 }
 
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
-        Error::with_string(ErrorKind::EncodeError, format!("{:?}", err))
+        Error::from_string(ErrorKind::EncodeError, format!("{:?}", err))
     }
 }
 
 impl From<codec::DecodeError> for Error {
     fn from(err: codec::DecodeError) -> Self {
-        Error::with_string(ErrorKind::DecodeError, format!("{:?}", err))
+        Error::from_string(ErrorKind::DecodeError, format!("{:?}", err))
     }
 }

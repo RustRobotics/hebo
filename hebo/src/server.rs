@@ -8,7 +8,7 @@ use std::io::{Read, Write};
 use tokio::runtime::Runtime;
 
 use crate::config::Config;
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::listener::Listener;
 use crate::storage::Storage;
 
@@ -79,12 +79,32 @@ impl ServerContext {
         ServerContext { config }
     }
 
+    /// Notify server process to reload config by sending `SIGUSR1` signal.
     pub fn reload(&mut self) -> Result<(), Error> {
         log::info!("reload()");
         let mut fd = File::open(&self.config.general.pid_file)?;
         let mut pid_str = String::new();
         fd.read_to_string(&mut pid_str)?;
         log::info!("pid str: {}", pid_str);
+        let pid = pid_str.parse::<i32>().map_err(|err| {
+            Error::from_string(
+                ErrorKind::PidError,
+                format!(
+                    "Failed to parse pid {} from file {}, err: {:?}",
+                    pid_str, &self.config.general.pid_file, err
+                ),
+            )
+        })?;
+        nc::kill(pid, nc::SIGUSR1).map_err(|err| {
+            Error::from_string(
+                ErrorKind::PidError,
+                format!(
+                    "Failed to notify process {}, got {}",
+                    pid,
+                    nc::strerror(err)
+                ),
+            )
+        })?;
         Ok(())
     }
 
@@ -100,7 +120,6 @@ impl ServerContext {
         self.write_pid()?;
 
         runtime.block_on(async {
-            let mut handles = Vec::new();
             for l in self.config.listeners.clone() {
                 let handle = runtime.spawn(async move {
                     let mut listener = Listener::bind(&l)
@@ -108,19 +127,14 @@ impl ServerContext {
                         .expect(&format!("Failed to listen at {:?}", l));
                     listener.run_loop().await;
                 });
-                handles.push(handle);
+                let _ret = handle.await;
             }
 
             let storage_handle = runtime.spawn(async {
                 let mut storage = Storage::new();
                 storage.run_loop().await;
             });
-            handles.push(storage_handle);
-
-            for handle in handles {
-                // TODO(Shaohua): Handle errors
-                handle.await;
-            }
+            let _ret = storage_handle.await;
         });
 
         Ok(())

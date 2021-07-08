@@ -194,7 +194,7 @@ impl Session {
             .await
             .map(drop)
             .map_err(|err| {
-                Error::with_string(
+                Error::from_string(
                     ErrorKind::SendError,
                     format!("Failed to send packet, {:?}", err),
                 )

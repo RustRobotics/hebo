@@ -92,7 +92,7 @@ impl Listener {
 
     fn load_certs(path: &String) -> Result<Vec<Certificate>, Error> {
         pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
-            Error::with_string(
+            Error::from_string(
                 ErrorKind::CertError,
                 format!("Failed to load cert file at {}, got: {:?}", &path, err),
             )
@@ -101,7 +101,7 @@ impl Listener {
 
     fn load_keys(path: &String) -> Result<Vec<PrivateKey>, Error> {
         pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)).map_err(|err| {
-            Error::with_string(
+            Error::from_string(
                 ErrorKind::CertError,
                 format!("Failed to load key file at {}, got {:?}", &path, err),
             )
@@ -133,7 +133,7 @@ impl Listener {
                 config
                     .set_single_cert(certs, keys.remove(0))
                     .map_err(|err| {
-                        Error::with_string(
+                        Error::from_string(
                             ErrorKind::CertError,
                             format!("Failed to init ServerConfig, got {:?}", err),
                         )
@@ -170,7 +170,7 @@ impl Listener {
                 config
                     .set_single_cert(certs, keys.remove(0))
                     .map_err(|err| {
-                        Error::with_string(
+                        Error::from_string(
                             ErrorKind::CertError,
                             format!("Failed to init ServerConfig, got {:?}", err),
                         )
@@ -190,7 +190,7 @@ impl Listener {
                 return Ok(Listener::new(Protocol::Uds(listener)));
             }
         }
-        Err(Error::with_string(
+        Err(Error::from_string(
             ErrorKind::SocketError,
             format!("Failed to create server socket with config: {:?}", listener),
         ))
