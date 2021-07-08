@@ -267,10 +267,15 @@ impl Listener {
 impl Listener {
     pub async fn run_loop(&mut self) -> ! {
         // Take ownership of mpsc receiver or else tokio select will raise error.
-        let mut receiver = self
+        let mut session_receiver = self
             .session_receiver
             .take()
             .expect("Invalid session receiver");
+
+        let mut storage_receiver = self
+            .storage_receiver
+            .take()
+            .expect("Invalid storage receiver");
 
         loop {
             tokio::select! {
@@ -278,9 +283,13 @@ impl Listener {
                     self.new_connection(stream).await;
                 },
 
-                Some(cmd) = receiver.recv() => {
-                    self.route_cmd(cmd).await;
+                Some(cmd) = session_receiver.recv() => {
+                    self.handle_session_cmd(cmd).await;
                 },
+
+                Some(cmd) = storage_receiver.recv() => {
+                    self.handle_storage_cmd(cmd).await;
+                }
             }
         }
     }
@@ -294,10 +303,10 @@ impl Listener {
         tokio::spawn(connection.run_loop());
     }
 
-    async fn route_cmd(&mut self, cmd: SessionToListenerCmd) {
-        log::info!("Listener::route_cmd()");
+    async fn handle_session_cmd(&mut self, cmd: SessionToListenerCmd) {
+        log::info!("Listener::handle_session_cmd()");
         match cmd {
-            SessionToListenerCmd::Publish(packet) => self.on_publish(packet).await,
+            SessionToListenerCmd::Publish(packet) => self.on_session_publish(packet).await,
             SessionToListenerCmd::Subscribe(connection_id, packet) => {
                 self.on_subscribe(connection_id, packet);
             }
@@ -314,6 +323,13 @@ impl Listener {
                     self.pipelines.remove(pos);
                 }
             }
+        }
+    }
+
+    async fn handle_storage_cmd(&mut self, cmd: StorageToListenerCmd) {
+        log::info!("Listener::handle_storage_cmd()");
+        match cmd {
+            StorageToListenerCmd::Publish(packet) => self.publish_packet(packet).await,
         }
     }
 
@@ -353,8 +369,14 @@ impl Listener {
         }
     }
 
-    async fn on_publish(&mut self, packet: PublishPacket) {
-        log::info!("Listener::on_publish()");
+    async fn on_session_publish(&mut self, packet: PublishPacket) {
+        log::info!("Listener::on_session_publish()");
+        let cmd = ListenerToStorageCmd::Publish(packet.clone());
+        self.storage_sender.send(cmd).await;
+    }
+
+    async fn publish_packet(&mut self, packet: PublishPacket) {
+        log::info!("Listener::publish_packet()");
         let cmd = ListenerToSessionCmd::Publish(packet.clone());
         // TODO(Shaohua): Replace with a trie tree and a hash table.
         for pipeline in self.pipelines.iter_mut() {
