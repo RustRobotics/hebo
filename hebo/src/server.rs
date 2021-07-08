@@ -44,22 +44,16 @@ pub fn run_server() -> Result<(), Error> {
         )
         .get_matches();
 
-    // TODO(Shaohua): Do not parse file.
-    if matches.is_present("test") {
-        let config_file = matches
-            .value_of("config")
-            .unwrap_or(constants::DEFAULT_CONFIG);
-        let config_content = std::fs::read_to_string(config_file)?;
-        let _config: Config = toml::from_str(&config_content).unwrap();
-        println!("The configuration file {} syntax is Ok", config_file);
-        return Ok(());
-    }
-
     let config_file = matches
         .value_of("config")
         .unwrap_or(constants::DEFAULT_CONFIG);
     let config_content = std::fs::read_to_string(config_file)?;
     let config: Config = toml::from_str(&config_content).unwrap();
+
+    if matches.is_present("test") {
+        println!("The configuration file {} syntax is Ok", config_file);
+        return Ok(());
+    }
 
     let mut server = ServerContext::new(config);
 
