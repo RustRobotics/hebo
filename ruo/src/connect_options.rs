@@ -2,7 +2,6 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::ffi::OsString;
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::time::Duration;
@@ -44,15 +43,14 @@ impl Authentication for UsernameAuth {}
 
 #[derive(Clone, Debug)]
 pub struct SelfSignedTls {
-    pub root_ca_pem: OsString,
-    pub cert_pem: OsString,
-    pub private_key_pem: OsString,
+    pub root_ca: String,
+    pub cert: String,
 }
 
 #[derive(Clone, Debug)]
 pub enum TlsType {
     /// Signed by Root CA, like `Let's Encrypt`.
-    CaSigned,
+    CASigned,
 
     /// Generated self signed ca file with `openssl` or other tools.
     SelfSigned(SelfSignedTls),

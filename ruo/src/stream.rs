@@ -5,16 +5,21 @@
 use std::net::SocketAddr;
 
 use futures_util::{SinkExt, StreamExt};
+use std::fs::File;
+use std::io::BufReader;
+use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+use tokio_rustls::client::TlsStream;
+use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
-use crate::connect_options::{ConnectType, WsConnect};
+use crate::connect_options::{ConnectType, MqttsConnect, TlsType, WsConnect};
 use crate::error::Error;
 
 pub enum Stream {
     Mqtt(TcpStream),
-    //Mqtts(TlsStream<TcpStream>),
+    Mqtts(TlsStream<TcpStream>),
     Ws(WebSocketStream<TcpStream>),
 }
 
@@ -22,7 +27,7 @@ impl Stream {
     pub async fn new(address: &SocketAddr, connect_type: &ConnectType) -> Result<Stream, Error> {
         match connect_type {
             ConnectType::Mqtt(_) => Stream::new_mqtt(address).await,
-            //ConnectType::Mqtts(mqtts_connect) => Stream::new_mqtts(address, mqtts_connect).await,
+            ConnectType::Mqtts(mqtts_connect) => Stream::new_mqtts(address, mqtts_connect).await,
             ConnectType::Ws(ws_connect) => Stream::new_ws(address, ws_connect).await,
             _ => unimplemented!(),
         }
@@ -33,29 +38,36 @@ impl Stream {
         Ok(Stream::Mqtt(tcp_stream))
     }
 
-    /*
     async fn new_mqtts(
         address: &SocketAddr,
         mqtts_connect: &MqttsConnect,
     ) -> Result<Stream, Error> {
-        let mut builder = native_tls::TlsConnector::builder();
-        if let TlsType::SelfSigned(self_signed) = &mqtts_connect.tls_type {
-            let mut root_ca_fd = File::open(&self_signed.root_ca_pem)?;
-            let mut root_ca_buf = Vec::new();
-            root_ca_fd.read_to_end(&mut root_ca_buf)?;
-            let root_ca = Certificate::from_pem(&root_ca_buf).unwrap();
-            builder.add_root_certificate(root_ca);
+        let mut config = ClientConfig::new();
+        match &mqtts_connect.tls_type {
+            TlsType::SelfSigned(self_signed) => {
+                let mut pem = BufReader::new(File::open(&self_signed.root_ca)?);
+                config
+                    .root_store
+                    .add_pem_file(&mut pem)
+                    .expect("Invalid ca");
+            }
+            TlsType::CASigned => {
+                config
+                    .root_store
+                    .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
+            }
         }
-        let connector = builder.build().unwrap();
-        let connector = tokio_tls::TlsConnector::from(connector);
-        let socket = TcpStream::connect(address).await?;
+        let config = Arc::new(config);
+        let connector = TlsConnector::from(config);
+        let tcp_stream = TcpStream::connect(address).await?;
+        let domain = DNSNameRef::try_from_ascii_str(&mqtts_connect.domain).unwrap();
+
         let socket = connector
-            .connect(&mqtts_connect.domain, socket)
+            .connect(domain, tcp_stream)
             .await
-            .unwrap();
+            .expect("Invalid connector");
         Ok(Stream::Mqtts(socket))
     }
-    */
 
     async fn new_ws(address: &SocketAddr, ws_connect: &WsConnect) -> Result<Stream, Error> {
         let ws_url = format!("ws://{}{}", address, &ws_connect.path);
@@ -67,7 +79,7 @@ impl Stream {
     pub async fn read_buf(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
         match self {
             Stream::Mqtt(socket) => Ok(socket.read_buf(buf).await?),
-            //Stream::Mqtts(tls_socket) => tls_socket.read(buf).await,
+            Stream::Mqtts(tls_socket) => Ok(tls_socket.read(buf).await?),
             Stream::Ws(ref mut ws_stream) => {
                 if let Some(msg) = ws_stream.next().await {
                     let msg = msg?;
@@ -85,7 +97,7 @@ impl Stream {
     pub async fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
         match self {
             Stream::Mqtt(tcp_stream) => Ok(tcp_stream.write(buf).await?),
-            //            Stream::Mqtts(tls_socket) => tls_socket.write_all(buf).await,
+            Stream::Mqtts(tls_socket) => Ok(tls_socket.write(buf).await?),
             Stream::Ws(ws_stream) => {
                 let msg = Message::binary(buf);
                 ws_stream.send(msg).await?;
