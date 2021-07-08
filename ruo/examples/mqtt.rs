@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use codec::QoS;
-use ruo::client::Client;
 use ruo::connect_options::ConnectOptions;
+use ruo::sync_client::Client;
 
 fn on_connect(client: &mut Client) {
     log::info!(

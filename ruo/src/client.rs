@@ -171,8 +171,8 @@ impl Client {
     }
 
     async fn on_connect(&self) {
-        if let Some(cb) = &self.connect_cb {
-            cb(self).await;
+        if let Some(ref cb) = self.connect_cb {
+            //(*cb)(self).await;
         }
     }
 
