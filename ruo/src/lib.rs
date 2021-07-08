@@ -6,3 +6,5 @@ pub mod client;
 pub mod connect_options;
 pub mod error;
 pub mod stream;
+pub mod sync_client;
+pub mod sync_stream;
