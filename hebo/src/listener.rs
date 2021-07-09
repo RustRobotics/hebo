@@ -8,6 +8,7 @@ use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
 use std::net::ToSocketAddrs;
+use std::path::Path;
 use std::sync::Arc;
 use tokio::net::{TcpListener, UnixListener};
 use tokio::sync::mpsc::{self, Receiver, Sender};
@@ -104,16 +105,16 @@ impl Listener {
         }
     }
 
-    fn load_certs(path: &String) -> Result<Vec<Certificate>, Error> {
+    fn load_certs(path: &Path) -> Result<Vec<Certificate>, Error> {
         pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
             Error::from_string(
                 ErrorKind::CertError,
-                format!("Failed to load cert file at {}, got: {:?}", &path, err),
+                format!("Failed to load cert file at {:?}, got: {:?}", path, err),
             )
         })
     }
 
-    fn load_keys(path: &String) -> Result<Vec<PrivateKey>, Error> {
+    fn load_keys(path: &Path) -> Result<Vec<PrivateKey>, Error> {
         if let Ok(keys) = pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)) {
             if !keys.is_empty() {
                 return Ok(keys);
@@ -127,7 +128,7 @@ impl Listener {
 
         Err(Error::from_string(
             ErrorKind::CertError,
-            format!("Failed to load key file at {}", &path),
+            format!("Failed to load key file at {:?}", path),
         ))
     }
 
@@ -171,7 +172,6 @@ impl Listener {
                     })?;
 
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;

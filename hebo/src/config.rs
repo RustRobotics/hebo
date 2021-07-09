@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use serde_derive::Deserialize;
+use std::path::PathBuf;
 
 /// Server main config.
 #[derive(Debug, Deserialize, Clone)]
@@ -52,11 +53,14 @@ pub struct Listener {
     #[serde(default = "listener_default_path")]
     pub path: String,
 
+    /// Domain name this tls cert refers to.
+    pub domain: Option<String>,
+
     /// Path to TLS cert file.
-    pub cert_file: Option<String>,
+    pub cert_file: Option<PathBuf>,
 
     /// Path to TLS private key file.
-    pub key_file: Option<String>,
+    pub key_file: Option<PathBuf>,
 }
 
 /// Binding protocol types.
