@@ -132,6 +132,36 @@ impl Listener {
         ))
     }
 
+    fn get_cert_config(listener: &config::Listener) -> Result<ServerConfig, Error> {
+        if let Some(key_file) = listener.key_file.as_ref() {
+            let cert_file = listener
+                .cert_file
+                .as_ref()
+                .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
+
+            let certs = Listener::load_certs(cert_file)?;
+            let mut keys = Listener::load_keys(key_file)?;
+            let mut config = ServerConfig::new(NoClientAuth::new());
+            config
+                .set_single_cert(certs, keys.remove(0))
+                .map_err(|err| {
+                    Error::from_string(
+                        ErrorKind::CertError,
+                        format!("Failed to init ServerConfig, got {:?}", err),
+                    )
+                })?;
+            Ok(config)
+        } else if let Some(domain) = listener.domain.as_ref() {
+            let mut config = ServerConfig::new(NoClientAuth::new());
+            Ok(config)
+        } else {
+            Err(Error::new(
+                ErrorKind::CertError,
+                "Invalid certification config",
+            ))
+        }
+    }
+
     pub async fn bind(
         listener: &config::Listener,
         storage_sender: Sender<ListenerToStorageCmd>,
@@ -150,27 +180,7 @@ impl Listener {
                 }
             }
             config::Protocol::Mqtts => {
-                let cert_file = listener
-                    .cert_file
-                    .as_ref()
-                    .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
-                let key_file = listener
-                    .key_file
-                    .as_ref()
-                    .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
-
-                let certs = Listener::load_certs(cert_file)?;
-                let mut keys = Listener::load_keys(key_file)?;
-                let mut config = ServerConfig::new(NoClientAuth::new());
-                config
-                    .set_single_cert(certs, keys.remove(0))
-                    .map_err(|err| {
-                        Error::from_string(
-                            ErrorKind::CertError,
-                            format!("Failed to init ServerConfig, got {:?}", err),
-                        )
-                    })?;
-
+                let config = Listener::get_cert_config(listener)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
@@ -194,29 +204,8 @@ impl Listener {
                 }
             }
             config::Protocol::Wss => {
-                let cert_file = listener
-                    .cert_file
-                    .as_ref()
-                    .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
-                let key_file = listener
-                    .key_file
-                    .as_ref()
-                    .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
-
-                let certs = Listener::load_certs(cert_file)?;
-                let mut keys = Listener::load_keys(key_file)?;
-                let mut config = ServerConfig::new(NoClientAuth::new());
-                config
-                    .set_single_cert(certs, keys.remove(0))
-                    .map_err(|err| {
-                        Error::from_string(
-                            ErrorKind::CertError,
-                            format!("Failed to init ServerConfig, got {:?}", err),
-                        )
-                    })?;
-
+                let config = Listener::get_cert_config(listener)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
