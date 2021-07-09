@@ -26,7 +26,7 @@ pub struct General {
     pub group: Option<String>,
 
     /// Path to pid file.
-    pub pid_file: String,
+    pub pid_file: PathBuf,
 
     pub max_keepalive: u32,
     pub max_connections: usize,
@@ -99,7 +99,7 @@ pub struct Security {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Storage {
     pub persistence: bool,
-    pub db_path: Option<String>,
+    pub db_path: Option<PathBuf>,
     pub auto_save_interval: usize,
     pub auto_save_on_change: bool,
 }
@@ -108,7 +108,7 @@ pub struct Storage {
 pub struct Log {
     pub console_log: bool,
     pub level: LogLevel,
-    pub log_file: Option<String>,
+    pub log_file: Option<PathBuf>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

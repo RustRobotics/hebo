@@ -89,7 +89,7 @@ impl ServerContext {
             Error::from_string(
                 ErrorKind::PidError,
                 format!(
-                    "Failed to parse pid {} from file {}, err: {:?}",
+                    "Failed to parse pid {} from file {:?}, err: {:?}",
                     pid_str, &self.config.general.pid_file, err
                 ),
             )
