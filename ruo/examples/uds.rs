@@ -5,6 +5,7 @@
 use codec::QoS;
 use ruo::client::Client;
 use ruo::connect_options::{ConnectOptions, ConnectType, UdsConnect};
+use std::future::Future;
 use std::path::PathBuf;
 
 async fn on_connect(client: &mut Client) {
@@ -33,6 +34,7 @@ async fn main() {
         sock_path: PathBuf::from("/tmp/hebo-uds.sock"),
     }));
     let mut client = Client::new(options);
+    //client.set_connect_callback(Box::new(on_connect));
     client.connect().await.expect("Failed to start");
     client.run_loop().await
 }

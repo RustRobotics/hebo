@@ -28,7 +28,6 @@ fn main() {
     options.set_connect_type(ConnectType::Mqtt(MqttConnect {
         address: SocketAddr::from(([127, 0, 0, 1], 1883)),
     }));
-    log::info!("options: {:?}", options);
     let mut client = Client::new(options, Some(on_connect), None).unwrap();
     client.start().unwrap();
 }

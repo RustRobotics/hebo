@@ -3,8 +3,9 @@
 // in the LICENSE file.
 
 use codec::QoS;
-use ruo::connect_options::ConnectOptions;
+use ruo::connect_options::{ConnectOptions, ConnectType, MqttConnect};
 use ruo::sync_client::Client;
+use std::net::SocketAddr;
 use std::time::Instant;
 
 fn on_connect(client: &mut Client) {
@@ -35,9 +36,10 @@ fn main() {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    let address = "127.0.0.1:1883";
-    let options = ConnectOptions::new(address).unwrap();
-    log::info!("options: {:?}", options);
+    let mut options = ConnectOptions::new();
+    options.set_connect_type(ConnectType::Mqtt(MqttConnect {
+        address: SocketAddr::from(([127, 0, 0, 1], 1883)),
+    }));
     let mut client = Client::new(options, Some(on_connect), None).unwrap();
     client.start().unwrap();
 }
