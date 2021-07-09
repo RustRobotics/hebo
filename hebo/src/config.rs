@@ -81,7 +81,10 @@ pub enum Protocol {
     /// Unix Domain Socket
     #[serde(alias = "uds")]
     Uds,
-    // Quic,
+
+    /// QUIC protocol
+    #[serde(alias = "quic")]
+    Quic,
 }
 
 #[derive(Debug, Deserialize, Clone)]

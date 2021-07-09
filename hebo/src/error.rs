@@ -69,7 +69,25 @@ impl From<io::Error> for Error {
 
 impl From<tungstenite::Error> for Error {
     fn from(err: tungstenite::Error) -> Self {
-        Error::from_string(ErrorKind::IoError, format!("Websocket error: {}", err))
+        Error::from_string(ErrorKind::SocketError, format!("Websocket error: {}", err))
+    }
+}
+
+impl From<quinn::EndpointError> for Error {
+    fn from(err: quinn::EndpointError) -> Self {
+        Error::from_string(
+            ErrorKind::SocketError,
+            format!("Quic endpoint error: {}", err),
+        )
+    }
+}
+
+impl From<quinn::ConnectionError> for Error {
+    fn from(err: quinn::ConnectionError) -> Self {
+        Error::from_string(
+            ErrorKind::SocketError,
+            format!("Quic connection error: {}", err),
+        )
     }
 }
 

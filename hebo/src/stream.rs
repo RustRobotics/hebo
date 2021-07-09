@@ -18,6 +18,7 @@ pub enum Stream {
     Ws(WebSocketStream<TcpStream>),
     Wss(WebSocketStream<TlsStream<TcpStream>>),
     Uds(UnixStream),
+    Quic(quinn::NewConnection),
 }
 
 impl Stream {
@@ -49,6 +50,14 @@ impl Stream {
                 }
             }
             Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
+            Stream::Quic(ref mut connection) => {
+                if let Some(Ok((_send, mut recv))) = connection.bi_streams.next().await {
+                    let data_len = recv.read_buf(buf).await.unwrap();
+                    Ok(data_len)
+                } else {
+                    Ok(0)
+                }
+            }
         }
     }
 
@@ -67,6 +76,16 @@ impl Stream {
                 Ok(buf.len())
             }
             Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
+            Stream::Quic(ref mut connection) => {
+                if let Some(Ok((mut send, _recv))) = connection.bi_streams.next().await {
+                    // TODO(Shaohua): handle errors
+                    send.write_all(buf).await.unwrap();
+                    send.finish().await.unwrap();
+                    Ok(buf.len())
+                } else {
+                    Ok(0)
+                }
+            }
         }
     }
 }

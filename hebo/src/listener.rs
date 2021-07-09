@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use codec::{PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
+use futures_util::StreamExt;
 use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
@@ -43,6 +44,7 @@ enum Protocol {
     Ws(TcpListener),
     Wss(TcpListener, TlsAcceptor),
     Uds(UnixListener),
+    Quic(quinn::Endpoint, quinn::Incoming),
 }
 
 impl fmt::Debug for Protocol {
@@ -53,6 +55,7 @@ impl fmt::Debug for Protocol {
             Protocol::Ws(..) => "Ws",
             Protocol::Wss(..) => "Wss",
             Protocol::Uds(..) => "Uds",
+            Protocol::Quic(..) => "Quic",
         };
         write!(f, "{}", msg)
     }
@@ -224,6 +227,21 @@ impl Listener {
                     storage_receiver,
                 ));
             }
+
+            config::Protocol::Quic => {
+                let mut endpoint_builder = quinn::Endpoint::builder();
+                endpoint_builder.listen(quinn::ServerConfig::default());
+                let addrs = listener.address.to_socket_addrs()?;
+                for addr in addrs {
+                    // Bind this endpoint to a UDP socket on the given server address.
+                    let (endpoint, incoming) = endpoint_builder.bind(&addr)?;
+                    return Ok(Listener::new(
+                        Protocol::Quic(endpoint, incoming),
+                        storage_sender,
+                        storage_receiver,
+                    ));
+                }
+            }
         }
         Err(Error::from_string(
             ErrorKind::SocketError,
@@ -231,8 +249,8 @@ impl Listener {
         ))
     }
 
-    pub async fn accept(&self) -> Result<Stream, Error> {
-        match &self.protocol {
+    pub async fn accept(&mut self) -> Result<Stream, Error> {
+        match &mut self.protocol {
             Protocol::Mqtt(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 return Ok(Stream::Mqtt(tcp_stream));
@@ -256,6 +274,17 @@ impl Listener {
             Protocol::Uds(listener) => {
                 let (uds_stream, _address) = listener.accept().await?;
                 return Ok(Stream::Uds(uds_stream));
+            }
+            Protocol::Quic(_endpoint, incoming) => {
+                if let Some(conn) = incoming.next().await {
+                    let connection: quinn::NewConnection = conn.await?;
+                    return Ok(Stream::Quic(connection));
+                } else {
+                    return Err(Error::new(
+                        ErrorKind::SocketError,
+                        "Failed to accept new quic connection",
+                    ));
+                }
             }
         }
     }
