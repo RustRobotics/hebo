@@ -47,7 +47,7 @@ impl Client {
         on_connect_cb: Option<ConnectCallback>,
         on_message_cb: Option<MessageCallback>,
     ) -> Result<Client, Error> {
-        let stream = Stream::new(connect_options.address(), connect_options.connect_type())?;
+        let stream = Stream::new(connect_options.connect_type())?;
         let client = Client {
             connect_options,
             stream,

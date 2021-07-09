@@ -2,8 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io;
-use std::net::{SocketAddr, ToSocketAddrs};
+use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -59,11 +58,14 @@ pub enum TlsType {
 
 /// Connect to tcp server.
 #[derive(Clone, Debug)]
-pub struct MqttConnect {}
+pub struct MqttConnect {
+    pub address: SocketAddr,
+}
 
 /// Connect to secure tcp server.
 #[derive(Clone, Debug)]
 pub struct MqttsConnect {
+    pub address: SocketAddr,
     pub domain: String,
     pub tls_type: TlsType,
 }
@@ -71,12 +73,14 @@ pub struct MqttsConnect {
 /// Connect to websocket server.
 #[derive(Clone, Debug)]
 pub struct WsConnect {
+    pub address: SocketAddr,
     pub path: String,
 }
 
 /// Connect to secure websocket server.
 #[derive(Clone, Debug)]
 pub struct WssConnect {
+    pub address: SocketAddr,
     pub domain: String,
     pub tls_type: TlsType,
     pub path: String,
@@ -99,7 +103,6 @@ pub enum ConnectType {
 
 #[derive(Clone, Debug)]
 pub struct ConnectOptions {
-    address: SocketAddr,
     connect_type: ConnectType,
     client_id: String,
     keep_alive: Duration,
@@ -110,8 +113,9 @@ pub struct ConnectOptions {
 impl Default for ConnectOptions {
     fn default() -> Self {
         ConnectOptions {
-            address: SocketAddr::from(([127, 0, 0, 1], 1883)),
-            connect_type: ConnectType::Mqtt(MqttConnect {}),
+            connect_type: ConnectType::Mqtt(MqttConnect {
+                address: SocketAddr::from(([127, 0, 0, 1], 1883)),
+            }),
             client_id: random_string(8),
             connect_timeout: Duration::from_secs(10),
             keep_alive: Duration::from_secs(30),
@@ -121,22 +125,8 @@ impl Default for ConnectOptions {
 }
 
 impl ConnectOptions {
-    pub fn new<A: ToSocketAddrs>(address: A) -> io::Result<ConnectOptions> {
-        let mut addrs = address.to_socket_addrs()?;
-        Ok(ConnectOptions {
-            address: addrs.next().unwrap(),
-            ..Self::default()
-        })
-    }
-
-    pub fn set_address<A: ToSocketAddrs>(&mut self, address: A) -> io::Result<&mut Self> {
-        let mut address = address.to_socket_addrs()?;
-        self.address = address.next().unwrap();
-        Ok(self)
-    }
-
-    pub fn address(&self) -> &SocketAddr {
-        &self.address
+    pub fn new() -> ConnectOptions {
+        Self::default()
     }
 
     pub fn set_connect_type(&mut self, connect_type: ConnectType) -> &mut Self {

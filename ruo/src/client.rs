@@ -42,10 +42,9 @@ pub struct Client {
 }
 
 impl Client {
-    pub async fn new(connect_options: ConnectOptions) -> Client {
-        let stream = Stream::new(connect_options.address(), connect_options.connect_type())
-            .await
-            .unwrap();
+    pub async fn new(connect_options: ConnectOptions) -> Result<Client, Error> {
+        // TODO(Shaohua): Should create stream in runtime loop.
+        let stream = Stream::new(connect_options.connect_type()).await?;
         let client = Client {
             connect_options,
             stream,
@@ -59,7 +58,7 @@ impl Client {
             connect_cb: None,
         };
 
-        client
+        Ok(client)
     }
 
     pub fn set_connect_callback(&mut self, callback: Box<FutureConnectCb>) {

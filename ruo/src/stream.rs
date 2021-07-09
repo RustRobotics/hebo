@@ -2,8 +2,6 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::net::SocketAddr;
-
 use futures_util::{SinkExt, StreamExt};
 use std::fs::File;
 use std::io::BufReader;
@@ -15,7 +13,7 @@ use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
 use crate::connect_options::{
-    ConnectType, MqttsConnect, TlsType, UdsConnect, WsConnect, WssConnect,
+    ConnectType, MqttConnect, MqttsConnect, TlsType, UdsConnect, WsConnect, WssConnect,
 };
 use crate::error::Error;
 
@@ -28,25 +26,22 @@ pub enum Stream {
 }
 
 impl Stream {
-    pub async fn new(address: &SocketAddr, connect_type: &ConnectType) -> Result<Stream, Error> {
+    pub async fn new(connect_type: &ConnectType) -> Result<Stream, Error> {
         match connect_type {
-            ConnectType::Mqtt(..) => Stream::new_mqtt(address).await,
-            ConnectType::Mqtts(mqtts_connect) => Stream::new_mqtts(address, mqtts_connect).await,
-            ConnectType::Ws(ws_connect) => Stream::new_ws(address, ws_connect).await,
-            ConnectType::Wss(wss_connect) => Stream::new_wss(address, wss_connect).await,
+            ConnectType::Mqtt(mqtt_connect) => Stream::new_mqtt(mqtt_connect).await,
+            ConnectType::Mqtts(mqtts_connect) => Stream::new_mqtts(mqtts_connect).await,
+            ConnectType::Ws(ws_connect) => Stream::new_ws(ws_connect).await,
+            ConnectType::Wss(wss_connect) => Stream::new_wss(wss_connect).await,
             ConnectType::Uds(uds_connect) => Stream::new_uds(uds_connect).await,
         }
     }
 
-    async fn new_mqtt(address: &SocketAddr) -> Result<Stream, Error> {
-        let tcp_stream = TcpStream::connect(address).await?;
+    async fn new_mqtt(mqtt_connect: &MqttConnect) -> Result<Stream, Error> {
+        let tcp_stream = TcpStream::connect(mqtt_connect.address).await?;
         Ok(Stream::Mqtt(tcp_stream))
     }
 
-    async fn new_mqtts(
-        address: &SocketAddr,
-        mqtts_connect: &MqttsConnect,
-    ) -> Result<Stream, Error> {
+    async fn new_mqtts(mqtts_connect: &MqttsConnect) -> Result<Stream, Error> {
         let mut config = ClientConfig::new();
         match &mqtts_connect.tls_type {
             TlsType::SelfSigned(self_signed) => {
@@ -64,7 +59,7 @@ impl Stream {
         }
         let config = Arc::new(config);
         let connector = TlsConnector::from(config);
-        let tcp_stream = TcpStream::connect(address).await?;
+        let tcp_stream = TcpStream::connect(mqtts_connect.address).await?;
         let domain = DNSNameRef::try_from_ascii_str(&mqtts_connect.domain).unwrap();
 
         let tls_stream = connector
@@ -74,14 +69,14 @@ impl Stream {
         Ok(Stream::Mqtts(tls_stream))
     }
 
-    async fn new_ws(address: &SocketAddr, ws_connect: &WsConnect) -> Result<Stream, Error> {
-        let ws_url = format!("ws://{}{}", address, &ws_connect.path);
-        let tcp_stream = TcpStream::connect(address).await?;
+    async fn new_ws(ws_connect: &WsConnect) -> Result<Stream, Error> {
+        let ws_url = format!("ws://{}{}", ws_connect.address, &ws_connect.path);
+        let tcp_stream = TcpStream::connect(ws_connect.address).await?;
         let (ws_stream, _) = tokio_tungstenite::client_async(ws_url, tcp_stream).await?;
         Ok(Stream::Ws(ws_stream))
     }
 
-    async fn new_wss(address: &SocketAddr, wss_connect: &WssConnect) -> Result<Stream, Error> {
+    async fn new_wss(wss_connect: &WssConnect) -> Result<Stream, Error> {
         let mut config = ClientConfig::new();
         match &wss_connect.tls_type {
             TlsType::SelfSigned(self_signed) => {
@@ -99,7 +94,7 @@ impl Stream {
         }
         let config = Arc::new(config);
         let connector = TlsConnector::from(config);
-        let tcp_stream = TcpStream::connect(address).await?;
+        let tcp_stream = TcpStream::connect(wss_connect.address).await?;
         let domain = DNSNameRef::try_from_ascii_str(&wss_connect.domain).unwrap();
 
         let tls_stream = connector
@@ -107,7 +102,7 @@ impl Stream {
             .await
             .expect("Invalid connector");
 
-        let ws_url = format!("ws://{}{}", address, &wss_connect.path);
+        let ws_url = format!("ws://{}{}", wss_connect.address, &wss_connect.path);
         let (ws_stream, _) = tokio_tungstenite::client_async(ws_url, tls_stream).await?;
         Ok(Stream::Wss(ws_stream))
     }

@@ -3,11 +3,10 @@
 // in the LICENSE file.
 
 use std::io::{self, Read, Write};
-use std::net::SocketAddr;
 use std::net::TcpStream;
 use std::time::Duration;
 
-use crate::connect_options::ConnectType;
+use crate::connect_options::{ConnectType, MqttConnect};
 
 #[derive(Debug)]
 pub enum Stream {
@@ -23,15 +22,15 @@ impl Drop for Stream {
 }
 
 impl Stream {
-    pub fn new(address: &SocketAddr, connect_type: &ConnectType) -> io::Result<Stream> {
+    pub fn new(connect_type: &ConnectType) -> io::Result<Stream> {
         match connect_type {
-            ConnectType::Mqtt(_) => Stream::new_mqtt(address),
+            ConnectType::Mqtt(mqtt_connect) => Stream::new_mqtt(mqtt_connect),
             _ => unimplemented!(),
         }
     }
 
-    fn new_mqtt(address: &SocketAddr) -> io::Result<Stream> {
-        let socket = TcpStream::connect(address)?;
+    fn new_mqtt(mqtt_connect: &MqttConnect) -> io::Result<Stream> {
+        let socket = TcpStream::connect(mqtt_connect.address)?;
         socket.set_read_timeout(Some(Duration::from_secs(20)))?;
         socket.set_write_timeout(Some(Duration::from_secs(20)))?;
         Ok(Stream::Mqtt(socket))
