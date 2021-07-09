@@ -4,6 +4,7 @@
 
 use std::io;
 use std::net::{SocketAddr, ToSocketAddrs};
+use std::path::PathBuf;
 use std::time::Duration;
 
 use codec::utils::random_string;
@@ -43,8 +44,8 @@ impl Authentication for UsernameAuth {}
 
 #[derive(Clone, Debug)]
 pub struct SelfSignedTls {
-    pub root_ca: String,
-    pub cert: String,
+    pub root_ca: PathBuf,
+    pub cert: PathBuf,
 }
 
 #[derive(Clone, Debug)]
@@ -56,25 +57,35 @@ pub enum TlsType {
     SelfSigned(SelfSignedTls),
 }
 
+/// Connect to tcp server.
 #[derive(Clone, Debug)]
 pub struct MqttConnect {}
 
+/// Connect to secure tcp server.
 #[derive(Clone, Debug)]
 pub struct MqttsConnect {
     pub domain: String,
     pub tls_type: TlsType,
 }
 
+/// Connect to websocket server.
 #[derive(Clone, Debug)]
 pub struct WsConnect {
     pub path: String,
 }
 
+/// Connect to secure websocket server.
 #[derive(Clone, Debug)]
 pub struct WssConnect {
     pub domain: String,
     pub tls_type: TlsType,
     pub path: String,
+}
+
+/// Connect to unix domain socket server.
+#[derive(Clone, Debug)]
+pub struct UdsConnect {
+    pub sock_path: PathBuf,
 }
 
 #[derive(Clone, Debug)]
@@ -83,6 +94,7 @@ pub enum ConnectType {
     Mqtts(MqttsConnect),
     Ws(WsConnect),
     Wss(WssConnect),
+    Uds(UdsConnect),
 }
 
 #[derive(Clone, Debug)]

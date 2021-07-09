@@ -9,12 +9,14 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
+use tokio::net::{TcpStream, UnixStream};
 use tokio_rustls::client::TlsStream;
 use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
-use crate::connect_options::{ConnectType, MqttsConnect, TlsType, WsConnect, WssConnect};
+use crate::connect_options::{
+    ConnectType, MqttsConnect, TlsType, UdsConnect, WsConnect, WssConnect,
+};
 use crate::error::Error;
 
 pub enum Stream {
@@ -22,15 +24,17 @@ pub enum Stream {
     Mqtts(TlsStream<TcpStream>),
     Ws(WebSocketStream<TcpStream>),
     Wss(WebSocketStream<TlsStream<TcpStream>>),
+    Uds(UnixStream),
 }
 
 impl Stream {
     pub async fn new(address: &SocketAddr, connect_type: &ConnectType) -> Result<Stream, Error> {
         match connect_type {
-            ConnectType::Mqtt(_) => Stream::new_mqtt(address).await,
+            ConnectType::Mqtt(..) => Stream::new_mqtt(address).await,
             ConnectType::Mqtts(mqtts_connect) => Stream::new_mqtts(address, mqtts_connect).await,
             ConnectType::Ws(ws_connect) => Stream::new_ws(address, ws_connect).await,
             ConnectType::Wss(wss_connect) => Stream::new_wss(address, wss_connect).await,
+            ConnectType::Uds(uds_connect) => Stream::new_uds(uds_connect).await,
         }
     }
 
@@ -108,10 +112,15 @@ impl Stream {
         Ok(Stream::Wss(ws_stream))
     }
 
+    async fn new_uds(uds_connect: &UdsConnect) -> Result<Stream, Error> {
+        let uds_stream = UnixStream::connect(&uds_connect.sock_path).await?;
+        Ok(Stream::Uds(uds_stream))
+    }
+
     pub async fn read_buf(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
         match self {
-            Stream::Mqtt(socket) => Ok(socket.read_buf(buf).await?),
-            Stream::Mqtts(tls_socket) => Ok(tls_socket.read(buf).await?),
+            Stream::Mqtt(tcp_stream) => Ok(tcp_stream.read_buf(buf).await?),
+            Stream::Mqtts(tls_stream) => Ok(tls_stream.read(buf).await?),
             Stream::Ws(ref mut ws_stream) => {
                 if let Some(msg) = ws_stream.next().await {
                     let msg = msg?;
@@ -134,6 +143,7 @@ impl Stream {
                     Ok(0)
                 }
             }
+            Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
         }
     }
 
@@ -151,6 +161,7 @@ impl Stream {
                 wss_stream.send(msg).await?;
                 Ok(buf.len())
             }
+            Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
         }
     }
 }
