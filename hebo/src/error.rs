@@ -91,6 +91,12 @@ impl From<quinn::ConnectionError> for Error {
     }
 }
 
+impl From<quinn::WriteError> for Error {
+    fn from(err: quinn::WriteError) -> Self {
+        Error::from_string(ErrorKind::SocketError, format!("Quic write error: {}", err))
+    }
+}
+
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
         Error::from_string(ErrorKind::EncodeError, format!("{:?}", err))
