@@ -18,7 +18,7 @@ use crate::error::{Error, ErrorKind};
 use crate::stream::Stream;
 
 #[derive(Debug, Hash, PartialEq)]
-enum StreamStatus {
+enum ConnectStatus {
     Connecting,
     Connected,
     ConnectFailed,
@@ -26,12 +26,12 @@ enum StreamStatus {
     Disconnected,
 }
 
-type FutureConnectCb = dyn Fn(&Client) -> dyn Future<Output = ()>;
+type FutureConnectCb = dyn Fn(&mut Client) -> dyn Future<Output = ()>;
 
 pub struct Client {
     connect_options: ConnectOptions,
     stream: Stream,
-    status: StreamStatus,
+    status: ConnectStatus,
     topics: HashMap<String, PacketId>,
     packet_id: PacketId,
     subscribing_packets: HashMap<PacketId, SubscribePacket>,
@@ -46,7 +46,7 @@ impl Client {
         Client {
             connect_options,
             stream: Stream::None,
-            status: StreamStatus::Disconnected,
+            status: ConnectStatus::Disconnected,
             topics: HashMap::new(),
             packet_id: 1,
             subscribing_packets: HashMap::new(),
@@ -62,6 +62,19 @@ impl Client {
     }
 
     pub async fn connect(&mut self) -> Result<(), Error> {
+        if self.status == ConnectStatus::Connecting {
+            return Err(Error::new(
+                ErrorKind::InvalidConnectStatus,
+                "In connecting ..",
+            ));
+        }
+        if self.status == ConnectStatus::Connected {
+            return Err(Error::new(
+                ErrorKind::InvalidConnectStatus,
+                "Already connected",
+            ));
+        }
+
         self.stream = Stream::connect(self.connect_options.connect_type()).await?;
         let conn_packet = ConnectPacket::new(self.connect_options.client_id());
         log::info!("send conn packet");
@@ -162,8 +175,8 @@ impl Client {
     }
 
     pub async fn disconnect(&mut self) -> Result<(), Error> {
-        if self.status == StreamStatus::Connected {
-            self.status = StreamStatus::Disconnecting;
+        if self.status == ConnectStatus::Connected {
+            self.status = ConnectStatus::Disconnecting;
             let packet = DisconnectPacket::new();
             self.send(packet).await?;
         }
@@ -171,7 +184,9 @@ impl Client {
         Ok(())
     }
 
-    async fn on_connect(&self) {
+    async fn on_connect(&mut self) -> Result<(), Error> {
+        log::info!("on_connect()");
+        Ok(())
         //if let Some(ref cb) = self.connect_cb {
         //(*cb)(self).await;
         //}
@@ -179,7 +194,7 @@ impl Client {
 
     async fn ping(&mut self) -> Result<(), Error> {
         log::info!("ping()");
-        if self.status == StreamStatus::Connected {
+        if self.status == ConnectStatus::Connected {
             log::info!("Send ping packet");
             let packet = PingRequestPacket::new();
             self.send(packet).await
@@ -190,7 +205,7 @@ impl Client {
     }
 
     fn on_disconnect(&mut self) {
-        self.status = StreamStatus::Disconnected;
+        self.status = ConnectStatus::Disconnected;
     }
 
     async fn on_message(&self, buf: &[u8]) -> Result<(), Error> {
@@ -216,12 +231,12 @@ impl Client {
         let packet = ConnectAckPacket::decode(&mut ba)?;
         match packet.return_code() {
             ConnectReturnCode::Accepted => {
-                self.status = StreamStatus::Connected;
-                self.on_connect().await;
+                self.status = ConnectStatus::Connected;
+                self.on_connect().await?;
             }
             _ => {
                 log::warn!("Failed to connect to server, {:?}", packet.return_code());
-                self.status = StreamStatus::ConnectFailed;
+                self.status = ConnectStatus::ConnectFailed;
             }
         }
         Ok(())

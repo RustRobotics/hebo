@@ -29,6 +29,9 @@ pub enum ErrorKind {
 
     /// Invalid pid.
     PidError,
+
+    /// Invalid connect status.
+    InvalidConnectStatus,
 }
 
 #[derive(Clone, Debug)]
