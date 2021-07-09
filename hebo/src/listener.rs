@@ -114,12 +114,21 @@ impl Listener {
     }
 
     fn load_keys(path: &String) -> Result<Vec<PrivateKey>, Error> {
-        pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)).map_err(|err| {
-            Error::from_string(
-                ErrorKind::CertError,
-                format!("Failed to load key file at {}, got {:?}", &path, err),
-            )
-        })
+        if let Ok(keys) = pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)) {
+            if !keys.is_empty() {
+                return Ok(keys);
+            }
+        }
+        if let Ok(keys) = pemfile::pkcs8_private_keys(&mut BufReader::new(File::open(path)?)) {
+            if !keys.is_empty() {
+                return Ok(keys);
+            }
+        }
+
+        Err(Error::from_string(
+            ErrorKind::CertError,
+            format!("Failed to load key file at {}", &path),
+        ))
     }
 
     pub async fn bind(
