@@ -4,28 +4,35 @@
 
 use codec::QoS;
 use ruo::client::Client;
-use ruo::connect_options::ConnectOptions;
+use ruo::connect_options::{ConnectOptions, ConnectType, UdsConnect};
+use std::path::PathBuf;
 
-fn on_connect(client: &mut Client) {
+async fn on_connect(client: &mut Client) {
     log::info!(
         "[on_connect] client id: {}",
         client.connect_option().client_id()
     );
 
-    // self.subscribe("hello", QoS::AtMostOnce).await;
-    client.subscribe("hello", QoS::AtMostOnce).unwrap();
+    client
+        .subscribe("hello", QoS::AtMostOnce)
+        .await
+        .expect("Failed to subscribe");
     client
         .publish("hello", QoS::AtMostOnce, b"Hello, world")
-        .unwrap();
+        .await
+        .expect("Failed to publish")
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    let address = "127.0.0.1:1883";
-    let options = ConnectOptions::new(address).unwrap();
-    log::info!("options: {:?}", options);
-    let mut client = Client::new(options, Some(on_connect), None).unwrap();
-    client.start().unwrap();
+    let mut options = ConnectOptions::new();
+    options.set_connect_type(ConnectType::Uds(UdsConnect {
+        sock_path: PathBuf::from("/tmp/hebo-uds.sock"),
+    }));
+    let mut client = Client::new(options);
+    client.connect().await.expect("Failed to start");
+    client.run_loop().await
 }

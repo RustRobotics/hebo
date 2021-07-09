@@ -23,10 +23,11 @@ pub enum Stream {
     Ws(WebSocketStream<TcpStream>),
     Wss(WebSocketStream<TlsStream<TcpStream>>),
     Uds(UnixStream),
+    None,
 }
 
 impl Stream {
-    pub async fn new(connect_type: &ConnectType) -> Result<Stream, Error> {
+    pub async fn connect(connect_type: &ConnectType) -> Result<Stream, Error> {
         match connect_type {
             ConnectType::Mqtt(mqtt_connect) => Stream::new_mqtt(mqtt_connect).await,
             ConnectType::Mqtts(mqtts_connect) => Stream::new_mqtts(mqtts_connect).await,
@@ -139,6 +140,7 @@ impl Stream {
                 }
             }
             Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
+            Stream::None => unreachable!(),
         }
     }
 
@@ -157,6 +159,7 @@ impl Stream {
                 Ok(buf.len())
             }
             Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
+            Stream::None => unreachable!(),
         }
     }
 }

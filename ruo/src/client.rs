@@ -14,7 +14,7 @@ use std::future::Future;
 use tokio::time::interval;
 
 use crate::connect_options::*;
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::stream::Stream;
 
 #[derive(Debug, Hash, PartialEq)]
@@ -42,13 +42,11 @@ pub struct Client {
 }
 
 impl Client {
-    pub async fn new(connect_options: ConnectOptions) -> Result<Client, Error> {
-        // TODO(Shaohua): Should create stream in runtime loop.
-        let stream = Stream::new(connect_options.connect_type()).await?;
-        let client = Client {
+    pub fn new(connect_options: ConnectOptions) -> Client {
+        Client {
             connect_options,
-            stream,
-            status: StreamStatus::Connecting,
+            stream: Stream::None,
+            status: StreamStatus::Disconnected,
             topics: HashMap::new(),
             packet_id: 1,
             subscribing_packets: HashMap::new(),
@@ -56,16 +54,21 @@ impl Client {
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
             connect_cb: None,
-        };
-
-        Ok(client)
+        }
     }
 
     pub fn set_connect_callback(&mut self, callback: Box<FutureConnectCb>) {
         self.connect_cb = Some(callback);
     }
 
-    pub async fn start(&mut self) -> Result<(), Error> {
+    pub async fn connect(&mut self) -> Result<(), Error> {
+        self.stream = Stream::connect(self.connect_options.connect_type()).await?;
+        let conn_packet = ConnectPacket::new(self.connect_options.client_id());
+        log::info!("send conn packet");
+        self.send(conn_packet).await
+    }
+
+    pub async fn run_loop(&mut self) -> ! {
         log::info!("client.start()");
 
         let mut buf: Vec<u8> = Vec::with_capacity(1024);
@@ -73,15 +76,9 @@ impl Client {
         // FIXME(Shaohua): Fix panic when keep_alive is 0
         let mut timer = interval(*self.connect_options.keep_alive());
 
-        let conn_packet = ConnectPacket::new(self.connect_options.client_id());
-        println!("connect packet client id: {}", conn_packet.client_id());
-        self.send(conn_packet).await?;
-        log::info!("send conn packet");
-
         loop {
             tokio::select! {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
-                    // log::info!("n_recv: {}", n_recv);
                     if n_recv > 0 {
                         if let Err(err) = self.recv_router(&mut buf).await {
                             log::error!("err: {:?}", err);
