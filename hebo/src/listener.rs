@@ -5,7 +5,7 @@
 use codec::{PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
 use futures_util::StreamExt;
 use std::fmt;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::BufReader;
 use std::net::ToSocketAddrs;
 use std::path::Path;
@@ -133,33 +133,27 @@ impl Listener {
     }
 
     fn get_cert_config(listener: &config::Listener) -> Result<ServerConfig, Error> {
-        if let Some(key_file) = listener.key_file.as_ref() {
-            let cert_file = listener
-                .cert_file
-                .as_ref()
-                .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
+        let cert_file = listener
+            .cert_file
+            .as_ref()
+            .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
+        let key_file = listener
+            .key_file
+            .as_ref()
+            .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
 
-            let certs = Listener::load_certs(cert_file)?;
-            let mut keys = Listener::load_keys(key_file)?;
-            let mut config = ServerConfig::new(NoClientAuth::new());
-            config
-                .set_single_cert(certs, keys.remove(0))
-                .map_err(|err| {
-                    Error::from_string(
-                        ErrorKind::CertError,
-                        format!("Failed to init ServerConfig, got {:?}", err),
-                    )
-                })?;
-            Ok(config)
-        } else if let Some(domain) = listener.domain.as_ref() {
-            let mut config = ServerConfig::new(NoClientAuth::new());
-            Ok(config)
-        } else {
-            Err(Error::new(
-                ErrorKind::CertError,
-                "Invalid certification config",
-            ))
-        }
+        let certs = Listener::load_certs(cert_file)?;
+        let mut keys = Listener::load_keys(key_file)?;
+        let mut config = ServerConfig::new(NoClientAuth::new());
+        config
+            .set_single_cert(certs, keys.remove(0))
+            .map_err(|err| {
+                Error::from_string(
+                    ErrorKind::CertError,
+                    format!("Failed to init ServerConfig, got {:?}", err),
+                )
+            })?;
+        Ok(config)
     }
 
     pub async fn bind(
@@ -227,8 +221,36 @@ impl Listener {
             }
 
             config::Protocol::Quic => {
+                let cert_file = listener
+                    .cert_file
+                    .as_ref()
+                    .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
+                let key_file = listener
+                    .key_file
+                    .as_ref()
+                    .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
+                let cert = fs::read(cert_file)?;
+                let key = fs::read(key_file)?;
+
+                // Parse to certificate chain whereafter taking the first certifcater in this chain.
+                let cert = quinn::CertificateChain::from_pem(&cert)?
+                    .iter()
+                    .next()
+                    .ok_or_else(|| {
+                        Error::from_string(
+                            ErrorKind::CertError,
+                            format!("cert_file {:?} is invalid", &cert_file),
+                        )
+                    })?
+                    .clone();
+                let key = quinn::PrivateKey::from_pem(&key)?;
+                let certs = vec![quinn::Certificate::from(cert)];
+
+                let mut config_builder = quinn::ServerConfigBuilder::default();
+                config_builder.certificate(quinn::CertificateChain::from_certs(certs), key)?;
+
                 let mut endpoint_builder = quinn::Endpoint::builder();
-                endpoint_builder.listen(quinn::ServerConfig::default());
+                endpoint_builder.listen(config_builder.build());
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     // Bind this endpoint to a UDP socket on the given server address.

@@ -2,6 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use quinn::crypto::rustls;
 use std::fmt::{self, Display};
 use std::io;
 use tokio_tungstenite::tungstenite;
@@ -87,6 +88,24 @@ impl From<quinn::ConnectionError> for Error {
         Error::from_string(
             ErrorKind::SocketError,
             format!("Quic connection error: {}", err),
+        )
+    }
+}
+
+impl From<quinn::ParseError> for Error {
+    fn from(err: quinn::ParseError) -> Self {
+        Error::from_string(
+            ErrorKind::CertError,
+            format!("Quic parse cert failed: {}", err),
+        )
+    }
+}
+
+impl From<rustls::TLSError> for Error {
+    fn from(err: rustls::TLSError) -> Self {
+        Error::from_string(
+            ErrorKind::CertError,
+            format!("Rustls parse cert failed: {}", err),
         )
     }
 }

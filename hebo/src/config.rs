@@ -53,9 +53,6 @@ pub struct Listener {
     #[serde(default = "listener_default_path")]
     pub path: String,
 
-    /// Domain name this tls cert refers to.
-    pub domain: Option<String>,
-
     /// Path to TLS cert file.
     pub cert_file: Option<PathBuf>,
 

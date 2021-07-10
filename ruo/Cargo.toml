@@ -5,19 +5,18 @@ authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2018"
 
 [dependencies]
-codec = { path = "../codec" }
-
 byteorder = "1.4.3"
+codec = { path = "../codec" }
 env_logger = "0.8.4"
 futures = "0.3.15"
 futures-util = "0.3.15"
 log = "0.4.14"
 tokio = { version = "1.8.1", features = ["full"] }
+tokio-rustls = "0.22.0"
 tokio-tls = "0.3.1"
+tokio-tungstenite = "0.14.0"
 url = "2.2.2"
 webpki-roots = "0.21.0"
-tokio-tungstenite = "0.14.0"
-tokio-rustls = "0.22.0"
 
 [dev-dependencies]
 protobuf = "2.24.1"
