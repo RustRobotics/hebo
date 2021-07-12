@@ -221,33 +221,44 @@ impl Listener {
             }
 
             config::Protocol::Quic => {
-                let cert_file = listener
-                    .cert_file
-                    .as_ref()
-                    .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
                 let key_file = listener
                     .key_file
                     .as_ref()
                     .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
-                let cert = fs::read(cert_file)?;
                 let key = fs::read(key_file)?;
 
-                // Parse to certificate chain whereafter taking the first certifcater in this chain.
-                let cert = quinn::CertificateChain::from_pem(&cert)?
-                    .iter()
-                    .next()
-                    .ok_or_else(|| {
+                let key = if key_file.extension().map_or(false, |x| x == "der") {
+                    quinn::PrivateKey::from_der(&key)?
+                } else {
+                    quinn::PrivateKey::from_pem(&key)?
+                };
+
+                let cert_file = listener
+                    .cert_file
+                    .as_ref()
+                    .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
+                let cert_chain = fs::read(cert_file)?;
+
+                let cert_chain = if cert_file.extension().map_or(false, |x| x == "der") {
+                    quinn::CertificateChain::from_certs(Some(
+                        quinn::Certificate::from_der(&cert_chain).map_err(|err| {
+                            Error::from_string(
+                                ErrorKind::CertError,
+                                format!("cert_file {:?} is invalid, err: {:?}", &cert_file, err),
+                            )
+                        })?,
+                    ))
+                } else {
+                    quinn::CertificateChain::from_pem(&cert_chain).map_err(|err| {
                         Error::from_string(
                             ErrorKind::CertError,
-                            format!("cert_file {:?} is invalid", &cert_file),
+                            format!("cert_file {:?} is invalid, err: {:?}", &cert_file, err),
                         )
                     })?
-                    .clone();
-                let key = quinn::PrivateKey::from_pem(&key)?;
-                let certs = vec![quinn::Certificate::from(cert)];
+                };
 
                 let mut config_builder = quinn::ServerConfigBuilder::default();
-                config_builder.certificate(quinn::CertificateChain::from_certs(certs), key)?;
+                config_builder.certificate(cert_chain, key)?;
 
                 let mut endpoint_builder = quinn::Endpoint::builder();
                 endpoint_builder.listen(config_builder.build());
