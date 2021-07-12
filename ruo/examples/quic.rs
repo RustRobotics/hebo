@@ -33,7 +33,7 @@ async fn main() {
         cert: PathBuf::from("../hebo/examples/certs/cert.pem"),
     });
     options.set_connect_type(ConnectType::Quic(QuicConnect {
-        client_address: "127.0.0.1:28993".parse().unwrap(),
+        client_address: "127.0.0.1:0".parse().unwrap(),
         server_address: "127.0.0.1:8993".parse().unwrap(),
         domain: "localhost".to_owned(),
         tls_type,

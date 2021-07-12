@@ -94,7 +94,10 @@ pub struct UdsConnect {
 /// Connect to quic based server.
 #[derive(Clone, Debug)]
 pub struct QuicConnect {
+    /// Specify client ip and port of quic protocol. If port number is 0, kernel
+    /// will choose a random port automatically.
     pub client_address: SocketAddr,
+
     pub server_address: SocketAddr,
     pub domain: String,
     pub tls_type: TlsType,
