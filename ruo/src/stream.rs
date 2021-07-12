@@ -13,7 +13,7 @@ use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
 use crate::connect_options::{
-    ConnectType, MqttConnect, MqttsConnect, TlsType, UdsConnect, WsConnect, WssConnect,
+    ConnectType, MqttConnect, MqttsConnect, QuicConnect, TlsType, UdsConnect, WsConnect, WssConnect,
 };
 use crate::error::Error;
 
@@ -23,6 +23,7 @@ pub enum Stream {
     Ws(WebSocketStream<TcpStream>),
     Wss(WebSocketStream<TlsStream<TcpStream>>),
     Uds(UnixStream),
+    Quic(quinn::NewConnection),
     None,
 }
 
@@ -34,6 +35,7 @@ impl Stream {
             ConnectType::Ws(ws_connect) => Stream::new_ws(ws_connect).await,
             ConnectType::Wss(wss_connect) => Stream::new_wss(wss_connect).await,
             ConnectType::Uds(uds_connect) => Stream::new_uds(uds_connect).await,
+            ConnectType::Quic(quic_connect) => Stream::new_quic(quic_connect).await,
         }
     }
 
@@ -46,7 +48,7 @@ impl Stream {
         let mut config = ClientConfig::new();
         match &mqtts_connect.tls_type {
             TlsType::SelfSigned(self_signed) => {
-                let mut pem = BufReader::new(File::open(&self_signed.root_ca)?);
+                let mut pem = BufReader::new(File::open(&self_signed.cert)?);
                 config
                     .root_store
                     .add_pem_file(&mut pem)
@@ -81,7 +83,7 @@ impl Stream {
         let mut config = ClientConfig::new();
         match &wss_connect.tls_type {
             TlsType::SelfSigned(self_signed) => {
-                let mut pem = BufReader::new(File::open(&self_signed.root_ca)?);
+                let mut pem = BufReader::new(File::open(&self_signed.cert)?);
                 config
                     .root_store
                     .add_pem_file(&mut pem)
@@ -113,6 +115,15 @@ impl Stream {
         Ok(Stream::Uds(uds_stream))
     }
 
+    async fn new_quic(quic_connect: &QuicConnect) -> Result<Stream, Error> {
+        let mut endpoint_builder = quinn::Endpoint::builder();
+        let (endpoint, _) = endpoint_builder.bind(&quic_connect.client_address)?;
+        let quic_connection = endpoint
+            .connect(&quic_connect.server_address, &quic_connect.domain)?
+            .await?;
+        Ok(Stream::Quic(quic_connection))
+    }
+
     pub async fn read_buf(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
         match self {
             Stream::Mqtt(tcp_stream) => Ok(tcp_stream.read_buf(buf).await?),
@@ -140,6 +151,13 @@ impl Stream {
                 }
             }
             Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
+            Stream::Quic(ref mut quic_connection) => {
+                if let Some(Ok(mut recv)) = quic_connection.uni_streams.next().await {
+                    Ok(recv.read_buf(buf).await?)
+                } else {
+                    Ok(0)
+                }
+            }
             Stream::None => unreachable!(),
         }
     }
@@ -159,6 +177,12 @@ impl Stream {
                 Ok(buf.len())
             }
             Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
+            Stream::Quic(quic_connection) => {
+                let mut send = quic_connection.connection.open_uni().await?;
+                send.write_all(buf).await?;
+                send.finish().await?;
+                Ok(buf.len())
+            }
             Stream::None => unreachable!(),
         }
     }

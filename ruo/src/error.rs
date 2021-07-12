@@ -76,6 +76,48 @@ impl From<tungstenite::Error> for Error {
     }
 }
 
+impl From<quinn::ConnectError> for Error {
+    fn from(err: quinn::ConnectError) -> Self {
+        Error::from_string(
+            ErrorKind::SocketError,
+            format!("Quic connect error: {}", err),
+        )
+    }
+}
+
+impl From<quinn::ConnectionError> for Error {
+    fn from(err: quinn::ConnectionError) -> Self {
+        Error::from_string(
+            ErrorKind::SocketError,
+            format!("Quic connection error: {}", err),
+        )
+    }
+}
+
+impl From<quinn::EndpointError> for Error {
+    fn from(err: quinn::EndpointError) -> Self {
+        Error::from_string(
+            ErrorKind::SocketError,
+            format!("Quic endpoint error: {}", err),
+        )
+    }
+}
+
+impl From<quinn::ParseError> for Error {
+    fn from(err: quinn::ParseError) -> Self {
+        Error::from_string(
+            ErrorKind::CertError,
+            format!("Quic parse cert failed: {}", err),
+        )
+    }
+}
+
+impl From<quinn::WriteError> for Error {
+    fn from(err: quinn::WriteError) -> Self {
+        Error::from_string(ErrorKind::SocketError, format!("Quic write error: {}", err))
+    }
+}
+
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
         Error::from_string(ErrorKind::EncodeError, format!("{:?}", err))

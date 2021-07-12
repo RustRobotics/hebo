@@ -43,7 +43,6 @@ impl Authentication for UsernameAuth {}
 
 #[derive(Clone, Debug)]
 pub struct SelfSignedTls {
-    pub root_ca: PathBuf,
     pub cert: PathBuf,
 }
 
@@ -92,6 +91,15 @@ pub struct UdsConnect {
     pub sock_path: PathBuf,
 }
 
+/// Connect to quic based server.
+#[derive(Clone, Debug)]
+pub struct QuicConnect {
+    pub client_address: SocketAddr,
+    pub server_address: SocketAddr,
+    pub domain: String,
+    pub tls_type: TlsType,
+}
+
 #[derive(Clone, Debug)]
 pub enum ConnectType {
     Mqtt(MqttConnect),
@@ -99,6 +107,7 @@ pub enum ConnectType {
     Ws(WsConnect),
     Wss(WssConnect),
     Uds(UdsConnect),
+    Quic(QuicConnect),
 }
 
 #[derive(Clone, Debug)]
