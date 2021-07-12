@@ -163,6 +163,7 @@ impl Listener {
     ) -> Result<Listener, Error> {
         match listener.protocol {
             config::Protocol::Mqtt => {
+                log::info!("bind mqtt://{}", listener.address);
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
@@ -174,6 +175,7 @@ impl Listener {
                 }
             }
             config::Protocol::Mqtts => {
+                log::info!("bind mqtts://{}", listener.address);
                 let config = Listener::get_cert_config(listener)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
                 let addrs = listener.address.to_socket_addrs()?;
@@ -187,6 +189,7 @@ impl Listener {
                 }
             }
             config::Protocol::Ws => {
+                log::info!("bind ws://{}", listener.address);
                 let addrs = listener.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
@@ -198,6 +201,7 @@ impl Listener {
                 }
             }
             config::Protocol::Wss => {
+                log::info!("bind wss://{}", listener.address);
                 let config = Listener::get_cert_config(listener)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
                 let addrs = listener.address.to_socket_addrs()?;
@@ -212,6 +216,8 @@ impl Listener {
             }
 
             config::Protocol::Uds => {
+                log::info!("bind uds://{}", listener.address);
+
                 // Try to clean up old socket file, not that this operation is not atomic.
                 if let Ok(_attr) = fs::metadata(&listener.address) {
                     fs::remove_file(&listener.address)?;
@@ -225,6 +231,8 @@ impl Listener {
             }
 
             config::Protocol::Quic => {
+                log::info!("bind quic://{}", listener.address);
+
                 let key_file = listener
                     .key_file
                     .as_ref()
