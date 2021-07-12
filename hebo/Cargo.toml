@@ -27,3 +27,6 @@ tokio-tungstenite = { version = "0.14.0", features = ["rustls-tls"] }
 toml = "0.5.8"
 tungstenite = "0.13.0"
 webpki-roots = "0.21.0"
+
+[dev-dependencies]
+rcgen = "0.8.11"

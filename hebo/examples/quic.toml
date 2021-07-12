@@ -4,7 +4,7 @@ max_memory = 0
 message_size_limit = 0
 sys_interval = 10
 
-pid_file = "/tmp/hebo-ws-8083.pid"
+pid_file = "/tmp/hebo-quic-8993.pid"
 
 max_packet_size = 0
 max_queued_messages = 0
@@ -17,8 +17,8 @@ no_delay = false
 [[listeners]]
 address = "0.0.0.0:8993"
 protocol = "quic"
-cert_file = "./examples/certs/cert.pem"
-key_file = "./examples/certs/key.pem"
+cert_file = "./examples/certs/cert.der"
+key_file = "./examples/certs/key.der"
 
 [security]
 allow_anonymous = true
