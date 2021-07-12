@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use futures_util::{SinkExt, StreamExt};
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::BufReader;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -116,8 +116,25 @@ impl Stream {
     }
 
     async fn new_quic(quic_connect: &QuicConnect) -> Result<Stream, Error> {
-        let mut endpoint_builder = quinn::Endpoint::builder();
-        let (endpoint, _) = endpoint_builder.bind(&quic_connect.client_address)?;
+        let mut client_config = quinn::ClientConfigBuilder::default();
+        match &quic_connect.tls_type {
+            TlsType::SelfSigned(self_signed) => {
+                let cert_content = fs::read(&self_signed.cert)?;
+                let cert_chain = if self_signed.cert.extension().map_or(false, |x| x == "der") {
+                    quinn::Certificate::from_der(&cert_content)?
+                } else {
+                    quinn::Certificate::from_pem(&cert_content)?
+                };
+                client_config.add_certificate_authority(cert_chain)?;
+            }
+            TlsType::CASigned => {
+                // Use default ca roots
+            }
+        }
+
+        let mut endpoint = quinn::Endpoint::builder();
+        endpoint.default_client_config(client_config.build());
+        let (endpoint, _) = endpoint.bind(&quic_connect.client_address)?;
         let quic_connection = endpoint
             .connect(&quic_connect.server_address, &quic_connect.domain)?
             .await?;

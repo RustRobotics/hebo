@@ -76,6 +76,12 @@ impl From<tungstenite::Error> for Error {
     }
 }
 
+impl From<tokio_rustls::webpki::Error> for Error {
+    fn from(err: tokio_rustls::webpki::Error) -> Self {
+        Error::from_string(ErrorKind::CertError, format!("webpki error: {}", err))
+    }
+}
+
 impl From<quinn::ConnectError> for Error {
     fn from(err: quinn::ConnectError) -> Self {
         Error::from_string(
