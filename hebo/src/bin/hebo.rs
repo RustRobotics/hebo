@@ -4,6 +4,9 @@
 
 use hebo::{server, Error};
 
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 fn main() -> Result<(), Error> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
