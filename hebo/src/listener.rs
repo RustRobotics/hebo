@@ -212,6 +212,10 @@ impl Listener {
             }
 
             config::Protocol::Uds => {
+                // Try to clean up old socket file, not that this operation is not atomic.
+                if let Ok(_attr) = fs::metadata(&listener.address) {
+                    fs::remove_file(&listener.address)?;
+                }
                 let listener = UnixListener::bind(&listener.address)?;
                 return Ok(Listener::new(
                     Protocol::Uds(listener),
