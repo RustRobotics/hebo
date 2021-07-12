@@ -4,7 +4,7 @@ max_memory = 0
 message_size_limit = 0
 sys_interval = 10
 
-pid_file = "/tmp/mqtts-8883.pid"
+pid_file = "/tmp/hebo-multi-protocols.pid"
 
 max_packet_size = 0
 max_queued_messages = 0
@@ -15,14 +15,35 @@ max_connections = 0
 no_delay = false
 
 [[listeners]]
+address = "0.0.0.0:1883"
+protocol = "mqtt"
+
+[[listeners]]
 address = "0.0.0.0:8883"
 protocol = "mqtts"
 cert_file = "./examples/certs/cert.pem"
 key_file = "./examples/certs/key.pem"
 
 [[listeners]]
-address = "0.0.0.0:1883"
-protocol = "mqtt"
+address = "0.0.0.0:8083"
+protocol = "ws"
+path = "/mqtt"
+
+[[listeners]]
+address = "0.0.0.0:8084"
+protocol = "wss"
+cert_file = "./examples/certs/cert.pem"
+key_file = "./examples/certs/key.pem"
+
+[[listeners]]
+address = "/tmp/hebo-uds.sock"
+protocol = "uds"
+
+[[listeners]]
+address = "0.0.0.0:8993"
+protocol = "quic"
+cert_file = "./examples/certs/cert.der"
+key_file = "./examples/certs/key.der"
 
 [security]
 allow_anonymous = true
