@@ -84,7 +84,7 @@ impl UnsubscribePacket {
 impl DecodePacket for UnsubscribePacket {
     fn decode(ba: &mut ByteArray) -> Result<UnsubscribePacket, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        if fixed_header.packet_type != PacketType::PublishAck {
+        if fixed_header.packet_type != PacketType::Unsubscribe {
             return Err(DecodeError::InvalidPacketType);
         }
 
