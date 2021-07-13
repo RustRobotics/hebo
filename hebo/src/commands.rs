@@ -28,3 +28,11 @@ pub enum ListenerToDispatcherCmd {
 pub enum DispatcherToListenerCmd {
     Publish(PublishPacket),
 }
+
+#[derive(Debug)]
+pub enum DispatcherToSystemCmd {}
+
+#[derive(Debug)]
+pub enum SystemToDispatcherCmd {
+    Publish(PublishPacket),
+}

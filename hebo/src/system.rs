@@ -2,29 +2,32 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::time;
+use std::time::{self, Duration};
+use tokio::time::interval;
 
 const UPTIME: &str = "$SYS/uptime";
 
+/// Produce $SYS message.
 #[derive(Debug)]
-pub struct SysMessage {
+pub struct System {
     startup: time::SystemTime,
-    connections: usize,
-    messages_sent: u64,
-    messages_recv: u64,
-    messages_queued: u64,
-    message_bytes_queued: u64,
+    uptime: u64,
 }
 
-impl SysMessage {
+impl System {
     pub fn new() -> Self {
-        SysMessage {
+        System {
             startup: time::SystemTime::now(),
-            connections: 0,
-            messages_sent: 0,
-            messages_recv: 0,
-            messages_queued: 0,
-            message_bytes_queued: 0,
+            uptime: 0,
+        }
+    }
+
+    pub async fn run_loop(&mut self) -> ! {
+        // TODO(Shaohua): Read interval from config.
+        let mut timer = interval(Duration::from_secs(3));
+        loop {
+            timer.tick().await;
+            log::info!("tick()");
         }
     }
 

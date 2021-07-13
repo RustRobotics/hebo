@@ -13,6 +13,7 @@ use crate::constants;
 use crate::dispatcher::Dispatcher;
 use crate::error::{Error, ErrorKind};
 use crate::listener::Listener;
+use crate::system::System;
 
 /// Entry point of server
 pub fn run_server() -> Result<(), Error> {
@@ -119,25 +120,40 @@ impl ServerContext {
         self.write_pid()?;
 
         runtime.block_on(async {
-            let (dispatcher_sender, dispatcher_receiver) =
+            let (listeners_to_dispatcher_sender, listeners_to_dispatcher_receiver) =
                 mpsc::channel(constants::CHANNEL_CAPACITY);
-            let mut listener_senders = Vec::new();
+            let mut dispatcher_to_listener_senders = Vec::new();
             let mut handles = Vec::new();
 
             for l in self.config.listeners.clone() {
-                let (listener_sender, listener_receiver) =
+                let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
                     mpsc::channel(constants::CHANNEL_CAPACITY);
-                listener_senders.push(listener_sender);
-                let mut listener = Listener::bind(&l, dispatcher_sender.clone(), listener_receiver)
-                    .await
-                    .expect(&format!("Failed to listen at {:?}", l));
+                dispatcher_to_listener_senders.push(dispatcher_to_listener_sender);
+                let mut listener = Listener::bind(
+                    &l,
+                    listeners_to_dispatcher_sender.clone(),
+                    dispatcher_to_listener_receiver,
+                )
+                .await
+                .expect(&format!("Failed to listen at {:?}", l));
                 let handle = runtime.spawn(async move {
                     listener.run_loop().await;
                 });
                 handles.push(handle);
             }
 
-            let mut dispatcher = Dispatcher::new(dispatcher_receiver, listener_senders);
+            //let (sys_to_dispatcher_sender, sys_to_dispatcher_receiver) =
+            //    mpsc::channel(constants::CHANNEL_CAPACITY);
+            let mut system = System::new();
+            let system_handle = runtime.spawn(async move {
+                system.run_loop().await;
+            });
+            handles.push(system_handle);
+
+            let mut dispatcher = Dispatcher::new(
+                listeners_to_dispatcher_receiver,
+                dispatcher_to_listener_senders,
+            );
             let dispatcher_handle = runtime.spawn(async move {
                 dispatcher.run_loop().await;
             });

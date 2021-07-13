@@ -3,5 +3,16 @@
 // in the LICENSE file.
 
 /// Key-value store.
-#[derive(Debug)]
-pub struct Cache {}
+#[derive(Debug, Default)]
+pub struct Cache {
+    pub sys_message: SysMessageCache,
+}
+
+#[derive(Debug, Default)]
+pub struct SysMessageCache {
+    connections: usize,
+    messages_sent: u64,
+    messages_recv: u64,
+    messages_queued: u64,
+    message_bytes_queued: u64,
+}
