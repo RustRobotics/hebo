@@ -5,7 +5,10 @@
 use quinn::crypto::rustls;
 use std::fmt::{self, Display};
 use std::io;
+use tokio::sync::mpsc;
 use tokio_tungstenite::tungstenite;
+
+use crate::commands::{SessionToListenerCmd, SystemToDispatcherCmd};
 
 /// Represent the types of errors.
 #[derive(Clone, Debug)]
@@ -30,6 +33,9 @@ pub enum ErrorKind {
 
     /// Invalid pid.
     PidError,
+
+    /// mpsc channel error.
+    ChannelError,
 }
 
 #[derive(Clone, Debug)]
@@ -106,6 +112,25 @@ impl From<rustls::TLSError> for Error {
         Error::from_string(
             ErrorKind::CertError,
             format!("Rustls parse cert failed: {}", err),
+        )
+    }
+}
+
+// TODO(Shaohua): Replace with a macro
+impl From<mpsc::error::SendError<SessionToListenerCmd>> for Error {
+    fn from(err: mpsc::error::SendError<SessionToListenerCmd>) -> Self {
+        Error::from_string(
+            ErrorKind::ChannelError,
+            format!("SystemToDispatcherCmd channel error: {}", err),
+        )
+    }
+}
+
+impl From<mpsc::error::SendError<SystemToDispatcherCmd>> for Error {
+    fn from(err: mpsc::error::SendError<SystemToDispatcherCmd>) -> Self {
+        Error::from_string(
+            ErrorKind::ChannelError,
+            format!("SystemToDispatcherCmd channel error: {}", err),
         )
     }
 }
