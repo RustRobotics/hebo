@@ -50,10 +50,9 @@ impl Stream {
                 }
             }
             Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
-            Stream::Quic(ref mut connection) => {
-                if let Some(Ok((_send, mut recv))) = connection.bi_streams.next().await {
-                    let data_len = recv.read_buf(buf).await?;
-                    Ok(data_len)
+            Stream::Quic(ref mut quic_connection) => {
+                if let Some(Ok(mut recv)) = quic_connection.uni_streams.next().await {
+                    Ok(recv.read_buf(buf).await?)
                 } else {
                     Ok(0)
                 }
@@ -76,14 +75,11 @@ impl Stream {
                 Ok(buf.len())
             }
             Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
-            Stream::Quic(ref mut connection) => {
-                if let Some(Ok((mut send, _recv))) = connection.bi_streams.next().await {
-                    send.write_all(buf).await?;
-                    send.finish().await?;
-                    Ok(buf.len())
-                } else {
-                    Ok(0)
-                }
+            Stream::Quic(quic_connection) => {
+                let mut send = quic_connection.connection.open_uni().await?;
+                send.write_all(buf).await?;
+                send.finish().await?;
+                Ok(buf.len())
             }
         }
     }
