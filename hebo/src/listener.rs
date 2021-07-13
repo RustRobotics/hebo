@@ -443,7 +443,10 @@ impl Listener {
         log::info!("Listener::on_session_publish()");
         let cmd = ListenerToDispatcherCmd::Publish(packet.clone());
         if let Err(err) = self.dispatcher_sender.send(cmd).await {
-            log::error!("Listener::on_session_publish() send failed: {:?}", err);
+            log::error!(
+                "Failed to send publish packet from listener to dispatcher : {:?}",
+                err
+            );
         }
     }
 
@@ -454,7 +457,10 @@ impl Listener {
         for pipeline in self.pipelines.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {
                 if let Err(err) = pipeline.sender.send(cmd.clone()).await {
-                    log::warn!("Failed to send publish packet to connection: {:?}", err);
+                    log::warn!(
+                        "Failed to send publish packet from listener to session: {:?}",
+                        err
+                    );
                 }
             }
         }

@@ -116,6 +116,24 @@ impl From<rustls::TLSError> for Error {
     }
 }
 
+impl From<quinn::WriteError> for Error {
+    fn from(err: quinn::WriteError) -> Self {
+        Error::from_string(ErrorKind::SocketError, format!("Quic write error: {}", err))
+    }
+}
+
+impl From<codec::EncodeError> for Error {
+    fn from(err: codec::EncodeError) -> Self {
+        Error::from_string(ErrorKind::EncodeError, format!("{:?}", err))
+    }
+}
+
+impl From<codec::DecodeError> for Error {
+    fn from(err: codec::DecodeError) -> Self {
+        Error::from_string(ErrorKind::DecodeError, format!("{:?}", err))
+    }
+}
+
 // TODO(Shaohua): Replace with a macro
 impl From<mpsc::error::SendError<SessionToListenerCmd>> for Error {
     fn from(err: mpsc::error::SendError<SessionToListenerCmd>) -> Self {
@@ -132,23 +150,5 @@ impl From<mpsc::error::SendError<SystemToDispatcherCmd>> for Error {
             ErrorKind::ChannelError,
             format!("SystemToDispatcherCmd channel error: {}", err),
         )
-    }
-}
-
-impl From<quinn::WriteError> for Error {
-    fn from(err: quinn::WriteError) -> Self {
-        Error::from_string(ErrorKind::SocketError, format!("Quic write error: {}", err))
-    }
-}
-
-impl From<codec::EncodeError> for Error {
-    fn from(err: codec::EncodeError) -> Self {
-        Error::from_string(ErrorKind::EncodeError, format!("{:?}", err))
-    }
-}
-
-impl From<codec::DecodeError> for Error {
-    fn from(err: codec::DecodeError) -> Self {
-        Error::from_string(ErrorKind::DecodeError, format!("{:?}", err))
     }
 }
