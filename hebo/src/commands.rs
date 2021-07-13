@@ -20,11 +20,11 @@ pub enum SessionToListenerCmd {
 }
 
 #[derive(Debug)]
-pub enum ListenerToStorageCmd {
+pub enum ListenerToDispatcherCmd {
     Publish(PublishPacket),
 }
 
 #[derive(Debug)]
-pub enum StorageToListenerCmd {
+pub enum DispatcherToListenerCmd {
     Publish(PublishPacket),
 }

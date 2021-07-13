@@ -17,8 +17,8 @@ use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
 use tokio_rustls::TlsAcceptor;
 
 use crate::commands::{
-    ConnectionId, ListenerToSessionCmd, ListenerToStorageCmd, SessionToListenerCmd,
-    StorageToListenerCmd,
+    ConnectionId, DispatcherToListenerCmd, ListenerToDispatcherCmd, ListenerToSessionCmd,
+    SessionToListenerCmd,
 };
 use crate::config;
 use crate::constants;
@@ -34,8 +34,8 @@ pub struct Listener {
     session_sender: Sender<SessionToListenerCmd>,
     session_receiver: Option<Receiver<SessionToListenerCmd>>,
 
-    storage_sender: Sender<ListenerToStorageCmd>,
-    storage_receiver: Option<Receiver<StorageToListenerCmd>>,
+    dispatcher_sender: Sender<ListenerToDispatcherCmd>,
+    dispatcher_receiver: Option<Receiver<DispatcherToListenerCmd>>,
 }
 
 /// Each Listener binds to a specific port
@@ -89,8 +89,8 @@ pub struct SubscribedTopic {
 impl Listener {
     fn new(
         protocol: Protocol,
-        storage_sender: Sender<ListenerToStorageCmd>,
-        storage_receiver: Receiver<StorageToListenerCmd>,
+        dispatcher_sender: Sender<ListenerToDispatcherCmd>,
+        dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
     ) -> Self {
         let (session_sender, session_receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
         Listener {
@@ -100,8 +100,8 @@ impl Listener {
             session_sender,
             session_receiver: Some(session_receiver),
 
-            storage_sender,
-            storage_receiver: Some(storage_receiver),
+            dispatcher_sender,
+            dispatcher_receiver: Some(dispatcher_receiver),
         }
     }
 
@@ -158,8 +158,8 @@ impl Listener {
 
     pub async fn bind(
         listener: &config::Listener,
-        storage_sender: Sender<ListenerToStorageCmd>,
-        storage_receiver: Receiver<StorageToListenerCmd>,
+        dispatcher_sender: Sender<ListenerToDispatcherCmd>,
+        dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
     ) -> Result<Listener, Error> {
         match listener.protocol {
             config::Protocol::Mqtt => {
@@ -169,8 +169,8 @@ impl Listener {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
                         Protocol::Mqtt(listener),
-                        storage_sender,
-                        storage_receiver,
+                        dispatcher_sender,
+                        dispatcher_receiver,
                     ));
                 }
             }
@@ -183,8 +183,8 @@ impl Listener {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
                         Protocol::Mqtts(listener, acceptor),
-                        storage_sender,
-                        storage_receiver,
+                        dispatcher_sender,
+                        dispatcher_receiver,
                     ));
                 }
             }
@@ -195,8 +195,8 @@ impl Listener {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
                         Protocol::Ws(listener),
-                        storage_sender,
-                        storage_receiver,
+                        dispatcher_sender,
+                        dispatcher_receiver,
                     ));
                 }
             }
@@ -209,8 +209,8 @@ impl Listener {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
                         Protocol::Wss(listener, acceptor),
-                        storage_sender,
-                        storage_receiver,
+                        dispatcher_sender,
+                        dispatcher_receiver,
                     ));
                 }
             }
@@ -225,8 +225,8 @@ impl Listener {
                 let listener = UnixListener::bind(&listener.address)?;
                 return Ok(Listener::new(
                     Protocol::Uds(listener),
-                    storage_sender,
-                    storage_receiver,
+                    dispatcher_sender,
+                    dispatcher_receiver,
                 ));
             }
 
@@ -280,8 +280,8 @@ impl Listener {
                     let (endpoint, incoming) = endpoint_builder.bind(&addr)?;
                     return Ok(Listener::new(
                         Protocol::Quic(endpoint, incoming),
-                        storage_sender,
-                        storage_receiver,
+                        dispatcher_sender,
+                        dispatcher_receiver,
                     ));
                 }
             }
@@ -342,10 +342,10 @@ impl Listener {
             .take()
             .expect("Invalid session receiver");
 
-        let mut storage_receiver = self
-            .storage_receiver
+        let mut dispatcher_receiver = self
+            .dispatcher_receiver
             .take()
-            .expect("Invalid storage receiver");
+            .expect("Invalid dispatcher receiver");
 
         loop {
             tokio::select! {
@@ -357,8 +357,8 @@ impl Listener {
                     self.handle_session_cmd(cmd).await;
                 },
 
-                Some(cmd) = storage_receiver.recv() => {
-                    self.handle_storage_cmd(cmd).await;
+                Some(cmd) = dispatcher_receiver.recv() => {
+                    self.handle_dispatcher_cmd(cmd).await;
                 }
             }
         }
@@ -396,10 +396,10 @@ impl Listener {
         }
     }
 
-    async fn handle_storage_cmd(&mut self, cmd: StorageToListenerCmd) {
-        log::info!("Listener::handle_storage_cmd()");
+    async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
+        log::info!("Listener::handle_dispatcher_cmd()");
         match cmd {
-            StorageToListenerCmd::Publish(packet) => self.publish_packet(packet).await,
+            DispatcherToListenerCmd::Publish(packet) => self.publish_packet(packet).await,
         }
     }
 
@@ -441,8 +441,8 @@ impl Listener {
 
     async fn on_session_publish(&mut self, packet: PublishPacket) {
         log::info!("Listener::on_session_publish()");
-        let cmd = ListenerToStorageCmd::Publish(packet.clone());
-        if let Err(err) = self.storage_sender.send(cmd).await {
+        let cmd = ListenerToDispatcherCmd::Publish(packet.clone());
+        if let Err(err) = self.dispatcher_sender.send(cmd).await {
             log::error!("Listener::on_session_publish() send failed: {:?}", err);
         }
     }

@@ -10,9 +10,9 @@ use tokio::sync::mpsc;
 
 use crate::config::Config;
 use crate::constants;
+use crate::dispatcher::Dispatcher;
 use crate::error::{Error, ErrorKind};
 use crate::listener::Listener;
-use crate::storage::Storage;
 
 /// Entry point of server
 pub fn run_server() -> Result<(), Error> {
@@ -66,7 +66,7 @@ pub fn run_server() -> Result<(), Error> {
     server.run_loop(runtime)
 }
 
-/// ServerContext manages lifetime of Storage and Listeners.
+/// ServerContext manages lifetime of Dispatcher and Listeners.
 /// All kernel signals are handled here.
 #[derive(Debug)]
 pub struct ServerContext {
@@ -119,7 +119,8 @@ impl ServerContext {
         self.write_pid()?;
 
         runtime.block_on(async {
-            let (storage_sender, storage_receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
+            let (dispatcher_sender, dispatcher_receiver) =
+                mpsc::channel(constants::CHANNEL_CAPACITY);
             let mut listener_senders = Vec::new();
             let mut handles = Vec::new();
 
@@ -127,7 +128,7 @@ impl ServerContext {
                 let (listener_sender, listener_receiver) =
                     mpsc::channel(constants::CHANNEL_CAPACITY);
                 listener_senders.push(listener_sender);
-                let mut listener = Listener::bind(&l, storage_sender.clone(), listener_receiver)
+                let mut listener = Listener::bind(&l, dispatcher_sender.clone(), listener_receiver)
                     .await
                     .expect(&format!("Failed to listen at {:?}", l));
                 let handle = runtime.spawn(async move {
@@ -136,11 +137,11 @@ impl ServerContext {
                 handles.push(handle);
             }
 
-            let mut storage = Storage::new(storage_receiver, listener_senders);
-            let storage_handle = runtime.spawn(async move {
-                storage.run_loop().await;
+            let mut dispatcher = Dispatcher::new(dispatcher_receiver, listener_senders);
+            let dispatcher_handle = runtime.spawn(async move {
+                dispatcher.run_loop().await;
             });
-            handles.push(storage_handle);
+            handles.push(dispatcher_handle);
 
             for handle in handles {
                 let _ret = handle.await;
