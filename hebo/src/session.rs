@@ -192,13 +192,8 @@ impl Session {
         self.sender
             .send(SessionToListenerCmd::Publish(packet))
             .await
-            .map(drop)
-            .map_err(|err| {
-                Error::from_string(
-                    ErrorKind::SendError,
-                    format!("Failed to send packet, {:?}", err),
-                )
-            })
+            .map(drop)?;
+        Ok(())
     }
 
     async fn subscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
