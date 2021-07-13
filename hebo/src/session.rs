@@ -12,7 +12,7 @@ use tokio::sync::mpsc;
 use tokio::time::interval;
 
 use crate::commands::{ConnectionId, ListenerToSessionCmd, SessionToListenerCmd};
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
 use crate::stream::Stream;
 
 #[derive(Debug)]

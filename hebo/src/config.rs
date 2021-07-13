@@ -19,6 +19,8 @@ pub struct Config {
 pub struct General {
     pub max_memory: usize,
     pub message_size_limit: usize,
+
+    /// Time interval to send $SYS messages.
     pub sys_interval: u32,
 
     /// When run as root, drop privileges to this user and its primary group.

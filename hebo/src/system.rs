@@ -17,26 +17,32 @@ const UPTIME: &str = "$SYS/uptime";
 pub struct System {
     startup: time::SystemTime,
     uptime: u64,
+    interval: u32,
     sender: mpsc::Sender<SystemToDispatcherCmd>,
 }
 
 impl System {
-    pub fn new(sender: mpsc::Sender<SystemToDispatcherCmd>) -> Self {
+    pub fn new(interval: u32, sender: mpsc::Sender<SystemToDispatcherCmd>) -> Self {
         System {
             startup: time::SystemTime::now(),
             uptime: 0,
+            interval,
             sender,
         }
     }
 
     pub async fn run_loop(&mut self) -> ! {
-        // TODO(Shaohua): Read interval from config.
-        let mut timer = interval(Duration::from_secs(3));
+        let mut timer = interval(Duration::from_secs(self.interval.into()));
         loop {
-            log::info!("tick()");
             timer.tick().await;
             self.update_time();
-            self.send_uptime().await;
+
+            if let Err(err) = self.send_uptime().await {
+                log::error!(
+                    "Failed to send publish packet from system to dispatcher: {:?}",
+                    err
+                );
+            }
         }
     }
 

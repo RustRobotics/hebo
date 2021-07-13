@@ -144,7 +144,10 @@ impl ServerContext {
 
             let (system_to_dispatcher_sender, system_to_dispatcher_receiver) =
                 mpsc::channel(constants::CHANNEL_CAPACITY);
-            let mut system = System::new(system_to_dispatcher_sender);
+            let mut system = System::new(
+                self.config.general.sys_interval,
+                system_to_dispatcher_sender,
+            );
             let system_handle = runtime.spawn(async move {
                 system.run_loop().await;
             });
