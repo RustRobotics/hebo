@@ -3,7 +3,10 @@
 // in the LICENSE file.
 
 use std::time::{self, Duration};
+use tokio::sync::mpsc;
 use tokio::time::interval;
+
+use crate::commands::SystemToDispatcherCmd;
 
 const UPTIME: &str = "$SYS/uptime";
 
@@ -12,13 +15,15 @@ const UPTIME: &str = "$SYS/uptime";
 pub struct System {
     startup: time::SystemTime,
     uptime: u64,
+    sender: mpsc::Sender<SystemToDispatcherCmd>,
 }
 
 impl System {
-    pub fn new() -> Self {
+    pub fn new(sender: mpsc::Sender<SystemToDispatcherCmd>) -> Self {
         System {
             startup: time::SystemTime::now(),
             uptime: 0,
+            sender,
         }
     }
 
@@ -26,12 +31,23 @@ impl System {
         // TODO(Shaohua): Read interval from config.
         let mut timer = interval(Duration::from_secs(3));
         loop {
-            timer.tick().await;
             log::info!("tick()");
+            timer.tick().await;
+            self.update_time();
+            self.send_uptime().await;
         }
     }
 
-    pub fn uptime(&self) -> Result<time::Duration, time::SystemTimeError> {
-        time::SystemTime::now().duration_since(self.startup)
+    fn update_time(&mut self) {
+        match time::SystemTime::now().duration_since(self.startup) {
+            Ok(duration) => {
+                self.uptime = duration.as_secs();
+            }
+            Err(err) => {
+                log::error!("Failed to update time, got error: {}", err);
+            }
+        }
     }
+
+    async fn send_uptime(&mut self) {}
 }

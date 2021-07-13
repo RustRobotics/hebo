@@ -142,9 +142,9 @@ impl ServerContext {
                 handles.push(handle);
             }
 
-            //let (sys_to_dispatcher_sender, sys_to_dispatcher_receiver) =
-            //    mpsc::channel(constants::CHANNEL_CAPACITY);
-            let mut system = System::new();
+            let (system_to_dispatcher_sender, system_to_dispatcher_receiver) =
+                mpsc::channel(constants::CHANNEL_CAPACITY);
+            let mut system = System::new(system_to_dispatcher_sender);
             let system_handle = runtime.spawn(async move {
                 system.run_loop().await;
             });
@@ -153,6 +153,7 @@ impl ServerContext {
             let mut dispatcher = Dispatcher::new(
                 listeners_to_dispatcher_receiver,
                 dispatcher_to_listener_senders,
+                system_to_dispatcher_receiver,
             );
             let dispatcher_handle = runtime.spawn(async move {
                 dispatcher.run_loop().await;

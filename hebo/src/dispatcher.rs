@@ -5,23 +5,27 @@
 use codec::PublishPacket;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{DispatcherToListenerCmd, ListenerToDispatcherCmd};
+use crate::commands::{DispatcherToListenerCmd, ListenerToDispatcherCmd, SystemToDispatcherCmd};
 
 /// Dispatcher is a message router.
 #[derive(Debug)]
 pub struct Dispatcher {
     listener_receiver: Receiver<ListenerToDispatcherCmd>,
     listener_senders: Vec<Sender<DispatcherToListenerCmd>>,
+
+    system_receiver: Receiver<SystemToDispatcherCmd>,
 }
 
 impl Dispatcher {
     pub fn new(
         listener_receiver: Receiver<ListenerToDispatcherCmd>,
         listener_senders: Vec<Sender<DispatcherToListenerCmd>>,
+        system_receiver: Receiver<SystemToDispatcherCmd>,
     ) -> Self {
         Dispatcher {
             listener_receiver,
             listener_senders,
+            system_receiver,
         }
     }
 
@@ -31,6 +35,20 @@ impl Dispatcher {
                 Some(cmd) = self.listener_receiver.recv() => {
                     self.handle_listener_cmd(cmd).await;
                 },
+                Some(cmd) = self.system_receiver.recv() => {
+                    self.handle_system_cmd(cmd).await;
+                }
+            }
+        }
+    }
+
+    async fn handle_system_cmd(&mut self, cmd: SystemToDispatcherCmd) {
+        log::info!("handle system cmd: {:?}", cmd);
+        match cmd {
+            SystemToDispatcherCmd::Publish(packet) => {
+                let (send_ok, send_failed) = self.publish_packet_to_listners(&packet).await;
+                self.cache_update_publish_packet(42, send_ok, send_failed)
+                    .await;
             }
         }
     }
