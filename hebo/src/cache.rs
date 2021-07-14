@@ -13,7 +13,8 @@ use crate::error::Error;
 pub struct Cache {
     sender: Sender<CacheToDispatcherCmd>,
     receiver: Option<Receiver<DispatcherToCacheCmd>>,
-    sys_message: SysMessageCache,
+
+    system: SystemCache,
 
     listeners: HashMap<u32, ListenerCache>,
 }
@@ -24,18 +25,49 @@ pub struct ListenerCache {
     pub address: String,
 
     pub sessions: u64,
-}
 
-#[derive(Debug, Default)]
-pub struct SysMessageCache {
+    pub subscriptions: u64,
+
+    pub retained_messages: u64,
+    pub retained_bytes: u64,
+
     pub messages_sent: u64,
     pub messages_received: u64,
 
     pub bytes_sent: u64,
     pub bytes_received: u64,
 
-    pub retained_messages_count: u64,
-    pub retained_messages_bytes: u64,
+    pub publish_messages_sent: u64,
+    pub publish_messages_received: u64,
+
+    pub publish_bytes_sent: u64,
+    pub publish_bytess_received: u64,
+}
+
+impl ListenerCache {
+    fn new(id: u32, address: String) -> Self {
+        ListenerCache {
+            id,
+            address,
+            ..Self::default()
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct SystemCache {
+    pub listener_count: usize,
+    pub sessions: u64,
+    pub subscriptions: u64,
+
+    pub retained_messages: u64,
+    pub retained_bytes: u64,
+
+    pub messages_sent: u64,
+    pub messages_received: u64,
+
+    pub bytes_sent: u64,
+    pub bytes_received: u64,
 
     pub publish_messages_dropped: u64,
     pub publish_messages_sent: u64,
@@ -54,7 +86,7 @@ impl Cache {
         Cache {
             sender,
             receiver: Some(receiver),
-            sys_message: SysMessageCache::default(),
+            system: SystemCache::default(),
             listeners: HashMap::new(),
         }
     }
@@ -71,9 +103,83 @@ impl Cache {
     async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToCacheCmd) {
         log::info!("cmd: {:?}", cmd);
         match cmd {
-            DispatcherToCacheCmd::ListenerAdded(id, address) => {
-                log::info!("listener id: {}, addr: {:?}", id, address);
+            DispatcherToCacheCmd::ListenerAdded(listener_id, address) => {
+                log::info!("Add listener id: {}, addr: {:?}", listener_id, address);
+                assert!(self.listeners.get(&listener_id).is_none());
+                let listener_cache = ListenerCache::new(listener_id, address);
+                self.listeners.insert(listener_id, listener_cache);
+                self.system.listener_count += 1;
             }
+            DispatcherToCacheCmd::ListenerRemoved(listener_id) => {
+                log::info!("Remove listener with id: {}", listener_id);
+                assert!(self.listeners.remove(&listener_id).is_some());
+                self.system.listener_count -= 1;
+            }
+            DispatcherToCacheCmd::SessionAdded(listener_id, count) => {
+                log::info!("{} sessions added to #{}", count, listener_id);
+                if let Some(listener) = self.listeners.get_mut(&listener_id) {
+                    let count = count as u64;
+                    listener.sessions += count;
+                    self.system.sessions += count;
+                } else {
+                    log::error!("Failed to found listener with id: {}", listener_id);
+                }
+            }
+            DispatcherToCacheCmd::SessionRemoved(listener_id, count) => {
+                log::info!("{} sessions removed from #{}", count, listener_id);
+                if let Some(listener) = self.listeners.get_mut(&listener_id) {
+                    let count = count as u64;
+                    listener.sessions -= count;
+                    self.system.sessions -= count;
+                } else {
+                    log::error!("Failed to found listener with id: {}", listener_id);
+                }
+            }
+            DispatcherToCacheCmd::SubscriptionsAdded(listener_id, count) => {
+                log::info!("{} subscriptions added to #{}", count, listener_id);
+                if let Some(listener) = self.listeners.get_mut(&listener_id) {
+                    let count = count as u64;
+                    listener.subscriptions += count;
+                    self.system.subscriptions += count;
+                } else {
+                    log::error!("Failed to found listener with id: {}", listener_id);
+                }
+            }
+            DispatcherToCacheCmd::SubscriptionsRemoved(listener_id, count) => {
+                log::info!("{} subscriptions removed from #{}", count, listener_id);
+                if let Some(listener) = self.listeners.get_mut(&listener_id) {
+                    let count = count as u64;
+                    listener.subscriptions -= count;
+                    self.system.subscriptions -= count;
+                } else {
+                    log::error!("Failed to found listener with id: {}", listener_id);
+                }
+            }
+            DispatcherToCacheCmd::RetainedMessageAdded(listener_id, count, bytes) => {
+                log::info!("{} retained messages added to #{}", count, listener_id);
+                if let Some(listener) = self.listeners.get_mut(&listener_id) {
+                    let count = count as u64;
+                    listener.retained_messages += count;
+                    listener.retained_bytes += bytes;
+                    self.system.retained_messages += count;
+                    self.system.retained_bytes += bytes;
+                } else {
+                    log::error!("Failed to found listener with id: {}", listener_id);
+                }
+            }
+            DispatcherToCacheCmd::RetainedMessageRemoved(listener_id, count, bytes) => {
+                log::info!("{} retained messages removed from #{}", count, listener_id);
+                if let Some(listener) = self.listeners.get_mut(&listener_id) {
+                    let count = count as u64;
+                    listener.retained_messages -= count;
+                    listener.retained_bytes -= bytes;
+                    self.system.retained_messages -= count;
+                    self.system.retained_bytes -= bytes;
+                } else {
+                    log::error!("Failed to found listener with id: {}", listener_id);
+                }
+            }
+
             DispatcherToCacheCmd::PublishPacketSent(count, bytes) => {
                 log::info!("count {}, bytes: {:?}", count, bytes);
             }

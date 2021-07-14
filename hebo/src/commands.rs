@@ -51,9 +51,9 @@ pub enum DispatcherToCacheCmd {
     SubscriptionsAdded(u32, usize),
     SubscriptionsRemoved(u32, usize),
 
-    // count, bytes
-    RetainedMessageAdded(usize, usize),
-    RetainedMessageRemoved(usize, usize),
+    // listener id, count, bytes
+    RetainedMessageAdded(u32, usize, usize),
+    RetainedMessageRemoved(u32, usize, usize),
 
     // count, bytes
     PublishPacketSent(usize, usize),
