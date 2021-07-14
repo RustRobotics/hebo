@@ -9,6 +9,7 @@ use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
 use crate::cache::Cache;
+use crate::commands::DispatcherToCacheCmd;
 use crate::config::Config;
 use crate::constants;
 use crate::dispatcher::Dispatcher;
@@ -126,8 +127,10 @@ impl ServerContext {
             let mut dispatcher_to_listener_senders = Vec::new();
             let mut handles = Vec::new();
             let mut listener_id: u32 = 0;
+            let mut listeners_info = Vec::new();
 
             for l in self.config.listeners.clone() {
+                listeners_info.push((listener_id, l.address.clone()));
                 let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
                     mpsc::channel(constants::CHANNEL_CAPACITY);
                 dispatcher_to_listener_senders.push((listener_id, dispatcher_to_listener_sender));
@@ -166,6 +169,15 @@ impl ServerContext {
                 cache.run_loop().await;
             });
             handles.push(cache_handle);
+
+            for listener_info in &listeners_info {
+                dispatcher_to_cache_sender
+                    .send(DispatcherToCacheCmd::ListenerAdded(
+                        listener_info.0,
+                        listener_info.1,
+                    ))
+                    .await;
+            }
 
             let mut dispatcher = Dispatcher::new(
                 // listeners module

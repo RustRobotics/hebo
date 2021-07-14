@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{CacheToDispatcherCmd, DispatcherToCacheCmd};
-use crate::error::Error;
 
 /// Key-value store.
 #[derive(Debug)]
@@ -239,10 +238,6 @@ impl Cache {
                 } else {
                     log::error!("Failed to found listener with id: {}", listener_id);
                 }
-            }
-
-            _ => {
-                // Do nothing
             }
         }
     }
