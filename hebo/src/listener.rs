@@ -28,6 +28,7 @@ use crate::stream::Stream;
 
 #[derive(Debug)]
 pub struct Listener {
+    id: u32,
     protocol: Protocol,
     current_connection_id: ConnectionId,
     pipelines: Vec<Pipeline>,
@@ -88,12 +89,14 @@ pub struct SubscribedTopic {
 // Initialize Listener
 impl Listener {
     fn new(
+        id: u32,
         protocol: Protocol,
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
     ) -> Self {
         let (session_sender, session_receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
         Listener {
+            id,
             protocol,
             current_connection_id: 0,
             pipelines: Vec::new(),
@@ -157,6 +160,7 @@ impl Listener {
     }
 
     pub async fn bind(
+        id: u32,
         listener: &config::Listener,
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
@@ -168,6 +172,7 @@ impl Listener {
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
+                        id,
                         Protocol::Mqtt(listener),
                         dispatcher_sender,
                         dispatcher_receiver,
@@ -182,6 +187,7 @@ impl Listener {
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
+                        id,
                         Protocol::Mqtts(listener, acceptor),
                         dispatcher_sender,
                         dispatcher_receiver,
@@ -194,6 +200,7 @@ impl Listener {
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
+                        id,
                         Protocol::Ws(listener),
                         dispatcher_sender,
                         dispatcher_receiver,
@@ -208,6 +215,7 @@ impl Listener {
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
+                        id,
                         Protocol::Wss(listener, acceptor),
                         dispatcher_sender,
                         dispatcher_receiver,
@@ -224,6 +232,7 @@ impl Listener {
                 }
                 let listener = UnixListener::bind(&listener.address)?;
                 return Ok(Listener::new(
+                    id,
                     Protocol::Uds(listener),
                     dispatcher_sender,
                     dispatcher_receiver,
@@ -279,6 +288,7 @@ impl Listener {
                     // Bind this endpoint to a UDP socket on the given server address.
                     let (endpoint, incoming) = endpoint_builder.bind(&addr)?;
                     return Ok(Listener::new(
+                        id,
                         Protocol::Quic(endpoint, incoming),
                         dispatcher_sender,
                         dispatcher_receiver,

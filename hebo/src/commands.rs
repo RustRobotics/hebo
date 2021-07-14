@@ -20,12 +20,12 @@ pub enum SessionToListenerCmd {
 }
 
 #[derive(Debug)]
-pub enum ListenerToDispatcherCmd {
+pub enum DispatcherToListenerCmd {
     Publish(PublishPacket),
 }
 
 #[derive(Debug)]
-pub enum DispatcherToListenerCmd {
+pub enum ListenerToDispatcherCmd {
     Publish(PublishPacket),
 }
 
@@ -35,4 +35,14 @@ pub enum DispatcherToSystemCmd {}
 #[derive(Debug)]
 pub enum SystemToDispatcherCmd {
     Publish(PublishPacket),
+}
+
+#[derive(Debug)]
+pub enum DispatcherToCacheCmd {
+    UpdateListener(u32),
+}
+
+#[derive(Debug)]
+pub enum CacheToDispatcherCmd {
+    ConneectionsInfo(u32),
 }

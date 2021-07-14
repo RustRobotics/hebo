@@ -5,27 +5,39 @@
 use codec::PublishPacket;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{DispatcherToListenerCmd, ListenerToDispatcherCmd, SystemToDispatcherCmd};
+use crate::commands::{
+    CacheToDispatcherCmd, DispatcherToCacheCmd, DispatcherToListenerCmd, ListenerToDispatcherCmd,
+    SystemToDispatcherCmd,
+};
 
 /// Dispatcher is a message router.
 #[derive(Debug)]
 pub struct Dispatcher {
+    listener_senders: Vec<(u32, Sender<DispatcherToListenerCmd>)>,
     listener_receiver: Receiver<ListenerToDispatcherCmd>,
-    listener_senders: Vec<Sender<DispatcherToListenerCmd>>,
 
     system_receiver: Receiver<SystemToDispatcherCmd>,
+
+    cache_sender: Sender<DispatcherToCacheCmd>,
+    cache_receiver: Receiver<CacheToDispatcherCmd>,
 }
 
 impl Dispatcher {
     pub fn new(
+        listener_senders: Vec<(u32, Sender<DispatcherToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToDispatcherCmd>,
-        listener_senders: Vec<Sender<DispatcherToListenerCmd>>,
         system_receiver: Receiver<SystemToDispatcherCmd>,
+        cache_sender: Sender<DispatcherToCacheCmd>,
+        cache_receiver: Receiver<CacheToDispatcherCmd>,
     ) -> Self {
         Dispatcher {
-            listener_receiver,
             listener_senders,
+            listener_receiver,
+
             system_receiver,
+
+            cache_sender,
+            cache_receiver,
         }
     }
 
@@ -73,9 +85,9 @@ impl Dispatcher {
     async fn publish_packet_to_listners(&mut self, packet: &PublishPacket) -> (usize, usize) {
         let mut send_ok = 0;
         let mut send_failed = 0;
-        for s in &self.listener_senders {
+        for (_listener_id, sender) in &self.listener_senders {
             let cmd = DispatcherToListenerCmd::Publish(packet.clone());
-            if let Err(err) = s.send(cmd).await {
+            if let Err(err) = sender.send(cmd).await {
                 log::error!("Dispatcher::handle_listener_cmd() send failed: {:?}", err);
                 send_failed += 1;
             } else {

@@ -8,6 +8,7 @@ use std::io::{Read, Write};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
+use crate::cache::Cache;
 use crate::config::Config;
 use crate::constants;
 use crate::dispatcher::Dispatcher;
@@ -124,12 +125,14 @@ impl ServerContext {
                 mpsc::channel(constants::CHANNEL_CAPACITY);
             let mut dispatcher_to_listener_senders = Vec::new();
             let mut handles = Vec::new();
+            let mut listener_id: u32 = 0;
 
             for l in self.config.listeners.clone() {
                 let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
                     mpsc::channel(constants::CHANNEL_CAPACITY);
-                dispatcher_to_listener_senders.push(dispatcher_to_listener_sender);
+                dispatcher_to_listener_senders.push((listener_id, dispatcher_to_listener_sender));
                 let mut listener = Listener::bind(
+                    listener_id,
                     &l,
                     listeners_to_dispatcher_sender.clone(),
                     dispatcher_to_listener_receiver,
@@ -140,6 +143,7 @@ impl ServerContext {
                     listener.run_loop().await;
                 });
                 handles.push(handle);
+                listener_id += 1;
             }
 
             let (system_to_dispatcher_sender, system_to_dispatcher_receiver) =
@@ -153,10 +157,25 @@ impl ServerContext {
             });
             handles.push(system_handle);
 
+            let (cache_to_dispatcher_sender, cache_to_dispatcher_receiver) =
+                mpsc::channel(constants::CHANNEL_CAPACITY);
+            let (dispatcher_to_cache_sender, dispatcher_to_cache_receiver) =
+                mpsc::channel(constants::CHANNEL_CAPACITY);
+            let mut cache = Cache::new(cache_to_dispatcher_sender, dispatcher_to_cache_receiver);
+            let cache_handle = runtime.spawn(async move {
+                cache.run_loop().await;
+            });
+            handles.push(cache_handle);
+
             let mut dispatcher = Dispatcher::new(
-                listeners_to_dispatcher_receiver,
+                // listeners module
                 dispatcher_to_listener_senders,
+                listeners_to_dispatcher_receiver,
+                // system module
                 system_to_dispatcher_receiver,
+                // cache module
+                dispatcher_to_cache_sender,
+                cache_to_dispatcher_receiver,
             );
             let dispatcher_handle = runtime.spawn(async move {
                 dispatcher.run_loop().await;
