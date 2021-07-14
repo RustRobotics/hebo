@@ -39,7 +39,30 @@ pub enum SystemToDispatcherCmd {
 
 #[derive(Debug)]
 pub enum DispatcherToCacheCmd {
-    UpdateListener(u32),
+    // listener id
+    ListenerAdded(u32, String),
+    ListenerRemoved(u32),
+
+    // listener id, count
+    SessionAdded(u32, usize),
+    SessionRemoved(u32, usize),
+
+    // listener id, count
+    SubscriptionsAdded(u32, usize),
+    SubscriptionsRemoved(u32, usize),
+
+    // count, bytes
+    RetainedMessageAdded(usize, usize),
+    RetainedMessageRemoved(usize, usize),
+
+    // count, bytes
+    PublishPacketSent(usize, usize),
+    PublishPacketReceived(usize, usize),
+    PublishPacketDropped(usize, usize),
+
+    // listener id, count, bytes
+    PacketReceived(u32, usize, usize),
+    PackdetSent(u32, usize, usize),
 }
 
 #[derive(Debug)]

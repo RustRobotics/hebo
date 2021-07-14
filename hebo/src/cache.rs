@@ -2,6 +2,7 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
+use std::collections::HashMap;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{CacheToDispatcherCmd, DispatcherToCacheCmd};
@@ -13,15 +14,36 @@ pub struct Cache {
     sender: Sender<CacheToDispatcherCmd>,
     receiver: Option<Receiver<DispatcherToCacheCmd>>,
     sys_message: SysMessageCache,
+
+    listeners: HashMap<u32, ListenerCache>,
+}
+
+#[derive(Debug, Default)]
+pub struct ListenerCache {
+    pub id: u32,
+    pub address: String,
+
+    pub sessions: u64,
 }
 
 #[derive(Debug, Default)]
 pub struct SysMessageCache {
-    connections: usize,
-    messages_sent: u64,
-    messages_recv: u64,
-    messages_queued: u64,
-    message_bytes_queued: u64,
+    pub messages_sent: u64,
+    pub messages_received: u64,
+
+    pub bytes_sent: u64,
+    pub bytes_received: u64,
+
+    pub retained_messages_count: u64,
+    pub retained_messages_bytes: u64,
+
+    pub publish_messages_dropped: u64,
+    pub publish_messages_sent: u64,
+    pub publish_messages_received: u64,
+
+    pub publish_bytes_dropped: u64,
+    pub publish_bytes_sent: u64,
+    pub publish_bytess_received: u64,
 }
 
 impl Cache {
@@ -33,6 +55,7 @@ impl Cache {
             sender,
             receiver: Some(receiver),
             sys_message: SysMessageCache::default(),
+            listeners: HashMap::new(),
         }
     }
 
@@ -47,5 +70,16 @@ impl Cache {
 
     async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToCacheCmd) {
         log::info!("cmd: {:?}", cmd);
+        match cmd {
+            DispatcherToCacheCmd::ListenerAdded(id, address) => {
+                log::info!("listener id: {}, addr: {:?}", id, address);
+            }
+            DispatcherToCacheCmd::PublishPacketSent(count, bytes) => {
+                log::info!("count {}, bytes: {:?}", count, bytes);
+            }
+            _ => {
+                // Do nothing
+            }
+        }
     }
 }

@@ -58,9 +58,7 @@ impl Dispatcher {
         log::info!("handle system cmd: {:?}", cmd);
         match cmd {
             SystemToDispatcherCmd::Publish(packet) => {
-                let (send_ok, send_failed) = self.publish_packet_to_listners(&packet).await;
-                self.cache_update_publish_packet(42, send_ok, send_failed)
-                    .await;
+                self.publish_packet_to_listners(&packet).await;
             }
         }
     }
@@ -70,9 +68,7 @@ impl Dispatcher {
         match cmd {
             ListenerToDispatcherCmd::Publish(packet) => {
                 self.storage_store_packet(&packet).await;
-                let (send_ok, send_failed) = self.publish_packet_to_listners(&packet).await;
-                self.cache_update_publish_packet(42, send_ok, send_failed)
-                    .await;
+                self.publish_packet_to_listners(&packet).await;
             }
         }
     }
@@ -82,35 +78,29 @@ impl Dispatcher {
         log::info!("store packet: {:?}", packet);
     }
 
-    async fn publish_packet_to_listners(&mut self, packet: &PublishPacket) -> (usize, usize) {
-        let mut send_ok = 0;
-        let mut send_failed = 0;
+    async fn publish_packet_to_listners(&mut self, packet: &PublishPacket) {
         for (_listener_id, sender) in &self.listener_senders {
             let cmd = DispatcherToListenerCmd::Publish(packet.clone());
             if let Err(err) = sender.send(cmd).await {
                 log::error!("Dispatcher::handle_listener_cmd() send failed: {:?}", err);
-                send_failed += 1;
-            } else {
-                send_ok += 1;
             }
         }
-        (send_ok, send_failed)
     }
 
     //
     // Cache related methods
     //
-    async fn cache_update_publish_packet(
-        &mut self,
-        packet_size: usize,
-        send_ok: usize,
-        send_failed: usize,
-    ) {
-        log::info!(
-            "update publish packet, packet size: {}, send oK: {}, send failed: {}",
-            packet_size,
-            send_ok,
-            send_failed
-        );
+    async fn cache_publish_packet_sent(&mut self, count: usize, bytes: usize) {
+        log::info!("update publish packet, count: {}, bytes: {}", count, bytes);
+        if let Err(err) = self
+            .cache_sender
+            .send(DispatcherToCacheCmd::PublishPacketSent(count, bytes))
+            .await
+        {
+            log::error!(
+                "Dispatcher: Failed to send UpdatePublishPacket, err: {:?}",
+                err
+            );
+        }
     }
 }
