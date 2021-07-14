@@ -105,7 +105,7 @@ impl Cache {
             DispatcherToCacheCmd::ListenerAdded(listener_id, address) => {
                 log::info!("Add listener id: {}, addr: {:?}", listener_id, address);
                 assert!(self.listeners.get(&listener_id).is_none());
-                let listener_cache = ListenerCache::new(listener_id, address);
+                let listener_cache = ListenerCache::new(listener_id, address.to_string());
                 self.listeners.insert(listener_id, listener_cache);
                 self.system.listener_count += 1;
             }

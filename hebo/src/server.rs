@@ -5,6 +5,7 @@
 use clap::Arg;
 use std::fs::File;
 use std::io::{Read, Write};
+use std::sync::Arc;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
@@ -130,7 +131,7 @@ impl ServerContext {
             let mut listeners_info = Vec::new();
 
             for l in self.config.listeners.clone() {
-                listeners_info.push((listener_id, l.address.clone()));
+                listeners_info.push((listener_id, Arc::new(l.address.clone())));
                 let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
                     mpsc::channel(constants::CHANNEL_CAPACITY);
                 dispatcher_to_listener_senders.push((listener_id, dispatcher_to_listener_sender));
@@ -171,12 +172,15 @@ impl ServerContext {
             handles.push(cache_handle);
 
             for listener_info in &listeners_info {
-                dispatcher_to_cache_sender
+                if let Err(err) = dispatcher_to_cache_sender
                     .send(DispatcherToCacheCmd::ListenerAdded(
                         listener_info.0,
-                        listener_info.1,
+                        listener_info.1.clone(),
                     ))
-                    .await;
+                    .await
+                {
+                    log::error!("Failed to send listener {:?} to cache!", listener_info.1);
+                }
             }
 
             let mut dispatcher = Dispatcher::new(

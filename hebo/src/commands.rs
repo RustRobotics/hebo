@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use codec::{PublishPacket, SubscribePacket, UnsubscribePacket};
+use std::sync::Arc;
 
 pub type ConnectionId = u64;
 
@@ -40,7 +41,7 @@ pub enum SystemToDispatcherCmd {
 #[derive(Debug)]
 pub enum DispatcherToCacheCmd {
     // listener id
-    ListenerAdded(u32, String),
+    ListenerAdded(u32, Arc<String>),
     ListenerRemoved(u32),
 
     // listener id, count
