@@ -56,16 +56,17 @@ pub enum DispatcherToCacheCmd {
     RetainedMessageRemoved(u32, usize, usize),
 
     // count, bytes
-    PublishPacketSent(usize, usize),
-    PublishPacketReceived(usize, usize),
+    PublishPacketSent(u32, usize, usize),
+    PublishPacketReceived(u32, usize, usize),
     PublishPacketDropped(usize, usize),
 
     // listener id, count, bytes
+    PacketSent(u32, usize, usize),
     PacketReceived(u32, usize, usize),
-    PackdetSent(u32, usize, usize),
 }
 
 #[derive(Debug)]
 pub enum CacheToDispatcherCmd {
-    ConneectionsInfo(u32),
+    ListenersCount(usize),
+    SessionsCount(usize),
 }

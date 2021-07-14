@@ -90,11 +90,14 @@ impl Dispatcher {
     //
     // Cache related methods
     //
-    async fn cache_publish_packet_sent(&mut self, count: usize, bytes: usize) {
-        log::info!("update publish packet, count: {}, bytes: {}", count, bytes);
+    async fn cache_publish_packet_sent(&mut self, listener_id: u32, count: usize, bytes: usize) {
         if let Err(err) = self
             .cache_sender
-            .send(DispatcherToCacheCmd::PublishPacketSent(count, bytes))
+            .send(DispatcherToCacheCmd::PublishPacketSent(
+                listener_id,
+                count,
+                bytes,
+            ))
             .await
         {
             log::error!(
