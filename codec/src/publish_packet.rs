@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use byteorder::{BigEndian, WriteBytesExt};
-use bytes::Bytes;
+use bytes::BytesMut;
 use std::io::Write;
 
 use super::topic::Topic;
@@ -85,7 +85,7 @@ pub struct PublishPacket {
     packet_id: PacketId,
 
     /// Payload contains `msg` field.
-    msg: Bytes,
+    msg: BytesMut,
 }
 
 impl PublishPacket {
@@ -100,8 +100,12 @@ impl PublishPacket {
             retain: false,
             topic: topic.to_string(),
             packet_id: 0,
-            msg: Bytes::copy_from_slice(msg),
+            msg: BytesMut::from(msg),
         })
+    }
+
+    pub fn append(&mut self, msg_parts: &[u8]) {
+        self.msg.extend_from_slice(msg_parts);
     }
 
     pub fn set_retain(&mut self, retain: bool) -> &mut Self {
@@ -174,8 +178,7 @@ impl DecodePacket for PublishPacket {
             msg_len -= 2;
         }
 
-        // TODO(Shaohua): Only copy a reference.
-        let msg = Bytes::copy_from_slice(ba.read_bytes(msg_len)?);
+        let msg = BytesMut::from(ba.read_bytes(msg_len)?);
         Ok(PublishPacket {
             qos,
             retain,

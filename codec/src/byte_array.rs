@@ -37,7 +37,6 @@ impl<'a> ByteArray<'a> {
         self.data.len() - self.offset
     }
 
-    // TODO(Shaohua): Add ByteArrayError
     pub fn read_byte(&mut self) -> Result<u8, ByteArrayError> {
         self.offset += 1;
         if self.offset > self.data.len() {
