@@ -2,9 +2,9 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::io::Write;
-
 use byteorder::{BigEndian, WriteBytesExt};
+use bytes::Bytes;
+use std::io::Write;
 
 use super::topic::Topic;
 use super::utils;
@@ -85,7 +85,7 @@ pub struct PublishPacket {
     packet_id: PacketId,
 
     /// Payload contains `msg` field.
-    msg: Vec<u8>,
+    msg: Bytes,
 }
 
 impl PublishPacket {
@@ -100,7 +100,7 @@ impl PublishPacket {
             retain: false,
             topic: topic.to_string(),
             packet_id: 0,
-            msg: msg.to_vec(),
+            msg: Bytes::copy_from_slice(msg),
         })
     }
 
@@ -175,7 +175,7 @@ impl DecodePacket for PublishPacket {
         }
 
         // TODO(Shaohua): Only copy a reference.
-        let msg = ba.read_bytes(msg_len)?.to_vec();
+        let msg = Bytes::copy_from_slice(ba.read_bytes(msg_len)?);
         Ok(PublishPacket {
             qos,
             retain,

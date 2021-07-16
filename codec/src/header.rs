@@ -193,15 +193,13 @@ impl DecodePacket for RemainingLength {
             }
         }
 
-        // No need to compare remaining bytes, sometimes we only receive
-        // header part of packet and decide whether to prevent from sending
-        // more bytes.
-        //if ba.remaining_bytes() < remaining_bytes as usize {
-        //    Err(DecodeError::InvalidRemainingLength)
-        //} else {
-        //    Ok(RemainingLength(remaining_bytes))
-        //}
-        Ok(RemainingLength(remaining_bytes))
+        // Sometimes we only receive header part of packet and decide
+        // whether to prevent from sending more bytes.
+        if ba.remaining_bytes() < remaining_bytes as usize {
+            Err(DecodeError::InvalidRemainingLength)
+        } else {
+            Ok(RemainingLength(remaining_bytes))
+        }
     }
 }
 
