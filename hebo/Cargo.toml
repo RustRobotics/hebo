@@ -13,20 +13,20 @@ path = "src/bin/hebo.rs"
 [dependencies]
 clap = "2.33.3"
 codec = { path = "../codec" }
-env_logger = "0.8.4"
+env_logger = "0.9.0"
 futures = "0.3.15"
 futures-util = "0.3.15"
-jemallocator = "0.3"
+jemallocator = "0.3.2"
 log = "0.4.14"
-nc = "0.6.2"
+nc = "0.7.2"
 quinn = "0.7.2"
 serde = "1.0.126"
 serde_derive = "1.0.126"
-tokio = { version = "1.7.1", features = ["full"] }
+tokio = { version = "1.8.1", features = ["full"] }
 tokio-rustls = "0.22.0"
-tokio-tungstenite = { version = "0.14.0", features = ["rustls-tls"] }
+tokio-tungstenite = { version = "0.15.0", features = ["rustls-tls"] }
 toml = "0.5.8"
-webpki-roots = "0.21.0"
+webpki-roots = "0.22.0"
 
 [dev-dependencies]
 rcgen = "0.8.11"
