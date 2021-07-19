@@ -79,6 +79,9 @@ impl Dispatcher {
             ListenerToDispatcherCmd::SubscriptionsAdded(listener_id) => {
                 self.cache_on_subscription_added(listener_id).await;
             }
+            ListenerToDispatcherCmd::SubscriptionsRemoved(listener_id) => {
+                self.cache_on_subscription_removed(listener_id).await;
+            }
         }
     }
 
@@ -150,6 +153,19 @@ impl Dispatcher {
         {
             log::error!(
                 "Dispatcher: Failed to send SubscriptionsAdded cmd, err: {:?}",
+                err
+            );
+        }
+    }
+
+    async fn cache_on_subscription_removed(&mut self, listener_id: ListenerId) {
+        if let Err(err) = self
+            .cache_sender
+            .send(DispatcherToCacheCmd::SubscriptionsRemoved(listener_id, 1))
+            .await
+        {
+            log::error!(
+                "Dispatcher: Failed to send SubscriptionsRemoved cmd, err: {:?}",
                 err
             );
         }

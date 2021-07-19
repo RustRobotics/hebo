@@ -399,7 +399,14 @@ impl Listener {
                 self.on_subscribe(session_id, packet);
             }
             SessionToListenerCmd::Unsubscribe(session_id, packet) => {
-                self.on_unsubscribe(session_id, packet)
+                self.on_unsubscribe(session_id, packet);
+                if let Err(err) = self
+                    .dispatcher_sender
+                    .send(ListenerToDispatcherCmd::SubscriptionsRemoved(self.id))
+                    .await
+                {
+                    log::error!("Failed to send SubscriptionsRemoved cmd: {:?}", err);
+                }
             }
             SessionToListenerCmd::Disconnect(session_id) => {
                 if let Some(pos) = self
