@@ -379,7 +379,7 @@ impl Listener {
         let session_id = self.next_session_id();
         let pipeline = Pipeline::new(sender, session_id);
         self.pipelines.push(pipeline);
-        let connection = Session::new(stream, session_id, self.session_sender.clone(), receiver);
+        let connection = Session::new(session_id, stream, self.session_sender.clone(), receiver);
         tokio::spawn(connection.run_loop());
 
         if let Err(err) = self

@@ -34,8 +34,8 @@ enum Status {
 // amount of time.
 #[derive(Debug)]
 pub struct Session {
+    id: SessionId,
     stream: Stream,
-    session_id: SessionId,
     sender: mpsc::Sender<SessionToListenerCmd>,
     receiver: mpsc::Receiver<ListenerToSessionCmd>,
     status: Status,
@@ -46,14 +46,14 @@ pub struct Session {
 
 impl Session {
     pub fn new(
+        id: SessionId,
         stream: Stream,
-        session_id: SessionId,
         sender: mpsc::Sender<SessionToListenerCmd>,
         receiver: mpsc::Receiver<ListenerToSessionCmd>,
     ) -> Session {
         Session {
+            id,
             stream,
-            session_id,
             sender,
             receiver,
             status: Status::Invalid,
@@ -93,12 +93,12 @@ impl Session {
         }
         if let Err(err) = self
             .sender
-            .send(SessionToListenerCmd::Disconnect(self.session_id))
+            .send(SessionToListenerCmd::Disconnect(self.id))
             .await
         {
             log::error!(
-                "Failed to send disconnect cmd to server, session_id: {}, err: {:?}",
-                self.session_id,
+                "Failed to send disconnect cmd to server, id: {}, err: {:?}",
+                self.id,
                 err
             );
         }
@@ -200,25 +200,21 @@ impl Session {
     async fn subscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = SubscribePacket::decode(&mut ba)?;
-        let ack;
+
+        // Send to listener, which will check auth.
         if let Err(err) = self
             .sender
-            .send(SessionToListenerCmd::Subscribe(
-                self.session_id,
-                packet.clone(),
-            ))
+            .send(SessionToListenerCmd::Subscribe(self.id, packet.clone()))
             .await
         {
-            ack = SubscribeAck::Failed;
-            log::warn!("Failed to send subscribe command to server: {:?}", err);
+            log::error!("Failed to send subscribe command to server: {:?}", err);
+            let ack = SubscribeAck::Failed;
+
+            let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
+            self.send(subscribe_ack_packet).await
         } else {
-            // TODO(Shaohua): Handle all of topics.
-            ack = SubscribeAck::QoS(packet.topics()[0].qos());
+            Ok(())
         }
-        // TODO(Shaohua): Do not send ack packet here.
-        // Instead send to listener, which will check auth.
-        let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
-        self.send(subscribe_ack_packet).await
     }
 
     async fn unsubscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -226,10 +222,7 @@ impl Session {
         let packet = UnsubscribePacket::decode(&mut ba)?;
         if let Err(err) = self
             .sender
-            .send(SessionToListenerCmd::Unsubscribe(
-                self.session_id,
-                packet.clone(),
-            ))
+            .send(SessionToListenerCmd::Unsubscribe(self.id, packet.clone()))
             .await
         {
             log::warn!("Failed to send unsubscribe command to server: {:?}", err);
@@ -243,7 +236,7 @@ impl Session {
         self.status = Status::Disconnected;
         if let Err(err) = self
             .sender
-            .send(SessionToListenerCmd::Disconnect(self.session_id))
+            .send(SessionToListenerCmd::Disconnect(self.id))
             .await
         {
             log::warn!("Failed to send disconnect command to server: {:?}", err);

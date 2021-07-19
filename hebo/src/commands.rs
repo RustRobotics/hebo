@@ -32,6 +32,9 @@ pub enum ListenerToDispatcherCmd {
 
     SessionAdded(ListenerId, SessionId),
     SessionRemoved(ListenerId, SessionId),
+
+    SubscriptionsAdded(ListenerId, SessionId),
+    //SubscriptionsRemoved(ListenerId, SessionId),
 }
 
 #[derive(Debug)]

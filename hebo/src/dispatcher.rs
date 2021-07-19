@@ -76,6 +76,9 @@ impl Dispatcher {
             ListenerToDispatcherCmd::SessionRemoved(listener_id, _session_id) => {
                 self.cache_on_session_removed(listener_id).await;
             }
+            ListenerToDispatcherCmd::SubscriptionsAdded(listener_id, _session_id) => {
+                self.cache_on_subscription_added(listener_id).await;
+            }
         }
     }
 
@@ -134,6 +137,19 @@ impl Dispatcher {
         {
             log::error!(
                 "Dispatcher: Failed to send SessionRemoved cmd, err: {:?}",
+                err
+            );
+        }
+    }
+
+    async fn cache_on_subscription_added(&mut self, listener_id: ListenerId) {
+        if let Err(err) = self
+            .cache_sender
+            .send(DispatcherToCacheCmd::SubscriptionsAdded(listener_id, 1))
+            .await
+        {
+            log::error!(
+                "Dispatcher: Failed to send SubscriptionsAdded cmd, err: {:?}",
                 err
             );
         }
