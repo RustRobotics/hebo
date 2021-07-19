@@ -4,6 +4,7 @@
 
 use hebo::{server, Error};
 
+#[cfg(feature = "allocator")]
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
