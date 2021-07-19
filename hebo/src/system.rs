@@ -7,6 +7,7 @@ use std::time::{self, Duration};
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
+use crate::cache_types::{ListenersVectorCache, SystemCache};
 use crate::commands::{CacheToSystemCmd, SystemToCacheCmd, SystemToDispatcherCmd};
 use crate::error::Error;
 
@@ -45,15 +46,44 @@ impl System {
     pub async fn run_loop(&mut self) -> ! {
         let mut timer = interval(Duration::from_secs(self.interval.into()));
         loop {
-            timer.tick().await;
-            self.update_time();
-
-            if let Err(err) = self.send_uptime().await {
-                log::error!(
-                    "Failed to send publish packet from system to dispatcher: {:?}",
-                    err
-                );
+            tokio::select! {
+                Some(cmd) = self.cache_receiver.recv() => {
+                    self.handle_cache_cmd(cmd).await;
+                },
+                _ = timer.tick() => {
+                    self.handle_timeout().await;
+                }
             }
+        }
+    }
+
+    async fn handle_cache_cmd(&mut self, cmd: CacheToSystemCmd) {
+        match cmd {
+            CacheToSystemCmd::All(system_cache, listeners_cache) => {
+                log::info!("system cache: {:?}", system_cache);
+                log::info!("listeners cache: {:?}", listeners_cache);
+            }
+            CacheToSystemCmd::System(system_cache) => {
+                log::info!("system cache: {:?}", system_cache);
+            }
+            CacheToSystemCmd::Listeners(listeners_cache) => {
+                log::info!("listeners cache: {:?}", listeners_cache);
+            }
+        }
+    }
+
+    async fn handle_timeout(&mut self) {
+        self.update_time();
+
+        if let Err(err) = self.cache_sender.send(SystemToCacheCmd::GetAllCache).await {
+            log::error!("Failed to send get all cache cmd: {:?}", err);
+        }
+
+        if let Err(err) = self.send_uptime().await {
+            log::error!(
+                "Failed to send publish packet from system to dispatcher: {:?}",
+                err
+            );
         }
     }
 

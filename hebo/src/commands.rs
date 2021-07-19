@@ -90,12 +90,14 @@ pub enum CacheToDispatcherCmd {
 
 #[derive(Debug)]
 pub enum SystemToCacheCmd {
+    GetAllCache,
     GetSystemCache,
     GetListenersCache,
 }
 
 #[derive(Debug)]
 pub enum CacheToSystemCmd {
+    All(SystemCache, ListenersVectorCache),
     System(SystemCache),
     Listeners(ListenersVectorCache),
 }

@@ -208,6 +208,16 @@ impl Cache {
     async fn handle_system_cmd(&mut self, cmd: SystemToCacheCmd) {
         log::info!("cmd: {:?}", cmd);
         match cmd {
+            SystemToCacheCmd::GetAllCache => {
+                let v = self.listeners.values().map(|v| v.clone()).collect();
+                if let Err(err) = self
+                    .system_sender
+                    .send(CacheToSystemCmd::All(self.system, v))
+                    .await
+                {
+                    log::error!("Failed to send All cache cmd: {:?}", err);
+                }
+            }
             SystemToCacheCmd::GetSystemCache => {
                 if let Err(err) = self
                     .system_sender
