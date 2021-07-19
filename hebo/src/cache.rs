@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::cache_types::{ListenerCache, SystemCache};
+use crate::cache_types::{ListenerCache, ListenersMapCache, ListenersVectorCache, SystemCache};
 use crate::commands::{
     CacheToDispatcherCmd, CacheToSystemCmd, DispatcherToCacheCmd, SystemToCacheCmd,
 };
@@ -21,7 +21,7 @@ pub struct Cache {
 
     system: SystemCache,
 
-    listeners: HashMap<u32, ListenerCache>,
+    listeners: ListenersMapCache,
 }
 
 impl Cache {
@@ -46,9 +46,18 @@ impl Cache {
             .dispatcher_receiver
             .take()
             .expect("Invalid dispatcher receiver");
+        let mut system_receiver = self
+            .system_receiver
+            .take()
+            .expect("Invalid system receiver");
         loop {
-            if let Some(cmd) = dispatcher_receiver.recv().await {
-                self.handle_dispatcher_cmd(cmd).await;
+            tokio::select! {
+                Some(cmd) = dispatcher_receiver.recv() => {
+                    self.handle_dispatcher_cmd(cmd).await;
+                }
+                Some(cmd) = system_receiver.recv() => {
+                    self.handle_system_cmd(cmd).await;
+                }
             }
         }
     }
@@ -191,6 +200,31 @@ impl Cache {
                     self.system.bytes_received += bytes;
                 } else {
                     log::error!("Failed to found listener with id: {}", listener_id);
+                }
+            }
+        }
+    }
+
+    async fn handle_system_cmd(&mut self, cmd: SystemToCacheCmd) {
+        log::info!("cmd: {:?}", cmd);
+        match cmd {
+            SystemToCacheCmd::GetSystemCache => {
+                if let Err(err) = self
+                    .system_sender
+                    .send(CacheToSystemCmd::System(self.system))
+                    .await
+                {
+                    log::error!("Failed to send System cmd: {:?}", err);
+                }
+            }
+            SystemToCacheCmd::GetListenersCache => {
+                let v = self.listeners.values().map(|v| v.clone()).collect();
+                if let Err(err) = self
+                    .system_sender
+                    .send(CacheToSystemCmd::Listeners(v))
+                    .await
+                {
+                    log::error!("Failed to send Listeners cmd: {:?}", err);
                 }
             }
         }

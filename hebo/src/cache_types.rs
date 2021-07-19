@@ -2,7 +2,9 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-#[derive(Debug, Default)]
+use std::collections::HashMap;
+
+#[derive(Debug, Default, Clone)]
 pub struct ListenerCache {
     pub id: u32,
     pub address: String,
@@ -37,7 +39,10 @@ impl ListenerCache {
     }
 }
 
-#[derive(Debug, Default)]
+pub type ListenersMapCache = HashMap<u32, ListenerCache>;
+pub type ListenersVectorCache = Vec<ListenerCache>;
+
+#[derive(Debug, Default, Clone, Copy)]
 pub struct SystemCache {
     pub listener_count: usize,
     pub sessions: u64,

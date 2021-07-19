@@ -5,6 +5,8 @@
 use codec::{PublishPacket, SubscribePacket, UnsubscribePacket};
 use std::sync::Arc;
 
+use crate::cache_types::{ListenersVectorCache, SystemCache};
+
 pub type ListenerId = u32;
 pub type SessionId = u64;
 
@@ -89,11 +91,11 @@ pub enum CacheToDispatcherCmd {
 #[derive(Debug)]
 pub enum SystemToCacheCmd {
     GetSystemCache,
-    GetListenerCache,
+    GetListenersCache,
 }
 
 #[derive(Debug)]
 pub enum CacheToSystemCmd {
-    System(usize),
-    Listener(usize),
+    System(SystemCache),
+    Listeners(ListenersVectorCache),
 }
