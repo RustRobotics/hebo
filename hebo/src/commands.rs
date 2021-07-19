@@ -30,11 +30,11 @@ pub enum DispatcherToListenerCmd {
 pub enum ListenerToDispatcherCmd {
     Publish(PublishPacket),
 
-    SessionAdded(ListenerId, SessionId),
-    SessionRemoved(ListenerId, SessionId),
+    SessionAdded(ListenerId),
+    SessionRemoved(ListenerId),
 
-    SubscriptionsAdded(ListenerId, SessionId),
-    //SubscriptionsRemoved(ListenerId, SessionId),
+    SubscriptionsAdded(ListenerId),
+    //SubscriptionsRemoved(ListenerId),
 }
 
 #[derive(Debug)]

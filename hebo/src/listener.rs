@@ -384,7 +384,7 @@ impl Listener {
 
         if let Err(err) = self
             .dispatcher_sender
-            .send(ListenerToDispatcherCmd::SessionAdded(self.id, session_id))
+            .send(ListenerToDispatcherCmd::SessionAdded(self.id))
             .await
         {
             log::error!("Failed to send NewSession cmd: {:?}", err);
@@ -411,7 +411,7 @@ impl Listener {
                     self.pipelines.remove(pos);
                     if let Err(err) = self
                         .dispatcher_sender
-                        .send(ListenerToDispatcherCmd::SessionRemoved(self.id, session_id))
+                        .send(ListenerToDispatcherCmd::SessionRemoved(self.id))
                         .await
                     {
                         log::error!("Failed to send session removed cmd: {:?}", err);

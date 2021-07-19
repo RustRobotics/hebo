@@ -70,13 +70,13 @@ impl Dispatcher {
                 self.storage_store_packet(&packet).await;
                 self.publish_packet_to_listners(&packet).await;
             }
-            ListenerToDispatcherCmd::SessionAdded(listener_id, _session_id) => {
+            ListenerToDispatcherCmd::SessionAdded(listener_id) => {
                 self.cache_on_session_added(listener_id).await;
             }
-            ListenerToDispatcherCmd::SessionRemoved(listener_id, _session_id) => {
+            ListenerToDispatcherCmd::SessionRemoved(listener_id) => {
                 self.cache_on_session_removed(listener_id).await;
             }
-            ListenerToDispatcherCmd::SubscriptionsAdded(listener_id, _session_id) => {
+            ListenerToDispatcherCmd::SubscriptionsAdded(listener_id) => {
                 self.cache_on_subscription_added(listener_id).await;
             }
         }
