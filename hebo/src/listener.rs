@@ -302,7 +302,7 @@ impl Listener {
         ))
     }
 
-    pub async fn accept(&mut self) -> Result<Stream, Error> {
+    async fn accept(&mut self) -> Result<Stream, Error> {
         match &mut self.protocol {
             Protocol::Mqtt(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;

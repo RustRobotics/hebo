@@ -14,10 +14,10 @@ use crate::commands::{
 #[derive(Debug)]
 pub struct Cache {
     dispatcher_sender: Sender<CacheToDispatcherCmd>,
-    dispatcher_receiver: Option<Receiver<DispatcherToCacheCmd>>,
+    dispatcher_receiver: Receiver<DispatcherToCacheCmd>,
 
     system_sender: Sender<CacheToSystemCmd>,
-    system_receiver: Option<Receiver<SystemToCacheCmd>>,
+    system_receiver: Receiver<SystemToCacheCmd>,
 
     system: SystemCache,
 
@@ -33,29 +33,21 @@ impl Cache {
     ) -> Self {
         Cache {
             dispatcher_sender,
-            dispatcher_receiver: Some(dispatcher_receiver),
+            dispatcher_receiver,
             system_sender,
-            system_receiver: Some(system_receiver),
+            system_receiver,
             system: SystemCache::default(),
             listeners: HashMap::new(),
         }
     }
 
     pub async fn run_loop(&mut self) -> ! {
-        let mut dispatcher_receiver = self
-            .dispatcher_receiver
-            .take()
-            .expect("Invalid dispatcher receiver");
-        let mut system_receiver = self
-            .system_receiver
-            .take()
-            .expect("Invalid system receiver");
         loop {
             tokio::select! {
-                Some(cmd) = dispatcher_receiver.recv() => {
+                Some(cmd) = self.dispatcher_receiver.recv() => {
                     self.handle_dispatcher_cmd(cmd).await;
                 }
-                Some(cmd) = system_receiver.recv() => {
+                Some(cmd) = self.system_receiver.recv() => {
                     self.handle_system_cmd(cmd).await;
                 }
             }
@@ -206,7 +198,6 @@ impl Cache {
     }
 
     async fn handle_system_cmd(&mut self, cmd: SystemToCacheCmd) {
-        log::info!("cmd: {:?}", cmd);
         match cmd {
             SystemToCacheCmd::GetAllCache => {
                 let v = self.listeners.values().map(|v| v.clone()).collect();
