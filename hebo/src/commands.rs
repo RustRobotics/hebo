@@ -5,7 +5,8 @@
 use codec::{PublishPacket, SubscribePacket, UnsubscribePacket};
 use std::sync::Arc;
 
-pub type ConnectionId = u64;
+pub type ListenerId = u32;
+pub type SessionId = u64;
 
 #[derive(Clone, Debug)]
 pub enum ListenerToSessionCmd {
@@ -15,9 +16,9 @@ pub enum ListenerToSessionCmd {
 #[derive(Debug)]
 pub enum SessionToListenerCmd {
     Publish(PublishPacket),
-    Subscribe(ConnectionId, SubscribePacket),
-    Unsubscribe(ConnectionId, UnsubscribePacket),
-    Disconnect(ConnectionId),
+    Subscribe(SessionId, SubscribePacket),
+    Unsubscribe(SessionId, UnsubscribePacket),
+    Disconnect(SessionId),
 }
 
 #[derive(Debug)]
@@ -28,6 +29,7 @@ pub enum DispatcherToListenerCmd {
 #[derive(Debug)]
 pub enum ListenerToDispatcherCmd {
     Publish(PublishPacket),
+    NewSession(ListenerId, SessionId),
 }
 
 #[derive(Debug)]
@@ -40,30 +42,37 @@ pub enum SystemToDispatcherCmd {
 
 #[derive(Debug)]
 pub enum DispatcherToCacheCmd {
-    // listener id
-    ListenerAdded(u32, Arc<String>),
-    ListenerRemoved(u32),
+    /// listener id, listener address
+    ListenerAdded(ListenerId, Arc<String>),
+    /// listener id
+    ListenerRemoved(ListenerId),
 
-    // listener id, count
-    SessionAdded(u32, usize),
-    SessionRemoved(u32, usize),
+    /// listener id, count
+    SessionAdded(ListenerId, usize),
+    /// listener id, count
+    SessionRemoved(ListenerId, usize),
 
-    // listener id, count
-    SubscriptionsAdded(u32, usize),
-    SubscriptionsRemoved(u32, usize),
+    /// listener id, count
+    SubscriptionsAdded(ListenerId, usize),
+    /// listener id, count
+    SubscriptionsRemoved(ListenerId, usize),
 
-    // listener id, count, bytes
-    RetainedMessageAdded(u32, usize, usize),
-    RetainedMessageRemoved(u32, usize, usize),
+    /// listener id, count, bytes
+    RetainedMessageAdded(ListenerId, usize, usize),
+    /// listener id, count, bytes
+    RetainedMessageRemoved(ListenerId, usize, usize),
 
-    // count, bytes
-    PublishPacketSent(u32, usize, usize),
-    PublishPacketReceived(u32, usize, usize),
+    /// listener id, count, bytes
+    PublishPacketSent(ListenerId, usize, usize),
+    /// listener id, count, bytes
+    PublishPacketReceived(ListenerId, usize, usize),
+    /// count, bytes
     PublishPacketDropped(usize, usize),
 
-    // listener id, count, bytes
-    PacketSent(u32, usize, usize),
-    PacketReceived(u32, usize, usize),
+    /// listener id, count, bytes
+    PacketSent(ListenerId, usize, usize),
+    /// listener id, count, bytes
+    PacketReceived(ListenerId, usize, usize),
 }
 
 #[derive(Debug)]

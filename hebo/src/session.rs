@@ -11,7 +11,7 @@ use std::time::Duration;
 use tokio::sync::mpsc;
 use tokio::time::interval;
 
-use crate::commands::{ConnectionId, ListenerToSessionCmd, SessionToListenerCmd};
+use crate::commands::{ListenerToSessionCmd, SessionId, SessionToListenerCmd};
 use crate::error::Error;
 use crate::stream::Stream;
 
@@ -35,7 +35,7 @@ enum Status {
 #[derive(Debug)]
 pub struct Session {
     stream: Stream,
-    connection_id: ConnectionId,
+    session_id: SessionId,
     sender: mpsc::Sender<SessionToListenerCmd>,
     receiver: mpsc::Receiver<ListenerToSessionCmd>,
     status: Status,
@@ -47,13 +47,13 @@ pub struct Session {
 impl Session {
     pub fn new(
         stream: Stream,
-        connection_id: ConnectionId,
+        session_id: SessionId,
         sender: mpsc::Sender<SessionToListenerCmd>,
         receiver: mpsc::Receiver<ListenerToSessionCmd>,
     ) -> Session {
         Session {
             stream,
-            connection_id,
+            session_id,
             sender,
             receiver,
             status: Status::Invalid,
@@ -65,7 +65,7 @@ impl Session {
         // TODO(Shaohua): Set buffer cap based on settings
         let mut buf = Vec::with_capacity(512);
         // TODO(Shaohua): Handle timeout
-        let mut timer = interval(Duration::from_secs(10));
+        let mut timer = interval(Duration::from_secs(20));
         loop {
             tokio::select! {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
@@ -80,7 +80,8 @@ impl Session {
                     }
                 }
                 _ = timer.tick() => {
-                    log::info!("tick()");
+                    // TODO(Shaohua): Send ping
+                    //log::info!("tick()");
                 },
                 Some(cmd) = self.receiver.recv() => {
                     if let Err(err) = self.handle_listener_packet(cmd).await {
@@ -92,12 +93,12 @@ impl Session {
         }
         if let Err(err) = self
             .sender
-            .send(SessionToListenerCmd::Disconnect(self.connection_id))
+            .send(SessionToListenerCmd::Disconnect(self.session_id))
             .await
         {
             log::error!(
-                "Failed to send disconnect cmd to server, connection_id: {}, err: {:?}",
-                self.connection_id,
+                "Failed to send disconnect cmd to server, session_id: {}, err: {:?}",
+                self.session_id,
                 err
             );
         }
@@ -203,7 +204,7 @@ impl Session {
         if let Err(err) = self
             .sender
             .send(SessionToListenerCmd::Subscribe(
-                self.connection_id,
+                self.session_id,
                 packet.clone(),
             ))
             .await
@@ -226,7 +227,7 @@ impl Session {
         if let Err(err) = self
             .sender
             .send(SessionToListenerCmd::Unsubscribe(
-                self.connection_id,
+                self.session_id,
                 packet.clone(),
             ))
             .await
@@ -242,7 +243,7 @@ impl Session {
         self.status = Status::Disconnected;
         if let Err(err) = self
             .sender
-            .send(SessionToListenerCmd::Disconnect(self.connection_id))
+            .send(SessionToListenerCmd::Disconnect(self.session_id))
             .await
         {
             log::warn!("Failed to send disconnect command to server: {:?}", err);
