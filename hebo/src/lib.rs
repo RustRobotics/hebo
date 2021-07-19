@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 mod cache;
+mod cache_types;
 mod commands;
 mod config;
 mod constants;
