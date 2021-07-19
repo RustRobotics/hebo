@@ -70,8 +70,11 @@ impl Dispatcher {
                 self.storage_store_packet(&packet).await;
                 self.publish_packet_to_listners(&packet).await;
             }
-            ListenerToDispatcherCmd::NewSession(listener_id, _session_id) => {
-                self.cache_on_new_session(listener_id).await;
+            ListenerToDispatcherCmd::SessionAdded(listener_id, _session_id) => {
+                self.cache_on_session_added(listener_id).await;
+            }
+            ListenerToDispatcherCmd::SessionRemoved(listener_id, _session_id) => {
+                self.cache_on_session_removed(listener_id).await;
             }
         }
     }
@@ -110,7 +113,7 @@ impl Dispatcher {
         }
     }
 
-    async fn cache_on_new_session(&mut self, listener_id: ListenerId) {
+    async fn cache_on_session_added(&mut self, listener_id: ListenerId) {
         if let Err(err) = self
             .cache_sender
             .send(DispatcherToCacheCmd::SessionAdded(listener_id, 1))
@@ -118,6 +121,19 @@ impl Dispatcher {
         {
             log::error!(
                 "Dispatcher: Failed to send SessionAdded cmd, err: {:?}",
+                err
+            );
+        }
+    }
+
+    async fn cache_on_session_removed(&mut self, listener_id: ListenerId) {
+        if let Err(err) = self
+            .cache_sender
+            .send(DispatcherToCacheCmd::SessionRemoved(listener_id, 1))
+            .await
+        {
+            log::error!(
+                "Dispatcher: Failed to send SessionRemoved cmd, err: {:?}",
                 err
             );
         }

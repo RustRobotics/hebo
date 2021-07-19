@@ -29,7 +29,9 @@ pub enum DispatcherToListenerCmd {
 #[derive(Debug)]
 pub enum ListenerToDispatcherCmd {
     Publish(PublishPacket),
-    NewSession(ListenerId, SessionId),
+
+    SessionAdded(ListenerId, SessionId),
+    SessionRemoved(ListenerId, SessionId),
 }
 
 #[derive(Debug)]
