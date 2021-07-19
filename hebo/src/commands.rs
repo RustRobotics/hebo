@@ -85,3 +85,15 @@ pub enum CacheToDispatcherCmd {
     ListenersCount(usize),
     SessionsCount(usize),
 }
+
+#[derive(Debug)]
+pub enum SystemToCacheCmd {
+    GetSystemCache,
+    GetListenerCache,
+}
+
+#[derive(Debug)]
+pub enum CacheToSystemCmd {
+    System(usize),
+    Listener(usize),
+}

@@ -5,13 +5,18 @@
 use std::collections::HashMap;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{CacheToDispatcherCmd, DispatcherToCacheCmd};
+use crate::commands::{
+    CacheToDispatcherCmd, CacheToSystemCmd, DispatcherToCacheCmd, SystemToCacheCmd,
+};
 
 /// Key-value store.
 #[derive(Debug)]
 pub struct Cache {
-    sender: Sender<CacheToDispatcherCmd>,
-    receiver: Option<Receiver<DispatcherToCacheCmd>>,
+    dispatcher_sender: Sender<CacheToDispatcherCmd>,
+    dispatcher_receiver: Option<Receiver<DispatcherToCacheCmd>>,
+
+    system_sender: Sender<CacheToSystemCmd>,
+    system_receiver: Option<Receiver<SystemToCacheCmd>>,
 
     system: SystemCache,
 
@@ -79,19 +84,26 @@ pub struct SystemCache {
 
 impl Cache {
     pub fn new(
-        sender: Sender<CacheToDispatcherCmd>,
-        receiver: Receiver<DispatcherToCacheCmd>,
+        dispatcher_sender: Sender<CacheToDispatcherCmd>,
+        dispatcher_receiver: Receiver<DispatcherToCacheCmd>,
+        system_sender: Sender<CacheToSystemCmd>,
+        system_receiver: Receiver<SystemToCacheCmd>,
     ) -> Self {
         Cache {
-            sender,
-            receiver: Some(receiver),
+            dispatcher_sender,
+            dispatcher_receiver: Some(dispatcher_receiver),
+            system_sender,
+            system_receiver: Some(system_receiver),
             system: SystemCache::default(),
             listeners: HashMap::new(),
         }
     }
 
     pub async fn run_loop(&mut self) -> ! {
-        let mut dispatcher_receiver = self.receiver.take().expect("Invalid dispatcher receiver");
+        let mut dispatcher_receiver = self
+            .dispatcher_receiver
+            .take()
+            .expect("Invalid dispatcher receiver");
         loop {
             if let Some(cmd) = dispatcher_receiver.recv().await {
                 self.handle_dispatcher_cmd(cmd).await;

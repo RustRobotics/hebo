@@ -152,9 +152,16 @@ impl ServerContext {
 
             let (system_to_dispatcher_sender, system_to_dispatcher_receiver) =
                 mpsc::channel(constants::CHANNEL_CAPACITY);
+            let (system_to_cache_sender, system_to_cache_receiver) =
+                mpsc::channel(constants::CHANNEL_CAPACITY);
+            let (cache_to_system_sender, cache_to_system_receiver) =
+                mpsc::channel(constants::CHANNEL_CAPACITY);
+
             let mut system = System::new(
                 self.config.general.sys_interval,
                 system_to_dispatcher_sender,
+                system_to_cache_sender,
+                cache_to_system_receiver,
             );
             let system_handle = runtime.spawn(async move {
                 system.run_loop().await;
@@ -165,7 +172,12 @@ impl ServerContext {
                 mpsc::channel(constants::CHANNEL_CAPACITY);
             let (dispatcher_to_cache_sender, dispatcher_to_cache_receiver) =
                 mpsc::channel(constants::CHANNEL_CAPACITY);
-            let mut cache = Cache::new(cache_to_dispatcher_sender, dispatcher_to_cache_receiver);
+            let mut cache = Cache::new(
+                cache_to_dispatcher_sender,
+                dispatcher_to_cache_receiver,
+                cache_to_system_sender,
+                system_to_cache_receiver,
+            );
             let cache_handle = runtime.spawn(async move {
                 cache.run_loop().await;
             });
@@ -179,7 +191,11 @@ impl ServerContext {
                     ))
                     .await
                 {
-                    log::error!("Failed to send listener {:?} to cache!", listener_info.1);
+                    log::error!(
+                        "Failed to send listener {:?} to cache, err: {:?}",
+                        listener_info.1,
+                        err
+                    );
                 }
             }
 

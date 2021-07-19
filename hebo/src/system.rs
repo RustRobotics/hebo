@@ -4,10 +4,10 @@
 
 use codec::{PublishPacket, QoS};
 use std::time::{self, Duration};
-use tokio::sync::mpsc;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
-use crate::commands::SystemToDispatcherCmd;
+use crate::commands::{CacheToSystemCmd, SystemToCacheCmd, SystemToDispatcherCmd};
 use crate::error::Error;
 
 const UPTIME: &str = "$SYS/uptime";
@@ -18,16 +18,27 @@ pub struct System {
     startup: time::SystemTime,
     uptime: u64,
     interval: u32,
-    sender: mpsc::Sender<SystemToDispatcherCmd>,
+    dispatcher_sender: Sender<SystemToDispatcherCmd>,
+
+    cache_sender: Sender<SystemToCacheCmd>,
+    cache_receiver: Receiver<CacheToSystemCmd>,
 }
 
 impl System {
-    pub fn new(interval: u32, sender: mpsc::Sender<SystemToDispatcherCmd>) -> Self {
+    pub fn new(
+        interval: u32,
+        dispatcher_sender: Sender<SystemToDispatcherCmd>,
+        cache_sender: Sender<SystemToCacheCmd>,
+        cache_receiver: Receiver<CacheToSystemCmd>,
+    ) -> Self {
         System {
             startup: time::SystemTime::now(),
             uptime: 0,
             interval,
-            sender,
+            dispatcher_sender,
+
+            cache_sender,
+            cache_receiver,
         }
     }
 
@@ -60,7 +71,7 @@ impl System {
     async fn send_uptime(&mut self) -> Result<(), Error> {
         let msg = format!("{}", self.uptime).into_bytes();
         let packet = PublishPacket::new(UPTIME, QoS::AtMostOnce, &msg)?;
-        self.sender
+        self.dispatcher_sender
             .send(SystemToDispatcherCmd::Publish(packet))
             .await
             .map(drop)?;
