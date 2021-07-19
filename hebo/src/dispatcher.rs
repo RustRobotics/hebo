@@ -6,8 +6,8 @@ use codec::PublishPacket;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
-    CacheToDispatcherCmd, DispatcherToCacheCmd, DispatcherToListenerCmd, ListenerToDispatcherCmd,
-    SystemToDispatcherCmd,
+    CacheToDispatcherCmd, DispatcherToCacheCmd, DispatcherToListenerCmd, ListenerId,
+    ListenerToDispatcherCmd, SystemToDispatcherCmd,
 };
 
 /// Dispatcher is a message router.
@@ -70,6 +70,9 @@ impl Dispatcher {
                 self.storage_store_packet(&packet).await;
                 self.publish_packet_to_listners(&packet).await;
             }
+            ListenerToDispatcherCmd::NewSession(listener_id, _session_id) => {
+                self.cache_on_new_session(listener_id).await;
+            }
         }
     }
 
@@ -102,6 +105,19 @@ impl Dispatcher {
         {
             log::error!(
                 "Dispatcher: Failed to send UpdatePublishPacket, err: {:?}",
+                err
+            );
+        }
+    }
+
+    async fn cache_on_new_session(&mut self, listener_id: ListenerId) {
+        if let Err(err) = self
+            .cache_sender
+            .send(DispatcherToCacheCmd::SessionAdded(listener_id, 1))
+            .await
+        {
+            log::error!(
+                "Dispatcher: Failed to send SessionAdded cmd, err: {:?}",
                 err
             );
         }

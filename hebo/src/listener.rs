@@ -17,7 +17,7 @@ use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
 use tokio_rustls::TlsAcceptor;
 
 use crate::commands::{
-    ConnectionId, DispatcherToListenerCmd, ListenerToDispatcherCmd, ListenerToSessionCmd,
+    DispatcherToListenerCmd, ListenerId, ListenerToDispatcherCmd, ListenerToSessionCmd, SessionId,
     SessionToListenerCmd,
 };
 use crate::config;
@@ -28,9 +28,9 @@ use crate::stream::Stream;
 
 #[derive(Debug)]
 pub struct Listener {
-    id: u32,
+    id: ListenerId,
     protocol: Protocol,
-    current_connection_id: ConnectionId,
+    current_session_id: SessionId,
     pipelines: Vec<Pipeline>,
     session_sender: Sender<SessionToListenerCmd>,
     session_receiver: Option<Receiver<SessionToListenerCmd>>,
@@ -67,15 +67,15 @@ impl fmt::Debug for Protocol {
 pub struct Pipeline {
     sender: Sender<ListenerToSessionCmd>,
     topics: Vec<SubscribedTopic>,
-    connection_id: ConnectionId,
+    session_id: SessionId,
 }
 
 impl Pipeline {
-    pub fn new(sender: Sender<ListenerToSessionCmd>, connection_id: ConnectionId) -> Pipeline {
+    pub fn new(sender: Sender<ListenerToSessionCmd>, session_id: SessionId) -> Pipeline {
         Pipeline {
             sender,
             topics: Vec::new(),
-            connection_id,
+            session_id,
         }
     }
 }
@@ -89,7 +89,7 @@ pub struct SubscribedTopic {
 // Initialize Listener
 impl Listener {
     fn new(
-        id: u32,
+        id: ListenerId,
         protocol: Protocol,
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
@@ -98,7 +98,7 @@ impl Listener {
         Listener {
             id,
             protocol,
-            current_connection_id: 0,
+            current_session_id: 0,
             pipelines: Vec::new(),
             session_sender,
             session_receiver: Some(session_receiver),
@@ -376,30 +376,38 @@ impl Listener {
 
     async fn new_connection(&mut self, stream: Stream) {
         let (sender, receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
-        let connection_id = self.next_connection_id();
-        let pipeline = Pipeline::new(sender, connection_id);
+        let session_id = self.next_session_id();
+        let pipeline = Pipeline::new(sender, session_id);
         self.pipelines.push(pipeline);
-        let connection = Session::new(stream, connection_id, self.session_sender.clone(), receiver);
+        let connection = Session::new(stream, session_id, self.session_sender.clone(), receiver);
         tokio::spawn(connection.run_loop());
+
+        if let Err(err) = self
+            .dispatcher_sender
+            .send(ListenerToDispatcherCmd::NewSession(self.id, session_id))
+            .await
+        {
+            log::error!("Failed to send NewSession cmd: {:?}", err);
+        }
     }
 
     async fn handle_session_cmd(&mut self, cmd: SessionToListenerCmd) {
         log::info!("Listener::handle_session_cmd()");
         match cmd {
             SessionToListenerCmd::Publish(packet) => self.on_session_publish(packet).await,
-            SessionToListenerCmd::Subscribe(connection_id, packet) => {
-                self.on_subscribe(connection_id, packet);
+            SessionToListenerCmd::Subscribe(session_id, packet) => {
+                self.on_subscribe(session_id, packet);
             }
-            SessionToListenerCmd::Unsubscribe(connection_id, packet) => {
-                self.on_unsubscribe(connection_id, packet)
+            SessionToListenerCmd::Unsubscribe(session_id, packet) => {
+                self.on_unsubscribe(session_id, packet)
             }
-            SessionToListenerCmd::Disconnect(connection_id) => {
+            SessionToListenerCmd::Disconnect(session_id) => {
                 if let Some(pos) = self
                     .pipelines
                     .iter()
-                    .position(|pipe| pipe.connection_id == connection_id)
+                    .position(|pipe| pipe.session_id == session_id)
                 {
-                    log::debug!("Remove pipeline: {}", connection_id);
+                    log::debug!("Remove pipeline: {}", session_id);
                     self.pipelines.remove(pos);
                 }
             }
@@ -413,15 +421,15 @@ impl Listener {
         }
     }
 
-    fn next_connection_id(&mut self) -> ConnectionId {
-        self.current_connection_id += 1;
-        self.current_connection_id
+    fn next_session_id(&mut self) -> SessionId {
+        self.current_session_id += 1;
+        self.current_session_id
     }
 
-    fn on_subscribe(&mut self, connection_id: ConnectionId, packet: SubscribePacket) {
+    fn on_subscribe(&mut self, session_id: SessionId, packet: SubscribePacket) {
         log::info!("Listener::on_subscribe()");
         for pipeline in self.pipelines.iter_mut() {
-            if pipeline.connection_id == connection_id {
+            if pipeline.session_id == session_id {
                 for topic in packet.topics() {
                     // TODO(Shaohua): Returns error
                     match Topic::parse(topic.topic()) {
@@ -437,10 +445,10 @@ impl Listener {
         }
     }
 
-    fn on_unsubscribe(&mut self, connection_id: ConnectionId, packet: UnsubscribePacket) {
+    fn on_unsubscribe(&mut self, session_id: SessionId, packet: UnsubscribePacket) {
         log::info!("Listener::on_unsubscribe()");
         for pipeline in self.pipelines.iter_mut() {
-            if pipeline.connection_id == connection_id {
+            if pipeline.session_id == session_id {
                 pipeline
                     .topics
                     .retain(|ref topic| !packet.topics().any(|t| t == topic.pattern.topic()));
