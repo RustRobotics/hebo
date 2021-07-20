@@ -2,7 +2,9 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-use codec::{ConnectPacket, PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
+use codec::{
+    ConnectPacket, ConnectReturnCode, PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket,
+};
 use futures_util::StreamExt;
 use std::fmt;
 use std::fs::{self, File};
@@ -394,7 +396,9 @@ impl Listener {
     async fn handle_session_cmd(&mut self, cmd: SessionToListenerCmd) {
         log::info!("Listener::handle_session_cmd()");
         match cmd {
-            SessionToListenerCmd::Connect(packet) => self.on_session_connect(packet).await,
+            SessionToListenerCmd::Connect(session_id, packet) => {
+                self.on_session_connect(session_id, packet).await
+            }
             SessionToListenerCmd::Publish(packet) => self.on_session_publish(packet).await,
             SessionToListenerCmd::Subscribe(session_id, packet) => {
                 self.on_session_subscribe(session_id, packet).await
@@ -408,20 +412,26 @@ impl Listener {
         }
     }
 
-    async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
-        log::info!("Listener::handle_dispatcher_cmd()");
-        match cmd {
-            DispatcherToListenerCmd::Publish(packet) => self.publish_packet(packet).await,
-        }
-    }
-
     fn next_session_id(&mut self) -> SessionId {
         self.current_session_id += 1;
         self.current_session_id
     }
 
-    async fn on_session_connect(&mut self, packet: ConnectPacket) {
+    async fn on_session_connect(&mut self, session_id: SessionId, packet: ConnectPacket) {
         log::info!("Listener::on_session_connect()");
+        // TODO(Shaohua): Check auth
+        let cmd = ListenerToSessionCmd::ConnectAck(ConnectReturnCode::Accepted);
+        for pipeline in self.pipelines.iter_mut() {
+            if pipeline.session_id == session_id {
+                if let Err(err) = pipeline.sender.send(cmd).await {
+                    log::warn!(
+                        "Failed to send connect ackpacket from listener to session: {:?}",
+                        err
+                    );
+                }
+                break;
+            }
+        }
     }
 
     async fn on_session_disconnect(&mut self, session_id: SessionId) {
@@ -491,6 +501,13 @@ impl Listener {
                 "Failed to send publish packet from listener to dispatcher : {:?}",
                 err
             );
+        }
+    }
+
+    async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
+        log::info!("Listener::handle_dispatcher_cmd()");
+        match cmd {
+            DispatcherToListenerCmd::Publish(packet) => self.publish_packet(packet).await,
         }
     }
 

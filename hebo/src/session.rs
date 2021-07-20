@@ -184,14 +184,10 @@ impl Session {
 
         self.status = Status::Connecting;
         self.sender
-            .send(SessionToListenerCmd::Connect(packet))
+            .send(SessionToListenerCmd::Connect(self.id, packet))
             .await
             .map(drop)?;
         Ok(())
-
-        //let packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
-        //self.status = Status::Connected;
-        //self.send(packet).await.map(drop)
     }
 
     async fn on_client_ping(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -260,9 +256,18 @@ impl Session {
 
     async fn handle_listener_packet(&mut self, cmd: ListenerToSessionCmd) -> Result<(), Error> {
         match cmd {
+            ListenerToSessionCmd::ConnectAck(accept) => {
+                self.on_listener_connect_ack(accept).await?
+            }
             ListenerToSessionCmd::Publish(packet) => self.on_listener_publish(packet).await?,
         }
         Ok(())
+    }
+
+    async fn on_listener_connect_ack(&mut self, accept: ConnectReturnCode) -> Result<(), Error> {
+        let packet = ConnectAckPacket::new(true, accept);
+        self.status = Status::Connected;
+        self.send(packet).await.map(drop)
     }
 
     async fn on_listener_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
