@@ -193,12 +193,13 @@ impl Session {
         let mut ba = ByteArray::new(buf);
         let packet = SubscribePacket::decode(&mut ba)?;
 
-        // Send to listener, which will check auth.
+        // Send subscribe packet to listener, which will check auth.
         if let Err(err) = self
             .sender
             .send(SessionToListenerCmd::Subscribe(self.id, packet.clone()))
             .await
         {
+            // Send subscribe ack (failed) to client.
             log::error!("Failed to send subscribe command to server: {:?}", err);
             let ack = SubscribeAck::Failed;
 

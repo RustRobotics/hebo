@@ -3,7 +3,8 @@
 // in the LICENSE file.
 
 use codec::{
-    ConnectPacket, ConnectReturnCode, PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket,
+    ConnectPacket, ConnectReturnCode, PublishPacket, QoS, SubscribeAck, SubscribeAckPacket,
+    SubscribePacket, Topic, UnsubscribePacket,
 };
 use futures_util::StreamExt;
 use std::collections::HashMap;
@@ -402,7 +403,7 @@ impl Listener {
             }
             SessionToListenerCmd::Publish(packet) => self.on_session_publish(packet).await,
             SessionToListenerCmd::Subscribe(session_id, packet) => {
-                self.on_session_subscribe(session_id, packet).await
+                self.on_session_subscribe(session_id, packet).await.unwrap()
             }
             SessionToListenerCmd::Unsubscribe(session_id, packet) => {
                 self.on_session_unsubscribe(session_id, packet).await
@@ -449,26 +450,46 @@ impl Listener {
         }
     }
 
-    async fn on_session_subscribe(&mut self, session_id: SessionId, packet: SubscribePacket) {
+    async fn on_session_subscribe(
+        &mut self,
+        session_id: SessionId,
+        packet: SubscribePacket,
+    ) -> Result<(), Error> {
         log::info!("Listener::on_session_subscribe()");
+
+        // TODO(Shaohua): Check auth.
+
         if let Some(pipeline) = self.pipelines.get_mut(&session_id) {
-            if pipeline.session_id == session_id {
-                for topic in packet.topics() {
-                    // TODO(Shaohua): Returns error
-                    match Topic::parse(topic.topic()) {
-                        Ok(pattern) => pipeline.topics.push(SubscribedTopic {
+            let mut ack_vec = vec![];
+            for topic in packet.topics() {
+                // Update sub tree
+                match Topic::parse(topic.topic()) {
+                    Ok(pattern) => {
+                        ack_vec.push(SubscribeAck::QoS(topic.qos()));
+                        pipeline.topics.push(SubscribedTopic {
                             pattern,
                             qos: topic.qos(),
-                        }),
-                        Err(err) => log::error!("Invalid sub topic: {:?}, err: {:?}", topic, err),
+                        });
+                    }
+                    Err(err) => {
+                        log::error!("Invalid sub topic: {:?}, err: {:?}", topic, err);
+                        ack_vec.push(SubscribeAck::Failed);
                     }
                 }
             }
+
+            // Send subscribe ack to session.
+            let ack_packet = SubscribeAckPacket::with_vec(ack_vec, packet.packet_id());
+            pipeline
+                .sender
+                .send(ListenerToSessionCmd::SubscribeAck(ack_packet))
+                .await?;
         } else {
             log::error!("Failed to find pipeline with id: {}", session_id);
         }
 
         // TODO(Shaohua): Send notify to dispatcher.
+        Ok(())
     }
 
     async fn on_session_unsubscribe(&mut self, session_id: SessionId, packet: UnsubscribePacket) {
