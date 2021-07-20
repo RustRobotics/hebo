@@ -368,7 +368,9 @@ impl Listener {
                 },
 
                 Some(cmd) = session_receiver.recv() => {
-                    self.handle_session_cmd(cmd).await;
+                    if let Err(err) = self.handle_session_cmd(cmd).await {
+                        log::error!("handle session cmd failed: {:?}", err);
+                    }
                 },
 
                 Some(cmd) = dispatcher_receiver.recv() => {
@@ -395,7 +397,7 @@ impl Listener {
         }
     }
 
-    async fn handle_session_cmd(&mut self, cmd: SessionToListenerCmd) {
+    async fn handle_session_cmd(&mut self, cmd: SessionToListenerCmd) -> Result<(), Error> {
         log::info!("Listener::handle_session_cmd()");
         match cmd {
             SessionToListenerCmd::Connect(session_id, packet) => {
@@ -403,7 +405,7 @@ impl Listener {
             }
             SessionToListenerCmd::Publish(packet) => self.on_session_publish(packet).await,
             SessionToListenerCmd::Subscribe(session_id, packet) => {
-                self.on_session_subscribe(session_id, packet).await.unwrap()
+                self.on_session_subscribe(session_id, packet).await
             }
             SessionToListenerCmd::Unsubscribe(session_id, packet) => {
                 self.on_session_unsubscribe(session_id, packet).await
@@ -419,37 +421,35 @@ impl Listener {
         self.current_session_id
     }
 
-    async fn on_session_connect(&mut self, session_id: SessionId, packet: ConnectPacket) {
+    async fn on_session_connect(
+        &mut self,
+        session_id: SessionId,
+        packet: ConnectPacket,
+    ) -> Result<(), Error> {
         log::info!("Listener::on_session_connect()");
         // TODO(Shaohua): Check auth
 
         let ack_packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
         let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
         if let Some(pipeline) = self.pipelines.get(&session_id) {
-            if let Err(err) = pipeline.sender.send(cmd).await {
-                log::warn!(
-                    "Failed to send connect ackpacket from listener to session: {:?}",
-                    err
-                );
-            }
+            pipeline.sender.send(cmd).await.map_err(|err| err.into())
         } else {
-            log::error!("Failed to find pipeline with id: {}", session_id);
+            Err(Error::session_error(session_id))
         }
     }
 
-    async fn on_session_disconnect(&mut self, session_id: SessionId) {
+    async fn on_session_disconnect(&mut self, session_id: SessionId) -> Result<(), Error> {
         log::info!("Listener::on_session_disconnect()");
+        // Delete session from pipeline
         if self.pipelines.remove(&session_id).is_none() {
             log::error!("Failed to remove pipeline with session id: {}", session_id);
-            return;
+            return Err(Error::session_error(session_id));
         }
-        if let Err(err) = self
-            .dispatcher_sender
+
+        self.dispatcher_sender
             .send(ListenerToDispatcherCmd::SessionRemoved(self.id))
             .await
-        {
-            log::error!("Failed to send session removed cmd: {:?}", err);
-        }
+            .map_err(|err| err.into())
     }
 
     async fn on_session_subscribe(
@@ -487,15 +487,19 @@ impl Listener {
                 .send(ListenerToSessionCmd::SubscribeAck(ack_packet))
                 .await?;
         } else {
-            log::error!("Failed to find pipeline with id: {}", session_id);
+            return Err(Error::session_error(session_id));
         }
 
         // TODO(Shaohua): Send notify to dispatcher.
         Ok(())
     }
 
-    async fn on_session_unsubscribe(&mut self, session_id: SessionId, packet: UnsubscribePacket) {
-        log::info!("Listener::on_session_unsubscribe()");
+    async fn on_session_unsubscribe(
+        &mut self,
+        session_id: SessionId,
+        packet: UnsubscribePacket,
+    ) -> Result<(), Error> {
+        // Remove topic from sub tree.
         for (_, pipeline) in self.pipelines.iter_mut() {
             if pipeline.session_id == session_id {
                 pipeline
@@ -504,38 +508,33 @@ impl Listener {
             }
             break;
         }
-        if let Err(err) = self
-            .dispatcher_sender
+
+        // Send subRemoved to dispatcher.
+        self.dispatcher_sender
             .send(ListenerToDispatcherCmd::SubscriptionsRemoved(self.id))
             .await
-        {
-            log::error!("Failed to send SubscriptionsRemoved cmd: {:?}", err);
-        }
+            .map_err(|err| err.into())
     }
 
-    async fn on_session_publish(&mut self, packet: PublishPacket) {
-        log::info!("Listener::on_session_publish()");
+    async fn on_session_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
         let cmd = ListenerToDispatcherCmd::Publish(packet.clone());
-        if let Err(err) = self.dispatcher_sender.send(cmd).await {
-            log::error!(
-                "Failed to send publish packet from listener to dispatcher : {:?}",
-                err
-            );
-        }
+        self.dispatcher_sender
+            .send(cmd)
+            .await
+            .map_err(|err| err.into())
     }
 
     async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
-        log::info!("Listener::handle_dispatcher_cmd()");
         match cmd {
             DispatcherToListenerCmd::Publish(packet) => self.publish_packet(packet).await,
         }
     }
 
     async fn publish_packet(&mut self, packet: PublishPacket) {
-        log::info!("Listener::publish_packet()");
         let cmd = ListenerToSessionCmd::Publish(packet.clone());
         // TODO(Shaohua): Replace with a trie tree and a hash table.
 
+        // TODO(Shaohua): Handle errors
         for (_, pipeline) in self.pipelines.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {
                 if let Err(err) = pipeline.sender.send(cmd.clone()).await {

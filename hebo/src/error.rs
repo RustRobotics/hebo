@@ -8,7 +8,10 @@ use std::io;
 use tokio::sync::mpsc;
 use tokio_tungstenite::tungstenite;
 
-use crate::commands::{ListenerToSessionCmd, SessionToListenerCmd, SystemToDispatcherCmd};
+use crate::commands::{
+    ListenerToDispatcherCmd, ListenerToSessionCmd, SessionId, SessionToListenerCmd,
+    SystemToDispatcherCmd,
+};
 
 /// Represent the types of errors.
 #[derive(Clone, Debug)]
@@ -34,6 +37,9 @@ pub enum ErrorKind {
     /// Invalid pid.
     PidError,
 
+    /// Session with id not found in pipelines.
+    SessionNotFound,
+
     /// mpsc channel error.
     ChannelError,
 }
@@ -57,6 +63,15 @@ impl Error {
 
     pub fn from_string(kind: ErrorKind, message: String) -> Self {
         Error { kind, message }
+    }
+}
+
+impl Error {
+    pub fn session_error(session_id: SessionId) -> Self {
+        Error::from_string(
+            ErrorKind::SessionNotFound,
+            format!("Session with id {} not found", session_id),
+        )
     }
 }
 
@@ -158,6 +173,15 @@ impl From<mpsc::error::SendError<ListenerToSessionCmd>> for Error {
         Error::from_string(
             ErrorKind::ChannelError,
             format!("SessionToListenerCmd channel error: {}", err),
+        )
+    }
+}
+
+impl From<mpsc::error::SendError<ListenerToDispatcherCmd>> for Error {
+    fn from(err: mpsc::error::SendError<ListenerToDispatcherCmd>) -> Self {
+        Error::from_string(
+            ErrorKind::ChannelError,
+            format!("SystemToDispatcherCmd channel error: {}", err),
         )
     }
 }
