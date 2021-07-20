@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use codec::{
-    ConnectPacket, ConnectReturnCode, PublishPacket, QoS, SubscribeAck, SubscribeAckPacket,
-    SubscribePacket, Topic, UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, QoS, SubscribeAck,
+    SubscribeAckPacket, SubscribePacket, Topic, UnsubscribePacket,
 };
 use futures_util::StreamExt;
 use std::collections::HashMap;
@@ -422,7 +422,9 @@ impl Listener {
     async fn on_session_connect(&mut self, session_id: SessionId, packet: ConnectPacket) {
         log::info!("Listener::on_session_connect()");
         // TODO(Shaohua): Check auth
-        let cmd = ListenerToSessionCmd::ConnectAck(ConnectReturnCode::Accepted);
+
+        let ack_packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
+        let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
         if let Some(pipeline) = self.pipelines.get(&session_id) {
             if let Err(err) = pipeline.sender.send(cmd).await {
                 log::warn!(

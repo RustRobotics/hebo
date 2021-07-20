@@ -239,9 +239,13 @@ impl Session {
 
     async fn handle_listener_packet(&mut self, cmd: ListenerToSessionCmd) -> Result<(), Error> {
         match cmd {
-            ListenerToSessionCmd::ConnectAck(accept) => {
-                let packet = ConnectAckPacket::new(true, accept);
-                self.status = Status::Connected;
+            ListenerToSessionCmd::ConnectAck(packet) => {
+                self.status = if packet.return_code() == ConnectReturnCode::Accepted {
+                    Status::Connected
+                } else {
+                    Status::Disconnected
+                };
+
                 self.send(packet).await
             }
             ListenerToSessionCmd::Publish(packet) => self.send(packet).await,

@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use codec::{
-    ConnectPacket, ConnectReturnCode, PublishPacket, SubscribeAckPacket, SubscribePacket,
+    ConnectAckPacket, ConnectPacket, PublishPacket, SubscribeAckPacket, SubscribePacket,
     UnsubscribePacket,
 };
 use std::sync::Arc;
@@ -16,7 +16,7 @@ pub type SessionId = u64;
 #[derive(Clone, Debug)]
 pub enum ListenerToSessionCmd {
     /// Accepted or not.
-    ConnectAck(ConnectReturnCode),
+    ConnectAck(ConnectAckPacket),
 
     Publish(PublishPacket),
 
