@@ -4,8 +4,9 @@
 
 use codec::{
     ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, DisconnectPacket,
-    EncodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishPacket,
-    SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
+    EncodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket,
+    PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
+    UnsubscribePacket,
 };
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -121,50 +122,21 @@ impl Session {
         let fixed_header = FixedHeader::decode(&mut ba)?;
 
         match fixed_header.packet_type {
-            PacketType::Connect => {
-                if let Err(err) = self.on_client_connect(&buf).await {
-                    log::warn!("connect failed! {:?}", err);
-                    return Err(err);
-                }
-            }
-            PacketType::PingRequest => {
-                if let Err(err) = self.on_client_ping(&buf).await {
-                    log::warn!("ping failed! {:?}", err);
-                    return Err(err);
-                }
-            }
-            PacketType::Publish { .. } => {
-                if let Err(err) = self.on_client_publish(&buf).await {
-                    log::warn!("publish failed! {:?}", err);
-                    return Err(err);
-                }
-            }
+            PacketType::Connect => self.on_client_connect(&buf).await,
+            PacketType::PingRequest => self.on_client_ping(&buf).await,
+            PacketType::Publish { .. } => self.on_client_publish(&buf).await,
             PacketType::PublishRelease { .. } => {
                 // Do nothing currently
+                Ok(())
             }
-            PacketType::Subscribe => {
-                if let Err(err) = self.on_client_subscribe(&buf).await {
-                    log::warn!("subscribe failed! {:?}", err);
-                    return Err(err);
-                }
-            }
-            PacketType::Unsubscribe => {
-                if let Err(err) = self.on_client_unsubscribe(&buf).await {
-                    log::warn!("unsubscribe failed! {:?}", err);
-                    return Err(err);
-                }
-            }
-            PacketType::Disconnect => {
-                if let Err(err) = self.on_client_disconnect(&buf).await {
-                    log::warn!("disconnect failed! {:?}", err);
-                    return Err(err);
-                }
-            }
+            PacketType::Subscribe => self.on_client_subscribe(&buf).await,
+            PacketType::Unsubscribe => self.on_client_unsubscribe(&buf).await,
+            PacketType::Disconnect => self.on_client_disconnect(&buf).await,
             t => {
                 log::warn!("Unhandled msg: {:?}", t);
+                Ok(())
             }
         }
-        return Ok(());
     }
 
     async fn on_client_connect(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -182,6 +154,7 @@ impl Session {
             return self.send(packet).await.map(drop);
         }
 
+        // Send the connect packet to listener.
         self.status = Status::Connecting;
         self.sender
             .send(SessionToListenerCmd::Connect(self.id, packet))
@@ -191,8 +164,11 @@ impl Session {
     }
 
     async fn on_client_ping(&mut self, buf: &[u8]) -> Result<(), Error> {
+        // TODO(Shaohua): Update last_message_timestamp.
         let mut ba = ByteArray::new(buf);
         let _packet = PingRequestPacket::decode(&mut ba)?;
+
+        // Send ping resp packet to client.
         let ping_resp_packet = PingResponsePacket::new();
         self.send(ping_resp_packet).await
     }
@@ -200,6 +176,12 @@ impl Session {
     async fn on_client_publish(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
+
+        // Send publish ack packet to client.
+        let ack_packet = PublishAckPacket::new(packet.packet_id());
+        self.send(ack_packet).await?;
+
+        // Send the publish packet to listener.
         self.sender
             .send(SessionToListenerCmd::Publish(packet))
             .await
