@@ -2,7 +2,7 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-use codec::{PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
+use codec::{ConnectPacket, PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket};
 use futures_util::StreamExt;
 use std::fmt;
 use std::fs::{self, File};
@@ -394,36 +394,16 @@ impl Listener {
     async fn handle_session_cmd(&mut self, cmd: SessionToListenerCmd) {
         log::info!("Listener::handle_session_cmd()");
         match cmd {
+            SessionToListenerCmd::Connect(packet) => self.on_session_connect(packet).await,
             SessionToListenerCmd::Publish(packet) => self.on_session_publish(packet).await,
             SessionToListenerCmd::Subscribe(session_id, packet) => {
-                self.on_subscribe(session_id, packet);
+                self.on_session_subscribe(session_id, packet).await
             }
             SessionToListenerCmd::Unsubscribe(session_id, packet) => {
-                self.on_unsubscribe(session_id, packet);
-                if let Err(err) = self
-                    .dispatcher_sender
-                    .send(ListenerToDispatcherCmd::SubscriptionsRemoved(self.id))
-                    .await
-                {
-                    log::error!("Failed to send SubscriptionsRemoved cmd: {:?}", err);
-                }
+                self.on_session_unsubscribe(session_id, packet).await
             }
             SessionToListenerCmd::Disconnect(session_id) => {
-                if let Some(pos) = self
-                    .pipelines
-                    .iter()
-                    .position(|pipe| pipe.session_id == session_id)
-                {
-                    log::debug!("Remove pipeline: {}", session_id);
-                    self.pipelines.remove(pos);
-                    if let Err(err) = self
-                        .dispatcher_sender
-                        .send(ListenerToDispatcherCmd::SessionRemoved(self.id))
-                        .await
-                    {
-                        log::error!("Failed to send session removed cmd: {:?}", err);
-                    }
-                }
+                self.on_session_disconnect(session_id).await
             }
         }
     }
@@ -440,8 +420,31 @@ impl Listener {
         self.current_session_id
     }
 
-    fn on_subscribe(&mut self, session_id: SessionId, packet: SubscribePacket) {
-        log::info!("Listener::on_subscribe()");
+    async fn on_session_connect(&mut self, packet: ConnectPacket) {
+        log::info!("Listener::on_session_connect()");
+    }
+
+    async fn on_session_disconnect(&mut self, session_id: SessionId) {
+        log::info!("Listener::on_session_disconnect()");
+        if let Some(pos) = self
+            .pipelines
+            .iter()
+            .position(|pipe| pipe.session_id == session_id)
+        {
+            log::debug!("Remove pipeline: {}", session_id);
+            self.pipelines.remove(pos);
+            if let Err(err) = self
+                .dispatcher_sender
+                .send(ListenerToDispatcherCmd::SessionRemoved(self.id))
+                .await
+            {
+                log::error!("Failed to send session removed cmd: {:?}", err);
+            }
+        }
+    }
+
+    async fn on_session_subscribe(&mut self, session_id: SessionId, packet: SubscribePacket) {
+        log::info!("Listener::on_session_subscribe()");
         for pipeline in self.pipelines.iter_mut() {
             if pipeline.session_id == session_id {
                 for topic in packet.topics() {
@@ -457,10 +460,12 @@ impl Listener {
                 break;
             }
         }
+
+        // TODO(Shaohua): Send notify to dispatcher.
     }
 
-    fn on_unsubscribe(&mut self, session_id: SessionId, packet: UnsubscribePacket) {
-        log::info!("Listener::on_unsubscribe()");
+    async fn on_session_unsubscribe(&mut self, session_id: SessionId, packet: UnsubscribePacket) {
+        log::info!("Listener::on_session_unsubscribe()");
         for pipeline in self.pipelines.iter_mut() {
             if pipeline.session_id == session_id {
                 pipeline
@@ -468,6 +473,13 @@ impl Listener {
                     .retain(|ref topic| !packet.topics().any(|t| t == topic.pattern.topic()));
             }
             break;
+        }
+        if let Err(err) = self
+            .dispatcher_sender
+            .send(ListenerToDispatcherCmd::SubscriptionsRemoved(self.id))
+            .await
+        {
+            log::error!("Failed to send SubscriptionsRemoved cmd: {:?}", err);
         }
     }
 

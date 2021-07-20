@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{PublishPacket, SubscribePacket, UnsubscribePacket};
+use codec::{ConnectPacket, PublishPacket, SubscribePacket, UnsubscribePacket};
 use std::sync::Arc;
 
 use crate::cache_types::{ListenersVectorCache, SystemCache};
@@ -17,6 +17,7 @@ pub enum ListenerToSessionCmd {
 
 #[derive(Debug)]
 pub enum SessionToListenerCmd {
+    Connect(ConnectPacket),
     Publish(PublishPacket),
     Subscribe(SessionId, SubscribePacket),
     Unsubscribe(SessionId, UnsubscribePacket),

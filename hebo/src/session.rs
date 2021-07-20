@@ -3,19 +3,19 @@
 // in the LICENSE file.
 
 use codec::{
-    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, EncodePacket,
-    FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishPacket, SubscribeAck,
-    SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
+    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, DisconnectPacket,
+    EncodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishPacket,
+    SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
 };
 use std::time::Duration;
-use tokio::sync::mpsc;
+use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
 use crate::commands::{ListenerToSessionCmd, SessionId, SessionToListenerCmd};
 use crate::error::Error;
 use crate::stream::Stream;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Status {
     Invalid,
     Connecting,
@@ -27,7 +27,6 @@ enum Status {
 /// ConnectionContext represents a client connection.
 /// All the status of this client is maintained in this struct.
 ///
-// TODO(Shaohua): Handle Session State
 // TODO(Shaohua): Handle Clean Session operation
 // TODO(Shaohua): Handle Will Message
 // TODO(Shaohua): Disconnect the network if ClientId is inuse
@@ -38,8 +37,8 @@ enum Status {
 pub struct Session {
     id: SessionId,
     stream: Stream,
-    sender: mpsc::Sender<SessionToListenerCmd>,
-    receiver: mpsc::Receiver<ListenerToSessionCmd>,
+    sender: Sender<SessionToListenerCmd>,
+    receiver: Receiver<ListenerToSessionCmd>,
     status: Status,
     client_id: String,
     // TODO(Shaohua): Add session flag
@@ -50,8 +49,8 @@ impl Session {
     pub fn new(
         id: SessionId,
         stream: Stream,
-        sender: mpsc::Sender<SessionToListenerCmd>,
-        receiver: mpsc::Receiver<ListenerToSessionCmd>,
+        sender: Sender<SessionToListenerCmd>,
+        receiver: Receiver<ListenerToSessionCmd>,
     ) -> Session {
         Session {
             id,
@@ -93,6 +92,7 @@ impl Session {
                 else => break,
             }
         }
+
         if let Err(err) = self
             .sender
             .send(SessionToListenerCmd::Disconnect(self.id))
@@ -178,11 +178,16 @@ impl Session {
         // If this client is already connected, send disconnect packet.
         if self.status == Status::Connected || self.status == Status::Connecting {
             let packet = DisconnectPacket::new();
-            self.status == Status::Disconnecting;
+            self.status = Status::Disconnecting;
             return self.send(packet).await.map(drop);
         }
 
         self.status = Status::Connecting;
+        self.sender
+            .send(SessionToListenerCmd::Connect(packet))
+            .await
+            .map(drop)?;
+        Ok(())
 
         //let packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
         //self.status = Status::Connected;

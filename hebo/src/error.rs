@@ -8,7 +8,7 @@ use std::io;
 use tokio::sync::mpsc;
 use tokio_tungstenite::tungstenite;
 
-use crate::commands::{SessionToListenerCmd, SystemToDispatcherCmd};
+use crate::commands::{ListenerToSessionCmd, SessionToListenerCmd, SystemToDispatcherCmd};
 
 /// Represent the types of errors.
 #[derive(Clone, Debug)]
@@ -149,6 +149,15 @@ impl From<mpsc::error::SendError<SystemToDispatcherCmd>> for Error {
         Error::from_string(
             ErrorKind::ChannelError,
             format!("SystemToDispatcherCmd channel error: {}", err),
+        )
+    }
+}
+
+impl From<mpsc::error::SendError<ListenerToSessionCmd>> for Error {
+    fn from(err: mpsc::error::SendError<ListenerToSessionCmd>) -> Self {
+        Error::from_string(
+            ErrorKind::ChannelError,
+            format!("SessionToListenerCmd channel error: {}", err),
         )
     }
 }
