@@ -18,7 +18,9 @@ use crate::stream::Stream;
 #[derive(Debug)]
 enum Status {
     Invalid,
+    Connecting,
     Connected,
+    Disconnecting,
     Disconnected,
 }
 
@@ -169,12 +171,22 @@ impl Session {
         let mut ba = ByteArray::new(buf);
         let packet = ConnectPacket::decode(&mut ba)?;
         self.client_id = packet.client_id().to_string();
+
         // TODO(Shaohua): Handle keep alive
-        // TODO(Shaohua): Check connection status first.
-        // TODO(Shaohua): If this client is already connected, send disconnect packet.
-        let packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
-        self.status = Status::Connected;
-        self.send(packet).await.map(drop)
+
+        // Check connection status first.
+        // If this client is already connected, send disconnect packet.
+        if self.status == Status::Connected || self.status == Status::Connecting {
+            let packet = DisconnectPacket::new();
+            self.status == Status::Disconnecting;
+            return self.send(packet).await.map(drop);
+        }
+
+        self.status = Status::Connecting;
+
+        //let packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
+        //self.status = Status::Connected;
+        //self.send(packet).await.map(drop)
     }
 
     async fn on_client_ping(&mut self, buf: &[u8]) -> Result<(), Error> {
