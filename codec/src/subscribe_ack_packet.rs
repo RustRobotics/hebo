@@ -62,6 +62,16 @@ impl SubscribeAckPacket {
         }
     }
 
+    pub fn with_vec(
+        acknowledgements: Vec<SubscribeAck>,
+        packet_id: PacketId,
+    ) -> SubscribeAckPacket {
+        SubscribeAckPacket {
+            packet_id,
+            acknowledgements,
+        }
+    }
+
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
     }
