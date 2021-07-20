@@ -240,20 +240,12 @@ impl Session {
     async fn handle_listener_packet(&mut self, cmd: ListenerToSessionCmd) -> Result<(), Error> {
         match cmd {
             ListenerToSessionCmd::ConnectAck(accept) => {
-                self.on_listener_connect_ack(accept).await?
+                let packet = ConnectAckPacket::new(true, accept);
+                self.status = Status::Connected;
+                self.send(packet).await
             }
-            ListenerToSessionCmd::Publish(packet) => self.on_listener_publish(packet).await?,
+            ListenerToSessionCmd::Publish(packet) => self.send(packet).await,
+            ListenerToSessionCmd::SubscribeAck(packet) => self.send(packet).await,
         }
-        Ok(())
-    }
-
-    async fn on_listener_connect_ack(&mut self, accept: ConnectReturnCode) -> Result<(), Error> {
-        let packet = ConnectAckPacket::new(true, accept);
-        self.status = Status::Connected;
-        self.send(packet).await.map(drop)
-    }
-
-    async fn on_listener_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
-        self.send(packet).await
     }
 }
