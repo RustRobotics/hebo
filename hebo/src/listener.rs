@@ -6,6 +6,7 @@ use codec::{
     ConnectPacket, ConnectReturnCode, PublishPacket, QoS, SubscribePacket, Topic, UnsubscribePacket,
 };
 use futures_util::StreamExt;
+use std::collections::HashMap;
 use std::fmt;
 use std::fs::{self, File};
 use std::io::BufReader;
@@ -33,7 +34,7 @@ pub struct Listener {
     id: ListenerId,
     protocol: Protocol,
     current_session_id: SessionId,
-    pipelines: Vec<Pipeline>,
+    pipelines: HashMap<SessionId, Pipeline>,
     session_sender: Sender<SessionToListenerCmd>,
     session_receiver: Option<Receiver<SessionToListenerCmd>>,
 
@@ -101,7 +102,7 @@ impl Listener {
             id,
             protocol,
             current_session_id: 0,
-            pipelines: Vec::new(),
+            pipelines: HashMap::new(),
             session_sender,
             session_receiver: Some(session_receiver),
 
@@ -380,7 +381,7 @@ impl Listener {
         let (sender, receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
         let session_id = self.next_session_id();
         let pipeline = Pipeline::new(sender, session_id);
-        self.pipelines.push(pipeline);
+        self.pipelines.insert(session_id, pipeline);
         let connection = Session::new(session_id, stream, self.session_sender.clone(), receiver);
         tokio::spawn(connection.run_loop());
 
@@ -421,41 +422,36 @@ impl Listener {
         log::info!("Listener::on_session_connect()");
         // TODO(Shaohua): Check auth
         let cmd = ListenerToSessionCmd::ConnectAck(ConnectReturnCode::Accepted);
-        for pipeline in self.pipelines.iter_mut() {
-            if pipeline.session_id == session_id {
-                if let Err(err) = pipeline.sender.send(cmd).await {
-                    log::warn!(
-                        "Failed to send connect ackpacket from listener to session: {:?}",
-                        err
-                    );
-                }
-                break;
+        if let Some(pipeline) = self.pipelines.get(&session_id) {
+            if let Err(err) = pipeline.sender.send(cmd).await {
+                log::warn!(
+                    "Failed to send connect ackpacket from listener to session: {:?}",
+                    err
+                );
             }
+        } else {
+            log::error!("Failed to find pipeline with id: {}", session_id);
         }
     }
 
     async fn on_session_disconnect(&mut self, session_id: SessionId) {
         log::info!("Listener::on_session_disconnect()");
-        if let Some(pos) = self
-            .pipelines
-            .iter()
-            .position(|pipe| pipe.session_id == session_id)
+        if self.pipelines.remove(&session_id).is_none() {
+            log::error!("Failed to remove pipeline with session id: {}", session_id);
+            return;
+        }
+        if let Err(err) = self
+            .dispatcher_sender
+            .send(ListenerToDispatcherCmd::SessionRemoved(self.id))
+            .await
         {
-            log::debug!("Remove pipeline: {}", session_id);
-            self.pipelines.remove(pos);
-            if let Err(err) = self
-                .dispatcher_sender
-                .send(ListenerToDispatcherCmd::SessionRemoved(self.id))
-                .await
-            {
-                log::error!("Failed to send session removed cmd: {:?}", err);
-            }
+            log::error!("Failed to send session removed cmd: {:?}", err);
         }
     }
 
     async fn on_session_subscribe(&mut self, session_id: SessionId, packet: SubscribePacket) {
         log::info!("Listener::on_session_subscribe()");
-        for pipeline in self.pipelines.iter_mut() {
+        if let Some(pipeline) = self.pipelines.get_mut(&session_id) {
             if pipeline.session_id == session_id {
                 for topic in packet.topics() {
                     // TODO(Shaohua): Returns error
@@ -467,8 +463,9 @@ impl Listener {
                         Err(err) => log::error!("Invalid sub topic: {:?}, err: {:?}", topic, err),
                     }
                 }
-                break;
             }
+        } else {
+            log::error!("Failed to find pipeline with id: {}", session_id);
         }
 
         // TODO(Shaohua): Send notify to dispatcher.
@@ -476,7 +473,7 @@ impl Listener {
 
     async fn on_session_unsubscribe(&mut self, session_id: SessionId, packet: UnsubscribePacket) {
         log::info!("Listener::on_session_unsubscribe()");
-        for pipeline in self.pipelines.iter_mut() {
+        for (_, pipeline) in self.pipelines.iter_mut() {
             if pipeline.session_id == session_id {
                 pipeline
                     .topics
@@ -515,7 +512,8 @@ impl Listener {
         log::info!("Listener::publish_packet()");
         let cmd = ListenerToSessionCmd::Publish(packet.clone());
         // TODO(Shaohua): Replace with a trie tree and a hash table.
-        for pipeline in self.pipelines.iter_mut() {
+
+        for (_, pipeline) in self.pipelines.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {
                 if let Err(err) = pipeline.sender.send(cmd.clone()).await {
                     log::warn!(
