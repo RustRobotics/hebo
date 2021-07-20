@@ -120,20 +120,20 @@ impl Session {
 
         match fixed_header.packet_type {
             PacketType::Connect => {
-                if let Err(err) = self.connect(&buf).await {
-                    log::warn!("connect() failed! {:?}", err);
+                if let Err(err) = self.on_client_connect(&buf).await {
+                    log::warn!("connect failed! {:?}", err);
                     return Err(err);
                 }
             }
             PacketType::PingRequest => {
-                if let Err(err) = self.ping(&buf).await {
-                    log::warn!("ping() failed! {:?}", err);
+                if let Err(err) = self.on_client_ping(&buf).await {
+                    log::warn!("ping failed! {:?}", err);
                     return Err(err);
                 }
             }
             PacketType::Publish { .. } => {
-                if let Err(err) = self.publish(&buf).await {
-                    log::warn!("publish() failed! {:?}", err);
+                if let Err(err) = self.on_client_publish(&buf).await {
+                    log::warn!("publish failed! {:?}", err);
                     return Err(err);
                 }
             }
@@ -141,20 +141,20 @@ impl Session {
                 // Do nothing currently
             }
             PacketType::Subscribe => {
-                if let Err(err) = self.subscribe(&buf).await {
-                    log::warn!("subscribe() failed! {:?}", err);
+                if let Err(err) = self.on_client_subscribe(&buf).await {
+                    log::warn!("subscribe failed! {:?}", err);
                     return Err(err);
                 }
             }
             PacketType::Unsubscribe => {
-                if let Err(err) = self.unsubscribe(&buf).await {
-                    log::warn!("unsubscribe() failed! {:?}", err);
+                if let Err(err) = self.on_client_unsubscribe(&buf).await {
+                    log::warn!("unsubscribe failed! {:?}", err);
                     return Err(err);
                 }
             }
             PacketType::Disconnect => {
-                if let Err(err) = self.disconnect(&buf).await {
-                    log::warn!("disconnect() failed! {:?}", err);
+                if let Err(err) = self.on_client_disconnect(&buf).await {
+                    log::warn!("disconnect failed! {:?}", err);
                     return Err(err);
                 }
             }
@@ -165,7 +165,7 @@ impl Session {
         return Ok(());
     }
 
-    async fn connect(&mut self, buf: &[u8]) -> Result<(), Error> {
+    async fn on_client_connect(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = ConnectPacket::decode(&mut ba)?;
         self.client_id = packet.client_id().to_string();
@@ -177,19 +177,16 @@ impl Session {
         self.send(packet).await.map(drop)
     }
 
-    async fn ping(&mut self, buf: &[u8]) -> Result<(), Error> {
+    async fn on_client_ping(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let _packet = PingRequestPacket::decode(&mut ba)?;
         let ping_resp_packet = PingResponsePacket::new();
         self.send(ping_resp_packet).await
     }
 
-    async fn publish(&mut self, buf: &[u8]) -> Result<(), Error> {
+    async fn on_client_publish(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
-        // TODO(Shaohua): Send PublishAck if qos == 0
-        //let publish_ack_packet = PublishAckPacket::new(packet.packet_id());
-        //self.send(publish_ack_packet).await?;
         self.sender
             .send(SessionToListenerCmd::Publish(packet))
             .await
@@ -197,7 +194,7 @@ impl Session {
         Ok(())
     }
 
-    async fn subscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
+    async fn on_client_subscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = SubscribePacket::decode(&mut ba)?;
 
@@ -217,7 +214,7 @@ impl Session {
         }
     }
 
-    async fn unsubscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
+    async fn on_client_unsubscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = UnsubscribePacket::decode(&mut ba)?;
         if let Err(err) = self
@@ -232,7 +229,7 @@ impl Session {
         self.send(unsubscribe_ack_packet).await
     }
 
-    async fn disconnect(&mut self, _buf: &[u8]) -> Result<(), Error> {
+    async fn on_client_disconnect(&mut self, _buf: &[u8]) -> Result<(), Error> {
         self.status = Status::Disconnected;
         if let Err(err) = self
             .sender
@@ -246,12 +243,12 @@ impl Session {
 
     async fn handle_listener_packet(&mut self, cmd: ListenerToSessionCmd) -> Result<(), Error> {
         match cmd {
-            ListenerToSessionCmd::Publish(packet) => self.listener_publish(packet).await?,
+            ListenerToSessionCmd::Publish(packet) => self.on_listener_publish(packet).await?,
         }
         Ok(())
     }
 
-    async fn listener_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
+    async fn on_listener_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
         self.send(packet).await
     }
 }
