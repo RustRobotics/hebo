@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use futures_util::{SinkExt, StreamExt};
+use std::fmt;
 use std::fs::{self, File};
 use std::io::BufReader;
 use std::sync::Arc;
@@ -25,6 +26,20 @@ pub enum Stream {
     Uds(UnixStream),
     Quic(quinn::NewConnection),
     None,
+}
+
+impl fmt::Debug for Stream {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Stream::Mqtt(..) => f.write_str("Mqtt"),
+            Stream::Mqtts(..) => f.write_str("Mqtts"),
+            Stream::Ws(..) => f.write_str("Ws"),
+            Stream::Wss(..) => f.write_str("Wsx"),
+            Stream::Uds(..) => f.write_str("Uds"),
+            Stream::Quic(..) => f.write_str("Quic"),
+            Stream::None => f.write_str("None"),
+        }
+    }
 }
 
 impl Stream {
