@@ -424,7 +424,7 @@ impl Listener {
     async fn on_session_connect(
         &mut self,
         session_id: SessionId,
-        packet: ConnectPacket,
+        _packet: ConnectPacket,
     ) -> Result<(), Error> {
         log::info!("Listener::on_session_connect()");
         // TODO(Shaohua): Check auth

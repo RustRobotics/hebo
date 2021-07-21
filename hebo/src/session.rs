@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use codec::{
-    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, DisconnectPacket,
-    EncodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket,
+    ByteArray, ConnectPacket, ConnectReturnCode, DecodePacket, DisconnectPacket, EncodePacket,
+    FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket,
     PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
     UnsubscribePacket,
 };

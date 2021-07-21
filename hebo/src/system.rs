@@ -7,7 +7,6 @@ use std::time::{self, Duration};
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
-use crate::cache_types::{ListenersVectorCache, SystemCache};
 use crate::commands::{CacheToSystemCmd, SystemToCacheCmd, SystemToDispatcherCmd};
 use crate::error::Error;
 

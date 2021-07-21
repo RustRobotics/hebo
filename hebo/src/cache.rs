@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::cache_types::{ListenerCache, ListenersMapCache, ListenersVectorCache, SystemCache};
+use crate::cache_types::{ListenerCache, ListenersMapCache, SystemCache};
 use crate::commands::{
     CacheToDispatcherCmd, CacheToSystemCmd, DispatcherToCacheCmd, SystemToCacheCmd,
 };

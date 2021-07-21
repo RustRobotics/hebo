@@ -149,39 +149,20 @@ impl From<codec::DecodeError> for Error {
     }
 }
 
-// TODO(Shaohua): Replace with a macro
-impl From<mpsc::error::SendError<SessionToListenerCmd>> for Error {
-    fn from(err: mpsc::error::SendError<SessionToListenerCmd>) -> Self {
-        Error::from_string(
-            ErrorKind::ChannelError,
-            format!("SystemToDispatcherCmd channel error: {}", err),
-        )
-    }
+macro_rules! convert_send_error {
+    ($cmd_type: ident) => {
+        impl From<mpsc::error::SendError<$cmd_type>> for Error {
+            fn from(err: mpsc::error::SendError<$cmd_type>) -> Self {
+                Error::from_string(
+                    ErrorKind::ChannelError,
+                    format!("$cmd_type channel error: {}", err),
+                )
+            }
+        }
+    };
 }
 
-impl From<mpsc::error::SendError<SystemToDispatcherCmd>> for Error {
-    fn from(err: mpsc::error::SendError<SystemToDispatcherCmd>) -> Self {
-        Error::from_string(
-            ErrorKind::ChannelError,
-            format!("SystemToDispatcherCmd channel error: {}", err),
-        )
-    }
-}
-
-impl From<mpsc::error::SendError<ListenerToSessionCmd>> for Error {
-    fn from(err: mpsc::error::SendError<ListenerToSessionCmd>) -> Self {
-        Error::from_string(
-            ErrorKind::ChannelError,
-            format!("SessionToListenerCmd channel error: {}", err),
-        )
-    }
-}
-
-impl From<mpsc::error::SendError<ListenerToDispatcherCmd>> for Error {
-    fn from(err: mpsc::error::SendError<ListenerToDispatcherCmd>) -> Self {
-        Error::from_string(
-            ErrorKind::ChannelError,
-            format!("SystemToDispatcherCmd channel error: {}", err),
-        )
-    }
-}
+convert_send_error!(ListenerToDispatcherCmd);
+convert_send_error!(ListenerToSessionCmd);
+convert_send_error!(SessionToListenerCmd);
+convert_send_error!(SystemToDispatcherCmd);
