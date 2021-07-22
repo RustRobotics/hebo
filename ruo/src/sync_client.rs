@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
+use std::time::Duration;
 
 use crate::connect_options::*;
 use crate::error::Error;
@@ -127,6 +128,7 @@ impl Client {
     }
 
     pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
+        log::info!("client publish()");
         let packet = PublishPacket::new(topic, qos, data)?;
         self.client_sender
             .send(ClientToInnerCmd::Publish(packet))
@@ -151,6 +153,7 @@ impl Client {
     }
 
     pub fn disconnect(&mut self) -> Result<(), Error> {
+        log::info!("client disconnect()");
         self.status = ClientStatus::Disconnecting;
         self.client_sender
             .send(ClientToInnerCmd::Disconnect)
@@ -192,7 +195,7 @@ impl ClientInner {
         inner_sender: Sender<InnerToClientCmd>,
         client_receiver: Receiver<ClientToInnerCmd>,
     ) -> Result<Self, Error> {
-        let stream = Stream::new(connect_options.connect_type())?;
+        let mut stream = Stream::new(connect_options.connect_type())?;
         Ok(ClientInner {
             client_id: connect_options.client_id().to_string(),
             stream,
@@ -210,9 +213,10 @@ impl ClientInner {
 
     fn run_loop(&mut self) -> Result<(), Error> {
         let mut buf = Vec::with_capacity(1024);
+        let timeout = Duration::from_millis(1);
 
         loop {
-            if let Ok(cmd) = self.client_receiver.try_recv() {
+            if let Ok(cmd) = self.client_receiver.recv_timeout(timeout) {
                 self.handle_client_cmd(cmd);
             }
             buf.resize(buf.capacity(), 0);
@@ -269,12 +273,13 @@ impl ClientInner {
     }
 
     fn do_connect(&mut self) -> Result<(), Error> {
+        log::info!(" inner do_connect() client id: {}", &self.client_id);
         let conn_packet = ConnectPacket::new(&self.client_id);
-        log::info!("connect packet client id: {}", conn_packet.client_id());
         self.send(conn_packet)
     }
 
     fn do_publish(&mut self, mut packet: PublishPacket) -> Result<(), Error> {
+        log::info!("inner do_publish: {:?}", packet.topic());
         match packet.qos() {
             QoS::AtLeastOnce => {
                 let packet_id = self.next_packet_id();
@@ -295,7 +300,7 @@ impl ClientInner {
     }
 
     fn do_subscribe(&mut self, mut packet: SubscribePacket) -> Result<(), Error> {
-        log::info!("subscribe to: {:?}", packet);
+        log::info!("inner do_subscribe: {:?}", packet.topics());
         let packet_id = self.next_packet_id();
         // TODO(Shaohua): Support multiple topics.
         //self.topics.insert(packet.topic().to_string(), packet_id);
@@ -305,6 +310,7 @@ impl ClientInner {
     }
 
     fn do_unsubscribe(&mut self, mut packet: UnsubscribePacket) -> Result<(), Error> {
+        log::info!("inner do_unsubscribe: {:?}", packet);
         let packet_id = self.next_packet_id();
         packet.set_packet_id(packet_id);
         self.unsubscribing_packets.insert(packet_id, packet.clone());
@@ -312,13 +318,12 @@ impl ClientInner {
     }
 
     fn do_disconnect(&mut self) -> Result<(), Error> {
+        log::info!("inner do_disconnect()");
         if self.status == ClientStatus::Connected {
             self.status = ClientStatus::Disconnecting;
             let packet = DisconnectPacket::new();
             self.send(packet)?;
         }
-        // TODO(Shaohua): Update status only after disconnect ack packet is received.
-        //self.on_disconnect();
         Ok(())
     }
 

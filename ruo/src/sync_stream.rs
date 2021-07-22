@@ -31,8 +31,8 @@ impl Stream {
 
     fn new_mqtt(mqtt_connect: &MqttConnect) -> io::Result<Stream> {
         let socket = TcpStream::connect(mqtt_connect.address)?;
-        socket.set_read_timeout(Some(Duration::from_secs(20)))?;
-        socket.set_write_timeout(Some(Duration::from_secs(20)))?;
+        // Enable non-blocking mode.
+        socket.set_nonblocking(true)?;
         Ok(Stream::Mqtt(socket))
     }
 
