@@ -20,6 +20,7 @@ use crate::sync_stream::Stream;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq)]
 pub enum ClientStatus {
+    Initialized,
     Connecting,
     Connected,
     ConnectFailed,
@@ -77,7 +78,7 @@ impl Client {
         let (inner_sender, inner_receiver) = mpsc::channel();
         Self {
             connect_options,
-            status: ClientStatus::Disconnected,
+            status: ClientStatus::Initialized,
             on_connect_cb,
             on_message_cb,
             client_sender: client_sender,
@@ -195,11 +196,11 @@ impl ClientInner {
         inner_sender: Sender<InnerToClientCmd>,
         client_receiver: Receiver<ClientToInnerCmd>,
     ) -> Result<Self, Error> {
-        let mut stream = Stream::new(connect_options.connect_type())?;
+        let stream = Stream::new(connect_options.connect_type())?;
         Ok(ClientInner {
             client_id: connect_options.client_id().to_string(),
             stream,
-            status: ClientStatus::Disconnected,
+            status: ClientStatus::Initialized,
             topics: HashMap::new(),
             packet_id: 1,
             subscribing_packets: HashMap::new(),
@@ -216,6 +217,9 @@ impl ClientInner {
         let timeout = Duration::from_millis(1);
 
         loop {
+            if self.status == ClientStatus::Disconnected {
+                break;
+            }
             if let Ok(cmd) = self.client_receiver.recv_timeout(timeout) {
                 self.handle_client_cmd(cmd);
             }
@@ -264,7 +268,6 @@ impl ClientInner {
             PacketType::SubscribeAck => self.on_subscribe_ack(&buf),
             PacketType::UnsubscribeAck => self.on_unsubscribe_ack(&buf),
             PacketType::PingResponse => self.on_ping_resp(),
-            PacketType::Disconnect => self.on_disconnect(),
             t => {
                 log::info!("Unhandled msg: {:?}", t);
                 Ok(())
@@ -319,11 +322,24 @@ impl ClientInner {
 
     fn do_disconnect(&mut self) -> Result<(), Error> {
         log::info!("inner do_disconnect()");
+        // Send disconnect packet to broker.
         if self.status == ClientStatus::Connected {
             self.status = ClientStatus::Disconnecting;
             let packet = DisconnectPacket::new();
             self.send(packet)?;
+        } else {
+            // TODO(Shaohua): Return errors
+            return Ok(());
         }
+
+        self.status = ClientStatus::Disconnected;
+        // Send disconnect packet to client.
+        self.inner_sender
+            .send(InnerToClientCmd::OnDisconnect)
+            .unwrap();
+
+        // Network connection will be closed soon.
+
         Ok(())
     }
 
@@ -341,14 +357,6 @@ impl ClientInner {
             // TODO(Shaohua): Return Error
             Ok(())
         }
-    }
-
-    fn on_disconnect(&mut self) -> Result<(), Error> {
-        self.status = ClientStatus::Disconnected;
-        self.inner_sender
-            .send(InnerToClientCmd::OnDisconnect)
-            .unwrap();
-        Ok(())
     }
 
     fn on_message(&mut self, buf: &[u8]) -> Result<(), Error> {

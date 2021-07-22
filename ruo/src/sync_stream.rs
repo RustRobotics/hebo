@@ -15,8 +15,9 @@ pub enum Stream {
 
 impl Drop for Stream {
     fn drop(&mut self) {
+        log::info!("Stream::drop()");
         match self {
-            Stream::Mqtt(socket) => drop(socket),
+            Stream::Mqtt(stream) => drop(stream),
         }
     }
 }
