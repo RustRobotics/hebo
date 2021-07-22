@@ -10,6 +10,7 @@ use codec::{
 };
 use std::collections::HashMap;
 use std::fmt;
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 
 use crate::connect_options::*;
@@ -28,11 +29,29 @@ enum StreamStatus {
 type ConnectCallback = fn(&mut Client);
 type MessageCallback = fn(&mut Client, &PublishPacket);
 
+#[derive(Debug, PartialEq)]
+enum ClientToInnerCmd {
+    Publish(PublishPacket),
+    Subscribe(SubscribePacket),
+    Unsubscribe(UnsubscribePacket),
+    Disconnect,
+}
+
+#[derive(Debug, PartialEq)]
+enum InnerToClientCmd {
+    OnConnect(),
+}
+
 pub struct Client {
     connect_options: ConnectOptions,
     status: StreamStatus,
     on_connect_cb: Option<ConnectCallback>,
     on_message_cb: Option<MessageCallback>,
+
+    client_sender: Sender<ClientToInnerCmd>,
+    client_receiver: Option<Receiver<ClientToInnerCmd>>,
+    inner_sender: Option<Sender<InnerToClientCmd>>,
+    inner_receiver: Receiver<InnerToClientCmd>,
 }
 
 impl fmt::Debug for Client {
@@ -50,11 +69,17 @@ impl Client {
         on_connect_cb: Option<ConnectCallback>,
         on_message_cb: Option<MessageCallback>,
     ) -> Self {
+        let (client_sender, client_receiver) = mpsc::channel();
+        let (inner_sender, inner_receiver) = mpsc::channel();
         Self {
             connect_options,
             status: StreamStatus::Connecting,
             on_connect_cb,
             on_message_cb,
+            client_sender: client_sender,
+            client_receiver: Some(client_receiver),
+            inner_sender: Some(inner_sender),
+            inner_receiver: inner_receiver,
         }
     }
 
@@ -62,12 +87,45 @@ impl Client {
         return &self.connect_options;
     }
 
-    pub fn run_loop(&mut self) -> Result<(), Error> {
-        let mut inner = ClientInner::new(&self.connect_options)?;
+    pub fn start(&mut self) -> Result<(), Error> {
+        let client_receiver = self.client_receiver.take().unwrap();
+        let inner_sender = self.inner_sender.take().unwrap();
+        let mut inner = ClientInner::new(&self.connect_options, inner_sender, client_receiver)?;
         thread::spawn(move || {
             inner.run_loop();
         });
 
+        Ok(())
+    }
+
+    pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
+        let mut packet = PublishPacket::new(topic, qos, data)?;
+        self.client_sender
+            .send(ClientToInnerCmd::Publish(packet))
+            .unwrap();
+        Ok(())
+    }
+
+    pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
+        let mut packet = SubscribePacket::new(topic, qos, 0)?;
+        self.client_sender
+            .send(ClientToInnerCmd::Subscribe(packet))
+            .unwrap();
+        Ok(())
+    }
+
+    pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
+        let mut packet = UnsubscribePacket::new(topic, 0);
+        self.client_sender
+            .send(ClientToInnerCmd::Unsubscribe(packet))
+            .unwrap();
+        Ok(())
+    }
+
+    pub fn disconnect(&mut self) -> Result<(), Error> {
+        self.client_sender
+            .send(ClientToInnerCmd::Disconnect)
+            .unwrap();
         Ok(())
     }
 }
@@ -82,10 +140,17 @@ struct ClientInner {
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
     publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
+
+    inner_sender: Sender<InnerToClientCmd>,
+    client_receiver: Receiver<ClientToInnerCmd>,
 }
 
 impl ClientInner {
-    fn new(connect_options: &ConnectOptions) -> Result<Self, Error> {
+    fn new(
+        connect_options: &ConnectOptions,
+        inner_sender: Sender<InnerToClientCmd>,
+        client_receiver: Receiver<ClientToInnerCmd>,
+    ) -> Result<Self, Error> {
         let stream = Stream::new(connect_options.connect_type())?;
         Ok(ClientInner {
             client_id: connect_options.client_id().to_string(),
@@ -97,6 +162,8 @@ impl ClientInner {
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
+            inner_sender,
+            client_receiver,
         })
     }
 
@@ -148,9 +215,8 @@ impl ClientInner {
         }
     }
 
-    pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
-        let mut packet = PublishPacket::new(topic, qos, data)?;
-        match qos {
+    fn do_publish(&mut self, mut packet: PublishPacket) -> Result<(), Error> {
+        match packet.qos() {
             QoS::AtLeastOnce => {
                 let packet_id = self.next_packet_id();
                 packet.set_packet_id(packet_id);
@@ -169,23 +235,24 @@ impl ClientInner {
         self.send(packet)
     }
 
-    pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
-        log::info!("subscribe to: {}", topic);
+    fn do_subscribe(&mut self, mut packet: SubscribePacket) -> Result<(), Error> {
+        log::info!("subscribe to: {:?}", packet);
         let packet_id = self.next_packet_id();
-        self.topics.insert(topic.to_string(), packet_id);
-        let packet = SubscribePacket::new(topic, qos, packet_id)?;
+        // TODO(Shaohua): Support multiple topics.
+        //self.topics.insert(packet.topic().to_string(), packet_id);
+        packet.set_packet_id(packet_id);
         self.subscribing_packets.insert(packet_id, packet.clone());
         self.send(packet)
     }
 
-    pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
+    fn do_unsubscribe(&mut self, mut packet: UnsubscribePacket) -> Result<(), Error> {
         let packet_id = self.next_packet_id();
-        let packet = UnsubscribePacket::new(topic, packet_id);
+        packet.set_packet_id(packet_id);
         self.unsubscribing_packets.insert(packet_id, packet.clone());
         self.send(packet)
     }
 
-    pub fn disconnect(&mut self) -> Result<(), Error> {
+    fn do_disconnect(&mut self) -> Result<(), Error> {
         if self.status == StreamStatus::Connected {
             self.status = StreamStatus::Disconnecting;
             let packet = DisconnectPacket::new();
