@@ -4,7 +4,7 @@
 
 use codec::QoS;
 use ruo::connect_options::{ConnectOptions, ConnectType, MqttConnect};
-use ruo::sync_client::Client;
+use ruo::sync_client::{Client, ClientStatus};
 use std::net::SocketAddr;
 use std::time::{Duration, Instant};
 
@@ -14,22 +14,7 @@ fn on_connect(client: &mut Client) {
         client.connect_option().client_id()
     );
 
-    //client.subscribe("hello", QoS::AtMostOnce).unwrap();
-    let mut count = 0;
-    let payload = std::include_str!("../src/client.rs");
-    let now = Instant::now();
-    loop {
-        count += 1;
-        if count == 1_000_000 {
-            break;
-        }
-        log::info!("count: {}", count);
-        if let Err(err) = client.publish("hello", QoS::AtMostOnce, payload.as_bytes()) {
-            log::error!("got error: {:?}", err);
-        }
-    }
-    log::info!("elapsed: {}", now.elapsed().as_millis());
-    std::process::exit(0);
+    client.subscribe("hello", QoS::AtMostOnce).unwrap();
 }
 
 fn main() {
@@ -41,9 +26,25 @@ fn main() {
         address: SocketAddr::from(([127, 0, 0, 1], 1883)),
     }));
     let mut client = Client::new(options, Some(on_connect), None);
-    client.run_loop().unwrap();
+    client.start().unwrap();
 
+    let mut count = 0;
+    let payload = std::include_str!("../src/client.rs");
+    let now = Instant::now();
     loop {
         std::thread::sleep(Duration::from_secs(1));
+        log::info!("elapsed: {}", now.elapsed().as_millis());
+        if client.status() != ClientStatus::Connected {
+            continue;
+        }
+
+        count += 1;
+        if count == 1_000_000 {
+            break;
+        }
+        log::info!("count: {}", count);
+        if let Err(err) = client.publish("hello", QoS::AtMostOnce, payload.as_bytes()) {
+            log::error!("got error: {:?}", err);
+        }
     }
 }

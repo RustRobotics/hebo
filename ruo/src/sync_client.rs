@@ -17,8 +17,8 @@ use crate::connect_options::*;
 use crate::error::Error;
 use crate::sync_stream::Stream;
 
-#[derive(Debug, Hash, PartialEq)]
-enum StreamStatus {
+#[derive(Debug, Clone, Copy, Hash, PartialEq)]
+pub enum ClientStatus {
     Connecting,
     Connected,
     ConnectFailed,
@@ -39,12 +39,13 @@ enum ClientToInnerCmd {
 
 #[derive(Debug, PartialEq)]
 enum InnerToClientCmd {
-    OnConnect(),
+    OnConnect,
+    OnMessage(PublishPacket),
 }
 
 pub struct Client {
     connect_options: ConnectOptions,
-    status: StreamStatus,
+    status: ClientStatus,
     on_connect_cb: Option<ConnectCallback>,
     on_message_cb: Option<MessageCallback>,
 
@@ -73,7 +74,7 @@ impl Client {
         let (inner_sender, inner_receiver) = mpsc::channel();
         Self {
             connect_options,
-            status: StreamStatus::Connecting,
+            status: ClientStatus::Connecting,
             on_connect_cb,
             on_message_cb,
             client_sender: client_sender,
@@ -84,7 +85,11 @@ impl Client {
     }
 
     pub fn connect_option(&self) -> &ConnectOptions {
-        return &self.connect_options;
+        &self.connect_options
+    }
+
+    pub fn status(&self) -> ClientStatus {
+        self.status
     }
 
     pub fn start(&mut self) -> Result<(), Error> {
@@ -92,14 +97,14 @@ impl Client {
         let inner_sender = self.inner_sender.take().unwrap();
         let mut inner = ClientInner::new(&self.connect_options, inner_sender, client_receiver)?;
         thread::spawn(move || {
-            inner.run_loop();
+            inner.run_loop().unwrap();
         });
 
         Ok(())
     }
 
     pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
-        let mut packet = PublishPacket::new(topic, qos, data)?;
+        let packet = PublishPacket::new(topic, qos, data)?;
         self.client_sender
             .send(ClientToInnerCmd::Publish(packet))
             .unwrap();
@@ -107,7 +112,7 @@ impl Client {
     }
 
     pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
-        let mut packet = SubscribePacket::new(topic, qos, 0)?;
+        let packet = SubscribePacket::new(topic, qos, 0)?;
         self.client_sender
             .send(ClientToInnerCmd::Subscribe(packet))
             .unwrap();
@@ -115,7 +120,7 @@ impl Client {
     }
 
     pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
-        let mut packet = UnsubscribePacket::new(topic, 0);
+        let packet = UnsubscribePacket::new(topic, 0);
         self.client_sender
             .send(ClientToInnerCmd::Unsubscribe(packet))
             .unwrap();
@@ -128,12 +133,24 @@ impl Client {
             .unwrap();
         Ok(())
     }
+    fn on_connect(&mut self) {
+        if let Some(cb) = &self.on_connect_cb {
+            cb(self);
+        }
+    }
+
+    fn on_message(&mut self, packet: PublishPacket) -> Result<(), Error> {
+        if let Some(cb) = &self.on_message_cb {
+            cb(self, &packet);
+        }
+        Ok(())
+    }
 }
 
 struct ClientInner {
     client_id: String,
     stream: Stream,
-    status: StreamStatus,
+    status: ClientStatus,
     topics: HashMap<String, PacketId>,
     packet_id: PacketId,
     subscribing_packets: HashMap<PacketId, SubscribePacket>,
@@ -155,7 +172,7 @@ impl ClientInner {
         Ok(ClientInner {
             client_id: connect_options.client_id().to_string(),
             stream,
-            status: StreamStatus::Disconnected,
+            status: ClientStatus::Disconnected,
             topics: HashMap::new(),
             packet_id: 1,
             subscribing_packets: HashMap::new(),
@@ -253,8 +270,8 @@ impl ClientInner {
     }
 
     fn do_disconnect(&mut self) -> Result<(), Error> {
-        if self.status == StreamStatus::Connected {
-            self.status = StreamStatus::Disconnecting;
+        if self.status == ClientStatus::Connected {
+            self.status = ClientStatus::Disconnecting;
             let packet = DisconnectPacket::new();
             self.send(packet)?;
         }
@@ -263,14 +280,12 @@ impl ClientInner {
     }
 
     fn on_connect(&mut self) {
-        //if let Some(cb) = &self.on_connect_cb {
-        //    cb(self);
-        //}
+        self.inner_sender.send(InnerToClientCmd::OnConnect).unwrap();
     }
 
     fn ping(&mut self) -> Result<(), Error> {
         log::info!("ping()");
-        if self.status == StreamStatus::Connected {
+        if self.status == ClientStatus::Connected {
             log::info!("Send ping packet");
             let packet = PingRequestPacket::new();
             self.send(packet)
@@ -281,17 +296,17 @@ impl ClientInner {
     }
 
     fn on_disconnect(&mut self) {
-        self.status = StreamStatus::Disconnected;
+        self.status = ClientStatus::Disconnected;
     }
 
     fn on_message(&mut self, buf: &[u8]) -> Result<(), Error> {
         log::info!("on_message()");
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
-        log::info!("packet: {:?}", packet);
-        //if let Some(cb) = &self.on_message_cb {
-        //    cb(self, &packet);
-        //}
+        log::info!("on_message() packet: {:?}", packet);
+        self.inner_sender
+            .send(InnerToClientCmd::OnMessage(packet))
+            .unwrap();
         Ok(())
     }
 
@@ -307,12 +322,12 @@ impl ClientInner {
         let packet = ConnectAckPacket::decode(&mut ba)?;
         match packet.return_code() {
             ConnectReturnCode::Accepted => {
-                self.status = StreamStatus::Connected;
+                self.status = ClientStatus::Connected;
                 self.on_connect();
             }
             _ => {
                 log::warn!("Failed to connect to server, {:?}", packet.return_code());
-                self.status = StreamStatus::ConnectFailed;
+                self.status = ClientStatus::ConnectFailed;
             }
         }
         Ok(())
