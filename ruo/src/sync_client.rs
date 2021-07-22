@@ -31,6 +31,7 @@ type MessageCallback = fn(&mut Client, &PublishPacket);
 
 #[derive(Debug, PartialEq)]
 enum ClientToInnerCmd {
+    Connect,
     Publish(PublishPacket),
     Subscribe(SubscribePacket),
     Unsubscribe(UnsubscribePacket),
@@ -41,6 +42,7 @@ enum ClientToInnerCmd {
 enum InnerToClientCmd {
     OnConnect,
     OnMessage(PublishPacket),
+    OnDisconnect,
 }
 
 pub struct Client {
@@ -74,7 +76,7 @@ impl Client {
         let (inner_sender, inner_receiver) = mpsc::channel();
         Self {
             connect_options,
-            status: ClientStatus::Connecting,
+            status: ClientStatus::Disconnected,
             on_connect_cb,
             on_message_cb,
             client_sender: client_sender,
@@ -92,7 +94,7 @@ impl Client {
         self.status
     }
 
-    pub fn start(&mut self) -> Result<(), Error> {
+    pub fn init(&mut self) -> Result<(), Error> {
         let client_receiver = self.client_receiver.take().unwrap();
         let inner_sender = self.inner_sender.take().unwrap();
         let mut inner = ClientInner::new(&self.connect_options, inner_sender, client_receiver)?;
@@ -100,6 +102,27 @@ impl Client {
             inner.run_loop().unwrap();
         });
 
+        Ok(())
+    }
+
+    pub fn process_events(&mut self) {
+        if let Ok(cmd) = self.inner_receiver.try_recv() {
+            match cmd {
+                InnerToClientCmd::OnConnect => {
+                    self.status = ClientStatus::Connected;
+                    self.on_connect()
+                }
+                InnerToClientCmd::OnMessage(packet) => self.on_message(packet),
+                InnerToClientCmd::OnDisconnect => {
+                    self.status = ClientStatus::Disconnected;
+                }
+            }
+        }
+    }
+
+    pub fn connect(&mut self) -> Result<(), Error> {
+        self.status = ClientStatus::Connecting;
+        self.client_sender.send(ClientToInnerCmd::Connect).unwrap();
         Ok(())
     }
 
@@ -128,22 +151,23 @@ impl Client {
     }
 
     pub fn disconnect(&mut self) -> Result<(), Error> {
+        self.status = ClientStatus::Disconnecting;
         self.client_sender
             .send(ClientToInnerCmd::Disconnect)
             .unwrap();
         Ok(())
     }
+
     fn on_connect(&mut self) {
         if let Some(cb) = &self.on_connect_cb {
             cb(self);
         }
     }
 
-    fn on_message(&mut self, packet: PublishPacket) -> Result<(), Error> {
+    fn on_message(&mut self, packet: PublishPacket) {
         if let Some(cb) = &self.on_message_cb {
             cb(self, &packet);
         }
-        Ok(())
     }
 }
 
@@ -185,9 +209,6 @@ impl ClientInner {
     }
 
     fn run_loop(&mut self) -> Result<(), Error> {
-        let conn_packet = ConnectPacket::new(&self.client_id);
-        log::info!("connect packet client id: {}", conn_packet.client_id());
-        self.send(conn_packet)?;
         let mut buf = Vec::with_capacity(1024);
 
         loop {
@@ -218,7 +239,9 @@ impl ClientInner {
     }
 
     fn handle_client_cmd(&mut self, cmd: ClientToInnerCmd) -> Result<(), Error> {
+        // TODO(Shaohua): Check client status first.
         match cmd {
+            ClientToInnerCmd::Connect => self.do_connect(),
             ClientToInnerCmd::Publish(packet) => self.do_publish(packet),
             ClientToInnerCmd::Subscribe(packet) => self.do_subscribe(packet),
             ClientToInnerCmd::Unsubscribe(packet) => self.do_unsubscribe(packet),
@@ -237,11 +260,18 @@ impl ClientInner {
             PacketType::SubscribeAck => self.on_subscribe_ack(&buf),
             PacketType::UnsubscribeAck => self.on_unsubscribe_ack(&buf),
             PacketType::PingResponse => self.on_ping_resp(),
+            PacketType::Disconnect => self.on_disconnect(),
             t => {
                 log::info!("Unhandled msg: {:?}", t);
                 Ok(())
             }
         }
+    }
+
+    fn do_connect(&mut self) -> Result<(), Error> {
+        let conn_packet = ConnectPacket::new(&self.client_id);
+        log::info!("connect packet client id: {}", conn_packet.client_id());
+        self.send(conn_packet)
     }
 
     fn do_publish(&mut self, mut packet: PublishPacket) -> Result<(), Error> {
@@ -308,8 +338,12 @@ impl ClientInner {
         }
     }
 
-    fn on_disconnect(&mut self) {
+    fn on_disconnect(&mut self) -> Result<(), Error> {
         self.status = ClientStatus::Disconnected;
+        self.inner_sender
+            .send(InnerToClientCmd::OnDisconnect)
+            .unwrap();
+        Ok(())
     }
 
     fn on_message(&mut self, buf: &[u8]) -> Result<(), Error> {

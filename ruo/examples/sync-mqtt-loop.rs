@@ -6,7 +6,7 @@ use codec::QoS;
 use ruo::connect_options::{ConnectOptions, ConnectType, MqttConnect};
 use ruo::sync_client::{Client, ClientStatus};
 use std::net::SocketAddr;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 fn on_connect(client: &mut Client) {
     log::info!(
@@ -26,14 +26,14 @@ fn main() {
         address: SocketAddr::from(([127, 0, 0, 1], 1883)),
     }));
     let mut client = Client::new(options, Some(on_connect), None);
-    client.start().unwrap();
+    client.init().unwrap();
+    client.connect().unwrap();
 
     let mut count = 0;
     let payload = std::include_str!("../src/client.rs");
-    let now = Instant::now();
     loop {
+        client.process_events();
         std::thread::sleep(Duration::from_secs(1));
-        log::info!("elapsed: {}", now.elapsed().as_millis());
         if client.status() != ClientStatus::Connected {
             continue;
         }
@@ -42,7 +42,7 @@ fn main() {
         if count == 1_000_000 {
             break;
         }
-        log::info!("count: {}", count);
+        log::info!("Client connected, publish packet count: {}", count);
         if let Err(err) = client.publish("hello", QoS::AtMostOnce, payload.as_bytes()) {
             log::error!("got error: {:?}", err);
         }
