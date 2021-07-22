@@ -191,6 +191,9 @@ impl ClientInner {
         let mut buf = Vec::with_capacity(1024);
 
         loop {
+            if let Ok(cmd) = self.client_receiver.try_recv() {
+                self.handle_client_cmd(cmd);
+            }
             buf.resize(buf.capacity(), 0);
             if let Ok(n_recv) = self.stream.read_buf(&mut buf) {
                 if n_recv > 0 {
@@ -212,6 +215,15 @@ impl ClientInner {
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
         self.stream.write_all(&buf).map_err(|err| err.into())
+    }
+
+    fn handle_client_cmd(&mut self, cmd: ClientToInnerCmd) -> Result<(), Error> {
+        match cmd {
+            ClientToInnerCmd::Publish(packet) => self.do_publish(packet),
+            ClientToInnerCmd::Subscribe(packet) => self.do_subscribe(packet),
+            ClientToInnerCmd::Unsubscribe(packet) => self.do_unsubscribe(packet),
+            ClientToInnerCmd::Disconnect => self.do_disconnect(),
+        }
     }
 
     fn handle_session_packet(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
@@ -275,7 +287,8 @@ impl ClientInner {
             let packet = DisconnectPacket::new();
             self.send(packet)?;
         }
-        self.on_disconnect();
+        // TODO(Shaohua): Update status only after disconnect ack packet is received.
+        //self.on_disconnect();
         Ok(())
     }
 
