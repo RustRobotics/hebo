@@ -6,7 +6,7 @@ use codec::QoS;
 use ruo::connect_options::{ConnectOptions, ConnectType, MqttConnect};
 use ruo::sync_client::Client;
 use std::net::SocketAddr;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 fn on_connect(client: &mut Client) {
     log::info!(
@@ -27,6 +27,7 @@ fn on_connect(client: &mut Client) {
         if let Err(err) = client.publish("hello", QoS::AtMostOnce, payload.as_bytes()) {
             log::error!("got error: {:?}", err);
         }
+        std::thread::sleep(Duration::from_secs(1));
     }
     log::info!("elapsed: {}", now.elapsed().as_millis());
     std::process::exit(0);
