@@ -27,7 +27,6 @@ fn on_connect(client: &mut Client) {
         if let Err(err) = client.publish("hello", QoS::AtMostOnce, payload.as_bytes()) {
             log::error!("got error: {:?}", err);
         }
-        std::thread::sleep(Duration::from_secs(1));
     }
     log::info!("elapsed: {}", now.elapsed().as_millis());
     std::process::exit(0);
@@ -41,6 +40,10 @@ fn main() {
     options.set_connect_type(ConnectType::Mqtt(MqttConnect {
         address: SocketAddr::from(([127, 0, 0, 1], 1883)),
     }));
-    let mut client = Client::new(options, Some(on_connect), None).unwrap();
-    client.start().unwrap();
+    let mut client = Client::new(options, Some(on_connect), None);
+    client.run_loop().unwrap();
+
+    loop {
+        std::thread::sleep(Duration::from_secs(1));
+    }
 }

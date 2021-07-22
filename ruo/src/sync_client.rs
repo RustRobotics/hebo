@@ -10,6 +10,7 @@ use codec::{
 };
 use std::collections::HashMap;
 use std::fmt;
+use std::thread;
 
 use crate::connect_options::*;
 use crate::error::Error;
@@ -29,14 +30,7 @@ type MessageCallback = fn(&mut Client, &PublishPacket);
 
 pub struct Client {
     connect_options: ConnectOptions,
-    stream: Stream,
     status: StreamStatus,
-    topics: HashMap<String, PacketId>,
-    packet_id: PacketId,
-    subscribing_packets: HashMap<PacketId, SubscribePacket>,
-    unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
-    publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
-    publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
     on_connect_cb: Option<ConnectCallback>,
     on_message_cb: Option<MessageCallback>,
 }
@@ -45,9 +39,7 @@ impl fmt::Debug for Client {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Client")
             .field("connect_options", &self.connect_options)
-            .field("stream", &"TcpStream")
             .field("status", &self.status)
-            .field("packet_id", &self.packet_id)
             .finish()
     }
 }
@@ -57,28 +49,60 @@ impl Client {
         connect_options: ConnectOptions,
         on_connect_cb: Option<ConnectCallback>,
         on_message_cb: Option<MessageCallback>,
-    ) -> Result<Client, Error> {
-        let stream = Stream::new(connect_options.connect_type())?;
-        let client = Client {
+    ) -> Self {
+        Self {
             connect_options,
-            stream,
             status: StreamStatus::Connecting,
+            on_connect_cb,
+            on_message_cb,
+        }
+    }
+
+    pub fn connect_option(&self) -> &ConnectOptions {
+        return &self.connect_options;
+    }
+
+    pub fn run_loop(&mut self) -> Result<(), Error> {
+        let mut inner = ClientInner::new(&self.connect_options)?;
+        thread::spawn(move || {
+            inner.run_loop();
+        });
+
+        Ok(())
+    }
+}
+
+struct ClientInner {
+    client_id: String,
+    stream: Stream,
+    status: StreamStatus,
+    topics: HashMap<String, PacketId>,
+    packet_id: PacketId,
+    subscribing_packets: HashMap<PacketId, SubscribePacket>,
+    unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
+    publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
+    publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
+}
+
+impl ClientInner {
+    fn new(connect_options: &ConnectOptions) -> Result<Self, Error> {
+        let stream = Stream::new(connect_options.connect_type())?;
+        Ok(ClientInner {
+            client_id: connect_options.client_id().to_string(),
+            stream,
+            status: StreamStatus::Disconnected,
             topics: HashMap::new(),
             packet_id: 1,
             subscribing_packets: HashMap::new(),
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
-            on_connect_cb,
-            on_message_cb,
-        };
-
-        Ok(client)
+        })
     }
 
-    pub fn start(&mut self) -> Result<(), Error> {
-        let conn_packet = ConnectPacket::new(self.connect_options.client_id());
-        println!("connect packet client id: {}", conn_packet.client_id());
+    fn run_loop(&mut self) -> Result<(), Error> {
+        let conn_packet = ConnectPacket::new(&self.client_id);
+        log::info!("connect packet client id: {}", conn_packet.client_id());
         self.send(conn_packet)?;
         let mut buf = Vec::with_capacity(1024);
 
@@ -100,6 +124,12 @@ impl Client {
         Ok(())
     }
 
+    fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
+        let mut buf = Vec::new();
+        packet.encode(&mut buf)?;
+        self.stream.write_all(&buf).map_err(|err| err.into())
+    }
+
     fn handle_session_packet(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let fixed_header = FixedHeader::decode(&mut ba)?;
@@ -116,12 +146,6 @@ impl Client {
                 Ok(())
             }
         }
-    }
-
-    fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
-        let mut buf = Vec::new();
-        packet.encode(&mut buf)?;
-        self.stream.write_all(&buf).map_err(|err| err.into())
     }
 
     pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
@@ -172,9 +196,9 @@ impl Client {
     }
 
     fn on_connect(&mut self) {
-        if let Some(cb) = &self.on_connect_cb {
-            cb(self);
-        }
+        //if let Some(cb) = &self.on_connect_cb {
+        //    cb(self);
+        //}
     }
 
     fn ping(&mut self) -> Result<(), Error> {
@@ -198,9 +222,9 @@ impl Client {
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
         log::info!("packet: {:?}", packet);
-        if let Some(cb) = &self.on_message_cb {
-            cb(self, &packet);
-        }
+        //if let Some(cb) = &self.on_message_cb {
+        //    cb(self, &packet);
+        //}
         Ok(())
     }
 
@@ -277,9 +301,5 @@ impl Client {
             self.packet_id += 1;
         }
         self.packet_id
-    }
-
-    pub fn connect_option(&self) -> &ConnectOptions {
-        return &self.connect_options;
     }
 }
