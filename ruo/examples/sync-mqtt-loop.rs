@@ -33,18 +33,28 @@ fn main() {
     let payload = std::include_str!("../src/client.rs");
     loop {
         client.process_events();
-        std::thread::sleep(Duration::from_secs(1));
+        std::thread::sleep(Duration::from_millis(1));
         if client.status() != ClientStatus::Connected {
             continue;
         }
 
+        std::thread::sleep(Duration::from_millis(100));
         count += 1;
-        if count == 1_000_000 {
+        if count == 100 {
             break;
         }
         log::info!("Client connected, publish packet count: {}", count);
         if let Err(err) = client.publish("hello", QoS::AtMostOnce, payload.as_bytes()) {
             log::error!("got error: {:?}", err);
+        }
+    }
+
+    client.disconnect().unwrap();
+    loop {
+        client.process_events();
+        std::thread::sleep(Duration::from_millis(1));
+        if client.status() == ClientStatus::Disconnected {
+            break;
         }
     }
 }
