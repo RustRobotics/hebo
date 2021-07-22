@@ -95,6 +95,10 @@ impl SubscribePacket {
         self.packet_id
     }
 
+    pub fn set_packet_id(&mut self, packet_id: PacketId) {
+        self.packet_id = packet_id
+    }
+
     pub fn topics(&self) -> &[SubscribeTopic] {
         &self.topics
     }

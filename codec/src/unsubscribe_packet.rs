@@ -71,6 +71,10 @@ impl UnsubscribePacket {
         self.packet_id
     }
 
+    pub fn set_packet_id(&mut self, packet_id: PacketId) {
+        self.packet_id = packet_id;
+    }
+
     pub fn add_topic(&mut self, topic: &str) -> &mut Self {
         self.topics.push(topic.to_string());
         self

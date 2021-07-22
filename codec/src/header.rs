@@ -105,6 +105,7 @@ impl TryFrom<u8> for PacketType {
 
     fn try_from(v: u8) -> Result<PacketType, Self::Error> {
         let type_bits = (v & 0b1111_0000) >> 4;
+        log::info!("type_bits: {}", type_bits);
         match type_bits {
             1 => Ok(PacketType::Connect),
             2 => Ok(PacketType::ConnectAck),
@@ -134,7 +135,10 @@ impl TryFrom<u8> for PacketType {
             13 => Ok(PacketType::PingResponse),
             14 => Ok(PacketType::Disconnect),
 
-            _ => Err(DecodeError::InvalidPacketType),
+            t => {
+                log::error!("Invlaid type_bits: {}", t);
+                Err(DecodeError::InvalidPacketType)
+            }
         }
     }
 }
