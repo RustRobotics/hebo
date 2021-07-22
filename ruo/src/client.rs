@@ -93,7 +93,7 @@ impl Client {
             tokio::select! {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
                     if n_recv > 0 {
-                        if let Err(err) = self.recv_router(&mut buf).await {
+                        if let Err(err) = self.handle_session_packet(&mut buf).await {
                             log::error!("err: {:?}", err);
                         }
                         buf.clear();
@@ -109,7 +109,7 @@ impl Client {
         }
     }
 
-    async fn recv_router(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
+    async fn handle_session_packet(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let fixed_header = FixedHeader::decode(&mut ba)?;
         match fixed_header.packet_type {

@@ -2,14 +2,14 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::collections::HashMap;
-
 use codec::{
     ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, DisconnectPacket,
     EncodePacket, FixedHeader, PacketId, PacketType, PingRequestPacket, PublishAckPacket,
     PublishPacket, QoS, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
     UnsubscribePacket,
 };
+use std::collections::HashMap;
+use std::fmt;
 
 use crate::connect_options::*;
 use crate::error::Error;
@@ -39,6 +39,17 @@ pub struct Client {
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
     on_connect_cb: Option<ConnectCallback>,
     on_message_cb: Option<MessageCallback>,
+}
+
+impl fmt::Debug for Client {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Client")
+            .field("connect_options", &self.connect_options)
+            .field("stream", &"TcpStream")
+            .field("status", &self.status)
+            .field("packet_id", &self.packet_id)
+            .finish()
+    }
 }
 
 impl Client {
@@ -75,7 +86,7 @@ impl Client {
             buf.resize(buf.capacity(), 0);
             if let Ok(n_recv) = self.stream.read_buf(&mut buf) {
                 if n_recv > 0 {
-                    if let Err(err) = self.recv_router(&mut buf) {
+                    if let Err(err) = self.handle_session_packet(&mut buf) {
                         log::error!("err: {:?}", err);
                     }
                     buf.clear();
@@ -89,16 +100,16 @@ impl Client {
         Ok(())
     }
 
-    fn recv_router(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
+    fn handle_session_packet(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let fixed_header = FixedHeader::decode(&mut ba)?;
         log::info!("fixed header: {:?}", fixed_header);
         match fixed_header.packet_type {
-            PacketType::ConnectAck => self.connect_ack(&buf),
+            PacketType::ConnectAck => self.on_connect_ack(&buf),
             PacketType::Publish { .. } => self.on_message(&buf),
-            PacketType::PublishAck => self.publish_ack(&buf),
-            PacketType::SubscribeAck => self.subscribe_ack(&buf),
-            PacketType::UnsubscribeAck => self.unsubscribe_ack(&buf),
+            PacketType::PublishAck => self.on_publish_ack(&buf),
+            PacketType::SubscribeAck => self.on_subscribe_ack(&buf),
+            PacketType::UnsubscribeAck => self.on_unsubscribe_ack(&buf),
             PacketType::PingResponse => self.on_ping_resp(),
             t => {
                 log::info!("Unhandled msg: {:?}", t);
@@ -199,7 +210,7 @@ impl Client {
         Ok(())
     }
 
-    fn connect_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
+    fn on_connect_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
         log::info!("connect_ack()");
         let mut ba = ByteArray::new(buf);
         let packet = ConnectAckPacket::decode(&mut ba)?;
@@ -216,7 +227,7 @@ impl Client {
         Ok(())
     }
 
-    fn publish_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
+    fn on_publish_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
         log::info!("publish_ack()");
         let mut ba = ByteArray::new(buf);
         let packet = PublishAckPacket::decode(&mut ba)?;
@@ -230,7 +241,7 @@ impl Client {
         Ok(())
     }
 
-    fn subscribe_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
+    fn on_subscribe_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
         log::info!("subscribe_ack()");
         // Parse packet_id and remove from vector.
         let mut ba = ByteArray::new(buf);
@@ -245,7 +256,7 @@ impl Client {
         Ok(())
     }
 
-    fn unsubscribe_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
+    fn on_unsubscribe_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
         log::info!("unsubscribe_ack()");
         let mut ba = ByteArray::new(buf);
         let packet = UnsubscribeAckPacket::decode(&mut ba)?;
