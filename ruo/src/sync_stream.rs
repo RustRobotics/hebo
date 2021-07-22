@@ -4,7 +4,6 @@
 
 use std::io::{self, Read, Write};
 use std::net::TcpStream;
-use std::time::Duration;
 
 use crate::connect_options::{ConnectType, MqttConnect};
 
@@ -34,6 +33,7 @@ impl Stream {
         let socket = TcpStream::connect(mqtt_connect.address)?;
         // Enable non-blocking mode.
         socket.set_nonblocking(true)?;
+        socket.set_nodelay(true)?;
         Ok(Stream::Mqtt(socket))
     }
 
