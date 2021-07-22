@@ -8,6 +8,7 @@ use codec::{
     PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
     UnsubscribePacket,
 };
+use std::convert::Into;
 use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
@@ -110,11 +111,7 @@ impl Session {
     async fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
         let mut buf = Vec::new();
         packet.encode(&mut buf).unwrap();
-        self.stream
-            .write(&buf)
-            .await
-            .map(drop)
-            .map_err(|err| err.into())
+        self.stream.write(&buf).await.map(drop).map_err(Into::into)
     }
 
     async fn handle_client_packet(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -174,6 +171,7 @@ impl Session {
     }
 
     async fn on_client_publish(&mut self, buf: &[u8]) -> Result<(), Error> {
+        log::info!("on_client_publish()");
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
 

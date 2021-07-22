@@ -8,6 +8,7 @@ use codec::{
 };
 use futures_util::StreamExt;
 use std::collections::HashMap;
+use std::convert::Into;
 use std::fmt;
 use std::fs::{self, File};
 use std::io::BufReader;
@@ -432,7 +433,7 @@ impl Listener {
         let ack_packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
         let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
         if let Some(pipeline) = self.pipelines.get(&session_id) {
-            pipeline.sender.send(cmd).await.map_err(|err| err.into())
+            pipeline.sender.send(cmd).await.map_err(Into::into)
         } else {
             Err(Error::session_error(session_id))
         }
@@ -449,7 +450,7 @@ impl Listener {
         self.dispatcher_sender
             .send(ListenerToDispatcherCmd::SessionRemoved(self.id))
             .await
-            .map_err(|err| err.into())
+            .map_err(Into::into)
     }
 
     async fn on_session_subscribe(
@@ -513,15 +514,12 @@ impl Listener {
         self.dispatcher_sender
             .send(ListenerToDispatcherCmd::SubscriptionsRemoved(self.id))
             .await
-            .map_err(|err| err.into())
+            .map_err(Into::into)
     }
 
     async fn on_session_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
         let cmd = ListenerToDispatcherCmd::Publish(packet.clone());
-        self.dispatcher_sender
-            .send(cmd)
-            .await
-            .map_err(|err| err.into())
+        self.dispatcher_sender.send(cmd).await.map_err(Into::into)
     }
 
     async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
