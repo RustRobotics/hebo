@@ -308,6 +308,19 @@ impl Listener {
     }
 
     async fn accept(&mut self) -> Result<Stream, Error> {
+        use tokio_tungstenite::tungstenite;
+
+        let check_ws_path = |request: &tungstenite::handshake::server::Request,
+                             mut response: tungstenite::handshake::server::Response|
+         -> Result<
+            tungstenite::handshake::server::Response,
+            tungstenite::handshake::server::ErrorResponse,
+        > {
+            let path = request.uri().path();
+            log::info!("path: {:?}", path);
+            return Ok(response);
+        };
+
         match &mut self.protocol {
             Protocol::Mqtt(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
@@ -320,7 +333,8 @@ impl Listener {
             }
             Protocol::Ws(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
-                let ws_stream = tokio_tungstenite::accept_async(tcp_stream).await?;
+                let ws_stream =
+                    tokio_tungstenite::accept_hdr_async(tcp_stream, check_ws_path).await?;
                 return Ok(Stream::Ws(ws_stream));
             }
             Protocol::Wss(listener, acceptor) => {
