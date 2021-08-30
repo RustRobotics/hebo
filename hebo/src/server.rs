@@ -16,6 +16,7 @@ use crate::constants;
 use crate::dispatcher::Dispatcher;
 use crate::error::{Error, ErrorKind};
 use crate::listener::Listener;
+use crate::log::init_log;
 use crate::system::System;
 
 /// Entry point of server
@@ -58,6 +59,8 @@ pub fn run_server() -> Result<(), Error> {
         println!("The configuration file {} syntax is Ok", config_file);
         return Ok(());
     }
+
+    init_log(&config.log)?;
 
     let mut server = ServerContext::new(config);
 

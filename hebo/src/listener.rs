@@ -323,7 +323,7 @@ impl Listener {
         use tokio_tungstenite::tungstenite::handshake::server as ws_server;
         let listener_path = self.listener_config.path.clone();
         let check_ws_path = |request: &ws_server::Request,
-                             mut response: ws_server::Response|
+                             response: ws_server::Response|
          -> Result<ws_server::Response, ws_server::ErrorResponse> {
             let path = request.uri().path();
             if path == listener_path {

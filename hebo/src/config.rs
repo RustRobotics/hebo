@@ -107,17 +107,25 @@ pub struct Storage {
 pub struct Log {
     pub console_log: bool,
     pub level: LogLevel,
-    pub log_file: Option<PathBuf>,
+
+    #[serde(default = "log_default_file")]
+    pub log_file: PathBuf,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub enum LogLevel {
+    Off,
     Error,
-    Warning,
+    Warn,
     Info,
     Debug,
+    Trace,
 }
 
 fn listener_default_path() -> String {
     "/".to_owned()
+}
+
+fn log_default_file() -> PathBuf {
+    PathBuf::from("/var/log/hebo/hebo.log")
 }

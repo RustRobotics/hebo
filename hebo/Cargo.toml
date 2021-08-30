@@ -11,7 +11,7 @@ name = "hebo"
 path = "src/bin/hebo.rs"
 
 [features]
-default = []
+default = ["allocator"]
 
 full = [
   "allocator",
@@ -27,6 +27,7 @@ futures-util = "0.3.16"
 http = "0.2.4"
 jemallocator = { version = "0.3.2", optional = true }
 log = "0.4.14"
+log4rs = { version = "1.0.0", default_features = false, features = ["console_appender", "rolling_file_appender"] }
 nc = "0.7.9"
 quinn = "0.7.2"
 serde = "1.0.129"

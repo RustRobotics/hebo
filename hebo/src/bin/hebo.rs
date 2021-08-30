@@ -9,8 +9,5 @@ use hebo::{server, Error};
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 fn main() -> Result<(), Error> {
-    std::env::set_var("RUST_LOG", "info");
-    env_logger::init();
-
     server::run_server()
 }
