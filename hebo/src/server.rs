@@ -137,12 +137,12 @@ impl ServerContext {
                 dispatcher_to_listener_senders.push((listener_id, dispatcher_to_listener_sender));
                 let mut listener = Listener::bind(
                     listener_id,
-                    &l,
+                    l,
                     listeners_to_dispatcher_sender.clone(),
                     dispatcher_to_listener_receiver,
                 )
                 .await
-                .expect(&format!("Failed to listen at {:?}", l));
+                .expect(&format!("Failed to listen at {:?}", &listeners_info.last()));
                 let handle = runtime.spawn(async move {
                     listener.run_loop().await;
                 });

@@ -35,6 +35,7 @@ use crate::stream::Stream;
 pub struct Listener {
     id: ListenerId,
     protocol: Protocol,
+    listener_config: config::Listener,
     current_session_id: SessionId,
     pipelines: HashMap<SessionId, Pipeline>,
     session_sender: Sender<SessionToListenerCmd>,
@@ -96,6 +97,7 @@ impl Listener {
     fn new(
         id: ListenerId,
         protocol: Protocol,
+        listener_config: config::Listener,
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
     ) -> Self {
@@ -103,6 +105,7 @@ impl Listener {
         Listener {
             id,
             protocol,
+            listener_config,
             current_session_id: 0,
             pipelines: HashMap::new(),
             session_sender,
@@ -140,12 +143,12 @@ impl Listener {
         ))
     }
 
-    fn get_cert_config(listener: &config::Listener) -> Result<ServerConfig, Error> {
-        let cert_file = listener
+    fn get_cert_config(listener_config: &config::Listener) -> Result<ServerConfig, Error> {
+        let cert_file = listener_config
             .cert_file
             .as_ref()
             .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
-        let key_file = listener
+        let key_file = listener_config
             .key_file
             .as_ref()
             .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
@@ -166,62 +169,66 @@ impl Listener {
 
     pub async fn bind(
         id: u32,
-        listener: &config::Listener,
+        listener_config: config::Listener,
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
     ) -> Result<Listener, Error> {
-        match listener.protocol {
+        match listener_config.protocol {
             config::Protocol::Mqtt => {
-                log::info!("bind mqtt://{}", listener.address);
-                let addrs = listener.address.to_socket_addrs()?;
+                log::info!("bind mqtt://{}", listener_config.address);
+                let addrs = listener_config.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
                         id,
                         Protocol::Mqtt(listener),
+                        listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
                     ));
                 }
             }
             config::Protocol::Mqtts => {
-                log::info!("bind mqtts://{}", listener.address);
-                let config = Listener::get_cert_config(listener)?;
+                log::info!("bind mqtts://{}", listener_config.address);
+                let config = Listener::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-                let addrs = listener.address.to_socket_addrs()?;
+                let addrs = listener_config.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
                         id,
                         Protocol::Mqtts(listener, acceptor),
+                        listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
                     ));
                 }
             }
             config::Protocol::Ws => {
-                log::info!("bind ws://{}", listener.address);
-                let addrs = listener.address.to_socket_addrs()?;
+                log::info!("bind ws://{}", listener_config.address);
+                let addrs = listener_config.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
                         id,
                         Protocol::Ws(listener),
+                        listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
                     ));
                 }
             }
             config::Protocol::Wss => {
-                log::info!("bind wss://{}", listener.address);
-                let config = Listener::get_cert_config(listener)?;
+                log::info!("bind wss://{}", listener_config.address);
+                let config = Listener::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-                let addrs = listener.address.to_socket_addrs()?;
+                let addrs = listener_config.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
                     return Ok(Listener::new(
                         id,
                         Protocol::Wss(listener, acceptor),
+                        listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
                     ));
@@ -229,25 +236,26 @@ impl Listener {
             }
 
             config::Protocol::Uds => {
-                log::info!("bind uds://{}", listener.address);
+                log::info!("bind uds://{}", listener_config.address);
 
                 // Try to clean up old socket file, not that this operation is not atomic.
-                if let Ok(_attr) = fs::metadata(&listener.address) {
-                    fs::remove_file(&listener.address)?;
+                if let Ok(_attr) = fs::metadata(&listener_config.address) {
+                    fs::remove_file(&listener_config.address)?;
                 }
-                let listener = UnixListener::bind(&listener.address)?;
+                let listener = UnixListener::bind(&listener_config.address)?;
                 return Ok(Listener::new(
                     id,
                     Protocol::Uds(listener),
+                    listener_config,
                     dispatcher_sender,
                     dispatcher_receiver,
                 ));
             }
 
             config::Protocol::Quic => {
-                log::info!("bind quic://{}", listener.address);
+                log::info!("bind quic://{}", listener_config.address);
 
-                let key_file = listener
+                let key_file = listener_config
                     .key_file
                     .as_ref()
                     .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
@@ -259,7 +267,7 @@ impl Listener {
                     quinn::PrivateKey::from_pem(&key)?
                 };
 
-                let cert_file = listener
+                let cert_file = listener_config
                     .cert_file
                     .as_ref()
                     .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
@@ -288,13 +296,14 @@ impl Listener {
 
                 let mut endpoint_builder = quinn::Endpoint::builder();
                 endpoint_builder.listen(config_builder.build());
-                let addrs = listener.address.to_socket_addrs()?;
+                let addrs = listener_config.address.to_socket_addrs()?;
                 for addr in addrs {
                     // Bind this endpoint to a UDP socket on the given server address.
                     let (endpoint, incoming) = endpoint_builder.bind(&addr)?;
                     return Ok(Listener::new(
                         id,
                         Protocol::Quic(endpoint, incoming),
+                        listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
                     ));
@@ -303,7 +312,10 @@ impl Listener {
         }
         Err(Error::from_string(
             ErrorKind::SocketError,
-            format!("Failed to create server socket with config: {:?}", listener),
+            format!(
+                "Failed to create server socket with config: {:?}",
+                &listener_config
+            ),
         ))
     }
 
@@ -340,7 +352,8 @@ impl Listener {
             Protocol::Wss(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let tls_stream = acceptor.accept(tcp_stream).await?;
-                let ws_stream = tokio_tungstenite::accept_async(tls_stream).await?;
+                let ws_stream =
+                    tokio_tungstenite::accept_hdr_async(tls_stream, check_ws_path).await?;
                 return Ok(Stream::Wss(ws_stream));
             }
             Protocol::Uds(listener) => {
