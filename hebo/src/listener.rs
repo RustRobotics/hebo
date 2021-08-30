@@ -320,17 +320,21 @@ impl Listener {
     }
 
     async fn accept(&mut self) -> Result<Stream, Error> {
-        use tokio_tungstenite::tungstenite;
-
-        let check_ws_path = |request: &tungstenite::handshake::server::Request,
-                             mut response: tungstenite::handshake::server::Response|
-         -> Result<
-            tungstenite::handshake::server::Response,
-            tungstenite::handshake::server::ErrorResponse,
-        > {
+        use tokio_tungstenite::tungstenite::handshake::server as ws_server;
+        let listener_path = self.listener_config.path.clone();
+        let check_ws_path = |request: &ws_server::Request,
+                             mut response: ws_server::Response|
+         -> Result<ws_server::Response, ws_server::ErrorResponse> {
             let path = request.uri().path();
-            log::info!("path: {:?}", path);
-            return Ok(response);
+            if path == listener_path {
+                return Ok(response);
+            } else {
+                let builder = http::Response::builder().status(http::StatusCode::NOT_FOUND);
+                let resp = builder.body(None);
+                // TODO(Shaohua): Remove unwrap()
+                let resp = resp.unwrap();
+                return Err(resp);
+            }
         };
 
         match &mut self.protocol {
