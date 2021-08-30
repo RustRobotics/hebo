@@ -3,12 +3,13 @@
 // in the LICENSE file.
 
 use log::LevelFilter;
-use log4rs::append::console::ConsoleAppender;
+use log4rs::append::console;
 use log4rs::append::rolling_file::policy::compound::{
     roll::fixed_window::FixedWindowRoller, trigger::size::SizeTrigger, CompoundPolicy,
 };
 use log4rs::append::rolling_file::RollingFileAppender;
-use log4rs::config::{Appender, Config, Logger, Root};
+use log4rs::config::{Appender, Config, Root};
+use log4rs::encode::pattern::PatternEncoder;
 
 use crate::config;
 use crate::error::Error;
@@ -29,7 +30,10 @@ fn get_log_level(level: config::LogLevel) -> LevelFilter {
 }
 
 pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
-    let stdout = ConsoleAppender::builder().build();
+    let stdout = console::ConsoleAppender::builder()
+        .target(console::Target::Stderr)
+        .encoder(Box::new(PatternEncoder::new("{d} {h({l})} - {m}{n}")))
+        .build();
 
     let roller_pattern = log_conf.log_file.to_str().unwrap();
     let roller_pattern = roller_pattern.to_string() + ROLLER_PATTERN;
