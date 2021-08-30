@@ -31,8 +31,8 @@ fn get_log_level(level: config::LogLevel) -> LevelFilter {
 pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
     let stdout = ConsoleAppender::builder().build();
 
-    let mut roller_pattern = log_conf.log_file.to_str().unwrap().to_string();
-    roller_pattern += ROLLER_PATTERN;
+    let roller_pattern = log_conf.log_file.to_str().unwrap();
+    let roller_pattern = roller_pattern.to_string() + ROLLER_PATTERN;
     let roller = FixedWindowRoller::builder()
         .build(&roller_pattern, ROLLER_COUNT)
         .unwrap();
@@ -45,16 +45,17 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
         .unwrap();
 
     let log_level = get_log_level(log_conf.level);
+
+    const STDOUT_NAME: &str = "stdout";
+    const ROLLER_NAME: &str = "roller";
     let config = Config::builder()
-        .appender(Appender::builder().build("stdout", Box::new(stdout)))
-        .appender(Appender::builder().build("requests", Box::new(requests)))
-        .logger(
-            Logger::builder()
-                .appender("requests")
-                .additive(false)
-                .build("app::requests", log_level),
+        .appender(Appender::builder().build(STDOUT_NAME, Box::new(stdout)))
+        .appender(Appender::builder().build(ROLLER_NAME, Box::new(requests)))
+        .build(
+            Root::builder()
+                .appenders([ROLLER_NAME, STDOUT_NAME])
+                .build(log_level),
         )
-        .build(Root::builder().appender("stdout").build(log_level))
         .unwrap();
 
     let handle = log4rs::init_config(config).unwrap();
