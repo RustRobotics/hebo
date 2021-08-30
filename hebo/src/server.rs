@@ -53,7 +53,9 @@ pub fn run_server() -> Result<(), Error> {
         .value_of("config")
         .unwrap_or(constants::DEFAULT_CONFIG);
     let config_content = std::fs::read_to_string(config_file)?;
-    let config: Config = toml::from_str(&config_content).unwrap();
+    let config: Config = toml::from_str(&config_content).map_err(|err| {
+        Error::from_string(ErrorKind::ConfigError, format!("Invalid config: {:?}", err))
+    })?;
 
     if matches.is_present("test") {
         println!("The configuration file {} syntax is Ok", config_file);

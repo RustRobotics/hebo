@@ -78,10 +78,6 @@ impl Error {
             format!("Session with id {} not found", session_id),
         )
     }
-
-    pub fn logger_error(msg: String) -> Self {
-        Error::from_string(ErrorKind::LoggerError, msg)
-    }
 }
 
 impl Display for Error {

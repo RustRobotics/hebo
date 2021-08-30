@@ -44,14 +44,24 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
     let roller_pattern = roller_pattern.to_string() + ROLLER_PATTERN;
     let roller = FixedWindowRoller::builder()
         .build(&roller_pattern, ROLLER_COUNT)
-        .map_err(|err| Error::logger_error(format!("Failed to init roller pattern, {:?}", err)))?;
+        .map_err(|err| {
+            Error::from_string(
+                ErrorKind::LoggerError,
+                format!("Failed to init roller pattern, {:?}", err),
+            )
+        })?;
     let rolling_policy = Box::new(CompoundPolicy::new(
         Box::new(SizeTrigger::new(LOG_FILE_SIZE)),
         Box::new(roller),
     ));
     let requests = RollingFileAppender::builder()
         .build(&log_conf.log_file, rolling_policy)
-        .map_err(|err| Error::logger_error(format!("Failed to init roller appender, {:?}", err)))?;
+        .map_err(|err| {
+            Error::from_string(
+                ErrorKind::LoggerError,
+                format!("Failed to init roller appender, {:?}", err),
+            )
+        })?;
 
     let log_level = get_log_level(log_conf.level);
 
@@ -65,9 +75,18 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
                 .appenders([ROLLER_NAME, STDOUT_NAME])
                 .build(log_level),
         )
-        .map_err(|err| Error::logger_error(format!("Failed to build log4rs config, {:?}", err)))?;
+        .map_err(|err| {
+            Error::from_string(
+                ErrorKind::LoggerError,
+                format!("Failed to build log4rs config, {:?}", err),
+            )
+        })?;
 
-    log4rs::init_config(config)
-        .map_err(|err| Error::logger_error(format!("Failed to init log4rs, {:?}", err)))?;
+    log4rs::init_config(config).map_err(|err| {
+        Error::from_string(
+            ErrorKind::LoggerError,
+            format!("Failed to init log4rs, {:?}", err),
+        )
+    })?;
     Ok(())
 }

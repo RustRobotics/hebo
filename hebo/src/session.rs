@@ -110,7 +110,7 @@ impl Session {
 
     async fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
         let mut buf = Vec::new();
-        packet.encode(&mut buf).unwrap();
+        packet.encode(&mut buf)?;
         self.stream.write(&buf).await.map(drop).map_err(Into::into)
     }
 
