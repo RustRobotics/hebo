@@ -12,7 +12,7 @@ use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
 
 use crate::config;
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 const LOG_FILE_SIZE: u64 = 16 * 1024 * 1024;
 const ROLLER_PATTERN: &str = ".{}.gz";
@@ -35,18 +35,23 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
         .encoder(Box::new(PatternEncoder::new("{d} {h({l})} - {m}{n}")))
         .build();
 
-    let roller_pattern = log_conf.log_file.to_str().unwrap();
+    let roller_pattern = log_conf.log_file.to_str().ok_or_else(|| {
+        Error::from_string(
+            ErrorKind::ConfigError,
+            format!("config: Invalid log file {:?}", log_conf.log_file),
+        )
+    })?;
     let roller_pattern = roller_pattern.to_string() + ROLLER_PATTERN;
     let roller = FixedWindowRoller::builder()
         .build(&roller_pattern, ROLLER_COUNT)
-        .unwrap();
+        .map_err(|err| Error::logger_error(format!("Failed to init roller pattern, {:?}", err)))?;
     let rolling_policy = Box::new(CompoundPolicy::new(
         Box::new(SizeTrigger::new(LOG_FILE_SIZE)),
         Box::new(roller),
     ));
     let requests = RollingFileAppender::builder()
         .build(&log_conf.log_file, rolling_policy)
-        .unwrap();
+        .map_err(|err| Error::logger_error(format!("Failed to init roller appender, {:?}", err)))?;
 
     let log_level = get_log_level(log_conf.level);
 
@@ -60,8 +65,9 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
                 .appenders([ROLLER_NAME, STDOUT_NAME])
                 .build(log_level),
         )
-        .unwrap();
+        .map_err(|err| Error::logger_error(format!("Failed to build log4rs config, {:?}", err)))?;
 
-    let handle = log4rs::init_config(config).unwrap();
+    log4rs::init_config(config)
+        .map_err(|err| Error::logger_error(format!("Failed to init log4rs, {:?}", err)))?;
     Ok(())
 }

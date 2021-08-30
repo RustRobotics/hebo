@@ -42,6 +42,11 @@ pub enum ErrorKind {
 
     /// mpsc channel error.
     ChannelError,
+
+    /// Invalid config file.
+    ConfigError,
+
+    LoggerError,
 }
 
 #[derive(Clone, Debug)]
@@ -72,6 +77,10 @@ impl Error {
             ErrorKind::SessionNotFound,
             format!("Session with id {} not found", session_id),
         )
+    }
+
+    pub fn logger_error(msg: String) -> Self {
+        Error::from_string(ErrorKind::LoggerError, msg)
     }
 }
 
