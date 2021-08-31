@@ -66,7 +66,7 @@ impl Session {
 
     pub async fn run_loop(mut self) {
         // TODO(Shaohua): Set buffer cap based on settings
-        let mut buf = Vec::with_capacity(512);
+        let mut buf = Vec::with_capacity(1024);
         // TODO(Shaohua): Handle timeout
         let mut timer = interval(Duration::from_secs(20));
         loop {
@@ -84,7 +84,7 @@ impl Session {
                 }
                 _ = timer.tick() => {
                     // TODO(Shaohua): Send ping
-                    //log::info!("tick()");
+                    log::info!("tick()");
                 },
                 Some(cmd) = self.receiver.recv() => {
                     if let Err(err) = self.handle_listener_packet(cmd).await {

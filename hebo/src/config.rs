@@ -21,6 +21,8 @@ pub struct Config {
 
     #[serde(default = "Storage::default")]
     pub storage: Storage,
+
+    #[serde(default = "Log::default")]
     pub log: Log,
 }
 
@@ -367,23 +369,72 @@ impl Default for Storage {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Log {
+    /// Alaso print log to console.
+    /// Default is true.
+    #[serde(default = "Log::default_console_log")]
     pub console_log: bool,
+
+    /// Set minimum log level.
+    ///
+    /// Avaliable values are:
+    /// - off, disable log
+    /// - error
+    /// - warn
+    /// - info
+    /// - debug
+    /// - trace
+    /// Default is "info".
+    #[serde(default = "Log::default_level")]
     pub level: LogLevel,
 
-    #[serde(default = "log_default_file")]
+    /// Path to log file.
+    ///
+    /// Default is "/var/log/hebo/hebo.log".
+    #[serde(default = "Log::default_log_file")]
     pub log_file: PathBuf,
 }
 
 #[derive(Debug, Deserialize, Clone, Copy)]
 pub enum LogLevel {
+    #[serde(alias = "off")]
     Off,
+
+    #[serde(alias = "error")]
     Error,
+
+    #[serde(alias = "warn")]
     Warn,
+
+    #[serde(alias = "info")]
     Info,
+
+    #[serde(alias = "debug")]
     Debug,
+
+    #[serde(alias = "trace")]
     Trace,
 }
 
-fn log_default_file() -> PathBuf {
-    PathBuf::from("/var/log/hebo/hebo.log")
+impl Log {
+    pub const fn default_console_log() -> bool {
+        true
+    }
+
+    pub const fn default_level() -> LogLevel {
+        LogLevel::Info
+    }
+
+    pub fn default_log_file() -> PathBuf {
+        PathBuf::from("/var/log/hebo/hebo.log")
+    }
+}
+
+impl Default for Log {
+    fn default() -> Self {
+        Self {
+            console_log: Self::default_console_log(),
+            level: Self::default_level(),
+            log_file: Self::default_log_file(),
+        }
+    }
 }
