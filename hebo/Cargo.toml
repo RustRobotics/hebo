@@ -1,6 +1,6 @@
 [package]
 name = "hebo"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2018"
 license = "AGPL-3.0-only"
