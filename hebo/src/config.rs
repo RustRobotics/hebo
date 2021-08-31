@@ -12,6 +12,8 @@ use codec::QoS;
 pub struct Config {
     #[serde(default = "General::default")]
     pub general: General,
+
+    #[serde(default = "Listener::default_listeners")]
     pub listeners: Vec<Listener>,
     pub security: Security,
     pub storage: Storage,
@@ -144,29 +146,111 @@ impl Default for General {
     }
 }
 
+/// Listener represent an unique ip/port combination and mqtt connection protocol.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Listener {
-    /// Network interface to bind to.
-    pub interface: Option<String>,
+    /// Bind the listener to a specific interface.
+    ///
+    /// This is useful when an interface has multiple addresses or the address may change.
+    /// If used with the [ip address/host name] part of the address definition, then the
+    /// bind_interface option will take priority.
+    /// Example: bind_interface eth0
+    ///
+    /// Default is empty.
+    #[serde(default = "Listener::default_bind_interface")]
+    pub bind_interface: String,
 
+    /// The maximum number of client connections to this listener allowed.
+    ///
+    /// Note that other process limits mean that unlimited connections
+    /// are not really possible. Typically the default maximum number of
+    /// connections possible is around 1024.
+    /// Default is 0, which means unlimited connections.
+    #[serde(default = "Listener::default_max_connections")]
     pub max_connections: usize,
 
     /// Binding protocol.
+    ///
+    /// Default is mqtt.
+    #[serde(default = "Listener::default_protocol")]
     pub protocol: Protocol,
 
-    /// Binding address, including domain name and port, e.g. localhost:1883
+    /// Binding address, including domain name and port.
+    ///
     /// For unix domain socket, path to socket file.
+    /// Command addresses are:
+    /// - 0.0.0.0:1883, for mqtt
+    /// - 0.0.0.0:8883, for mqtts
+    /// - 0.0.0.0:8993, for mqtt over QUIC
+    /// - 0.0.0.0:8083, for mqtt over WebSocket
+    /// - 0.0.0.0:8084, for mqtt over secure WebSocket
+    /// Default is 0.0.0.0:1883
+    #[serde(default = "Listener::default_address")]
     pub address: String,
 
     /// Url path to bind to, only used for websocket protocols.
-    #[serde(default = "listener_default_path")]
-    pub path: String,
+    ///
+    /// Default is None, which means do not check url path.
+    #[serde(default = "Listener::default_path")]
+    pub path: Option<String>,
 
     /// Path to TLS cert file.
+    /// Default is None.
+    #[serde(default = "Listener::default_cert_file")]
     pub cert_file: Option<PathBuf>,
 
     /// Path to TLS private key file.
+    /// Default is None.
+    #[serde(default = "Listener::default_key_file")]
     pub key_file: Option<PathBuf>,
+}
+
+impl Listener {
+    pub fn default_listeners() -> Vec<Self> {
+        vec![Self::default()]
+    }
+
+    pub fn default_bind_interface() -> String {
+        "".to_string()
+    }
+
+    pub const fn default_max_connections() -> usize {
+        0
+    }
+
+    pub const fn default_protocol() -> Protocol {
+        Protocol::Mqtt
+    }
+
+    pub fn default_address() -> String {
+        "0.0.0.0:1883".to_string()
+    }
+
+    pub const fn default_path() -> Option<String> {
+        None
+    }
+
+    pub const fn default_cert_file() -> Option<PathBuf> {
+        None
+    }
+
+    pub const fn default_key_file() -> Option<PathBuf> {
+        None
+    }
+}
+
+impl Default for Listener {
+    fn default() -> Self {
+        Self {
+            bind_interface: Self::default_bind_interface(),
+            max_connections: Self::default_max_connections(),
+            protocol: Self::default_protocol(),
+            address: Self::default_address(),
+            path: Self::default_path(),
+            cert_file: Self::default_cert_file(),
+            key_file: Self::default_key_file(),
+        }
+    }
 }
 
 /// Binding protocol types.
@@ -227,10 +311,6 @@ pub enum LogLevel {
     Info,
     Debug,
     Trace,
-}
-
-fn listener_default_path() -> String {
-    "/".to_owned()
 }
 
 fn log_default_file() -> PathBuf {
