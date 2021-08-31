@@ -2,6 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use serde_derive::Deserialize;
 use std::convert::TryFrom;
 
 use super::{ByteArray, DecodeError, EncodeError};
@@ -19,7 +20,7 @@ pub trait DecodePacket: Sized {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]
 pub enum QoS {
     /// At most once delivery.
     AtMostOnce = 0,
