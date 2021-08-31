@@ -32,6 +32,7 @@ pub struct General {
     /// Time interval to send $SYS messages in seconds.
     ///
     /// Set to 0 to disable $SYS messages.
+    ///
     /// Default is 3s.
     #[serde(default = "General::default_sys_interval")]
     pub sys_interval: u32,
@@ -52,6 +53,7 @@ pub struct General {
     ///
     /// This has the effect of reducing latency of individual messages
     /// at the potential cost of increasing the number of packets being sent.
+    ///
     /// Default is false.
     #[serde(default = "General::default_no_delay")]
     pub no_delay: bool,
@@ -60,6 +62,7 @@ pub struct General {
     ///
     /// Received messages that exceed this size will not be accepted by the broker.
     /// MQTT imposes a maximum payload size of 268435455 bytes.
+    ///
     /// Default value is 0, which means that all valid MQTT messages are accepted.
     #[serde(default = "General::default_message_size_limit")]
     pub message_size_limit: usize,
@@ -73,6 +76,7 @@ pub struct General {
     /// connect with keepalive less than or equal to this value, otherwise they will be
     /// sent a server keepalive telling them to use `max_keepalive`.
     /// This only applies to MQTT v5 clients. The maximum value allowable is 65535. Do not set below 10.
+    ///
     /// Default value is 65535.
     #[serde(default = "General::default_max_keepalive")]
     pub max_keepalive: u32,
@@ -81,6 +85,7 @@ pub struct General {
     ///
     /// Clients publishing at a QoS higher than specified here will be disconnected.
     /// Available values are 0, 1 and 2.
+    ///
     /// Default is 2.
     #[serde(default = "General::default_max_qos")]
     pub max_qos: QoS,
@@ -96,6 +101,7 @@ pub struct General {
     /// and earlier clients will of course not have received the maximum packet size information.
     /// Setting below 20 bytes is forbidden because it is likely to interfere with ordinary client operation,
     /// even with very small payloads.
+    ///
     /// Defaults is 0, which means no limit.
     #[serde(default = "General::default_max_packet_size")]
     pub max_packet_size: usize,
@@ -171,6 +177,7 @@ pub struct Listener {
     /// Note that other process limits mean that unlimited connections
     /// are not really possible. Typically the default maximum number of
     /// connections possible is around 1024.
+    ///
     /// Default is 0, which means unlimited connections.
     #[serde(default = "Listener::default_max_connections")]
     pub max_connections: usize,
@@ -190,6 +197,7 @@ pub struct Listener {
     /// - 0.0.0.0:8993, for mqtt over QUIC
     /// - 0.0.0.0:8083, for mqtt over WebSocket
     /// - 0.0.0.0:8084, for mqtt over secure WebSocket
+    ///
     /// Default is 0.0.0.0:1883
     #[serde(default = "Listener::default_address")]
     pub address: String,
@@ -201,11 +209,13 @@ pub struct Listener {
     pub path: Option<String>,
 
     /// Path to TLS cert file.
+    ///
     /// Default is None.
     #[serde(default = "Listener::default_cert_file")]
     pub cert_file: Option<PathBuf>,
 
     /// Path to TLS private key file.
+    ///
     /// Default is None.
     #[serde(default = "Listener::default_key_file")]
     pub key_file: Option<PathBuf>,
@@ -289,6 +299,11 @@ pub enum Protocol {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Security {
+    /// Determines whether clients that connect without providing a username are allowed to connect.
+    /// It is highly recommended to disable this switch and configure an authorization policy.
+    ///
+    /// Default is true.
+    #[serde(default = "Security::default_allow_anonymous")]
     pub allow_anonymous: bool,
 }
 
@@ -312,11 +327,13 @@ pub struct Storage {
     ///
     /// This saves information about all messages, including subscriptions, currently in-flight messages
     /// and retained messages.
+    ///
     /// Default is true.
     #[serde(default = "Storage::default_persistence")]
     pub persistence: bool,
 
     /// Location for persistent database.
+    ///
     /// Default is "/var/lib/hebo/hebo.db"
     #[serde(default = "Storage::default_db_path")]
     pub db_path: PathBuf,
@@ -326,6 +343,7 @@ pub struct Storage {
     /// If set to 0, the persistence database will only be written when hebo exits.
     /// See also `autosave_on_changes`.
     /// Note that writing of the persistence database can be forced by sending a SIGUSR1 signal.
+    ///
     /// Default is 1800 seconds.
     #[serde(default = "Storage::default_auto_save_interval")]
     pub auto_save_interval: usize,
@@ -333,6 +351,7 @@ pub struct Storage {
     /// If is not None, hebo will count the number of subscription changes, retained messages received
     /// and queued messages and if the total exceeds specified threshold then
     /// the in-memory database will be saved to disk.
+    ///
     /// Default is None.
     #[serde(default = "Storage::default_auto_save_on_change")]
     pub auto_save_on_change: Option<usize>,
@@ -370,6 +389,7 @@ impl Default for Storage {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Log {
     /// Alaso print log to console.
+    ///
     /// Default is true.
     #[serde(default = "Log::default_console_log")]
     pub console_log: bool,
@@ -383,6 +403,7 @@ pub struct Log {
     /// - info
     /// - debug
     /// - trace
+    ///
     /// Default is "info".
     #[serde(default = "Log::default_level")]
     pub level: LogLevel,
