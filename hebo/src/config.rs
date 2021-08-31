@@ -15,7 +15,11 @@ pub struct Config {
 
     #[serde(default = "Listener::default_listeners")]
     pub listeners: Vec<Listener>,
+
+    #[serde(default = "Security::default")]
     pub security: Security,
+
+    #[serde(default = "Storage::default")]
     pub storage: Storage,
     pub log: Log,
 }
@@ -286,12 +290,79 @@ pub struct Security {
     pub allow_anonymous: bool,
 }
 
+impl Security {
+    pub const fn default_allow_anonymous() -> bool {
+        true
+    }
+}
+
+impl Default for Security {
+    fn default() -> Self {
+        Self {
+            allow_anonymous: Self::default_allow_anonymous(),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct Storage {
+    /// Save persistent message data to disk.
+    ///
+    /// This saves information about all messages, including subscriptions, currently in-flight messages
+    /// and retained messages.
+    /// Default is true.
+    #[serde(default = "Storage::default_persistence")]
     pub persistence: bool,
-    pub db_path: Option<PathBuf>,
+
+    /// Location for persistent database.
+    /// Default is "/var/lib/hebo/hebo.db"
+    #[serde(default = "Storage::default_db_path")]
+    pub db_path: PathBuf,
+
+    /// If persistence is enabled, save the in-memory database to disk every autosave_interval seconds.
+    ///
+    /// If set to 0, the persistence database will only be written when hebo exits.
+    /// See also `autosave_on_changes`.
+    /// Note that writing of the persistence database can be forced by sending a SIGUSR1 signal.
+    /// Default is 1800 seconds.
+    #[serde(default = "Storage::default_auto_save_interval")]
     pub auto_save_interval: usize,
-    pub auto_save_on_change: bool,
+
+    /// If is not None, hebo will count the number of subscription changes, retained messages received
+    /// and queued messages and if the total exceeds specified threshold then
+    /// the in-memory database will be saved to disk.
+    /// Default is None.
+    #[serde(default = "Storage::default_auto_save_on_change")]
+    pub auto_save_on_change: Option<usize>,
+}
+
+impl Storage {
+    pub const fn default_persistence() -> bool {
+        true
+    }
+
+    pub fn default_db_path() -> PathBuf {
+        PathBuf::from("/var/lib/hebo/hebo.db")
+    }
+
+    pub const fn default_auto_save_interval() -> usize {
+        1800
+    }
+
+    pub const fn default_auto_save_on_change() -> Option<usize> {
+        None
+    }
+}
+
+impl Default for Storage {
+    fn default() -> Self {
+        Self {
+            persistence: Self::default_persistence(),
+            db_path: Self::default_db_path(),
+            auto_save_interval: Self::default_auto_save_interval(),
+            auto_save_on_change: Self::default_auto_save_on_change(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Clone)]
