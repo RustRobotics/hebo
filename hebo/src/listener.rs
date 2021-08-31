@@ -321,12 +321,12 @@ impl Listener {
 
     async fn accept(&mut self) -> Result<Stream, Error> {
         use tokio_tungstenite::tungstenite::handshake::server as ws_server;
-        let listener_path = self.listener_config.path.clone();
+        let listener_path = self.listener_config.path.as_ref();
         let check_ws_path = |request: &ws_server::Request,
                              response: ws_server::Response|
          -> Result<ws_server::Response, ws_server::ErrorResponse> {
             let path = request.uri().path();
-            if path == listener_path {
+            if listener_path.is_none() || path == listener_path.unwrap() {
                 return Ok(response);
             } else {
                 let builder = http::Response::builder().status(http::StatusCode::NOT_FOUND);
@@ -349,15 +349,21 @@ impl Listener {
             }
             Protocol::Ws(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
-                let ws_stream =
-                    tokio_tungstenite::accept_hdr_async(tcp_stream, check_ws_path).await?;
+                let ws_stream = if listener_path.is_none() {
+                    tokio_tungstenite::accept_async(tcp_stream).await?
+                } else {
+                    tokio_tungstenite::accept_hdr_async(tcp_stream, check_ws_path).await?
+                };
                 return Ok(Stream::Ws(ws_stream));
             }
             Protocol::Wss(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let tls_stream = acceptor.accept(tcp_stream).await?;
-                let ws_stream =
-                    tokio_tungstenite::accept_hdr_async(tls_stream, check_ws_path).await?;
+                let ws_stream = if listener_path.is_none() {
+                    tokio_tungstenite::accept_async(tls_stream).await?
+                } else {
+                    tokio_tungstenite::accept_hdr_async(tls_stream, check_ws_path).await?
+                };
                 return Ok(Stream::Wss(ws_stream));
             }
             Protocol::Uds(listener) => {
