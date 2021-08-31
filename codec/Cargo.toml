@@ -7,6 +7,6 @@ description = "Packet codec for MQTT protocol"
 
 [dependencies]
 byteorder = "1.4.3"
-bytes = "1.0.1"
+bytes = "1.1.0"
 log = "0.4.14"
 rand = "0.8.4"
