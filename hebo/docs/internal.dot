@@ -1,0 +1,62 @@
+
+digraph {
+	ServerContext [shape=box];
+	ServerContext -> Config;
+	ServerContext -> Dispatcher [style=dotted, color=red];
+
+	Dispatcher -> Listeners;
+	Listeners -> Dispatcher;
+
+	Dispatcher -> SysTree;
+	SysTree -> Dispatcher [style=dotted];
+
+	Dispatcher -> Cache;
+	Cache -> Dispatcher;
+	Cache -> "Persistent Storage";
+
+	Listeners -> Sessions;
+	Sessions -> Listeners;
+	Sessions -> Stream;
+
+	// cli
+	Cli -> Dispatcher;
+
+	// dashboard app
+	RestApi -> Dispatcher;
+
+	// auth app
+	Auth -> Dispatcher [style=dotted, color=red];
+	Dispatcher -> Auth [style=dotted, color=red];
+	Auth -> "Password File" [style=dotted, color=red];
+	Auth -> "Auth Database" [style=dotted, color=red];
+
+	// hook app
+	Dispatcher -> Hook [style=dotted, color=red];
+	Hook -> Dispatcher [style=dotted, color=red];
+
+	// plugin app
+	Dispatcher -> Plugins [style=dotted, color=red];
+	Plugins -> Dispatcher [style=dotted, color=red];
+
+	// gateway app
+	Gateway -> Dispatcher [style=dotted, color=red];
+	Dispatcher -> Gateway [style=dotted, color=red];
+	Gateway -> CoAP [style=dotted, color=red];
+	Gateway -> Stomp [style=dotted, color=red];
+	Gateway -> "MQTT-SN" [style=dotted, color=red];
+	Gateway -> LwM2M [style=dotted, color=red];
+
+	// mqtt bridge app
+	Dispatcher -> Bridge [style=dotted, color=red];
+	Bridge -> Dispatcher [style=dotted, color=red];
+
+	// rule engine app
+	Dispatcher -> "Rule Engine" [style=dotted, color=red];
+	"Rule Engine" -> Dispatcher [style=dotted, color=red];
+	"Rule Engine" -> "Forward Database" [style=dotted, color=red];
+
+	// monitor app
+	Dispatcher -> Metrix [style=dotted, color=red];
+	Metrix -> Dispatcher [style=dotted, color=red];
+	Metrix -> Promethous [style=dotted, color=red];
+}
