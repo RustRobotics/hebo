@@ -2,6 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+pub mod auth;
 pub mod cache;
 pub mod cache_types;
 pub mod commands;

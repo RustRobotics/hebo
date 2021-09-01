@@ -3,3 +3,5 @@
 // in the LICENSE file.
 
 pub mod file_auth;
+pub mod passwd;
+pub use passwd::Passwd;

@@ -47,6 +47,8 @@ pub enum ErrorKind {
     ConfigError,
 
     LoggerError,
+
+    SSLError,
 }
 
 #[derive(Clone, Debug)]
@@ -151,6 +153,12 @@ impl From<codec::EncodeError> for Error {
 impl From<codec::DecodeError> for Error {
     fn from(err: codec::DecodeError) -> Self {
         Error::from_string(ErrorKind::DecodeError, format!("{:?}", err))
+    }
+}
+
+impl From<openssl::error::ErrorStack> for Error {
+    fn from(err: openssl::error::ErrorStack) -> Self {
+        Error::from_string(ErrorKind::SSLError, format!("{:?}", err))
     }
 }
 

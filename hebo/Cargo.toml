@@ -29,7 +29,9 @@ jemallocator = { version = "0.3.2", optional = true }
 log = "0.4.14"
 log4rs = { version = "1.0.0", features = [ "background_rotation", "gzip" ] }
 nc = "0.7.9"
+openssl = "0.10.36"
 quinn = "0.7.2"
+rand = "0.8.4"
 serde = "1.0.129"
 serde_derive = "1.0.129"
 tokio = { version = "1.10.1", features = ["full"] }
