@@ -11,16 +11,25 @@ pub const SALT_LEN: usize = 12;
 pub const HASH_LEN: usize = 64;
 pub const PW_SHA512: i32 = 6;
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Salt([u8; SALT_LEN]);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Passwd {
+    // TODO(Shaohua): Replace with [u8; 64].
     passwd_hash: Vec<u8>,
     salt: Salt,
 }
 
 impl Passwd {
+    pub fn hash(&self) -> &[u8] {
+        &self.passwd_hash
+    }
+
+    pub fn salt(&self) -> &[u8] {
+        &self.salt.0
+    }
+
     /// Parse password entry from string.
     pub fn parse(_s: &str) -> Option<Self> {
         unimplemented!()
@@ -68,14 +77,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_dump() {}
+    fn test_dump() {
+        let p = Passwd::generate(b"password").unwrap();
+        let output = p.dump("username");
+        assert_eq!(output.len(), 117);
+    }
 
     #[test]
-    fn test_generate() {}
+    fn test_generate() {
+        let p = Passwd::generate(b"password");
+        assert!(p.is_ok());
+        let p = p.unwrap();
+        assert_eq!(p.hash().len(), HASH_LEN);
+    }
 
     #[test]
-    fn test_update() {}
+    fn test_update() {
+        let mut p = Passwd::generate(b"password").unwrap();
+        assert!(p.update(b"new-password").is_ok());
+    }
 
     #[test]
-    fn test_is_match() {}
+    fn test_is_match() {
+        let p = Passwd::generate(b"password").unwrap();
+        assert!(p.is_match(b"password").unwrap());
+    }
 }
