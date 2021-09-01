@@ -18,11 +18,22 @@ pub struct Salt([u8; SALT_LEN]);
 pub struct Passwd {
     passwd_hash: Vec<u8>,
     salt: Salt,
-    iterations: u32,
 }
 
 impl Passwd {
-    pub fn generate(passwd: &[u8], iterations: u32) -> Result<Self, Error> {
+    /// Parse password entry from string.
+    pub fn parse(_s: &str) -> Option<Self> {
+        unimplemented!()
+    }
+
+    /// Generate password entry.
+    pub fn dump(&self, username: &str) -> String {
+        let salt = base64::encode(self.salt.0);
+        let hash = base64::encode(&self.passwd_hash);
+        format!("{}:${}${}${}", username, PW_SHA512, salt, hash)
+    }
+
+    pub fn generate(passwd: &[u8]) -> Result<Self, Error> {
         let salt = Salt(rand::thread_rng().gen());
         let mut h = Hasher::new(MessageDigest::sha512())?;
         h.update(passwd)?;
@@ -31,7 +42,6 @@ impl Passwd {
         Ok(Self {
             passwd_hash: res.to_vec(),
             salt,
-            iterations,
         })
     }
 
@@ -44,11 +54,28 @@ impl Passwd {
         Ok(())
     }
 
-    pub fn match_passwd(&self, passwd: &[u8]) -> Result<bool, Error> {
+    pub fn is_match(&self, passwd: &[u8]) -> Result<bool, Error> {
         let mut h = Hasher::new(MessageDigest::sha512())?;
         h.update(passwd)?;
         h.update(&self.salt.0)?;
         let res = h.finish()?;
         Ok(self.passwd_hash == res.as_ref())
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dump() {}
+
+    #[test]
+    fn test_generate() {}
+
+    #[test]
+    fn test_update() {}
+
+    #[test]
+    fn test_is_match() {}
 }
