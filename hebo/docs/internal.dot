@@ -2,61 +2,54 @@
 digraph {
 	ServerContext [shape=box];
 	ServerContext -> Config;
-	ServerContext -> Dispatcher [style=dotted, color=red];
+	ServerContext -> Dispatcher [style=bold];
 
-	Dispatcher -> Listeners;
-	Listeners -> Dispatcher;
+	Dispatcher -> Listeners [dir=both];
 
 	Dispatcher -> SysTree;
 	SysTree -> Dispatcher [style=dotted];
 
-	Dispatcher -> Cache;
-	Cache -> Dispatcher;
+	Dispatcher -> Cache [dir=both];
+	"Persistent Storage" [shape=cylinder];
 	Cache -> "Persistent Storage";
 
-	Listeners -> Sessions;
-	Sessions -> Listeners;
+	Listeners -> Sessions [dir=both];
 	Sessions -> Stream;
 
 	// cli
-	Cli -> Dispatcher;
+	CLI -> Dispatcher;
 
 	// dashboard app
 	RestApi -> Dispatcher;
 
 	// auth app
-	Auth -> Dispatcher [style=dotted, color=red];
-	Dispatcher -> Auth [style=dotted, color=red];
+	Auth -> Dispatcher [dir=both, style=dotted, color=red];
 	Auth -> "Password File" [style=dotted, color=red];
+	"Auth Database" [shape=cylinder];
 	Auth -> "Auth Database" [style=dotted, color=red];
+	Auth -> connector [style=dotted, color=red];
 
 	// hook app
-	Dispatcher -> Hook [style=dotted, color=red];
-	Hook -> Dispatcher [style=dotted, color=red];
+	Dispatcher -> Hook [dir=both, style=dotted, color=red];
 
 	// plugin app
-	Dispatcher -> Plugins [style=dotted, color=red];
-	Plugins -> Dispatcher [style=dotted, color=red];
+	Dispatcher -> Plugins [dir=both,style=dotted, color=red];
 
 	// gateway app
-	Gateway -> Dispatcher [style=dotted, color=red];
-	Dispatcher -> Gateway [style=dotted, color=red];
-	Gateway -> CoAP [style=dotted, color=red];
-	Gateway -> Stomp [style=dotted, color=red];
-	Gateway -> "MQTT-SN" [style=dotted, color=red];
-	Gateway -> LwM2M [style=dotted, color=red];
+	Gateway -> Dispatcher [dir=both, style=dotted, color=red];
+	ExternalProtocols [shape=record, label="{ CoAP | Stomp | MQTT-SN | LwM2M }"];
+	Gateway -> ExternalProtocols [style=dotted, color=red];
 
 	// mqtt bridge app
-	Dispatcher -> Bridge [style=dotted, color=red];
-	Bridge -> Dispatcher [style=dotted, color=red];
+	Dispatcher -> Bridge [dir=both,style=dotted, color=red];
 
 	// rule engine app
-	Dispatcher -> "Rule Engine" [style=dotted, color=red];
-	"Rule Engine" -> Dispatcher [style=dotted, color=red];
+	Dispatcher -> "Rule Engine" [dir=both, style=dotted, color=red];
+	"Forward Database" [shape=cylinder];
 	"Rule Engine" -> "Forward Database" [style=dotted, color=red];
+	"Rule Engine" -> connector [style=dotted, color=red];
 
 	// monitor app
-	Dispatcher -> Metrix [style=dotted, color=red];
-	Metrix -> Dispatcher [style=dotted, color=red];
+	Dispatcher -> Metrix [dir=both, style=dotted, color=red];
 	Metrix -> Promethous [style=dotted, color=red];
 }
