@@ -6,7 +6,6 @@ pub mod cache;
 pub mod cache_types;
 pub mod commands;
 pub mod config;
-pub mod constants;
 pub mod dispatcher;
 pub mod error;
 pub mod listener;

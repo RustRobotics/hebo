@@ -12,12 +12,14 @@ use tokio::sync::mpsc;
 use crate::cache::Cache;
 use crate::commands::DispatcherToCacheCmd;
 use crate::config::Config;
-use crate::constants;
 use crate::dispatcher::Dispatcher;
 use crate::error::{Error, ErrorKind};
 use crate::listener::Listener;
 use crate::log::init_log;
 use crate::system::System;
+
+pub const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
+pub const CHANNEL_CAPACITY: usize = 16;
 
 /// Entry point of server
 pub fn run_server() -> Result<(), Error> {
@@ -49,9 +51,7 @@ pub fn run_server() -> Result<(), Error> {
         )
         .get_matches();
 
-    let config_file = matches
-        .value_of("config")
-        .unwrap_or(constants::DEFAULT_CONFIG);
+    let config_file = matches.value_of("config").unwrap_or(DEFAULT_CONFIG);
     let config_content = std::fs::read_to_string(config_file)?;
     let config: Config = toml::from_str(&config_content).map_err(|err| {
         Error::from_string(ErrorKind::ConfigError, format!("Invalid config: {:?}", err))
@@ -129,7 +129,7 @@ impl ServerContext {
 
         runtime.block_on(async {
             let (listeners_to_dispatcher_sender, listeners_to_dispatcher_receiver) =
-                mpsc::channel(constants::CHANNEL_CAPACITY);
+                mpsc::channel(CHANNEL_CAPACITY);
             let mut dispatcher_to_listener_senders = Vec::new();
             let mut handles = Vec::new();
             let mut listener_id: u32 = 0;
@@ -138,7 +138,7 @@ impl ServerContext {
             for l in self.config.listeners.clone() {
                 listeners_info.push((listener_id, Arc::new(l.address.clone())));
                 let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
-                    mpsc::channel(constants::CHANNEL_CAPACITY);
+                    mpsc::channel(CHANNEL_CAPACITY);
                 dispatcher_to_listener_senders.push((listener_id, dispatcher_to_listener_sender));
                 let mut listener = Listener::bind(
                     listener_id,
@@ -156,11 +156,11 @@ impl ServerContext {
             }
 
             let (system_to_dispatcher_sender, system_to_dispatcher_receiver) =
-                mpsc::channel(constants::CHANNEL_CAPACITY);
+                mpsc::channel(CHANNEL_CAPACITY);
             let (system_to_cache_sender, system_to_cache_receiver) =
-                mpsc::channel(constants::CHANNEL_CAPACITY);
+                mpsc::channel(CHANNEL_CAPACITY);
             let (cache_to_system_sender, cache_to_system_receiver) =
-                mpsc::channel(constants::CHANNEL_CAPACITY);
+                mpsc::channel(CHANNEL_CAPACITY);
 
             let mut system = System::new(
                 self.config.general.sys_interval,
@@ -174,9 +174,9 @@ impl ServerContext {
             handles.push(system_handle);
 
             let (cache_to_dispatcher_sender, cache_to_dispatcher_receiver) =
-                mpsc::channel(constants::CHANNEL_CAPACITY);
+                mpsc::channel(CHANNEL_CAPACITY);
             let (dispatcher_to_cache_sender, dispatcher_to_cache_receiver) =
-                mpsc::channel(constants::CHANNEL_CAPACITY);
+                mpsc::channel(CHANNEL_CAPACITY);
             let mut cache = Cache::new(
                 cache_to_dispatcher_sender,
                 dispatcher_to_cache_receiver,

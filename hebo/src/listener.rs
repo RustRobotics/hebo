@@ -26,10 +26,11 @@ use crate::commands::{
     SessionToListenerCmd,
 };
 use crate::config;
-use crate::constants;
 use crate::error::{Error, ErrorKind};
 use crate::session::Session;
 use crate::stream::Stream;
+
+pub const CHANNEL_CAPACITY: usize = 16;
 
 #[derive(Debug)]
 pub struct Listener {
@@ -101,7 +102,7 @@ impl Listener {
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
     ) -> Self {
-        let (session_sender, session_receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
+        let (session_sender, session_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         Listener {
             id,
             protocol,
@@ -419,7 +420,7 @@ impl Listener {
     }
 
     async fn new_connection(&mut self, stream: Stream) {
-        let (sender, receiver) = mpsc::channel(constants::CHANNEL_CAPACITY);
+        let (sender, receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let session_id = self.next_session_id();
         let pipeline = Pipeline::new(sender, session_id);
         self.pipelines.insert(session_id, pipeline);
