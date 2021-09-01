@@ -11,7 +11,6 @@ pub mod error;
 pub mod listener;
 pub mod log;
 pub mod metrics;
-pub mod router;
 pub mod server;
 pub mod session;
 pub mod storage;

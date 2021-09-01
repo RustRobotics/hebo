@@ -18,7 +18,7 @@ use crate::listener::Listener;
 use crate::log::init_log;
 use crate::system::System;
 
-pub const DEFAULT_CONFIG: &'static str = "/etc/hebo/hebo.toml";
+pub const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
 pub const CHANNEL_CAPACITY: usize = 16;
 
 /// Entry point of server

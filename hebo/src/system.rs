@@ -10,7 +10,7 @@ use tokio::time::interval;
 use crate::commands::{CacheToSystemCmd, SystemToCacheCmd, SystemToDispatcherCmd};
 use crate::error::Error;
 
-const UPTIME: &str = "$SYS/uptime";
+pub const UPTIME: &str = "$SYS/uptime";
 
 /// Produce $SYS message.
 #[derive(Debug)]
