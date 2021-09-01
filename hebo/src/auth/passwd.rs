@@ -11,19 +11,29 @@ pub const SALT_LEN: usize = 12;
 pub const HASH_LEN: usize = 64;
 pub const PW_SHA512: i32 = 6;
 
-#[derive(Debug, Default, Clone, Copy, PartialEq)]
-pub struct Salt([u8; SALT_LEN]);
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Salt([u8; SALT_LEN]);
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Hash([u8; HASH_LEN]);
+
+impl Hash {
+    fn from_slice(s: &[u8]) -> Self {
+        let mut v = [0; HASH_LEN];
+        v.copy_from_slice(s);
+        Self(v)
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Passwd {
-    // TODO(Shaohua): Replace with [u8; 64].
-    passwd_hash: Vec<u8>,
     salt: Salt,
+    passwd_hash: Hash,
 }
 
 impl Passwd {
     pub fn hash(&self) -> &[u8] {
-        &self.passwd_hash
+        &self.passwd_hash.0
     }
 
     pub fn salt(&self) -> &[u8] {
@@ -38,7 +48,7 @@ impl Passwd {
     /// Generate password entry.
     pub fn dump(&self, username: &str) -> String {
         let salt = base64::encode(self.salt.0);
-        let hash = base64::encode(&self.passwd_hash);
+        let hash = base64::encode(self.passwd_hash.0);
         format!("{}:${}${}${}", username, PW_SHA512, salt, hash)
     }
 
@@ -48,10 +58,9 @@ impl Passwd {
         h.update(passwd)?;
         h.update(&salt.0)?;
         let res = h.finish()?;
-        Ok(Self {
-            passwd_hash: res.to_vec(),
-            salt,
-        })
+        assert_eq!(res.as_ref().len(), HASH_LEN);
+        let passwd_hash = Hash::from_slice(res.as_ref());
+        Ok(Self { salt, passwd_hash })
     }
 
     pub fn update(&mut self, passwd: &[u8]) -> Result<(), Error> {
@@ -59,7 +68,8 @@ impl Passwd {
         h.update(passwd)?;
         h.update(&self.salt.0)?;
         let res = h.finish()?;
-        self.passwd_hash = res.to_vec();
+        assert_eq!(res.as_ref().len(), HASH_LEN);
+        self.passwd_hash.0.copy_from_slice(res.as_ref());
         Ok(())
     }
 
@@ -68,7 +78,7 @@ impl Passwd {
         h.update(passwd)?;
         h.update(&self.salt.0)?;
         let res = h.finish()?;
-        Ok(self.passwd_hash == res.as_ref())
+        Ok(self.passwd_hash.0 == res.as_ref())
     }
 }
 
