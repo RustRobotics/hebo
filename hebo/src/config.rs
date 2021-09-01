@@ -219,6 +219,19 @@ pub struct Listener {
     /// Default is None.
     #[serde(default = "Listener::default_key_file")]
     pub key_file: Option<PathBuf>,
+
+    /// Set `username_as_client_id` to true to replace the client id that a client
+    /// connected with with its username.
+    ///
+    /// This allows authentication to be tied to the client id, which means
+    /// that it is possible to prevent one client disconnecting another
+    /// by using the same client id.
+    /// If a client connects with no username it will be disconnected as not
+    /// authorised when this option is set to true.
+    ///
+    /// Default is false.
+    #[serde(default = "Listener::default_username_as_client_id")]
+    pub username_as_client_id: bool,
 }
 
 impl Listener {
@@ -253,6 +266,10 @@ impl Listener {
     pub const fn default_key_file() -> Option<PathBuf> {
         None
     }
+
+    pub const fn default_username_as_client_id() -> bool {
+        false
+    }
 }
 
 impl Default for Listener {
@@ -265,6 +282,7 @@ impl Default for Listener {
             path: Self::default_path(),
             cert_file: Self::default_cert_file(),
             key_file: Self::default_key_file(),
+            username_as_client_id: Self::default_username_as_client_id(),
         }
     }
 }
@@ -305,11 +323,29 @@ pub struct Security {
     /// Default is true.
     #[serde(default = "Security::default_allow_anonymous")]
     pub allow_anonymous: bool,
+
+    /// Control access to the broker using a password file.
+    ///
+    /// This file can be generated using the hebo-passwd utility.
+    /// The file should be a text file with lines in the format:
+    /// `username:password`.
+    /// The password (and colon) may be omitted if desired, although this
+    /// offers very little in the way of security.
+    ///
+    /// If an auth_plugin is used as well as password_file, the auth_plugin check will be made first.
+    ///
+    /// Default is None.
+    #[serde(default = "Security::default_password_file")]
+    pub password_file: Option<PathBuf>,
 }
 
 impl Security {
     pub const fn default_allow_anonymous() -> bool {
         true
+    }
+
+    pub fn default_password_file() -> Option<PathBuf> {
+        None
     }
 }
 
@@ -317,6 +353,7 @@ impl Default for Security {
     fn default() -> Self {
         Self {
             allow_anonymous: Self::default_allow_anonymous(),
+            password_file: Self::default_password_file(),
         }
     }
 }
