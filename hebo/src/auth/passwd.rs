@@ -109,14 +109,25 @@ impl Passwd {
 
     fn parse_passwd(s: &str) -> Result<Self, Error> {
         let parts: Vec<&str> = s.split('$').collect();
-        if parts.len() != 3 {
-            return Err(Error::from_string(
-                ErrorKind::FormatError,
-                format!("Invalid password : {:?}", s),
-            ));
+        let err = Err(Error::from_string(
+            ErrorKind::FormatError,
+            format!("Invalid password : {:?}", s),
+        ));
+        if parts.len() != 4 {
+            return err;
         }
-        let salt = Salt::from_slice(parts[1].as_bytes());
-        let passwd_hash = Hash::from_slice(parts[2].as_bytes());
+        if let Ok(hash_type) = parts[1].parse::<i32>() {
+            if hash_type != PW_SHA512 {
+                return err;
+            }
+        } else {
+            return err;
+        }
+
+        let salt = base64::decode(parts[2])?;
+        let salt = Salt::from_slice(&salt);
+        let passwd_hash = base64::decode(parts[3])?;
+        let passwd_hash = Hash::from_slice(&passwd_hash);
         Ok(Self {
             salt,
             passwd_hash,

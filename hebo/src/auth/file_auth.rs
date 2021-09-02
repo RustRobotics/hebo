@@ -43,7 +43,11 @@ pub fn add_delete_users<P: AsRef<Path>>(
     add_users: &[&str],
     delete_users: &[&str],
 ) -> Result<(), Error> {
-    let fd = File::open(passwd_file.as_ref())?;
+    let fd = OpenOptions::new()
+        .create(true)
+        .read(true)
+        .write(true)
+        .open(passwd_file.as_ref())?;
     let reader = BufReader::new(fd);
     let mut users = BTreeMap::new();
     for line in reader.lines() {
@@ -91,13 +95,16 @@ pub fn add_delete_users<P: AsRef<Path>>(
         users.remove(*username);
     }
 
-    /*
     let mut fd = OpenOptions::new()
+        .create(true)
         .write(true)
-        .truncate(true)
         .open(passwd_file.as_ref())?;
-    fd.write(result.as_bytes()).map(drop).map_err(Into::into)
-    */
+    for (username, passwd) in users {
+        let line = passwd.dump(&username);
+        log::info!("line: {}", line);
+        fd.write(line.as_bytes())?;
+        fd.write(b"\n")?;
+    }
 
     Ok(())
 }
