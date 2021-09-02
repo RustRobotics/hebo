@@ -4,7 +4,10 @@
 
 use clap::Arg;
 
-fn main() {
+use hebo::auth::file_auth;
+use hebo::error::{Error, ErrorKind};
+
+fn main() -> Result<(), Error> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
@@ -38,4 +41,19 @@ fn main() {
         .arg(Arg::with_name("password"))
         .get_matches();
     log::info!("matches: {:?}", matches);
+
+    let password_file = if let Some(file) = matches.value_of("passwordfile") {
+        file
+    } else {
+        return Err(Error::new(
+            ErrorKind::ParameterError,
+            "passwordfile is required",
+        ));
+    };
+
+    if matches.is_present("update") {
+        return file_auth::update_file_hash(password_file);
+    }
+
+    Ok(())
 }

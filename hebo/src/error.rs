@@ -49,6 +49,12 @@ pub enum ErrorKind {
     LoggerError,
 
     SSLError,
+
+    /// Command line parameter error.
+    ParameterError,
+
+    /// File format error.
+    FormatError,
 }
 
 #[derive(Clone, Debug)]
