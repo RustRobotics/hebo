@@ -150,6 +150,18 @@ impl From<quinn::WriteError> for Error {
     }
 }
 
+impl From<openssl::error::ErrorStack> for Error {
+    fn from(err: openssl::error::ErrorStack) -> Self {
+        Error::from_string(ErrorKind::SSLError, format!("{:?}", err))
+    }
+}
+
+impl From<base64::DecodeError> for Error {
+    fn from(err: base64::DecodeError) -> Self {
+        Error::from_string(ErrorKind::FormatError, format!("{:?}", err))
+    }
+}
+
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
         Error::from_string(ErrorKind::EncodeError, format!("{:?}", err))
@@ -159,12 +171,6 @@ impl From<codec::EncodeError> for Error {
 impl From<codec::DecodeError> for Error {
     fn from(err: codec::DecodeError) -> Self {
         Error::from_string(ErrorKind::DecodeError, format!("{:?}", err))
-    }
-}
-
-impl From<openssl::error::ErrorStack> for Error {
-    fn from(err: openssl::error::ErrorStack) -> Self {
-        Error::from_string(ErrorKind::SSLError, format!("{:?}", err))
     }
 }
 
