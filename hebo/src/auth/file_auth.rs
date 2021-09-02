@@ -98,6 +98,7 @@ pub fn add_delete_users<P: AsRef<Path>>(
     let mut fd = OpenOptions::new()
         .create(true)
         .write(true)
+        .truncate(true)
         .open(passwd_file.as_ref())?;
     for (username, passwd) in users {
         let line = passwd.dump(&username);
