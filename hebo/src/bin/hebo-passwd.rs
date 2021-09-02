@@ -40,7 +40,11 @@ fn main() -> Result<(), Error> {
                 .takes_value(false)
                 .help("Update a plain text password file to use hashed passwords"),
         )
-        .arg(Arg::with_name("password_file").help("password_file will be crated if not exist"))
+        .arg(
+            Arg::with_name("password_file")
+                .required(true)
+                .help("password_file will be crated if not exist"),
+        )
         .get_matches();
 
     let passwd_file = if let Some(file) = matches.value_of("password_file") {
@@ -48,7 +52,7 @@ fn main() -> Result<(), Error> {
     } else {
         return Err(Error::new(
             ErrorKind::ParameterError,
-            "passwordfile is required",
+            "password_file is required",
         ));
     };
 
