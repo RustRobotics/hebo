@@ -2,12 +2,13 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use std::collections::BTreeMap;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
 use super::passwd::Passwd;
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 pub fn update_file_hash<P: AsRef<Path>>(passwd_file: P) -> Result<(), Error> {
     let fd = File::open(passwd_file.as_ref())?;
@@ -35,4 +36,68 @@ pub fn update_file_hash<P: AsRef<Path>>(passwd_file: P) -> Result<(), Error> {
         .truncate(true)
         .open(passwd_file.as_ref())?;
     fd.write(result.as_bytes()).map(drop).map_err(Into::into)
+}
+
+pub fn add_delete_users<P: AsRef<Path>>(
+    passwd_file: P,
+    add_users: &[&str],
+    delete_users: &[&str],
+) -> Result<(), Error> {
+    let fd = File::open(passwd_file.as_ref())?;
+    let reader = BufReader::new(fd);
+    let mut users = BTreeMap::new();
+    for line in reader.lines() {
+        let line = line?;
+        match Passwd::parse(&line) {
+            Err(err) => {
+                log::error!("Failed to parse line {:?}, got err: {:?}", line, err);
+                return Err(err);
+            }
+            Ok(None) => {
+                // continue
+            }
+            Ok(Some((username, passwd))) => {
+                users.insert(username.to_string(), passwd);
+            }
+        }
+    }
+
+    // Add/update users
+    for item in add_users {
+        match Passwd::parse_raw_text(item) {
+            Err(err) => {
+                log::error!("Failed to parse pair {:?}, got err: {:?}", item, err);
+                return Err(err);
+            }
+            Ok(None) => {
+                log::info!("Ignore empty line: {}", item);
+                // continue
+            }
+            Ok(Some((username, passwd))) => {
+                users.insert(username.to_string(), passwd);
+            }
+        }
+    }
+
+    // Delete users
+    for username in delete_users {
+        if username.contains(':') {
+            return Err(Error::from_string(
+                ErrorKind::ParameterError,
+                format!("Invalid username to delete: {:?}", username),
+            ));
+        }
+
+        users.remove(*username);
+    }
+
+    /*
+    let mut fd = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(passwd_file.as_ref())?;
+    fd.write(result.as_bytes()).map(drop).map_err(Into::into)
+    */
+
+    Ok(())
 }

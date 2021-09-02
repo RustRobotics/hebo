@@ -56,7 +56,19 @@ fn main() -> Result<(), Error> {
         return file_auth::update_file_hash(passwd_file);
     }
 
-    if matches.is_present("delete") {}
+    let add_users: Vec<&str> = if let Some(users) = matches.values_of("add") {
+        users.collect()
+    } else {
+        Vec::new()
+    };
+
+    let delete_users: Vec<&str> = if let Some(users) = matches.values_of("delete") {
+        users.collect()
+    } else {
+        Vec::new()
+    };
+
+    file_auth::add_delete_users(passwd_file, &add_users, &delete_users)?;
 
     Ok(())
 }

@@ -68,6 +68,12 @@ impl Passwd {
             ));
         }
         let username = parts[0];
+        if username.is_empty() {
+            return Err(Error::from_string(
+                ErrorKind::FormatError,
+                format!("Username is empty in entry: {:?}", s),
+            ));
+        }
         let passwd = parts[1];
         let passwd = Self::generate(passwd.as_bytes())?;
 
@@ -90,6 +96,12 @@ impl Passwd {
             ));
         }
         let username = parts[0];
+        if username.is_empty() {
+            return Err(Error::from_string(
+                ErrorKind::FormatError,
+                format!("Username is empty in entry: {:?}", s),
+            ));
+        }
         let passwd = Self::parse_passwd(parts[1])?;
 
         Ok(Some((username, passwd)))
