@@ -16,33 +16,34 @@ fn main() -> Result<(), Error> {
         .author("Xu Shaohua <shaohua@biofan.org>")
         .about("hebo-passwd is a tool for managing password files for hebo")
         .arg(
-            Arg::with_name("batch")
-                .short("b")
-                .long("batch")
-                .takes_value(false)
-                .help("run in batch mode to allow passing passwords on the command line."),
+            Arg::with_name("add")
+                .short("a")
+                .long("add")
+                .takes_value(true)
+                .value_name("username:passwd")
+                .multiple(true)
+                .help("Add username:passwd pair. Or update if username already exists."),
         )
         .arg(
             Arg::with_name("delete")
                 .short("d")
                 .long("delete")
-                .takes_value(false)
-                .help("delete the username rather than adding/updating its password."),
+                .takes_value(true)
+                .value_name("username")
+                .multiple(true)
+                .help("Delete the username rather than adding/updating its password."),
         )
         .arg(
             Arg::with_name("update")
-                .short("U")
+                .short("u")
                 .long("update")
                 .takes_value(false)
                 .help("Update a plain text password file to use hashed passwords"),
         )
-        .arg(Arg::with_name("passwordfile").help("passwordfile will be crated if not exist"))
-        .arg(Arg::with_name("username"))
-        .arg(Arg::with_name("password"))
+        .arg(Arg::with_name("password_file").help("password_file will be crated if not exist"))
         .get_matches();
-    log::info!("matches: {:?}", matches);
 
-    let password_file = if let Some(file) = matches.value_of("passwordfile") {
+    let passwd_file = if let Some(file) = matches.value_of("password_file") {
         file
     } else {
         return Err(Error::new(
@@ -52,8 +53,10 @@ fn main() -> Result<(), Error> {
     };
 
     if matches.is_present("update") {
-        return file_auth::update_file_hash(password_file);
+        return file_auth::update_file_hash(passwd_file);
     }
+
+    if matches.is_present("delete") {}
 
     Ok(())
 }
