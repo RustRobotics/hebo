@@ -12,10 +12,9 @@ use crate::error::Error;
 pub fn update_file_hash<P: AsRef<Path>>(password_file: P) -> Result<(), Error> {
     let fd = File::open(password_file.as_ref())?;
     let reader = BufReader::new(fd);
-    let mut result = String::new();
     for line in reader.lines() {
         let line = line?;
-        match Passwd::parse(&line) {
+        match Passwd::parse_raw_text(&line) {
             Err(err) => {
                 log::error!("err: {:?}, line: {}", err, line);
             }
@@ -24,15 +23,10 @@ pub fn update_file_hash<P: AsRef<Path>>(password_file: P) -> Result<(), Error> {
             }
             Ok(Some((username, passwd))) => {
                 let hashed_line = passwd.dump(username);
-                result.push_str(&hashed_line);
-                result.push_str("\n");
+                println!("{}", hashed_line);
             }
         }
     }
 
-    let mut fd = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(password_file.as_ref())?;
-    fd.write(result.as_bytes()).map(drop).map_err(Into::into)
+    Ok(())
 }

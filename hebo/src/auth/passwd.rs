@@ -26,6 +26,9 @@ impl Salt {
 struct Hash([u8; HASH_LEN]);
 
 impl Hash {
+    fn new() -> Self {
+        Self([0; HASH_LEN])
+    }
     fn from_slice(s: &[u8]) -> Self {
         let mut v = [0; HASH_LEN];
         v.copy_from_slice(s);
@@ -51,6 +54,24 @@ impl Passwd {
 
     pub fn valid(&self) -> bool {
         self.valid
+    }
+
+    pub fn parse_raw_text(s: &str) -> Result<Option<(&str, Self)>, Error> {
+        if s.is_empty() {
+            return Ok(None);
+        }
+        let parts: Vec<&str> = s.split(':').collect();
+        if parts.len() != 2 {
+            return Err(Error::from_string(
+                ErrorKind::FormatError,
+                format!("Invalid password entry: {:?}", s),
+            ));
+        }
+        let username = parts[0];
+        let passwd = parts[1];
+        let passwd = Self::generate(passwd.as_bytes())?;
+
+        Ok(Some((username, passwd)))
     }
 
     /// Parse password entry from string.
@@ -104,6 +125,13 @@ impl Passwd {
 
     pub fn generate(passwd: &[u8]) -> Result<Self, Error> {
         let salt = Salt(rand::thread_rng().gen());
+        if passwd.is_empty() {
+            return Ok(Self {
+                salt,
+                passwd_hash: Hash::new(),
+                valid: false,
+            });
+        }
         let mut h = Hasher::new(MessageDigest::sha512())?;
         h.update(passwd)?;
         h.update(&salt.0)?;
