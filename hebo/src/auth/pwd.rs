@@ -37,15 +37,15 @@ impl Hash {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Passwd {
+pub struct Password {
     salt: Salt,
-    passwd_hash: Hash,
+    password_hash: Hash,
     valid: bool,
 }
 
-impl Passwd {
+impl Password {
     pub fn hash(&self) -> &[u8] {
-        &self.passwd_hash.0
+        &self.password_hash.0
     }
 
     pub fn salt(&self) -> &[u8] {
@@ -74,10 +74,10 @@ impl Passwd {
                 format!("Username is empty in entry: {:?}", s),
             ));
         }
-        let passwd = parts[1];
-        let passwd = Self::generate(passwd.as_bytes())?;
+        let password = parts[1];
+        let password = Self::generate(password.as_bytes())?;
 
-        Ok(Some((username, passwd)))
+        Ok(Some((username, password)))
     }
 
     /// Parse password entry from string.
@@ -102,12 +102,12 @@ impl Passwd {
                 format!("Username is empty in entry: {:?}", s),
             ));
         }
-        let passwd = Self::parse_passwd(parts[1])?;
+        let password = Self::parse_password(parts[1])?;
 
-        Ok(Some((username, passwd)))
+        Ok(Some((username, password)))
     }
 
-    fn parse_passwd(s: &str) -> Result<Self, Error> {
+    fn parse_password(s: &str) -> Result<Self, Error> {
         let parts: Vec<&str> = s.split('$').collect();
         let err = Err(Error::from_string(
             ErrorKind::FormatError,
@@ -126,11 +126,11 @@ impl Passwd {
 
         let salt = base64::decode(parts[2])?;
         let salt = Salt::from_slice(&salt);
-        let passwd_hash = base64::decode(parts[3])?;
-        let passwd_hash = Hash::from_slice(&passwd_hash);
+        let password_hash = base64::decode(parts[3])?;
+        let password_hash = Hash::from_slice(&password_hash);
         Ok(Self {
             salt,
-            passwd_hash,
+            password_hash,
             valid: true,
         })
     }
@@ -139,51 +139,51 @@ impl Passwd {
     pub fn dump(&self, username: &str) -> String {
         if self.valid {
             let salt = base64::encode(self.salt.0);
-            let hash = base64::encode(self.passwd_hash.0);
+            let hash = base64::encode(self.password_hash.0);
             format!("{}:${}${}${}", username, PW_SHA512, salt, hash)
         } else {
             format!("{}:", username)
         }
     }
 
-    pub fn generate(passwd: &[u8]) -> Result<Self, Error> {
+    pub fn generate(password: &[u8]) -> Result<Self, Error> {
         let salt = Salt(rand::thread_rng().gen());
-        if passwd.is_empty() {
+        if password.is_empty() {
             return Ok(Self {
                 salt,
-                passwd_hash: Hash::new(),
+                password_hash: Hash::new(),
                 valid: false,
             });
         }
         let mut h = Hasher::new(MessageDigest::sha512())?;
-        h.update(passwd)?;
+        h.update(password)?;
         h.update(&salt.0)?;
         let res = h.finish()?;
         assert_eq!(res.as_ref().len(), HASH_LEN);
-        let passwd_hash = Hash::from_slice(res.as_ref());
+        let password_hash = Hash::from_slice(res.as_ref());
         Ok(Self {
             salt,
-            passwd_hash,
+            password_hash,
             valid: true,
         })
     }
 
-    pub fn update(&mut self, passwd: &[u8]) -> Result<(), Error> {
+    pub fn update(&mut self, password: &[u8]) -> Result<(), Error> {
         let mut h = Hasher::new(MessageDigest::sha512())?;
-        h.update(passwd)?;
+        h.update(password)?;
         h.update(&self.salt.0)?;
         let res = h.finish()?;
         assert_eq!(res.as_ref().len(), HASH_LEN);
-        self.passwd_hash.0.copy_from_slice(res.as_ref());
+        self.password_hash.0.copy_from_slice(res.as_ref());
         Ok(())
     }
 
-    pub fn is_match(&self, passwd: &[u8]) -> Result<bool, Error> {
+    pub fn is_match(&self, password: &[u8]) -> Result<bool, Error> {
         let mut h = Hasher::new(MessageDigest::sha512())?;
-        h.update(passwd)?;
+        h.update(password)?;
         h.update(&self.salt.0)?;
         let res = h.finish()?;
-        Ok(self.passwd_hash.0 == res.as_ref())
+        Ok(self.password_hash.0 == res.as_ref())
     }
 }
 
@@ -193,14 +193,14 @@ mod tests {
 
     #[test]
     fn test_dump() {
-        let p = Passwd::generate(b"password").unwrap();
+        let p = Password::generate(b"password").unwrap();
         let output = p.dump("username");
         assert_eq!(output.len(), 117);
     }
 
     #[test]
     fn test_generate() {
-        let p = Passwd::generate(b"password");
+        let p = Password::generate(b"password");
         assert!(p.is_ok());
         let p = p.unwrap();
         assert_eq!(p.hash().len(), HASH_LEN);
@@ -208,13 +208,13 @@ mod tests {
 
     #[test]
     fn test_update() {
-        let mut p = Passwd::generate(b"password").unwrap();
+        let mut p = Password::generate(b"password").unwrap();
         assert!(p.update(b"new-password").is_ok());
     }
 
     #[test]
     fn test_is_match() {
-        let p = Passwd::generate(b"password").unwrap();
+        let p = Password::generate(b"password").unwrap();
         assert!(p.is_match(b"password").unwrap());
     }
 }

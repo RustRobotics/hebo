@@ -7,12 +7,12 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
-use super::passwd::Passwd;
+use super::pwd::Password;
 use crate::error::{Error, ErrorKind};
 
 /// FileAuth represents records in password_file.
 #[derive(Debug)]
-pub struct FileAuth(BTreeMap<String, Passwd>);
+pub struct FileAuth(BTreeMap<String, Password>);
 
 impl FileAuth {
     /// Parse password_file.
@@ -22,7 +22,7 @@ impl FileAuth {
         let mut map = BTreeMap::new();
         for line in reader.lines() {
             let line = line?;
-            match Passwd::parse_raw_text(&line) {
+            match Password::parse_raw_text(&line) {
                 Err(err) => {
                     log::error!("err: {:?}, line: {}", err, line);
                 }
@@ -53,7 +53,7 @@ pub fn update_file_hash<P: AsRef<Path>>(password_file: P) -> Result<(), Error> {
     let mut result = String::new();
     for line in reader.lines() {
         let line = line?;
-        match Passwd::parse_raw_text(&line) {
+        match Password::parse_raw_text(&line) {
             Err(err) => {
                 log::error!("err: {:?}, line: {}", err, line);
             }
@@ -89,7 +89,7 @@ pub fn add_delete_users<P: AsRef<Path>>(
     let mut users = BTreeMap::new();
     for line in reader.lines() {
         let line = line?;
-        match Passwd::parse(&line) {
+        match Password::parse(&line) {
             Err(err) => {
                 log::error!("Failed to parse line {:?}, got err: {:?}", line, err);
                 return Err(err);
@@ -105,7 +105,7 @@ pub fn add_delete_users<P: AsRef<Path>>(
 
     // Add/update users
     for item in add_users {
-        match Passwd::parse_raw_text(item) {
+        match Password::parse_raw_text(item) {
             Err(err) => {
                 log::error!("Failed to parse pair {:?}, got err: {:?}", item, err);
                 return Err(err);

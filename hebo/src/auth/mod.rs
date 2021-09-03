@@ -4,5 +4,4 @@
 
 pub mod app;
 pub mod file_auth;
-pub mod passwd;
-pub use passwd::Passwd;
+pub mod pwd;
