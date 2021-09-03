@@ -28,8 +28,8 @@ base64 = "0.13.0"
 clap = "2.33.3"
 codec = { path = "../codec" }
 env_logger = "0.9.0"
-futures = "0.3.16"
-futures-util = "0.3.16"
+futures = "0.3.17"
+futures-util = "0.3.17"
 http = "0.2.4"
 jemallocator = { version = "0.3.2", optional = true }
 log = "0.4.14"
@@ -38,10 +38,10 @@ nc = "0.7.9"
 openssl = "0.10.36"
 quinn = "0.7.2"
 rand = "0.8.4"
-redis = { version = "0.21", optional = true }
-serde = "1.0.129"
-serde_derive = "1.0.129"
-tokio = { version = "1.10.1", features = ["full"] }
+redis = { version = "0.21.2", optional = true }
+serde = "1.0.130"
+serde_derive = "1.0.130"
+tokio = { version = "1.11.0", features = ["full"] }
 tokio-rustls = "0.22.0"
 tokio-tungstenite = { version = "0.15.0", features = ["rustls-tls"] }
 toml = "0.5.8"
