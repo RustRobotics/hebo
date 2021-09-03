@@ -5,7 +5,6 @@
 use clap::Arg;
 use std::fs::File;
 use std::io::{Read, Write};
-use std::sync::Arc;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
@@ -137,7 +136,7 @@ impl ServerContext {
             let mut listeners_info = Vec::new();
 
             for l in self.config.listeners.clone() {
-                listeners_info.push((listener_id, Arc::new(l.address.clone())));
+                listeners_info.push((listener_id, l.address.clone()));
                 let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
                     mpsc::channel(CHANNEL_CAPACITY);
                 dispatcher_to_listener_senders.push((listener_id, dispatcher_to_listener_sender));

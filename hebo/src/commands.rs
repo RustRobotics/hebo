@@ -6,7 +6,6 @@ use codec::{
     ConnectAckPacket, ConnectPacket, PublishPacket, SubscribeAckPacket, SubscribePacket,
     UnsubscribePacket,
 };
-use std::sync::Arc;
 
 use crate::cache_types::{ListenersVectorCache, SystemCache};
 
@@ -71,7 +70,7 @@ pub enum SystemToDispatcherCmd {
 #[derive(Debug, Clone)]
 pub enum DispatcherToCacheCmd {
     /// listener id, listener address
-    ListenerAdded(ListenerId, Arc<String>),
+    ListenerAdded(ListenerId, String),
     /// listener id
     ListenerRemoved(ListenerId),
 
