@@ -8,7 +8,6 @@ use hebo::auth::file_auth;
 use hebo::error::{Error, ErrorKind};
 
 fn main() -> Result<(), Error> {
-    std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
     let matches = clap::App::new("Hebo Passwd")

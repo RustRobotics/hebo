@@ -10,13 +10,18 @@ description = "Distributed MQTT broker"
 name = "hebo"
 path = "src/bin/hebo.rs"
 
+[[bin]]
+name = "hebo-passwd"
+path = "src/bin/hebo_passwd.rs"
+
 [features]
-default = ["allocator"]
+default = []
 
 full = [
   "allocator",
 ]
 allocator = ["jemallocator"]
+auth_redis = ["redis"]
 
 [dependencies]
 base64 = "0.13.0"
@@ -33,6 +38,7 @@ nc = "0.7.9"
 openssl = "0.10.36"
 quinn = "0.7.2"
 rand = "0.8.4"
+redis = { version = "0.21", optional = true }
 serde = "1.0.129"
 serde_derive = "1.0.129"
 tokio = { version = "1.10.1", features = ["full"] }

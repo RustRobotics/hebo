@@ -3,5 +3,6 @@
 // in the LICENSE file.
 
 pub mod app;
+pub mod db_auth;
 pub mod file_auth;
 pub mod pwd;
