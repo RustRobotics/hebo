@@ -9,6 +9,7 @@ use std::sync::Arc;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
+use crate::auth::app::AuthApp;
 use crate::cache::Cache;
 use crate::commands::DispatcherToCacheCmd;
 use crate::config::Config;

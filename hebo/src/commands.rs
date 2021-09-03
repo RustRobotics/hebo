@@ -13,7 +13,19 @@ use crate::cache_types::{ListenersVectorCache, SystemCache};
 pub type ListenerId = u32;
 pub type SessionId = u64;
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
+pub enum ListenerToAuthCmd {
+    /// listener-id, username, password
+    RequestAuth(ListenerId, String, Vec<u8>),
+}
+
+#[derive(Debug, Clone)]
+pub enum AuthToListenerCmd {
+    /// username, access-granted, error-reason
+    ResponseAuth(String, bool, String),
+}
+
+#[derive(Debug, Clone)]
 pub enum ListenerToSessionCmd {
     /// Accepted or not.
     ConnectAck(ConnectAckPacket),
@@ -23,7 +35,7 @@ pub enum ListenerToSessionCmd {
     SubscribeAck(SubscribeAckPacket),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SessionToListenerCmd {
     Connect(SessionId, ConnectPacket),
     Publish(PublishPacket),
@@ -32,12 +44,12 @@ pub enum SessionToListenerCmd {
     Disconnect(SessionId),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DispatcherToListenerCmd {
     Publish(PublishPacket),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ListenerToDispatcherCmd {
     Publish(PublishPacket),
 
@@ -48,15 +60,15 @@ pub enum ListenerToDispatcherCmd {
     SubscriptionsRemoved(ListenerId),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DispatcherToSystemCmd {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SystemToDispatcherCmd {
     Publish(PublishPacket),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DispatcherToCacheCmd {
     /// listener id, listener address
     ListenerAdded(ListenerId, Arc<String>),
@@ -91,20 +103,20 @@ pub enum DispatcherToCacheCmd {
     PacketReceived(ListenerId, usize, usize),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CacheToDispatcherCmd {
     ListenersCount(usize),
     SessionsCount(usize),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SystemToCacheCmd {
     GetAllCache,
     GetSystemCache,
     GetListenersCache,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CacheToSystemCmd {
     All(SystemCache, ListenersVectorCache),
     System(SystemCache),

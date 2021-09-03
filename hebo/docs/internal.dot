@@ -23,11 +23,10 @@ digraph {
 	RestApi -> Dispatcher;
 
 	// auth app
-	Auth -> Dispatcher [dir=both, style=dotted, color=red];
+	Auth -> Listeners [dir=both, style=dotted, color=red];
 	Auth -> "Password File" [style=dotted, color=red];
 	"Auth Database" [shape=cylinder];
 	Auth -> "Auth Database" [style=dotted, color=red];
-	Auth -> connector [style=dotted, color=red];
 
 	// hook app
 	Dispatcher -> Hook [dir=both, style=dotted, color=red];
@@ -47,7 +46,6 @@ digraph {
 	Dispatcher -> "Rule Engine" [dir=both, style=dotted, color=red];
 	"Forward Database" [shape=cylinder];
 	"Rule Engine" -> "Forward Database" [style=dotted, color=red];
-	"Rule Engine" -> connector [style=dotted, color=red];
 
 	// monitor app
 	Dispatcher -> Metrix [dir=both, style=dotted, color=red];

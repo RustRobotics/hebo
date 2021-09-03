@@ -2,6 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+pub mod app;
 pub mod file_auth;
 pub mod passwd;
 pub use passwd::Passwd;
