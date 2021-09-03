@@ -60,6 +60,10 @@ impl Password {
         if s.is_empty() {
             return Ok(None);
         }
+        // Ignore comment lines.
+        if s.starts_with('#') {
+            return Ok(None);
+        }
         let parts: Vec<&str> = s.split(':').collect();
         if parts.len() != 2 {
             return Err(Error::from_string(
@@ -85,6 +89,10 @@ impl Password {
     /// Returns (username, Password) pair if success.
     pub fn parse(s: &str) -> Result<Option<(&str, Self)>, Error> {
         if s.is_empty() {
+            return Ok(None);
+        }
+        // Ignore comment lines.
+        if s.starts_with('#') {
             return Ok(None);
         }
 
