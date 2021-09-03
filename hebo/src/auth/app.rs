@@ -75,6 +75,9 @@ impl AuthApp {
         } else {
             false
         };
+        if !access_granted {
+            log::error!("AuthApp: Check auth failed, {}:{:?}", username, password);
+        }
         for (sender_listener_id, sender) in &self.listener_senders {
             if *sender_listener_id == listener_id {
                 let cmd = AuthToListenerCmd::ResponseAuth(session_id, access_granted);

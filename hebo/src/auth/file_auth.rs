@@ -22,7 +22,7 @@ impl FileAuth {
         let mut map = BTreeMap::new();
         for line in reader.lines() {
             let line = line?;
-            match Password::parse_raw_text(&line) {
+            match Password::parse(&line) {
                 Err(err) => {
                     log::error!("err: {:?}, line: {}", err, line);
                 }
