@@ -28,7 +28,7 @@ pub enum ConnectReturnCode {
     MalformedUsernamePassword = 4,
 
     /// The Client is not authorized to connect.
-    Unauthorithed = 5,
+    Unauthorized = 5,
 
     /// 6-255 are reserved.
     Reserved = 6,
@@ -48,7 +48,7 @@ impl From<u8> for ConnectReturnCode {
             2 => ConnectReturnCode::IdentifierRejected,
             3 => ConnectReturnCode::ServerUnavailable,
             4 => ConnectReturnCode::MalformedUsernamePassword,
-            5 => ConnectReturnCode::Unauthorithed,
+            5 => ConnectReturnCode::Unauthorized,
             _ => ConnectReturnCode::Reserved,
         }
     }
