@@ -13,7 +13,7 @@ use crate::commands::{
 /// Dispatcher is a message router.
 #[derive(Debug)]
 pub struct Dispatcher {
-    listener_senders: Vec<(u32, Sender<DispatcherToListenerCmd>)>,
+    listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
     listener_receiver: Receiver<ListenerToDispatcherCmd>,
 
     system_receiver: Receiver<SystemToDispatcherCmd>,
@@ -24,7 +24,7 @@ pub struct Dispatcher {
 
 impl Dispatcher {
     pub fn new(
-        listener_senders: Vec<(u32, Sender<DispatcherToListenerCmd>)>,
+        listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToDispatcherCmd>,
         system_receiver: Receiver<SystemToDispatcherCmd>,
         cache_sender: Sender<DispatcherToCacheCmd>,
@@ -102,7 +102,12 @@ impl Dispatcher {
     //
     // Cache related methods
     //
-    async fn cache_publish_packet_sent(&mut self, listener_id: u32, count: usize, bytes: usize) {
+    async fn cache_publish_packet_sent(
+        &mut self,
+        listener_id: ListenerId,
+        count: usize,
+        bytes: usize,
+    ) {
         if let Err(err) = self
             .cache_sender
             .send(DispatcherToCacheCmd::PublishPacketSent(

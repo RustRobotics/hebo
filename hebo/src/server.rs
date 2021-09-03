@@ -131,6 +131,10 @@ impl ServerContext {
             let (listeners_to_dispatcher_sender, listeners_to_dispatcher_receiver) =
                 mpsc::channel(CHANNEL_CAPACITY);
             let mut dispatcher_to_listener_senders = Vec::new();
+            let (listeners_to_auth_sender, listeners_to_auth_receiver) =
+                mpsc::channel(CHANNEL_CAPACITY);
+            let mut auth_to_listener_senders = Vec::new();
+
             let mut handles = Vec::new();
             let mut listener_id: u32 = 0;
             let mut listeners_info = Vec::new();
@@ -140,11 +144,18 @@ impl ServerContext {
                 let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
                     mpsc::channel(CHANNEL_CAPACITY);
                 dispatcher_to_listener_senders.push((listener_id, dispatcher_to_listener_sender));
+
+                let (auth_to_listener_sender, auth_to_listener_receiver) =
+                    mpsc::channel(CHANNEL_CAPACITY);
+                auth_to_listener_senders.push((listener_id, auth_to_listener_sender));
+
                 let mut listener = Listener::bind(
                     listener_id,
                     l,
                     listeners_to_dispatcher_sender.clone(),
                     dispatcher_to_listener_receiver,
+                    listeners_to_auth_sender.clone(),
+                    auth_to_listener_receiver,
                 )
                 .await
                 .expect(&format!("Failed to listen at {:?}", &listeners_info.last()));
@@ -203,6 +214,16 @@ impl ServerContext {
                     );
                 }
             }
+
+            let mut auth_app = AuthApp::new(
+                self.config.security.clone(),
+                auth_to_listener_senders,
+                listeners_to_auth_receiver,
+            );
+            let auth_app_handle = runtime.spawn(async move {
+                auth_app.run_loop().await;
+            });
+            handles.push(auth_app_handle);
 
             let mut dispatcher = Dispatcher::new(
                 // listeners module

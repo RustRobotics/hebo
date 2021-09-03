@@ -22,8 +22,8 @@ use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
 use tokio_rustls::TlsAcceptor;
 
 use crate::commands::{
-    DispatcherToListenerCmd, ListenerId, ListenerToDispatcherCmd, ListenerToSessionCmd, SessionId,
-    SessionToListenerCmd,
+    AuthToListenerCmd, DispatcherToListenerCmd, ListenerId, ListenerToAuthCmd,
+    ListenerToDispatcherCmd, ListenerToSessionCmd, SessionId, SessionToListenerCmd,
 };
 use crate::config;
 use crate::error::{Error, ErrorKind};
@@ -39,11 +39,15 @@ pub struct Listener {
     listener_config: config::Listener,
     current_session_id: SessionId,
     pipelines: HashMap<SessionId, Pipeline>,
+
     session_sender: Sender<SessionToListenerCmd>,
     session_receiver: Option<Receiver<SessionToListenerCmd>>,
 
     dispatcher_sender: Sender<ListenerToDispatcherCmd>,
     dispatcher_receiver: Option<Receiver<DispatcherToListenerCmd>>,
+
+    auth_sender: Sender<ListenerToAuthCmd>,
+    auth_receiver: Option<Receiver<AuthToListenerCmd>>,
 }
 
 /// Each Listener binds to a specific port
@@ -101,6 +105,8 @@ impl Listener {
         listener_config: config::Listener,
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
+        auth_sender: Sender<ListenerToAuthCmd>,
+        auth_receiver: Receiver<AuthToListenerCmd>,
     ) -> Self {
         let (session_sender, session_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         Listener {
@@ -114,6 +120,9 @@ impl Listener {
 
             dispatcher_sender,
             dispatcher_receiver: Some(dispatcher_receiver),
+
+            auth_sender,
+            auth_receiver: Some(auth_receiver),
         }
     }
 
@@ -173,6 +182,8 @@ impl Listener {
         listener_config: config::Listener,
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
+        auth_sender: Sender<ListenerToAuthCmd>,
+        auth_receiver: Receiver<AuthToListenerCmd>,
     ) -> Result<Listener, Error> {
         match listener_config.protocol {
             config::Protocol::Mqtt => {
@@ -186,6 +197,8 @@ impl Listener {
                         listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
+                        auth_sender,
+                        auth_receiver,
                     ));
                 }
             }
@@ -202,6 +215,8 @@ impl Listener {
                         listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
+                        auth_sender,
+                        auth_receiver,
                     ));
                 }
             }
@@ -216,6 +231,8 @@ impl Listener {
                         listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
+                        auth_sender,
+                        auth_receiver,
                     ));
                 }
             }
@@ -232,6 +249,8 @@ impl Listener {
                         listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
+                        auth_sender,
+                        auth_receiver,
                     ));
                 }
             }
@@ -250,6 +269,8 @@ impl Listener {
                     listener_config,
                     dispatcher_sender,
                     dispatcher_receiver,
+                    auth_sender,
+                    auth_receiver,
                 ));
             }
 
@@ -307,6 +328,8 @@ impl Listener {
                         listener_config,
                         dispatcher_sender,
                         dispatcher_receiver,
+                        auth_sender,
+                        auth_receiver,
                     ));
                 }
             }
