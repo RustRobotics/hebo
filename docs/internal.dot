@@ -7,15 +7,16 @@ digraph {
 	RestApi -> ServerContext [style=dotted, color=red];
 
 	ServerContext [shape=box];
+	ServerContext -> ACL [style=dotted, color=blue];
 	ServerContext -> Auth [style=dotted, color=blue];
 	ServerContext -> Bridge [style=dotted, color=blue];
 	ServerContext -> Gateway [style=dotted, color=blue];
 	ServerContext -> Metrix [style=dotted, color=blue];
-	ServerContext -> Router [style=dotted, color=blue];
+	ServerContext -> Routing [style=dotted, color=blue];
 	ServerContext -> "Rule Engine" [style=dotted, color=blue];
 	ServerContext -> SysTree [style=dotted, color=blue];
 
-	Router -> PubSub [dir=both, color=red, style=dotted];
+	Routing -> PubSub [dir=both, color=red, style=dotted];
 
 	PubSub -> Listeners [dir=both];
 	Listeners -> Sessions [dir=both];
@@ -26,26 +27,32 @@ digraph {
 	"Persistent Storage" [shape=cylinder];
 	Cache -> "Persistent Storage";
 
+	// ACL app
+	ACL -> Listeners [dir=both];
+	ACL -> "ACL File";
+	"ACL Database" [shape=cylinder];
+	ACL -> "ACL Database" [style=dotted, color=red];
+
 	// auth app
 	Auth -> Listeners [dir=both];
 	Auth -> "Password File";
 	"Auth Database" [shape=cylinder];
 	Auth -> "Auth Database" [style=dotted, color=red];
 
+	// mqtt bridge app
+	PubSub -> Bridge [dir=both,style=dotted, color=red];
+
 	// gateway app
 	PubSub -> Gateway [dir=both, style=dotted, color=red];
 	ExternalProtocols [shape=record, label="{ CoAP | Stomp | MQTT-SN | LwM2M }"];
 	Gateway -> ExternalProtocols [style=dotted, color=red];
 
-	// mqtt bridge app
-	PubSub -> Bridge [dir=both,style=dotted, color=red];
-
-	// rule engine app
-	Router -> "Rule Engine" [dir=both, style=dotted, color=red];
-	"Forward Database" [shape=cylinder];
-	"Rule Engine" -> "Forward Database" [style=dotted, color=red];
-
 	// monitor app
 	PubSub -> Metrix [dir=both, style=dotted, color=red];
 	Metrix -> Promethous [style=dotted, color=red];
+
+	// rule engine app
+	PubSub -> "Rule Engine" [dir=both, style=dotted, color=red];
+	"Forward Database" [shape=cylinder];
+	"Rule Engine" -> "Forward Database" [style=dotted, color=red];
 }
