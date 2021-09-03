@@ -4,12 +4,13 @@
 
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{AuthToListenerCmd, ListenerId, ListenerToAuthCmd};
+use crate::commands::{AuthToListenerCmd, ListenerId, ListenerToAuthCmd, SessionId};
 use crate::config::Security;
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct AuthApp {
-    security: Security,
+    allow_anonymous: bool,
     listener_senders: Vec<(ListenerId, Sender<AuthToListenerCmd>)>,
     listener_receiver: Receiver<ListenerToAuthCmd>,
 }
@@ -21,7 +22,7 @@ impl AuthApp {
         listener_receiver: Receiver<ListenerToAuthCmd>,
     ) -> Self {
         Self {
-            security,
+            allow_anonymous: security.allow_anonymous,
             listener_senders,
             listener_receiver,
         }
@@ -31,13 +32,31 @@ impl AuthApp {
         loop {
             tokio::select! {
                 Some(cmd) = self.listener_receiver.recv() => {
-                    self.handle_listener_cmd(cmd).await;
+                    if let Err(err) = self.handle_listener_cmd(cmd).await {
+                        log::error!("Failed to handle listener cmd: {:?}", err);
+                    }
                 },
             }
         }
     }
 
-    async fn handle_listener_cmd(&mut self, cmd: ListenerToAuthCmd) {
+    async fn handle_listener_cmd(&mut self, cmd: ListenerToAuthCmd) -> Result<(), Error> {
         log::info!("AuthApp::handle_listener_cmd(), cmd: {:?}", cmd);
+        match cmd {
+            ListenerToAuthCmd::RequestAuth(listener_id, session_id, username, password) => {
+                self.on_listener_request_auth(listener_id, session_id, username, password)
+                    .await
+            }
+        }
+    }
+
+    async fn on_listener_request_auth(
+        &mut self,
+        listener_id: ListenerId,
+        session_id: SessionId,
+        username: String,
+        password: Vec<u8>,
+    ) -> Result<(), Error> {
+        Ok(())
     }
 }
