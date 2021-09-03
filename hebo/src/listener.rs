@@ -418,6 +418,8 @@ impl Listener {
             .take()
             .expect("Invalid session receiver");
 
+        let mut auth_receiver = self.auth_receiver.take().expect("Invalid auth receiver");
+
         let mut dispatcher_receiver = self
             .dispatcher_receiver
             .take()
@@ -437,6 +439,12 @@ impl Listener {
 
                 Some(cmd) = dispatcher_receiver.recv() => {
                     self.handle_dispatcher_cmd(cmd).await;
+                }
+
+                Some(cmd) = auth_receiver.recv() => {
+                    if let Err(err) = self.handle_auth_cmd(cmd).await {
+                        log::error!("handle auth cmd failed: {:?}", err);
+                    }
                 }
             }
         }
@@ -486,18 +494,18 @@ impl Listener {
     async fn on_session_connect(
         &mut self,
         session_id: SessionId,
-        _packet: ConnectPacket,
+        packet: ConnectPacket,
     ) -> Result<(), Error> {
         log::info!("Listener::on_session_connect()");
-        // TODO(Shaohua): Check auth
-
-        let ack_packet = ConnectAckPacket::new(true, ConnectReturnCode::Accepted);
-        let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
-        if let Some(pipeline) = self.pipelines.get(&session_id) {
-            pipeline.sender.send(cmd).await.map_err(Into::into)
-        } else {
-            Err(Error::session_error(session_id))
-        }
+        self.auth_sender
+            .send(ListenerToAuthCmd::RequestAuth(
+                self.id,
+                session_id,
+                packet.username().to_string(),
+                packet.password().to_vec(),
+            ))
+            .await
+            .map_err(Into::into)
     }
 
     async fn on_session_disconnect(&mut self, session_id: SessionId) -> Result<(), Error> {
@@ -585,11 +593,11 @@ impl Listener {
 
     async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
         match cmd {
-            DispatcherToListenerCmd::Publish(packet) => self.publish_packet(packet).await,
+            DispatcherToListenerCmd::Publish(packet) => self.on_dispatcher_publish(packet).await,
         }
     }
 
-    async fn publish_packet(&mut self, packet: PublishPacket) {
+    async fn on_dispatcher_publish(&mut self, packet: PublishPacket) {
         let cmd = ListenerToSessionCmd::Publish(packet.clone());
         // TODO(Shaohua): Replace with a trie tree and a hash table.
 
@@ -603,6 +611,32 @@ impl Listener {
                     );
                 }
             }
+        }
+    }
+
+    async fn handle_auth_cmd(&mut self, cmd: AuthToListenerCmd) -> Result<(), Error> {
+        match cmd {
+            AuthToListenerCmd::ResponseAuth(session_id, access_granted) => {
+                self.on_auth_response(session_id, access_granted).await
+            }
+        }
+    }
+
+    async fn on_auth_response(
+        &mut self,
+        session_id: SessionId,
+        access_granted: bool,
+    ) -> Result<(), Error> {
+        let ack_packet = if access_granted {
+            ConnectAckPacket::new(true, ConnectReturnCode::Accepted)
+        } else {
+            ConnectAckPacket::new(false, ConnectReturnCode::Unauthorized)
+        };
+        let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
+        if let Some(pipeline) = self.pipelines.get(&session_id) {
+            pipeline.sender.send(cmd).await.map_err(Into::into)
+        } else {
+            Err(Error::session_error(session_id))
         }
     }
 }

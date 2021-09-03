@@ -31,10 +31,9 @@ enum Status {
 ///
 // TODO(Shaohua): Handle Clean Session operation
 // TODO(Shaohua): Handle Will Message
-// TODO(Shaohua): Disconnect the network if ClientId is inuse
+// TODO(Shaohua): Disconnect the network if ClientId is in use
 // TODO(Shaohua): Disconnect the network if Connect Packet is invalid
-// TODO(Shaohua): Disconnect the network if Connect Packet is not received within a reasonable
-// amount of time.
+// TODO(Shaohua): Disconnect the network if Connect Packet is not received within a reasonable amount of time.
 #[derive(Debug)]
 pub struct Session {
     id: SessionId,

@@ -14,14 +14,14 @@ pub type SessionId = u64;
 
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
-    /// listener-id, username, password
-    RequestAuth(ListenerId, String, Vec<u8>),
+    /// listener-id, session-id, username, password
+    RequestAuth(ListenerId, SessionId, String, Vec<u8>),
 }
 
 #[derive(Debug, Clone)]
 pub enum AuthToListenerCmd {
-    /// username, access-granted, error-reason
-    ResponseAuth(String, bool, String),
+    /// session-id, access-granted
+    ResponseAuth(SessionId, bool),
 }
 
 #[derive(Debug, Clone)]
