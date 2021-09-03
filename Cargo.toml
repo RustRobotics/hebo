@@ -1,10 +1,11 @@
 [package]
 name = "hebo"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2018"
 license = "AGPL-3.0-only"
 description = "Distributed MQTT broker"
+publish = false
 
 [[bin]]
 name = "hebo"
