@@ -94,7 +94,10 @@ impl Dispatcher {
         for (_listener_id, sender) in &self.listener_senders {
             let cmd = DispatcherToListenerCmd::Publish(packet.clone());
             if let Err(err) = sender.send(cmd).await {
-                log::error!("Dispatcher::handle_listener_cmd() send failed: {:?}", err);
+                log::error!(
+                    "Dispatcher::publish_packet_to_listener() send failed: {:?}",
+                    err
+                );
             }
         }
     }

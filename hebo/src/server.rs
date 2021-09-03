@@ -215,11 +215,14 @@ impl ServerContext {
                 }
             }
 
+            // TODO(Shaohua): Returns an error.
             let mut auth_app = AuthApp::new(
                 self.config.security.clone(),
                 auth_to_listener_senders,
                 listeners_to_auth_receiver,
-            );
+            )
+            .expect("Failed to init auth app");
+
             let auth_app_handle = runtime.spawn(async move {
                 auth_app.run_loop().await;
             });

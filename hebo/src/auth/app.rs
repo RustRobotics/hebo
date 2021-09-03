@@ -4,13 +4,16 @@
 
 use tokio::sync::mpsc::{Receiver, Sender};
 
+use super::file_auth::FileAuth;
 use crate::commands::{AuthToListenerCmd, ListenerId, ListenerToAuthCmd, SessionId};
 use crate::config::Security;
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 #[derive(Debug)]
 pub struct AuthApp {
     allow_anonymous: bool,
+    file_auth: Option<FileAuth>,
+
     listener_senders: Vec<(ListenerId, Sender<AuthToListenerCmd>)>,
     listener_receiver: Receiver<ListenerToAuthCmd>,
 }
@@ -20,12 +23,20 @@ impl AuthApp {
         security: Security,
         listener_senders: Vec<(ListenerId, Sender<AuthToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToAuthCmd>,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, Error> {
+        let file_auth = if let Some(password_file) = security.password_file {
+            Some(FileAuth::new(password_file)?)
+        } else {
+            None
+        };
+
+        Ok(Self {
             allow_anonymous: security.allow_anonymous,
+            file_auth,
+
             listener_senders,
             listener_receiver,
-        }
+        })
     }
 
     pub async fn run_loop(&mut self) -> ! {
@@ -57,6 +68,27 @@ impl AuthApp {
         username: String,
         password: Vec<u8>,
     ) -> Result<(), Error> {
-        Ok(())
+        let access_granted = if username.is_empty() {
+            self.allow_anonymous
+        } else if let Some(file_auth) = &self.file_auth {
+            file_auth.is_match(&username, &password)?
+        } else {
+            false
+        };
+        for (sender_listener_id, sender) in &self.listener_senders {
+            if *sender_listener_id == listener_id {
+                let cmd = AuthToListenerCmd::ResponseAuth(session_id, access_granted);
+                sender.send(cmd).await?;
+                return Ok(());
+            }
+        }
+
+        Err(Error::from_string(
+            ErrorKind::ChannelError,
+            format!(
+                "AuthApp: Failed to find listener_senders with id: {}",
+                listener_id
+            ),
+        ))
     }
 }
