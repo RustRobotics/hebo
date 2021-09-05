@@ -55,6 +55,8 @@ pub enum ErrorKind {
 
     /// File format error.
     FormatError,
+
+    RedisError,
 }
 
 #[derive(Clone, Debug)]
@@ -161,6 +163,20 @@ impl From<base64::DecodeError> for Error {
         Error::from_string(ErrorKind::FormatError, format!("{:?}", err))
     }
 }
+
+impl From<redis::RedisError> for Error {
+    fn from(err: redis::RedisError) -> Self {
+        Error::from_string(ErrorKind::RedisError, format!("{:?}", err))
+    }
+}
+
+impl From<toml::de::Error> for Error {
+    fn from(err: toml::de::Error) -> Self {
+        Error::from_string(ErrorKind::ConfigError, format!("{:?}", err))
+    }
+}
+
+// Internal error convertions.
 
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
