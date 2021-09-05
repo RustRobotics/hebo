@@ -38,7 +38,7 @@ nc = "0.7.9"
 openssl = "0.10.36"
 quinn = "0.7.2"
 rand = "0.8.4"
-redis = { version = "0.21.2", features = ["r2d2", "tokio-comp", "connection-manager"] }
+redis = { version = "0.21.2", features = ["tokio-comp", "connection-manager"] }
 serde = "1.0.130"
 serde_derive = "1.0.130"
 tokio = { version = "1.11.0", features = ["full"] }

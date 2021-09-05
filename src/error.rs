@@ -55,6 +55,8 @@ pub enum ErrorKind {
 
     /// File format error.
     FormatError,
+
+    RedisError,
 }
 
 #[derive(Clone, Debug)]
@@ -161,6 +163,14 @@ impl From<base64::DecodeError> for Error {
         Error::from_string(ErrorKind::FormatError, format!("{:?}", err))
     }
 }
+
+impl From<redis::RedisError> for Error {
+    fn from(err: redis::RedisError) -> Self {
+        Error::from_string(ErrorKind::RedisError, format!("{:?}", err))
+    }
+}
+
+// Internal error convertions.
 
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {

@@ -3,17 +3,30 @@
 // in the LICENSE file.
 
 use serde_derive::Deserialize;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::time::Duration;
+
+use crate::error::Error;
 
 /// Configuration for connection to redis server.
 #[derive(Debug, Deserialize, Clone)]
 pub struct RedisConnConfig {
+    /// Use unix domain socket connection to redis.
+    ///
+    /// Default is false.
+    #[serde(default = "RedisConnConfig::default_use_uds")]
+    pub use_uds: bool,
+
     /// Redis server address.
     ///
     /// Default is "127.0.0.1:6379"
-    #[serde(default = "RedisConnConfig::default_server")]
-    pub server: SocketAddr,
+    #[serde(default = "RedisConnConfig::default_address")]
+    pub address: String,
+
+    /// Redis username.
+    ///
+    /// Default is None.
+    #[serde(default = "RedisConnConfig::default_username")]
+    pub username: Option<String>,
 
     /// Redis password.
     ///
@@ -21,17 +34,17 @@ pub struct RedisConnConfig {
     #[serde(default = "RedisConnConfig::default_password")]
     pub password: Option<String>,
 
+    /// Redis database number.
+    ///
+    /// Default is None.
+    #[serde(default = "RedisConnConfig::default_database")]
+    pub database: Option<u32>,
+
     /// Connection pool.
     ///
     /// Default is 8.
     #[serde(default = "RedisConnConfig::default_pool_size")]
     pub pool_size: usize,
-
-    /// Redis database number.
-    ///
-    /// Default is 0.
-    #[serde(default = "RedisConnConfig::default_database")]
-    pub database: u32,
 
     /// Default is 5s.
     #[serde(default = "RedisConnConfig::default_query_timeout")]
@@ -39,11 +52,23 @@ pub struct RedisConnConfig {
 }
 
 impl RedisConnConfig {
-    fn default_server() -> SocketAddr {
-        SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 6379)
+    fn default_use_uds() -> bool {
+        false
+    }
+
+    fn default_address() -> String {
+        "127.0.0.1:6379".to_string()
+    }
+
+    fn default_username() -> Option<String> {
+        None
     }
 
     fn default_password() -> Option<String> {
+        None
+    }
+
+    fn default_database() -> Option<u32> {
         None
     }
 
@@ -51,11 +76,54 @@ impl RedisConnConfig {
         8
     }
 
-    fn default_database() -> u32 {
-        0
-    }
-
     fn default_query_timeout() -> Duration {
         Duration::from_secs(5)
+    }
+
+    pub fn get_uri(&self) -> String {
+        let mut uri = String::new();
+        if self.use_uds {
+            // For `redis+unix:///<path>[?db=<db>[&pass=<password>][&user=<username>]]`
+            uri.push_str("redis+unix://");
+            uri.push_str(&self.address);
+            if let Some(db) = self.database {
+                uri.push_str(&format!("?db={}", db));
+            }
+            if let Some(username) = &self.username {
+                uri.push_str(&format!("&username={}", username));
+            }
+            if let Some(password) = &self.password {
+                uri.push_str(&format!("&password={}", password));
+            }
+        } else {
+            // For `redis://[<username>][:<password>@]<hostname>[:port][/<db>]`
+            uri.push_str("redis://");
+            if let Some(username) = &self.username {
+                uri.push_str(username);
+            }
+            if let Some(password) = &self.password {
+                uri.push_str(&format!(":{}@", password));
+            }
+            uri.push_str(&self.address);
+            if let Some(db) = self.database {
+                uri.push_str(&format!("/{}", db));
+            }
+        }
+
+        uri
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RedisConn {
+    config: RedisConnConfig,
+    client: redis::Client,
+}
+
+impl RedisConn {
+    pub fn new(config: RedisConnConfig) -> Result<Self, Error> {
+        let client = redis::Client::open(config.get_uri())?;
+
+        unimplemented!()
     }
 }
