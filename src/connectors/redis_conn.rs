@@ -82,6 +82,20 @@ impl RedisConnConfig {
     }
 }
 
+impl Default for RedisConnConfig {
+    fn default() -> Self {
+        Self {
+            use_uds: Self::default_use_uds(),
+            address: Self::default_address(),
+            database: Self::default_database(),
+            username: Self::default_username(),
+            password: Self::default_password(),
+            pool_size: Self::default_pool_size(),
+            query_timeout: Self::default_query_timeout(),
+        }
+    }
+}
+
 impl RedisConnConfig {
     pub fn query_timeout(&self) -> Duration {
         Duration::from_secs(self.query_timeout as u64)
@@ -121,17 +135,25 @@ impl RedisConnConfig {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RedisConn {
-    config: RedisConnConfig,
     client: redis::Client,
+    conn: Option<redis::aio::ConnectionManager>,
 }
 
 impl RedisConn {
-    pub fn new(config: RedisConnConfig) -> Result<Self, Error> {
+    pub fn new(config: &RedisConnConfig) -> Result<Self, Error> {
         let client = redis::Client::open(config.get_uri())?;
+        Ok(Self { client, conn: None })
+    }
 
-        unimplemented!()
+    pub async fn init(&mut self) -> Result<(), Error> {
+        self.conn = Some(self.client.get_tokio_connection_manager().await?);
+        Ok(())
+    }
+
+    pub fn conn(&self) -> Option<redis::aio::ConnectionManager> {
+        self.conn.clone()
     }
 }
 
