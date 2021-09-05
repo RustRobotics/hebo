@@ -1,0 +1,14 @@
+version: "3.0"
+services:
+  redis:
+    image: mariadb:10
+    restart: always
+    ports:
+      - 127.0.0.1:3306:3306
+    environment:
+      MARIADB_ROOT_PASSWORD: root-password
+      MARIADB_USER: hebo-user
+      MARIADB_PASSWORD: hebo-password
+      MARIADB_DATABASE: hebo-mqtt
+    volumes:
+      - ./db:/var/lib/mysql
