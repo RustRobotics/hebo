@@ -12,6 +12,10 @@ name = "hebo"
 path = "src/bin/hebo.rs"
 
 [[bin]]
+name = "hebo-ctl"
+path = "src/bin/hebo_ctl.rs"
+
+[[bin]]
 name = "hebo-passwd"
 path = "src/bin/hebo_passwd.rs"
 
