@@ -170,6 +170,12 @@ impl From<redis::RedisError> for Error {
     }
 }
 
+impl From<toml::de::Error> for Error {
+    fn from(err: toml::de::Error) -> Self {
+        Error::from_string(ErrorKind::ConfigError, format!("{:?}", err))
+    }
+}
+
 // Internal error convertions.
 
 impl From<codec::EncodeError> for Error {

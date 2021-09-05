@@ -132,6 +132,7 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits",
+ "serde",
  "time",
  "winapi",
 ]
@@ -434,6 +435,7 @@ name = "hebo"
 version = "0.2.2"
 dependencies = [
  "base64",
+ "chrono",
  "clap",
  "codec",
  "env_logger",

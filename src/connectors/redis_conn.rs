@@ -22,6 +22,12 @@ pub struct RedisConnConfig {
     #[serde(default = "RedisConnConfig::default_address")]
     pub address: String,
 
+    /// Redis database number.
+    ///
+    /// Default is None.
+    #[serde(default = "RedisConnConfig::default_database")]
+    pub database: Option<u32>,
+
     /// Redis username.
     ///
     /// Default is None.
@@ -34,21 +40,16 @@ pub struct RedisConnConfig {
     #[serde(default = "RedisConnConfig::default_password")]
     pub password: Option<String>,
 
-    /// Redis database number.
-    ///
-    /// Default is None.
-    #[serde(default = "RedisConnConfig::default_database")]
-    pub database: Option<u32>,
-
     /// Connection pool.
     ///
     /// Default is 8.
     #[serde(default = "RedisConnConfig::default_pool_size")]
     pub pool_size: usize,
 
+    /// Redis query timeout in seconds.
     /// Default is 5s.
     #[serde(default = "RedisConnConfig::default_query_timeout")]
-    pub query_timeout: Duration,
+    pub query_timeout: u32,
 }
 
 impl RedisConnConfig {
@@ -76,8 +77,14 @@ impl RedisConnConfig {
         8
     }
 
-    fn default_query_timeout() -> Duration {
-        Duration::from_secs(5)
+    fn default_query_timeout() -> u32 {
+        5
+    }
+}
+
+impl RedisConnConfig {
+    pub fn query_timeout(&self) -> Duration {
+        Duration::from_secs(self.query_timeout as u64)
     }
 
     pub fn get_uri(&self) -> String {
@@ -125,5 +132,54 @@ impl RedisConn {
         let client = redis::Client::open(config.get_uri())?;
 
         unimplemented!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::error::Error;
+
+    #[test]
+    fn test_redis_conn_config() {
+        let config: Result<RedisConnConfig, Error> = toml::from_str(
+            r#"
+        use_ds = false
+        address = "127.0.0.1:6379"
+        database = 1
+        username = "user1"
+        password = "password1"
+        pool_size = 8
+        query_timeout = 6
+        "#,
+        )
+        .map_err(Into::into);
+        assert!(config.is_ok());
+        let config = config.unwrap();
+        println!("{:?}", config.query_timeout);
+        assert_eq!(config.query_timeout(), Duration::from_secs(6));
+        let uri = config.get_uri();
+        assert_eq!(uri, "redis://user1:password1@127.0.0.1:6379/1");
+    }
+
+    #[test]
+    fn test_redis_conn_config_uds() {
+        let config: Result<RedisConnConfig, Error> = toml::from_str(
+            r#"
+        use_uds = true
+        address = "/var/run/redis.sock"
+        database = 1
+        password = "password1"
+        pool_size = 8
+        "#,
+        )
+        .map_err(Into::into);
+        assert!(config.is_ok());
+        let config = config.unwrap();
+        let uri = config.get_uri();
+        assert_eq!(
+            uri,
+            "redis+unix:///var/run/redis.sock?db=1&password=password1"
+        );
     }
 }
