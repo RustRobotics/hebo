@@ -4,7 +4,7 @@ services:
     image: postgres:13-buster
     restart: always
     ports:
-      - 127.0.0.1:3306:3306
+      - 127.0.0.1:5432:5432
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres

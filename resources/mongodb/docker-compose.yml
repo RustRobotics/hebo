@@ -4,7 +4,8 @@ services:
     image: mongo:4.2
     restart: always
     ports:
-      - 127.0.0.1:3306:3306
+      - 127.0.0.1:27017:27017
+      - 127.0.0.1:27018:27018
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: password
