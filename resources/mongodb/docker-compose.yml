@@ -1,0 +1,13 @@
+version: "3.0"
+services:
+  redis:
+    image: mongo:4.2
+    restart: always
+    ports:
+      - 127.0.0.1:3306:3306
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: hebo-mqtt
+    volumes:
+      - ./db:/data/db
