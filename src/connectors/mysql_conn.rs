@@ -127,11 +127,11 @@ impl MySQLConnConfig {
 
 pub struct MySQLConn {
     pool: mysql_async::Pool,
-    conn: Option<mysql_async::Conn>,
+    conn: mysql_async::Conn,
 }
 
 impl MySQLConn {
-    pub fn new(config: &MySQLConnConfig) -> Result<Self, Error> {
+    pub async fn connect(config: &MySQLConnConfig) -> Result<Self, Error> {
         let builder = mysql_async::OptsBuilder::default()
             .user(Some(&config.username))
             .pass(Some(&config.password));
@@ -144,23 +144,16 @@ impl MySQLConn {
                 .db_name(Some(&config.database))
         };
         let pool = mysql_async::Pool::new(builder);
-        Ok(Self { pool, conn: None })
+        let conn = pool.get_conn().await?;
+        Ok(Self { pool, conn })
     }
 
-    pub async fn init(&mut self) -> Result<(), Error> {
-        let conn = self.pool.get_conn().await?;
-        self.conn = Some(conn);
-        Ok(())
-    }
-
-    pub fn get_conn(&mut self) -> Option<&mut mysql_async::Conn> {
-        self.conn.as_mut()
+    pub fn get_conn(&mut self) -> &mut mysql_async::Conn {
+        &mut self.conn
     }
 
     pub async fn disconnect(self) -> Result<(), Error> {
-        if let Some(conn) = self.conn {
-            drop(conn);
-        }
+        drop(self.conn);
         self.pool.disconnect().await.map_err(Into::into)
     }
 }
@@ -203,15 +196,11 @@ mod tests {
         };
 
         tokio_test::block_on(async {
-            let mysql_conn = MySQLConn::new(&config);
+            let mysql_conn = MySQLConn::connect(&config).await;
             assert!(mysql_conn.is_ok());
             let mut mysql_conn = mysql_conn.unwrap();
-            let ret = mysql_conn.init().await;
-            assert!(ret.is_ok());
 
             let conn = mysql_conn.get_conn();
-            assert!(conn.is_some());
-            let conn = conn.unwrap();
 
             // Create temporary table
             let ret = conn
