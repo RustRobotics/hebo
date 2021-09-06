@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use mongodb::options::{ClientOptions, ServerAddress};
+use mongodb::options::{ClientOptions, Credential, StreamAddress};
 use serde_derive::Deserialize;
 use std::time::Duration;
 
@@ -126,15 +126,17 @@ impl MongoConnConfig {
     }
 
     fn get_config(&self) -> ClientOptions {
+        let mut credential = Credential::default();
+        credential.username = self.username.clone();
+        credential.password = self.password.clone();
         let mut builder = ClientOptions::default();
-        builder.hosts = vec![ServerAddress::Tcp {
-            host: self.host.clone(),
-            port: self.port,
+        builder.hosts = vec![StreamAddress {
+            hostname: self.host.clone(),
+            port: Some(self.port),
         }];
         builder.app_name = Some("hebo".to_string());
         builder.connect_timeout = Some(self.query_timeout());
-        builder.credential.username = self.username.clone();
-        builder.credential.password = self.password.clone();
+        builder.credential = Some(credential);
 
         builder
     }
