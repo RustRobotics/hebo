@@ -57,6 +57,8 @@ pub enum ErrorKind {
     FormatError,
 
     RedisError,
+
+    MySQLError,
 }
 
 #[derive(Clone, Debug)]
@@ -170,6 +172,12 @@ impl From<redis::RedisError> for Error {
     }
 }
 
+impl From<mysql::Error> for Error {
+    fn from(err: mysql::Error) -> Self {
+        Error::from_string(ErrorKind::MySQLError, format!("{:?}", err))
+    }
+}
+
 impl From<toml::de::Error> for Error {
     fn from(err: toml::de::Error) -> Self {
         Error::from_string(ErrorKind::ConfigError, format!("{:?}", err))
@@ -177,7 +185,6 @@ impl From<toml::de::Error> for Error {
 }
 
 // Internal error convertions.
-
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
         Error::from_string(ErrorKind::EncodeError, format!("{:?}", err))
