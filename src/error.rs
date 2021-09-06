@@ -59,6 +59,8 @@ pub enum ErrorKind {
     RedisError,
 
     MySQLError,
+
+    PgSQLError,
 }
 
 #[derive(Clone, Debug)]
@@ -175,6 +177,12 @@ impl From<redis::RedisError> for Error {
 impl From<mysql_async::Error> for Error {
     fn from(err: mysql_async::Error) -> Self {
         Error::from_string(ErrorKind::MySQLError, format!("{:?}", err))
+    }
+}
+
+impl From<tokio_postgres::Error> for Error {
+    fn from(err: tokio_postgres::Error) -> Self {
+        Error::from_string(ErrorKind::PgSQLError, format!("{:?}", err))
     }
 }
 

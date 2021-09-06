@@ -48,6 +48,7 @@ redis = { version = "0.21.2", features = ["tokio-comp", "connection-manager"] }
 serde = "1.0.130"
 serde_derive = "1.0.130"
 tokio = { version = "1.11.0", features = ["full"] }
+tokio-postgres = "0.7.2"
 tokio-rustls = "0.22.0"
 tokio-tungstenite = { version = "0.15.0", features = ["rustls-tls"] }
 toml = "0.5.8"

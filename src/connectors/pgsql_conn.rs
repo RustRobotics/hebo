@@ -4,6 +4,9 @@
 
 use serde_derive::Deserialize;
 use std::time::Duration;
+use tokio_postgres::config::Config;
+use tokio_postgres::config::SslMode;
+use tokio_postgres::NoTls;
 
 use crate::error::Error;
 
@@ -18,9 +21,9 @@ pub struct PgSQLConnConfig {
 
     /// Socket address to server.
     ///
-    /// Default is None.
+    /// Default is empty.
     #[serde(default = "PgSQLConnConfig::default_socket")]
-    pub socket: Option<String>,
+    pub socket: String,
 
     /// PgSQL server ip or hostname.
     ///
@@ -70,8 +73,8 @@ impl PgSQLConnConfig {
         false
     }
 
-    fn default_socket() -> Option<String> {
-        None
+    fn default_socket() -> String {
+        String::new()
     }
 
     fn default_ip() -> String {
@@ -123,6 +126,52 @@ impl PgSQLConnConfig {
     pub fn query_timeout(&self) -> Duration {
         Duration::from_secs(self.query_timeout as u64)
     }
+
+    fn get_config(&self) -> Config {
+        let mut builder = Config::new();
+        builder
+            .user(&self.username)
+            .password(self.password.as_bytes())
+            .dbname(&self.database)
+            .application_name("hebo")
+            .ssl_mode(SslMode::Disable)
+            .port(self.port)
+            .connect_timeout(self.query_timeout());
+        if self.use_uds {
+            builder.host_path(&self.socket);
+        } else {
+            builder.host(&self.ip);
+        }
+
+        builder
+    }
+}
+
+pub struct PgSQLConn {
+    client: tokio_postgres::Client,
+}
+
+impl PgSQLConn {
+    pub async fn connect(pg_config: &PgSQLConnConfig) -> Result<Self, Error> {
+        let config = pg_config.get_config();
+        let (client, connection) = config.connect(NoTls).await?;
+
+        // The connection object performs the actual communication with the database,
+        // so spawn it off to run on its own.
+        // No need to keep reference to connection, it will be disconnected and dropped
+        // once client is dropped.
+        tokio::spawn(async move {
+            if let Err(e) = connection.await {
+                eprintln!("connection error: {}", e);
+            }
+        });
+
+        Ok(Self { client })
+    }
+
+    pub fn get_conn(&mut self) -> &tokio_postgres::Client {
+        &self.client
+    }
 }
 
 #[cfg(test)]
@@ -143,5 +192,37 @@ mod tests {
         )
         .map_err(Into::into);
         assert!(config.is_ok());
+    }
+
+    #[derive(Debug, PartialEq, Eq, Clone)]
+    struct Payment {
+        customer_id: i32,
+        amount: i32,
+        account_name: Option<String>,
+    }
+
+    #[test]
+    fn test_pgsql_conn() {
+        let config = PgSQLConnConfig {
+            password: "hebo-password".to_string(),
+            ..PgSQLConnConfig::default()
+        };
+
+        tokio_test::block_on(async {
+            let pgsql_conn = PgSQLConn::connect(&config).await;
+            assert!(pgsql_conn.is_ok());
+            let mut pgsql_conn = pgsql_conn.unwrap();
+
+            let conn = pgsql_conn.get_conn();
+
+            // Now we can execute a simple statement that just returns its parameter.
+            let rows = conn.query("SELECT $1::TEXT", &[&"hello world"]).await;
+            assert!(rows.is_ok());
+            let rows = rows.unwrap();
+
+            // And then check that we got back the same string we sent over.
+            let value: &str = rows[0].get(0);
+            assert_eq!(value, "hello world");
+        });
     }
 }
