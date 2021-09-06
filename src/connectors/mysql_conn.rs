@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use crate::error::Error;
 
-/// Configuration for connection to mysql server.
+/// Configuration for connection to MySQL server.
 #[derive(Debug, Deserialize, Clone)]
 pub struct MySQLConnConfig {
     /// Use unix domain socket connection to MySQL.
