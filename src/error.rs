@@ -172,8 +172,8 @@ impl From<redis::RedisError> for Error {
     }
 }
 
-impl From<mysql::Error> for Error {
-    fn from(err: mysql::Error) -> Self {
+impl From<mysql_async::Error> for Error {
+    fn from(err: mysql_async::Error) -> Self {
         Error::from_string(ErrorKind::MySQLError, format!("{:?}", err))
     }
 }

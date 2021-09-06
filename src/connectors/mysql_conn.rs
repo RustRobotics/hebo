@@ -2,9 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use mysql::prelude::*;
 use serde_derive::Deserialize;
-use std::path::PathBuf;
 use std::time::Duration;
 
 use crate::error::Error;
@@ -22,7 +20,7 @@ pub struct MySQLConnConfig {
     ///
     /// Default is None.
     #[serde(default = "MySQLConnConfig::default_socket")]
-    pub socket: Option<PathBuf>,
+    pub socket: Option<String>,
 
     /// MySQL server ip or hostname.
     ///
@@ -72,7 +70,7 @@ impl MySQLConnConfig {
         false
     }
 
-    fn default_socket() -> Option<PathBuf> {
+    fn default_socket() -> Option<String> {
         None
     }
 
@@ -127,13 +125,62 @@ impl MySQLConnConfig {
     }
 }
 
-#[derive(Clone)]
 pub struct MySQLConn {
-    pool: mysql::Pool,
+    pool: mysql_async::Pool,
+    conn: Option<mysql_async::Conn>,
 }
 
 impl MySQLConn {
     pub fn new(config: &MySQLConnConfig) -> Result<Self, Error> {
-        unimplemented!()
+        let builder = mysql_async::OptsBuilder::default()
+            .user(Some(&config.username))
+            .pass(Some(&config.password));
+        let builder = if config.use_uds {
+            builder.socket(config.socket.as_ref())
+        } else {
+            builder
+                .ip_or_hostname(&config.ip)
+                .tcp_port(config.port)
+                .db_name(Some(&config.database))
+        };
+        let pool = mysql_async::Pool::new(builder);
+        Ok(Self { pool, conn: None })
     }
+
+    pub async fn init(&mut self) -> Result<(), Error> {
+        let conn = self.pool.get_conn().await?;
+        self.conn = Some(conn);
+        Ok(())
+    }
+
+    pub async fn disconnect(self) -> Result<(), Error> {
+        if let Some(conn) = self.conn {
+            drop(conn);
+        }
+        self.pool.disconnect().await.map_err(Into::into)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_mysql_config() {
+        let config: Result<MySQLConnConfig, Error> = toml::from_str(
+            r#"
+        use_ds = false
+        database = "hebo-mqtt"
+        username = "user1"
+        password = "password1"
+        pool_size = 8
+        query_timeout = 6
+        "#,
+        )
+        .map_err(Into::into);
+        assert!(config.is_ok());
+    }
+
+    #[test]
+    fn test_mysql_conn() {}
 }
