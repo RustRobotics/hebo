@@ -4,8 +4,7 @@
 
 use serde_derive::Deserialize;
 use std::time::Duration;
-use tokio_postgres::config::Config;
-use tokio_postgres::config::SslMode;
+use tokio_postgres::config::{Config, SslMode};
 use tokio_postgres::NoTls;
 
 use crate::error::Error;
@@ -28,8 +27,8 @@ pub struct PgSQLConnConfig {
     /// PgSQL server ip or hostname.
     ///
     /// Default is "127.0.0.1"
-    #[serde(default = "PgSQLConnConfig::default_ip")]
-    pub ip: String,
+    #[serde(default = "PgSQLConnConfig::default_host")]
+    pub host: String,
 
     /// Server port number.
     ///
@@ -37,7 +36,7 @@ pub struct PgSQLConnConfig {
     #[serde(default = "PgSQLConnConfig::default_port")]
     pub port: u16,
 
-    /// PgSQL database number.
+    /// PgSQL database .
     ///
     /// Default is `hebo-mqtt`.
     #[serde(default = "PgSQLConnConfig::default_database")]
@@ -77,7 +76,7 @@ impl PgSQLConnConfig {
         String::new()
     }
 
-    fn default_ip() -> String {
+    fn default_host() -> String {
         "127.0.0.1".to_string()
     }
 
@@ -111,7 +110,7 @@ impl Default for PgSQLConnConfig {
         Self {
             use_uds: Self::default_use_uds(),
             socket: Self::default_socket(),
-            ip: Self::default_ip(),
+            host: Self::default_host(),
             port: Self::default_port(),
             database: Self::default_database(),
             username: Self::default_username(),
@@ -140,7 +139,7 @@ impl PgSQLConnConfig {
         if self.use_uds {
             builder.host_path(&self.socket);
         } else {
-            builder.host(&self.ip);
+            builder.host(&self.host);
         }
 
         builder
@@ -192,13 +191,6 @@ mod tests {
         )
         .map_err(Into::into);
         assert!(config.is_ok());
-    }
-
-    #[derive(Debug, PartialEq, Eq, Clone)]
-    struct Payment {
-        customer_id: i32,
-        amount: i32,
-        account_name: Option<String>,
     }
 
     #[test]

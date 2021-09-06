@@ -25,8 +25,8 @@ pub struct RedisConnConfig {
     /// Redis server ip or hostname.
     ///
     /// Default is "127.0.0.1"
-    #[serde(default = "RedisConnConfig::default_ip")]
-    pub ip: String,
+    #[serde(default = "RedisConnConfig::default_host")]
+    pub host: String,
 
     /// Redis server port.
     ///
@@ -73,7 +73,7 @@ impl RedisConnConfig {
         String::new()
     }
 
-    fn default_ip() -> String {
+    fn default_host() -> String {
         "127.0.0.1".to_string()
     }
 
@@ -107,7 +107,7 @@ impl Default for RedisConnConfig {
         Self {
             use_uds: Self::default_use_uds(),
             socket: Self::default_socket(),
-            ip: Self::default_ip(),
+            host: Self::default_host(),
             port: Self::default_port(),
             database: Self::default_database(),
             username: Self::default_username(),
@@ -146,7 +146,7 @@ impl RedisConnConfig {
             if let Some(password) = &self.password {
                 uri.push_str(&format!(":{}@", password));
             }
-            uri.push_str(&format!("{}:{}", self.ip, self.port));
+            uri.push_str(&format!("{}:{}", self.host, self.port));
             if let Some(db) = self.database {
                 uri.push_str(&format!("/{}", db));
             }

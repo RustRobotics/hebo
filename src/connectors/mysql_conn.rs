@@ -25,8 +25,8 @@ pub struct MySQLConnConfig {
     /// MySQL server ip or hostname.
     ///
     /// Default is "127.0.0.1"
-    #[serde(default = "MySQLConnConfig::default_ip")]
-    pub ip: String,
+    #[serde(default = "MySQLConnConfig::default_host")]
+    pub host: String,
 
     /// Server port number.
     ///
@@ -34,7 +34,7 @@ pub struct MySQLConnConfig {
     #[serde(default = "MySQLConnConfig::default_port")]
     pub port: u16,
 
-    /// MySQL database number.
+    /// MySQL database name.
     ///
     /// Default is `hebo-mqtt`.
     #[serde(default = "MySQLConnConfig::default_database")]
@@ -74,7 +74,7 @@ impl MySQLConnConfig {
         None
     }
 
-    fn default_ip() -> String {
+    fn default_host() -> String {
         "127.0.0.1".to_string()
     }
 
@@ -108,7 +108,7 @@ impl Default for MySQLConnConfig {
         Self {
             use_uds: Self::default_use_uds(),
             socket: Self::default_socket(),
-            ip: Self::default_ip(),
+            host: Self::default_host(),
             port: Self::default_port(),
             database: Self::default_database(),
             username: Self::default_username(),
@@ -139,7 +139,7 @@ impl MySQLConn {
             builder.socket(config.socket.as_ref())
         } else {
             builder
-                .ip_or_hostname(&config.ip)
+                .ip_or_hostname(&config.host)
                 .tcp_port(config.port)
                 .db_name(Some(&config.database))
         };
