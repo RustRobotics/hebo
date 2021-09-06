@@ -125,7 +125,7 @@ impl MongoConnConfig {
         Duration::from_secs(self.query_timeout as u64)
     }
 
-    fn get_config(&self) -> ClientOptions {
+    fn get_options(&self) -> ClientOptions {
         let mut credential = Credential::default();
         credential.username = self.username.clone();
         credential.password = self.password.clone();
@@ -139,6 +139,28 @@ impl MongoConnConfig {
         builder.credential = Some(credential);
 
         builder
+    }
+}
+
+#[derive(Debug)]
+pub struct MongoConn {
+    _client: mongodb::Client,
+    db: mongodb::Database,
+}
+
+impl MongoConn {
+    pub fn connect(mongo_config: &MongoConnConfig) -> Result<Self, Error> {
+        let options = mongo_config.get_options();
+        let client = mongodb::Client::with_options(options)?;
+        let db = client.database(&mongo_config.database);
+        Ok(Self {
+            _client: client,
+            db,
+        })
+    }
+
+    pub fn get_conn(&mut self) -> &mut mongodb::Database {
+        &mut self.db
     }
 }
 
@@ -158,5 +180,29 @@ mod tests {
         )
         .map_err(Into::into);
         assert!(config.is_ok());
+    }
+
+    #[test]
+    fn test_mongo_conn() {
+        let config = MongoConnConfig {
+            username: Some("root".to_string()),
+            password: Some("password".to_string()),
+            ..MongoConnConfig::default()
+        };
+
+        let mongo_conn = MongoConn::connect(&config);
+        assert!(mongo_conn.is_ok());
+        let mut mongo_conn = mongo_conn.unwrap();
+
+        // TODO(Shaohua): Fix tokio error.
+        tokio_test::block_on(async {
+            let db = mongo_conn.get_conn();
+            let collection_name = "hebo_test_temp";
+            let ret = db.create_collection(collection_name, None).await;
+            assert!(ret.is_ok());
+            let collection_handle = db.collection(collection_name);
+            let ret = collection_handle.drop(None).await;
+            assert!(ret.is_ok());
+        });
     }
 }

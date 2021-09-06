@@ -61,6 +61,8 @@ pub enum ErrorKind {
     MySQLError,
 
     PgSQLError,
+
+    MongoError,
 }
 
 #[derive(Clone, Debug)]
@@ -183,6 +185,12 @@ impl From<mysql_async::Error> for Error {
 impl From<tokio_postgres::Error> for Error {
     fn from(err: tokio_postgres::Error) -> Self {
         Error::from_string(ErrorKind::PgSQLError, format!("{:?}", err))
+    }
+}
+
+impl From<mongodb::error::Error> for Error {
+    fn from(err: mongodb::error::Error) -> Self {
+        Error::from_string(ErrorKind::MongoError, format!("{:?}", err))
     }
 }
 
