@@ -16,11 +16,22 @@ pub struct RedisConnConfig {
     #[serde(default = "RedisConnConfig::default_use_uds")]
     pub use_uds: bool,
 
-    /// Redis server address.
+    /// Path to redis socket.
     ///
-    /// Default is "127.0.0.1:6379"
-    #[serde(default = "RedisConnConfig::default_address")]
-    pub address: String,
+    /// Default is empty.
+    #[serde(default = "RedisConnConfig::default_socket")]
+    pub socket: String,
+
+    /// Redis server ip or hostname.
+    ///
+    /// Default is "127.0.0.1"
+    #[serde(default = "RedisConnConfig::default_ip")]
+    pub ip: String,
+
+    /// Redis server port.
+    ///
+    /// Default is 6379
+    pub port: u16,
 
     /// Redis database number.
     ///
@@ -42,23 +53,32 @@ pub struct RedisConnConfig {
 
     /// Connection pool.
     ///
-    /// Default is 8.
+    /// Default is 4.
     #[serde(default = "RedisConnConfig::default_pool_size")]
     pub pool_size: usize,
 
     /// Redis query timeout in seconds.
+    ///
     /// Default is 5s.
     #[serde(default = "RedisConnConfig::default_query_timeout")]
     pub query_timeout: u32,
 }
 
 impl RedisConnConfig {
-    fn default_use_uds() -> bool {
+    const fn default_use_uds() -> bool {
         false
     }
 
-    fn default_address() -> String {
-        "127.0.0.1:6379".to_string()
+    fn default_socket() -> String {
+        String::new()
+    }
+
+    fn default_ip() -> String {
+        "127.0.0.1".to_string()
+    }
+
+    const fn default_port() -> u16 {
+        6379
     }
 
     fn default_username() -> Option<String> {
@@ -69,15 +89,15 @@ impl RedisConnConfig {
         None
     }
 
-    fn default_database() -> Option<u32> {
+    const fn default_database() -> Option<u32> {
         None
     }
 
-    fn default_pool_size() -> usize {
-        8
+    const fn default_pool_size() -> usize {
+        4
     }
 
-    fn default_query_timeout() -> u32 {
+    const fn default_query_timeout() -> u32 {
         5
     }
 }
@@ -86,7 +106,9 @@ impl Default for RedisConnConfig {
     fn default() -> Self {
         Self {
             use_uds: Self::default_use_uds(),
-            address: Self::default_address(),
+            socket: Self::default_socket(),
+            ip: Self::default_ip(),
+            port: Self::default_port(),
             database: Self::default_database(),
             username: Self::default_username(),
             password: Self::default_password(),
@@ -105,8 +127,7 @@ impl RedisConnConfig {
         let mut uri = String::new();
         if self.use_uds {
             // For `redis+unix:///<path>[?db=<db>[&pass=<password>][&user=<username>]]`
-            uri.push_str("redis+unix://");
-            uri.push_str(&self.address);
+            uri.push_str(&format!("redis+unix://{}", self.socket));
             if let Some(db) = self.database {
                 uri.push_str(&format!("?db={}", db));
             }
@@ -114,7 +135,7 @@ impl RedisConnConfig {
                 uri.push_str(&format!("&username={}", username));
             }
             if let Some(password) = &self.password {
-                uri.push_str(&format!("&password={}", password));
+                uri.push_str(&format!("&pass={}", password));
             }
         } else {
             // For `redis://[<username>][:<password>@]<hostname>[:port][/<db>]`
@@ -125,7 +146,7 @@ impl RedisConnConfig {
             if let Some(password) = &self.password {
                 uri.push_str(&format!(":{}@", password));
             }
-            uri.push_str(&self.address);
+            uri.push_str(&format!("{}:{}", self.ip, self.port));
             if let Some(db) = self.database {
                 uri.push_str(&format!("/{}", db));
             }
@@ -167,7 +188,6 @@ mod tests {
         let config: Result<RedisConnConfig, Error> = toml::from_str(
             r#"
         use_ds = false
-        address = "127.0.0.1:6379"
         database = 1
         username = "user1"
         password = "password1"
@@ -189,7 +209,7 @@ mod tests {
         let config: Result<RedisConnConfig, Error> = toml::from_str(
             r#"
         use_uds = true
-        address = "/var/run/redis.sock"
+        socket = "/var/run/redis.sock"
         database = 1
         password = "password1"
         pool_size = 8
