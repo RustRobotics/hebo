@@ -230,8 +230,14 @@ impl ServerContext {
             mpsc::channel(CHANNEL_CAPACITY);
         let (dispatcher_to_bridge_sender, dispatcher_to_bridge_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
-        let mut bridge_app =
-            BridgeApp::new(bridge_to_dispatcher_sender, dispatcher_to_bridge_receiver);
+        let mut bridge_app = BridgeApp::new(
+            // dispatcher
+            bridge_to_dispatcher_sender,
+            dispatcher_to_bridge_receiver,
+            // server ctx
+            server_ctx_response_sender.clone(),
+            server_ctx_request_sender.subscribe(),
+        );
         let bridge_handle = runtime.spawn(async move {
             bridge_app.run_loop().await;
         });
