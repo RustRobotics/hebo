@@ -675,7 +675,7 @@ impl Listener {
 
     /// Acl cmd handler.
     async fn handle_acl_cmd(&mut self, cmd: AclToListenerCmd) -> Result<(), Error> {
-        log::info!("Handle acl cmd");
+        log::info!("Handle acl cmd: {:?}", cmd);
         Ok(())
     }
 }

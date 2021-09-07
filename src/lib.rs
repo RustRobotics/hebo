@@ -5,6 +5,7 @@
 pub mod acl;
 pub mod auth;
 pub mod backends;
+pub mod bridge;
 pub mod cache_types;
 pub mod commands;
 pub mod config;

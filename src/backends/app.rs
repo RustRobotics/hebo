@@ -50,6 +50,7 @@ impl BackendsApp {
     }
 
     async fn handle_session_added(&mut self, session: SessionInfo) -> Result<(), Error> {
+        log::info!("session added: {}", session.session_id);
         Ok(())
     }
 
@@ -58,6 +59,7 @@ impl BackendsApp {
         listener_id: ListenerId,
         session_id: SessionId,
     ) -> Result<(), Error> {
+        log::info!("session removed: {}, {}", listener_id, session_id);
         Ok(())
     }
 }

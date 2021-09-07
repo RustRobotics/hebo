@@ -115,6 +115,12 @@ pub enum DispatcherToBackendsCmd {
 pub enum BackendsToDispatcherCmd {}
 
 #[derive(Debug, Clone)]
+pub enum DispatcherToBridgeCmd {}
+
+#[derive(Debug, Clone)]
+pub enum BridgeToDispatcherCmd {}
+
+#[derive(Debug, Clone)]
 pub enum ServerContextRequestCmd {}
 
 #[derive(Debug, Clone)]
