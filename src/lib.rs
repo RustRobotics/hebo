@@ -3,7 +3,6 @@
 // in the LICENSE file.
 
 pub mod auth;
-pub mod cache;
 pub mod cache_types;
 pub mod commands;
 pub mod config;
@@ -18,4 +17,3 @@ pub mod server;
 pub mod session;
 pub mod storage;
 pub mod stream;
-pub mod system;
