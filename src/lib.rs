@@ -16,6 +16,7 @@ pub mod gateway;
 pub mod listener;
 pub mod log;
 pub mod metrics;
+pub mod rule_engine;
 pub mod server;
 pub mod session;
 pub mod storage;

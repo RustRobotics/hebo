@@ -56,7 +56,7 @@ digraph {
 	Metrix -> SysTree;
 
 	// rule engine app
-	Dispatcher -> "Rule Engine" [dir=both, style=dotted, color=red];
+	Dispatcher -> "Rule Engine" [dir=both];
 	"Forward Database" [shape=cylinder];
 	"Rule Engine" -> "Forward Database" [style=dotted, color=red];
 }
