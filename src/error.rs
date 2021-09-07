@@ -10,8 +10,9 @@ use tokio_tungstenite::tungstenite;
 
 use crate::commands::{
     AuthToListenerCmd, DispatcherToMetricsCmd, ListenerToAuthCmd, ListenerToDispatcherCmd,
-    ListenerToSessionCmd, MetricsToDispatcherCmd, SessionId, SessionToListenerCmd,
+    ListenerToSessionCmd, MetricsToDispatcherCmd, SessionToListenerCmd,
 };
+use crate::types::SessionId;
 
 /// Represent the types of errors.
 #[derive(Clone, Debug)]

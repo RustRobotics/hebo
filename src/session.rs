@@ -13,9 +13,10 @@ use std::time::Duration;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
-use crate::commands::{ListenerToSessionCmd, SessionId, SessionToListenerCmd};
+use crate::commands::{ListenerToSessionCmd, SessionToListenerCmd};
 use crate::error::Error;
 use crate::stream::Stream;
+use crate::types::SessionId;
 
 #[derive(Debug, PartialEq)]
 enum Status {

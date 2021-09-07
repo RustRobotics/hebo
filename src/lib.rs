@@ -17,5 +17,6 @@ pub mod server;
 pub mod session;
 pub mod storage;
 pub mod stream;
+pub mod types;
 
 pub use error::Error;

@@ -5,9 +5,10 @@
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use super::file_auth::FileAuth;
-use crate::commands::{AuthToListenerCmd, ListenerId, ListenerToAuthCmd, SessionId};
+use crate::commands::{AuthToListenerCmd, ListenerToAuthCmd};
 use crate::config::Security;
 use crate::error::{Error, ErrorKind};
+use crate::types::{ListenerId, SessionId};
 
 #[derive(Debug)]
 pub struct AuthApp {

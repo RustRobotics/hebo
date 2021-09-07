@@ -7,8 +7,7 @@ use codec::{
     UnsubscribePacket,
 };
 
-pub type ListenerId = u32;
-pub type SessionId = u64;
+use crate::types::{ListenerId, SessionId, SessionInfo};
 
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
@@ -99,8 +98,8 @@ pub enum MetricsToDispatcherCmd {
 
 #[derive(Debug, Clone)]
 pub enum DispatcherToBackendsCmd {
-    /// listener id, session id, client id
-    SessionAdded(ListenerId, SessionId, String),
+    /// session info
+    SessionAdded(SessionInfo),
 
     /// listener id, session id
     SessionRemoved(ListenerId, SessionId),

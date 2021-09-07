@@ -4,8 +4,9 @@
 
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{BackendsToDispatcherCmd, DispatcherToBackendsCmd, ListenerId, SessionId};
+use crate::commands::{BackendsToDispatcherCmd, DispatcherToBackendsCmd};
 use crate::error::Error;
+use crate::types::{ListenerId, SessionId, SessionInfo};
 
 #[derive(Debug)]
 pub struct BackendsApp {
@@ -39,9 +40,8 @@ impl BackendsApp {
     async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToBackendsCmd) -> Result<(), Error> {
         log::info!("cmd: {:?}", cmd);
         match cmd {
-            DispatcherToBackendsCmd::SessionAdded(listener_id, session_id, client_id) => {
-                self.handle_session_added(listener_id, session_id, client_id)
-                    .await
+            DispatcherToBackendsCmd::SessionAdded(session) => {
+                self.handle_session_added(session).await
             }
             DispatcherToBackendsCmd::SessionRemoved(listener_id, session_id) => {
                 self.handle_session_removed(listener_id, session_id).await
@@ -49,12 +49,7 @@ impl BackendsApp {
         }
     }
 
-    async fn handle_session_added(
-        &mut self,
-        listener_id: ListenerId,
-        session_id: SessionId,
-        client_id: String,
-    ) -> Result<(), Error> {
+    async fn handle_session_added(&mut self, session: SessionInfo) -> Result<(), Error> {
         Ok(())
     }
 

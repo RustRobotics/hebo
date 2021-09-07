@@ -6,9 +6,10 @@ use codec::PublishPacket;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
-    DispatcherToListenerCmd, DispatcherToMetricsCmd, ListenerId, ListenerToDispatcherCmd,
+    DispatcherToListenerCmd, DispatcherToMetricsCmd, ListenerToDispatcherCmd,
     MetricsToDispatcherCmd,
 };
+use crate::types::ListenerId;
 
 /// Dispatcher is a message router.
 #[derive(Debug)]
