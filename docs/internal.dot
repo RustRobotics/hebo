@@ -1,25 +1,28 @@
 
 digraph {
 	// cli
-	CLI -> ServerContext [style=dotted, color=red];
+	CLI -> "Rest API" [style=dotted, color=blue];
+	"Rest API" -> CLI [style=dotted, color=red];
 
 	// dashboard app
-	RestApi -> ServerContext [style=dotted, color=red];
+	Dashboard -> "Rest API" [style=dotted, color=blue];
+	"Rest API" -> Dashboard [style=dotted, color=red];
 
-	Dashboard -> ServerContext [style=dotted, color=red];
+	"Rest API" -> "Server Context" [style=dotted, color=blue];
+	"Rest API" -> Metrix [dir=both, style=dotted, color=red];
 
-	ServerContext [shape=box];
-	ServerContext -> ACL [style=dotted, color=blue];
-	ServerContext -> Auth [style=dotted, color=blue];
-	ServerContext -> Bridge [style=dotted, color=blue];
-	ServerContext -> Gateway [style=dotted, color=blue];
-	ServerContext -> Metrix [style=dotted, color=blue];
-	ServerContext -> ClusterDispatcher [style=dotted, color=blue];
-	ServerContext -> "Rule Engine" [style=dotted, color=blue];
-	ServerContext -> SysTree [style=dotted, color=blue];
-	ServerContext -> Cache [style=dotted, color=blue];
+	"Server Context" [shape=box];
+	"Server Context" -> ACL [style=dotted, color=blue];
+	"Server Context" -> Auth [style=dotted, color=blue];
+	"Server Context" -> Bridge [style=dotted, color=blue];
+	"Server Context" -> Gateway [style=dotted, color=blue];
+	"Server Context" -> Metrix [style=dotted, color=blue];
+	"Server Context" -> "Cluster Dispatcher" [style=dotted, color=blue];
+	"Server Context" -> "Rule Engine" [style=dotted, color=blue];
+	"Server Context" -> SysTree [style=dotted, color=blue];
+	"Server Context" -> Cache [style=dotted, color=blue];
 
-	ClusterDispatcher -> Dispatcher [dir=both, color=red, style=dotted];
+	"Cluster Dispatcher" -> Dispatcher [dir=both, color=red, style=dotted];
 
 	Dispatcher -> Listeners [dir=both];
 	Listeners -> Sessions [dir=both];
@@ -28,7 +31,7 @@ digraph {
 
 	Dispatcher -> Cache [dir=both];
 	"Persistent Storage" [shape=cylinder];
-	Cache -> "Persistent Storage";
+	Cache -> "Persistent Storage" [color=red, style=dotted];
 
 	// ACL app
 	ACL -> Listeners [dir=both];
