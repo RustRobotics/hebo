@@ -36,7 +36,13 @@ impl AuthApp {
         server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
     ) -> Result<Self, Error> {
         let file_auth = if let Some(password_file) = security.password_file {
-            Some(FileAuth::new(password_file)?)
+            let file_auth = FileAuth::new(password_file.as_path()).map_err(|err| {
+                Error::from_string(
+                    ErrorKind::ConfigError,
+                    format!("Invalid password file: {:?}, err: {:?}", password_file, err),
+                )
+            })?;
+            Some(file_auth)
         } else {
             None
         };

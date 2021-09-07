@@ -243,7 +243,6 @@ impl ServerContext {
         }
 
         // Auth module.
-        // TODO(Shaohua): Returns an error.
         let mut auth_app = AuthApp::new(
             self.config.security.clone(),
             // listeners
@@ -252,8 +251,7 @@ impl ServerContext {
             // server ctx
             self.response_sender.clone(),
             self.request_sender.subscribe(),
-        )
-        .expect("Failed to init auth app");
+        )?;
         let auth_app_handle = runtime.spawn(async move {
             auth_app.run_loop().await;
         });
@@ -310,7 +308,6 @@ impl ServerContext {
         handles.push(bridge_handle);
 
         // dashboard module.
-        // TODO(Shaohua): Remove unwrap.
         let mut dashboard_app = DashboardApp::new(
             &self.config.dashboard,
             // server ctx
