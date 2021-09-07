@@ -7,68 +7,83 @@ use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
     BackendsToDispatcherCmd, BridgeToDispatcherCmd, DispatcherToBackendsCmd, DispatcherToBridgeCmd,
-    DispatcherToListenerCmd, DispatcherToMetricsCmd, ListenerToDispatcherCmd,
-    MetricsToDispatcherCmd,
+    DispatcherToGatewayCmd, DispatcherToListenerCmd, DispatcherToMetricsCmd,
+    GatewayToDispatcherCmd, ListenerToDispatcherCmd, MetricsToDispatcherCmd,
 };
 use crate::types::ListenerId;
 
 /// Dispatcher is a message router.
 #[derive(Debug)]
 pub struct Dispatcher {
-    listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
-    listener_receiver: Receiver<ListenerToDispatcherCmd>,
-
-    metrics_sender: Sender<DispatcherToMetricsCmd>,
-    metrics_receiver: Receiver<MetricsToDispatcherCmd>,
-
     backends_sender: Sender<DispatcherToBackendsCmd>,
     backends_receiver: Receiver<BackendsToDispatcherCmd>,
 
     bridge_sender: Sender<DispatcherToBridgeCmd>,
     bridge_receiver: Receiver<BridgeToDispatcherCmd>,
+
+    gateway_sender: Sender<DispatcherToGatewayCmd>,
+    gateway_receiver: Receiver<GatewayToDispatcherCmd>,
+
+    metrics_sender: Sender<DispatcherToMetricsCmd>,
+    metrics_receiver: Receiver<MetricsToDispatcherCmd>,
+
+    listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
+    listener_receiver: Receiver<ListenerToDispatcherCmd>,
 }
 
 impl Dispatcher {
     pub fn new(
-        listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
-        listener_receiver: Receiver<ListenerToDispatcherCmd>,
-        metrics_sender: Sender<DispatcherToMetricsCmd>,
-        metrics_receiver: Receiver<MetricsToDispatcherCmd>,
         backends_sender: Sender<DispatcherToBackendsCmd>,
         backends_receiver: Receiver<BackendsToDispatcherCmd>,
+
         bridge_sender: Sender<DispatcherToBridgeCmd>,
         bridge_receiver: Receiver<BridgeToDispatcherCmd>,
+
+        gateway_sender: Sender<DispatcherToGatewayCmd>,
+        gateway_receiver: Receiver<GatewayToDispatcherCmd>,
+
+        metrics_sender: Sender<DispatcherToMetricsCmd>,
+        metrics_receiver: Receiver<MetricsToDispatcherCmd>,
+
+        listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
+        listener_receiver: Receiver<ListenerToDispatcherCmd>,
     ) -> Self {
         Dispatcher {
-            listener_senders,
-            listener_receiver,
-
-            metrics_sender,
-            metrics_receiver,
-
             backends_sender,
             backends_receiver,
 
             bridge_sender,
             bridge_receiver,
+
+            gateway_sender,
+            gateway_receiver,
+
+            metrics_sender,
+            metrics_receiver,
+
+            listener_senders,
+            listener_receiver,
         }
     }
 
     pub async fn run_loop(&mut self) -> ! {
         loop {
             tokio::select! {
-                Some(cmd) = self.listener_receiver.recv() => {
-                    self.handle_listener_cmd(cmd).await;
-                },
-                Some(cmd) = self.metrics_receiver.recv() => {
-                    self.handle_metrics_cmd(cmd).await;
-                }
                 Some(cmd) = self.backends_receiver.recv() => {
                     self.handle_backends_cmd(cmd).await;
                 }
                 Some(cmd) = self.bridge_receiver.recv() => {
                     self.handle_bridge_cmd(cmd).await;
                 }
+                Some(cmd) = self.gateway_receiver.recv() => {
+                    self.handle_gateway_cmd(cmd).await;
+                }
+                Some(cmd) = self.metrics_receiver.recv() => {
+                    self.handle_metrics_cmd(cmd).await;
+                }
+                Some(cmd) = self.listener_receiver.recv() => {
+                    self.handle_listener_cmd(cmd).await;
+                },
             }
         }
     }
@@ -204,6 +219,11 @@ impl Dispatcher {
 
     /// Bridge app handlers
     async fn handle_bridge_cmd(&mut self, cmd: BridgeToDispatcherCmd) {
+        log::info!("cmd: {:?}", cmd);
+    }
+
+    /// Gateway app handler
+    async fn handle_gateway_cmd(&mut self, cmd: GatewayToDispatcherCmd) {
         log::info!("cmd: {:?}", cmd);
     }
 }

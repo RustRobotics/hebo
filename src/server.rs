@@ -18,6 +18,7 @@ use crate::commands::DispatcherToMetricsCmd;
 use crate::config::Config;
 use crate::dispatcher::Dispatcher;
 use crate::error::{Error, ErrorKind};
+use crate::gateway::app::GatewayApp;
 use crate::listener::Listener;
 use crate::log::init_log;
 use crate::metrics::Metrics;
@@ -208,20 +209,35 @@ impl ServerContext {
         });
         handles.push(bridge_handle);
 
+        // gateway module.
+        let (gateway_to_dispatcher_sender, gateway_to_dispatcher_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+        let (dispatcher_to_gateway_sender, dispatcher_to_gateway_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+        let mut gateway_app =
+            GatewayApp::new(gateway_to_dispatcher_sender, dispatcher_to_gateway_receiver);
+        let gateway_handle = runtime.spawn(async move {
+            gateway_app.run_loop().await;
+        });
+        handles.push(gateway_handle);
+
         // Dispatcher module.
         let mut dispatcher = Dispatcher::new(
-            // listeners module
-            dispatcher_to_listener_senders,
-            listeners_to_dispatcher_receiver,
-            // metrics module
-            dispatcher_to_metrics_sender,
-            metrics_to_dispatcher_receiver,
             // backends module
             dispatcher_to_backends_sender,
             backends_to_dispatcher_receiver,
             // bridge module
             dispatcher_to_bridge_sender,
             bridge_to_dispatcher_receiver,
+            // gateway module
+            dispatcher_to_gateway_sender,
+            gateway_to_dispatcher_receiver,
+            // metrics module
+            dispatcher_to_metrics_sender,
+            metrics_to_dispatcher_receiver,
+            // listeners module
+            dispatcher_to_listener_senders,
+            listeners_to_dispatcher_receiver,
         );
         let dispatcher_handle = runtime.spawn(async move {
             dispatcher.run_loop().await;
