@@ -213,8 +213,12 @@ impl ServerContext {
         let (dispatcher_to_backends_sender, dispatcher_to_backends_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
         let mut backends_app = BackendsApp::new(
+            // dispatcher
             backends_to_dispatcher_sender,
             dispatcher_to_backends_receiver,
+            // server ctx
+            server_ctx_response_sender.clone(),
+            server_ctx_request_sender.subscribe(),
         );
         let backends_handle = runtime.spawn(async move {
             backends_app.run_loop().await;

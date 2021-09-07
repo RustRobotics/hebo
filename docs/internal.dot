@@ -11,8 +11,8 @@ digraph {
 	"Rest API" -> "Server Context" [style=dotted, color=blue];
 
 	"Server Context" [shape=box];
-	"Server Context" -> ACL [dir=both, style=dotted, color=blue];
-	"Server Context" -> Auth [dir=both, style=dotted, color=blue];
+	"Server Context" -> ACL [dir=both, color=blue];
+	"Server Context" -> Auth [dir=both, color=blue];
 	"Server Context" -> Bridge [dir=both, style=dotted, color=blue];
 	"Server Context" -> Gateway [dir=both, style=dotted, color=blue];
 	"Server Context" -> Metrix [dir=both, style=dotted, color=blue];

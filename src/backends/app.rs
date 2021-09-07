@@ -2,9 +2,13 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{BackendsToDispatcherCmd, DispatcherToBackendsCmd};
+use crate::commands::{
+    BackendsToDispatcherCmd, DispatcherToBackendsCmd, ServerContextRequestCmd,
+    ServerContextResponseCmd,
+};
 use crate::error::Error;
 use crate::types::{ListenerId, SessionId, SessionInfo};
 
@@ -12,16 +16,26 @@ use crate::types::{ListenerId, SessionId, SessionInfo};
 pub struct BackendsApp {
     dispatcher_sender: Sender<BackendsToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToBackendsCmd>,
+
+    server_ctx_sender: Sender<ServerContextResponseCmd>,
+    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
 }
 
 impl BackendsApp {
     pub fn new(
+        // dispatcher
         dispatcher_sender: Sender<BackendsToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToBackendsCmd>,
+        // server ctx
+        server_ctx_sender: Sender<ServerContextResponseCmd>,
+        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
     ) -> Self {
         Self {
             dispatcher_sender,
             dispatcher_receiver,
+
+            server_ctx_sender,
+            server_ctx_receiver,
         }
     }
 
@@ -32,6 +46,9 @@ impl BackendsApp {
                     if let Err(err) = self.handle_dispatcher_cmd(cmd).await {
                         log::error!("Failed to handle dispatcher cmd: {:?}", err);
                     }
+                }
+                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                    self.handle_server_ctx_cmd(cmd).await;
                 }
             }
         }
@@ -61,5 +78,10 @@ impl BackendsApp {
     ) -> Result<(), Error> {
         log::info!("session removed: {}, {}", listener_id, session_id);
         Ok(())
+    }
+
+    /// Server context handler
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+        log::info!("cmd: {:?}", cmd);
     }
 }
