@@ -267,8 +267,12 @@ impl ServerContext {
         let (dispatcher_to_rule_engine_sender, dispatcher_to_rule_engine_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
         let mut rule_engine_app = RuleEngineApp::new(
+            // dispatcher
             rule_engine_to_dispatcher_sender,
             dispatcher_to_rule_engine_receiver,
+            // server ctx
+            server_ctx_response_sender.clone(),
+            server_ctx_request_sender.subscribe(),
         );
         let rule_engine_handle = runtime.spawn(async move {
             rule_engine_app.run_loop().await;
