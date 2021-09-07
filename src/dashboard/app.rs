@@ -7,16 +7,31 @@
 //! Web ui part is located in `/dashboard`.
 
 use std::net::SocketAddr;
+use tokio::sync::mpsc::{Receiver, Sender};
 use warp::Filter;
+
+use crate::commands::{DashboardToServerContexCmd, ServerContextToDashboardCmd};
 
 #[derive(Debug)]
 pub struct DashboardApp {
     addr: SocketAddr,
+
+    // TODO(Shaohua): Replace with oneshot.
+    server_ctx_sender: Sender<DashboardToServerContexCmd>,
+    server_ctx_receiver: Receiver<ServerContextToDashboardCmd>,
 }
 
 impl DashboardApp {
-    pub fn new<A: Into<SocketAddr>>(addr: A) -> Self {
-        Self { addr: addr.into() }
+    pub fn new<A: Into<SocketAddr>>(
+        addr: A,
+        server_ctx_sender: Sender<DashboardToServerContexCmd>,
+        server_ctx_receiver: Receiver<ServerContextToDashboardCmd>,
+    ) -> Self {
+        Self {
+            addr: addr.into(),
+            server_ctx_sender,
+            server_ctx_receiver,
+        }
     }
 
     pub async fn run_loop(&mut self) {

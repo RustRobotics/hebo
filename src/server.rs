@@ -15,8 +15,12 @@ use crate::acl::app::AclApp;
 use crate::auth::app::AuthApp;
 use crate::backends::app::BackendsApp;
 use crate::bridge::app::BridgeApp;
-use crate::commands::{DispatcherToMetricsCmd, ServerContextRequestCmd, ServerContextResponseCmd};
+use crate::commands::{
+    DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
+    ServerContextResponseCmd, ServerContextToDashboardCmd,
+};
 use crate::config::Config;
+use crate::dashboard::app::DashboardApp;
 use crate::dispatcher::Dispatcher;
 use crate::error::{Error, ErrorKind};
 use crate::gateway::app::GatewayApp;
@@ -39,6 +43,12 @@ pub struct ServerContext {
 
     response_sender: mpsc::Sender<ServerContextResponseCmd>,
     response_receiver: mpsc::Receiver<ServerContextResponseCmd>,
+
+    to_dashboard_sender: mpsc::Sender<ServerContextToDashboardCmd>,
+    to_dashboard_receiver: Option<mpsc::Receiver<ServerContextToDashboardCmd>>,
+
+    from_dashboard_sender: Option<mpsc::Sender<DashboardToServerContexCmd>>,
+    from_dashboard_receiver: mpsc::Receiver<DashboardToServerContexCmd>,
 }
 
 impl ServerContext {
@@ -50,6 +60,9 @@ impl ServerContext {
         // A mpsc channel is used to send response cmd from apps to server context.
         let (response_sender, response_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
+        let (to_dashboard_sender, to_dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (from_dashboard_sender, from_dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+
         ServerContext {
             config,
 
@@ -58,6 +71,12 @@ impl ServerContext {
 
             response_sender,
             response_receiver,
+
+            to_dashboard_sender,
+            to_dashboard_receiver: Some(to_dashboard_receiver),
+
+            from_dashboard_sender: Some(from_dashboard_sender),
+            from_dashboard_receiver,
         }
     }
 
@@ -112,9 +131,14 @@ impl ServerContext {
             tokio::select! {
                 Some(cmd) = self.response_receiver.recv() => {
                     if let Err(err) = self.handle_response_cmd(cmd).await {
-                        log::error!("Failed to handle listener cmd: {:?}", err);
+                        log::error!("Failed to handle response cmd: {:?}", err);
                     }
                 },
+                Some(cmd) = self.from_dashboard_receiver.recv() => {
+                    if let Err(err) = self.handle_dashboard_cmd(cmd).await {
+                        log::error!("Failed to handle dashboard cmd: {:?}", err);
+                    }
+                }
             }
         }
 
@@ -124,6 +148,11 @@ impl ServerContext {
     }
 
     async fn handle_response_cmd(&mut self, cmd: ServerContextResponseCmd) -> Result<(), Error> {
+        log::info!("cmd: {:?}", cmd);
+        Ok(())
+    }
+
+    async fn handle_dashboard_cmd(&mut self, cmd: DashboardToServerContexCmd) -> Result<(), Error> {
         log::info!("cmd: {:?}", cmd);
         Ok(())
     }
@@ -279,6 +308,20 @@ impl ServerContext {
             bridge_app.run_loop().await;
         });
         handles.push(bridge_handle);
+
+        // dashboard module.
+        // TODO(Shaohua): Remove unwrap.
+        // TODO(Shaohua): Add dashboard config
+        let mut dashboard_app = DashboardApp::new(
+            ([127, 0, 0, 1], 18082),
+            // server ctx
+            self.from_dashboard_sender.take().unwrap(),
+            self.to_dashboard_receiver.take().unwrap(),
+        );
+        let dashboard_handle = runtime.spawn(async move {
+            dashboard_app.run_loop().await;
+        });
+        handles.push(dashboard_handle);
 
         // gateway module.
         let (gateway_to_dispatcher_sender, gateway_to_dispatcher_receiver) =

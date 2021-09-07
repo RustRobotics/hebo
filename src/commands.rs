@@ -137,3 +137,9 @@ pub enum ServerContextRequestCmd {}
 
 #[derive(Debug, Clone)]
 pub enum ServerContextResponseCmd {}
+
+#[derive(Debug, Clone)]
+pub enum DashboardToServerContexCmd {}
+
+#[derive(Debug, Clone)]
+pub enum ServerContextToDashboardCmd {}
