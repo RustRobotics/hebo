@@ -43,17 +43,17 @@ digraph {
 	Auth -> "Auth Database" [style=dotted, color=red];
 
 	// mqtt bridge app
-	Dispatcher -> Bridge [dir=both,style=dotted, color=red];
+	Dispatcher -> Bridge [dir=both];
 
 	// gateway app
-	Dispatcher -> Gateway [dir=both, style=dotted, color=red];
+	Dispatcher -> Gateway [dir=both];
 	ExternalProtocols [shape=record, label="{ CoAP | Stomp | MQTT-SN | LwM2M }"];
 	Gateway -> ExternalProtocols [style=dotted, color=red];
 
 	// monitor app
-	Dispatcher -> Metrix [dir=both, style=dotted, color=red];
+	Dispatcher -> Metrix [dir=both];
 	Metrix -> Promethous [style=dotted, color=red];
-	Metrix -> SysTree [dir=both, style=dotted, color=red];
+	Metrix -> SysTree;
 
 	// rule engine app
 	Dispatcher -> "Rule Engine" [dir=both, style=dotted, color=red];

@@ -121,6 +121,12 @@ pub enum DispatcherToBridgeCmd {}
 pub enum BridgeToDispatcherCmd {}
 
 #[derive(Debug, Clone)]
+pub enum DispatcherToGatewayCmd {}
+
+#[derive(Debug, Clone)]
+pub enum GatewayToDispatcherCmd {}
+
+#[derive(Debug, Clone)]
 pub enum ServerContextRequestCmd {}
 
 #[derive(Debug, Clone)]

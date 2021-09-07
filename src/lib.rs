@@ -12,6 +12,7 @@ pub mod config;
 pub mod connectors;
 pub mod dispatcher;
 pub mod error;
+pub mod gateway;
 pub mod listener;
 pub mod log;
 pub mod metrics;
