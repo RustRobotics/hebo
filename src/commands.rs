@@ -7,8 +7,6 @@ use codec::{
     UnsubscribePacket,
 };
 
-use crate::cache_types::{ListenersVectorCache, SystemCache};
-
 pub type ListenerId = u32;
 pub type SessionId = u64;
 
@@ -60,15 +58,7 @@ pub enum ListenerToDispatcherCmd {
 }
 
 #[derive(Debug, Clone)]
-pub enum DispatcherToSystemCmd {}
-
-#[derive(Debug, Clone)]
-pub enum SystemToDispatcherCmd {
-    Publish(PublishPacket),
-}
-
-#[derive(Debug, Clone)]
-pub enum DispatcherToCacheCmd {
+pub enum DispatcherToMetricsCmd {
     /// listener id, listener address
     ListenerAdded(ListenerId, String),
     /// listener id
@@ -103,21 +93,12 @@ pub enum DispatcherToCacheCmd {
 }
 
 #[derive(Debug, Clone)]
-pub enum CacheToDispatcherCmd {
-    ListenersCount(usize),
-    SessionsCount(usize),
+pub enum MetricsToDispatcherCmd {
+    Publish(PublishPacket),
 }
 
 #[derive(Debug, Clone)]
-pub enum SystemToCacheCmd {
-    GetAllCache,
-    GetSystemCache,
-    GetListenersCache,
-}
+pub enum ServerContextRequestCmd {}
 
 #[derive(Debug, Clone)]
-pub enum CacheToSystemCmd {
-    All(SystemCache, ListenersVectorCache),
-    System(SystemCache),
-    Listeners(ListenersVectorCache),
-}
+pub enum ServerContextResponseCmd {}

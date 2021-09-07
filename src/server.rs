@@ -11,71 +11,16 @@ use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
 use crate::auth::app::AuthApp;
-use crate::cache::Cache;
-use crate::commands::DispatcherToCacheCmd;
+use crate::commands::DispatcherToMetricsCmd;
 use crate::config::Config;
 use crate::dispatcher::Dispatcher;
 use crate::error::{Error, ErrorKind};
 use crate::listener::Listener;
 use crate::log::init_log;
-use crate::system::System;
+use crate::metrics::Metrics;
 
 pub const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
 pub const CHANNEL_CAPACITY: usize = 16;
-
-/// Entry point of server
-pub fn run_server() -> Result<(), Error> {
-    let matches = clap::App::new("Hebo")
-        .version("0.1.0")
-        .author("Xu Shaohua <shaohua@biofan.org>")
-        .about("High Performance MQTT Server")
-        .arg(
-            Arg::with_name("config")
-                .short("c")
-                .long("config")
-                .value_name("config_file")
-                .takes_value(true)
-                .help("Specify config file path"),
-        )
-        .arg(
-            Arg::with_name("reload")
-                .short("r")
-                .long("reload")
-                .takes_value(false)
-                .help("Reload config"),
-        )
-        .arg(
-            Arg::with_name("test")
-                .short("t")
-                .long("test")
-                .takes_value(false)
-                .help("Test config file"),
-        )
-        .get_matches();
-
-    let config_file = matches.value_of("config").unwrap_or(DEFAULT_CONFIG);
-    let config_content = std::fs::read_to_string(config_file)?;
-    let config: Config = toml::from_str(&config_content).map_err(|err| {
-        Error::from_string(ErrorKind::ConfigError, format!("Invalid config: {:?}", err))
-    })?;
-
-    if matches.is_present("test") {
-        println!("The configuration file {} syntax is Ok", config_file);
-        return Ok(());
-    }
-
-    init_log(&config.log)?;
-
-    let mut server = ServerContext::new(config);
-
-    if matches.is_present("reload") {
-        log::info!("Reload is present");
-        return server.reload();
-    }
-
-    let runtime = Runtime::new()?;
-    server.run_loop(runtime)
-}
 
 /// ServerContext manages lifetime of Dispatcher and Listeners.
 /// All kernel signals are handled here.
@@ -129,9 +74,7 @@ impl ServerContext {
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
         self.write_pid()?;
 
-        runtime.block_on(async { self.init_modules(&runtime).await });
-
-        Ok(())
+        runtime.block_on(async { self.init_modules(&runtime).await })
     }
 
     async fn init_modules(&mut self, runtime: &Runtime) -> Result<(), Error> {
@@ -174,49 +117,31 @@ impl ServerContext {
             listener_id += 1;
         }
 
-        // SysTree module.
-        let (system_to_dispatcher_sender, system_to_dispatcher_receiver) =
+        // Metrics module.
+        let (metrics_to_dispatcher_sender, metrics_to_dispatcher_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
-        let (system_to_cache_sender, system_to_cache_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (cache_to_system_sender, cache_to_system_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-
-        let mut system = System::new(
+        let (dispatcher_to_metrics_sender, dispatcher_to_metrics_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+        let mut metrics = Metrics::new(
             self.config.general.sys_interval,
-            system_to_dispatcher_sender,
-            system_to_cache_sender,
-            cache_to_system_receiver,
+            metrics_to_dispatcher_sender,
+            dispatcher_to_metrics_receiver,
         );
-        let system_handle = runtime.spawn(async move {
-            system.run_loop().await;
+        let metrics_handle = runtime.spawn(async move {
+            metrics.run_loop().await;
         });
-        handles.push(system_handle);
-
-        // Cache module.
-        let (cache_to_dispatcher_sender, cache_to_dispatcher_receiver) =
-            mpsc::channel(CHANNEL_CAPACITY);
-        let (dispatcher_to_cache_sender, dispatcher_to_cache_receiver) =
-            mpsc::channel(CHANNEL_CAPACITY);
-        let mut cache = Cache::new(
-            cache_to_dispatcher_sender,
-            dispatcher_to_cache_receiver,
-            cache_to_system_sender,
-            system_to_cache_receiver,
-        );
-        let cache_handle = runtime.spawn(async move {
-            cache.run_loop().await;
-        });
-        handles.push(cache_handle);
+        handles.push(metrics_handle);
 
         for listener_info in &listeners_info {
-            if let Err(err) = dispatcher_to_cache_sender
-                .send(DispatcherToCacheCmd::ListenerAdded(
+            if let Err(err) = dispatcher_to_metrics_sender
+                .send(DispatcherToMetricsCmd::ListenerAdded(
                     listener_info.0,
                     listener_info.1.clone(),
                 ))
                 .await
             {
                 log::error!(
-                    "Failed to send listener {:?} to cache, err: {:?}",
+                    "Failed to send listener {:?} to metrics, err: {:?}",
                     listener_info.1,
                     err
                 );
@@ -244,11 +169,9 @@ impl ServerContext {
             // listeners module
             dispatcher_to_listener_senders,
             listeners_to_dispatcher_receiver,
-            // system module
-            system_to_dispatcher_receiver,
-            // cache module
-            dispatcher_to_cache_sender,
-            cache_to_dispatcher_receiver,
+            // metrics module
+            dispatcher_to_metrics_sender,
+            metrics_to_dispatcher_receiver,
         );
         let dispatcher_handle = runtime.spawn(async move {
             dispatcher.run_loop().await;
@@ -261,4 +184,58 @@ impl ServerContext {
 
         Ok(())
     }
+}
+
+/// Entry point of server
+pub fn run_server() -> Result<(), Error> {
+    let matches = clap::App::new("Hebo")
+        .version("0.1.0")
+        .author("Xu Shaohua <shaohua@biofan.org>")
+        .about("High Performance MQTT Server")
+        .arg(
+            Arg::with_name("config")
+                .short("c")
+                .long("config")
+                .value_name("config_file")
+                .takes_value(true)
+                .help("Specify config file path"),
+        )
+        .arg(
+            Arg::with_name("reload")
+                .short("r")
+                .long("reload")
+                .takes_value(false)
+                .help("Reload config"),
+        )
+        .arg(
+            Arg::with_name("test")
+                .short("t")
+                .long("test")
+                .takes_value(false)
+                .help("Test config file"),
+        )
+        .get_matches();
+
+    let config_file = matches.value_of("config").unwrap_or(DEFAULT_CONFIG);
+    let config_content = std::fs::read_to_string(config_file)?;
+    let config: Config = toml::from_str(&config_content).map_err(|err| {
+        Error::from_string(ErrorKind::ConfigError, format!("Invalid config: {:?}", err))
+    })?;
+
+    if matches.is_present("test") {
+        println!("The configuration file {} syntax is Ok", config_file);
+        return Ok(());
+    }
+
+    init_log(&config.log)?;
+
+    let mut server = ServerContext::new(config);
+
+    if matches.is_present("reload") {
+        log::info!("Reload is present");
+        return server.reload();
+    }
+
+    let runtime = Runtime::new()?;
+    server.run_loop(runtime)
 }

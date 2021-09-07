@@ -6,8 +6,8 @@ use codec::PublishPacket;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
-    CacheToDispatcherCmd, DispatcherToCacheCmd, DispatcherToListenerCmd, ListenerId,
-    ListenerToDispatcherCmd, SystemToDispatcherCmd,
+    DispatcherToListenerCmd, DispatcherToMetricsCmd, ListenerId, ListenerToDispatcherCmd,
+    MetricsToDispatcherCmd,
 };
 
 /// Dispatcher is a message router.
@@ -16,28 +16,23 @@ pub struct Dispatcher {
     listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
     listener_receiver: Receiver<ListenerToDispatcherCmd>,
 
-    system_receiver: Receiver<SystemToDispatcherCmd>,
-
-    cache_sender: Sender<DispatcherToCacheCmd>,
-    cache_receiver: Receiver<CacheToDispatcherCmd>,
+    metrics_sender: Sender<DispatcherToMetricsCmd>,
+    metrics_receiver: Receiver<MetricsToDispatcherCmd>,
 }
 
 impl Dispatcher {
     pub fn new(
         listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToDispatcherCmd>,
-        system_receiver: Receiver<SystemToDispatcherCmd>,
-        cache_sender: Sender<DispatcherToCacheCmd>,
-        cache_receiver: Receiver<CacheToDispatcherCmd>,
+        metrics_sender: Sender<DispatcherToMetricsCmd>,
+        metrics_receiver: Receiver<MetricsToDispatcherCmd>,
     ) -> Self {
         Dispatcher {
             listener_senders,
             listener_receiver,
 
-            system_receiver,
-
-            cache_sender,
-            cache_receiver,
+            metrics_sender,
+            metrics_receiver,
         }
     }
 
@@ -47,17 +42,17 @@ impl Dispatcher {
                 Some(cmd) = self.listener_receiver.recv() => {
                     self.handle_listener_cmd(cmd).await;
                 },
-                Some(cmd) = self.system_receiver.recv() => {
-                    self.handle_system_cmd(cmd).await;
+                Some(cmd) = self.metrics_receiver.recv() => {
+                    self.handle_metrics_cmd(cmd).await;
                 }
             }
         }
     }
 
-    async fn handle_system_cmd(&mut self, cmd: SystemToDispatcherCmd) {
-        log::info!("handle system cmd: {:?}", cmd);
+    async fn handle_metrics_cmd(&mut self, cmd: MetricsToDispatcherCmd) {
+        log::info!("handle metrics cmd: {:?}", cmd);
         match cmd {
-            SystemToDispatcherCmd::Publish(packet) => {
+            MetricsToDispatcherCmd::Publish(packet) => {
                 self.publish_packet_to_listners(&packet).await;
             }
         }
@@ -71,16 +66,16 @@ impl Dispatcher {
                 self.publish_packet_to_listners(&packet).await;
             }
             ListenerToDispatcherCmd::SessionAdded(listener_id) => {
-                self.cache_on_session_added(listener_id).await;
+                self.metrics_on_session_added(listener_id).await;
             }
             ListenerToDispatcherCmd::SessionRemoved(listener_id) => {
-                self.cache_on_session_removed(listener_id).await;
+                self.metrics_on_session_removed(listener_id).await;
             }
             ListenerToDispatcherCmd::SubscriptionsAdded(listener_id) => {
-                self.cache_on_subscription_added(listener_id).await;
+                self.metrics_on_subscription_added(listener_id).await;
             }
             ListenerToDispatcherCmd::SubscriptionsRemoved(listener_id) => {
-                self.cache_on_subscription_removed(listener_id).await;
+                self.metrics_on_subscription_removed(listener_id).await;
             }
         }
     }
@@ -102,18 +97,17 @@ impl Dispatcher {
         }
     }
 
-    //
-    // Cache related methods
-    //
-    async fn cache_publish_packet_sent(
+    // TODO(Shaohua): Remove method
+    // Metrics related methods
+    async fn metrics_publish_packet_sent(
         &mut self,
         listener_id: ListenerId,
         count: usize,
         bytes: usize,
     ) {
         if let Err(err) = self
-            .cache_sender
-            .send(DispatcherToCacheCmd::PublishPacketSent(
+            .metrics_sender
+            .send(DispatcherToMetricsCmd::PublishPacketSent(
                 listener_id,
                 count,
                 bytes,
@@ -127,10 +121,10 @@ impl Dispatcher {
         }
     }
 
-    async fn cache_on_session_added(&mut self, listener_id: ListenerId) {
+    async fn metrics_on_session_added(&mut self, listener_id: ListenerId) {
         if let Err(err) = self
-            .cache_sender
-            .send(DispatcherToCacheCmd::SessionAdded(listener_id, 1))
+            .metrics_sender
+            .send(DispatcherToMetricsCmd::SessionAdded(listener_id, 1))
             .await
         {
             log::error!(
@@ -140,10 +134,10 @@ impl Dispatcher {
         }
     }
 
-    async fn cache_on_session_removed(&mut self, listener_id: ListenerId) {
+    async fn metrics_on_session_removed(&mut self, listener_id: ListenerId) {
         if let Err(err) = self
-            .cache_sender
-            .send(DispatcherToCacheCmd::SessionRemoved(listener_id, 1))
+            .metrics_sender
+            .send(DispatcherToMetricsCmd::SessionRemoved(listener_id, 1))
             .await
         {
             log::error!(
@@ -153,10 +147,10 @@ impl Dispatcher {
         }
     }
 
-    async fn cache_on_subscription_added(&mut self, listener_id: ListenerId) {
+    async fn metrics_on_subscription_added(&mut self, listener_id: ListenerId) {
         if let Err(err) = self
-            .cache_sender
-            .send(DispatcherToCacheCmd::SubscriptionsAdded(listener_id, 1))
+            .metrics_sender
+            .send(DispatcherToMetricsCmd::SubscriptionsAdded(listener_id, 1))
             .await
         {
             log::error!(
@@ -166,10 +160,10 @@ impl Dispatcher {
         }
     }
 
-    async fn cache_on_subscription_removed(&mut self, listener_id: ListenerId) {
+    async fn metrics_on_subscription_removed(&mut self, listener_id: ListenerId) {
         if let Err(err) = self
-            .cache_sender
-            .send(DispatcherToCacheCmd::SubscriptionsRemoved(listener_id, 1))
+            .metrics_sender
+            .send(DispatcherToMetricsCmd::SubscriptionsRemoved(listener_id, 1))
             .await
         {
             log::error!(

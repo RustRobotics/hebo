@@ -9,8 +9,8 @@ use tokio::sync::mpsc;
 use tokio_tungstenite::tungstenite;
 
 use crate::commands::{
-    AuthToListenerCmd, ListenerToAuthCmd, ListenerToDispatcherCmd, ListenerToSessionCmd, SessionId,
-    SessionToListenerCmd, SystemToDispatcherCmd,
+    AuthToListenerCmd, DispatcherToMetricsCmd, ListenerToAuthCmd, ListenerToDispatcherCmd,
+    ListenerToSessionCmd, MetricsToDispatcherCmd, SessionId, SessionToListenerCmd,
 };
 
 /// Represent the types of errors.
@@ -231,4 +231,5 @@ convert_send_error!(ListenerToAuthCmd);
 convert_send_error!(ListenerToDispatcherCmd);
 convert_send_error!(ListenerToSessionCmd);
 convert_send_error!(SessionToListenerCmd);
-convert_send_error!(SystemToDispatcherCmd);
+convert_send_error!(MetricsToDispatcherCmd);
+convert_send_error!(DispatcherToMetricsCmd);

@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 
 #[derive(Debug, Default, Clone)]
-pub struct ListenerCache {
+pub struct ListenerMetrics {
     pub id: u32,
     pub address: String,
 
@@ -29,9 +29,9 @@ pub struct ListenerCache {
     pub publish_bytes_received: u64,
 }
 
-impl ListenerCache {
+impl ListenerMetrics {
     pub fn new(id: u32, address: String) -> Self {
-        ListenerCache {
+        ListenerMetrics {
             id,
             address,
             ..Self::default()
@@ -39,11 +39,11 @@ impl ListenerCache {
     }
 }
 
-pub type ListenersMapCache = HashMap<u32, ListenerCache>;
-pub type ListenersVectorCache = Vec<ListenerCache>;
+pub type ListenersMapMetrics = HashMap<u32, ListenerMetrics>;
+pub type ListenersVectorMetrics = Vec<ListenerMetrics>;
 
 #[derive(Debug, Default, Clone, Copy)]
-pub struct SystemCache {
+pub struct SystemMetrics {
     pub listener_count: usize,
     pub sessions: u64,
     pub subscriptions: u64,
