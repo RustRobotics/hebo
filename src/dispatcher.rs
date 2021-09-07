@@ -6,8 +6,9 @@ use codec::PublishPacket;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
-    BackendsToDispatcherCmd, DispatcherToBackendsCmd, DispatcherToListenerCmd,
-    DispatcherToMetricsCmd, ListenerToDispatcherCmd, MetricsToDispatcherCmd,
+    BackendsToDispatcherCmd, BridgeToDispatcherCmd, DispatcherToBackendsCmd, DispatcherToBridgeCmd,
+    DispatcherToListenerCmd, DispatcherToMetricsCmd, ListenerToDispatcherCmd,
+    MetricsToDispatcherCmd,
 };
 use crate::types::ListenerId;
 
@@ -22,6 +23,9 @@ pub struct Dispatcher {
 
     backends_sender: Sender<DispatcherToBackendsCmd>,
     backends_receiver: Receiver<BackendsToDispatcherCmd>,
+
+    bridge_sender: Sender<DispatcherToBridgeCmd>,
+    bridge_receiver: Receiver<BridgeToDispatcherCmd>,
 }
 
 impl Dispatcher {
@@ -32,6 +36,8 @@ impl Dispatcher {
         metrics_receiver: Receiver<MetricsToDispatcherCmd>,
         backends_sender: Sender<DispatcherToBackendsCmd>,
         backends_receiver: Receiver<BackendsToDispatcherCmd>,
+        bridge_sender: Sender<DispatcherToBridgeCmd>,
+        bridge_receiver: Receiver<BridgeToDispatcherCmd>,
     ) -> Self {
         Dispatcher {
             listener_senders,
@@ -42,6 +48,9 @@ impl Dispatcher {
 
             backends_sender,
             backends_receiver,
+
+            bridge_sender,
+            bridge_receiver,
         }
     }
 
@@ -56,6 +65,9 @@ impl Dispatcher {
                 }
                 Some(cmd) = self.backends_receiver.recv() => {
                     self.handle_backends_cmd(cmd).await;
+                }
+                Some(cmd) = self.bridge_receiver.recv() => {
+                    self.handle_bridge_cmd(cmd).await;
                 }
             }
         }
@@ -185,8 +197,13 @@ impl Dispatcher {
         }
     }
 
-    /// Backends cmd handlers
+    /// Backends app handlers
     async fn handle_backends_cmd(&mut self, cmd: BackendsToDispatcherCmd) {
+        log::info!("cmd: {:?}", cmd);
+    }
+
+    /// Bridge app handlers
+    async fn handle_bridge_cmd(&mut self, cmd: BridgeToDispatcherCmd) {
         log::info!("cmd: {:?}", cmd);
     }
 }

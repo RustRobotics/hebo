@@ -13,6 +13,7 @@ use tokio::sync::mpsc;
 use crate::acl::app::AclApp;
 use crate::auth::app::AuthApp;
 use crate::backends::app::BackendsApp;
+use crate::bridge::app::BridgeApp;
 use crate::commands::DispatcherToMetricsCmd;
 use crate::config::Config;
 use crate::dispatcher::Dispatcher;
@@ -195,6 +196,18 @@ impl ServerContext {
         });
         handles.push(backends_handle);
 
+        // bridge module.
+        let (bridge_to_dispatcher_sender, bridge_to_dispatcher_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+        let (dispatcher_to_bridge_sender, dispatcher_to_bridge_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+        let mut bridge_app =
+            BridgeApp::new(bridge_to_dispatcher_sender, dispatcher_to_bridge_receiver);
+        let bridge_handle = runtime.spawn(async move {
+            bridge_app.run_loop().await;
+        });
+        handles.push(bridge_handle);
+
         // Dispatcher module.
         let mut dispatcher = Dispatcher::new(
             // listeners module
@@ -206,6 +219,9 @@ impl ServerContext {
             // backends module
             dispatcher_to_backends_sender,
             backends_to_dispatcher_receiver,
+            // bridge module
+            dispatcher_to_bridge_sender,
+            bridge_to_dispatcher_receiver,
         );
         let dispatcher_handle = runtime.spawn(async move {
             dispatcher.run_loop().await;
