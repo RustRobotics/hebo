@@ -15,7 +15,7 @@ use crate::acl::app::AclApp;
 use crate::auth::app::AuthApp;
 use crate::backends::app::BackendsApp;
 use crate::bridge::app::BridgeApp;
-use crate::commands::DispatcherToMetricsCmd;
+use crate::commands::{DispatcherToMetricsCmd, ServerContextRequestCmd, ServerContextResponseCmd};
 use crate::config::Config;
 use crate::dispatcher::Dispatcher;
 use crate::error::{Error, ErrorKind};
@@ -33,11 +33,32 @@ pub const CHANNEL_CAPACITY: usize = 16;
 #[derive(Debug)]
 pub struct ServerContext {
     config: Config,
+
+    request_sender: broadcast::Sender<ServerContextRequestCmd>,
+    request_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+
+    response_sender: mpsc::Sender<ServerContextResponseCmd>,
+    response_receiver: mpsc::Receiver<ServerContextResponseCmd>,
 }
 
 impl ServerContext {
     pub fn new(config: Config) -> ServerContext {
-        ServerContext { config }
+        // A broadcast channel connects server context to all apps.
+        // So that these apps will receive commands from server context.
+        let (request_sender, request_receiver) = broadcast::channel(CHANNEL_CAPACITY);
+
+        // A mpsc channel is used to send response cmd from apps to server context.
+        let (response_sender, response_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+
+        ServerContext {
+            config,
+
+            request_sender,
+            request_receiver,
+
+            response_sender,
+            response_receiver,
+        }
     }
 
     /// Notify server process to reload config by sending `SIGUSR1` signal.
@@ -80,7 +101,31 @@ impl ServerContext {
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
         self.write_pid()?;
 
-        runtime.block_on(async { self.init_modules(&runtime).await })
+        runtime.block_on(async {
+            self.init_modules(&runtime).await?;
+            self.run_inner_loop().await
+        })
+    }
+
+    async fn run_inner_loop(&mut self) -> Result<(), Error> {
+        loop {
+            tokio::select! {
+                Some(cmd) = self.response_receiver.recv() => {
+                    if let Err(err) = self.handle_response_cmd(cmd).await {
+                        log::error!("Failed to handle listener cmd: {:?}", err);
+                    }
+                },
+            }
+        }
+
+        // TODO(Shaohua): Break main loop
+        #[allow(unreachable_code)]
+        Ok(())
+    }
+
+    async fn handle_response_cmd(&mut self, cmd: ServerContextResponseCmd) -> Result<(), Error> {
+        log::info!("cmd: {:?}", cmd);
+        Ok(())
     }
 
     async fn init_modules(&mut self, runtime: &Runtime) -> Result<(), Error> {
@@ -134,14 +179,6 @@ impl ServerContext {
             listener_id += 1;
         }
 
-        // A broadcast channel connects server context to all apps.
-        // So that these apps will receive commands from server context.
-        let (server_ctx_request_sender, server_ctx_request_receiver) =
-            broadcast::channel(CHANNEL_CAPACITY);
-        // A mpsc channel is used to send response cmd from apps to server context.
-        let (server_ctx_response_sender, server_ctx_response_receiver) =
-            mpsc::channel(CHANNEL_CAPACITY);
-
         // Metrics module.
         let (metrics_to_dispatcher_sender, metrics_to_dispatcher_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
@@ -152,8 +189,8 @@ impl ServerContext {
             metrics_to_dispatcher_sender,
             dispatcher_to_metrics_receiver,
             // server ctx
-            server_ctx_response_sender.clone(),
-            server_ctx_request_sender.subscribe(),
+            self.response_sender.clone(),
+            self.request_sender.subscribe(),
         );
         let metrics_handle = runtime.spawn(async move {
             metrics.run_loop().await;
@@ -184,8 +221,8 @@ impl ServerContext {
             auth_to_listener_senders,
             listeners_to_auth_receiver,
             // server ctx
-            server_ctx_response_sender.clone(),
-            server_ctx_request_sender.subscribe(),
+            self.response_sender.clone(),
+            self.request_sender.subscribe(),
         )
         .expect("Failed to init auth app");
         let auth_app_handle = runtime.spawn(async move {
@@ -199,8 +236,8 @@ impl ServerContext {
             acl_to_listener_senders,
             listeners_to_acl_receiver,
             // server ctx
-            server_ctx_response_sender.clone(),
-            server_ctx_request_sender.subscribe(),
+            self.response_sender.clone(),
+            self.request_sender.subscribe(),
         );
         let acl_app_handle = runtime.spawn(async move {
             acl_app.run_loop().await;
@@ -217,8 +254,8 @@ impl ServerContext {
             backends_to_dispatcher_sender,
             dispatcher_to_backends_receiver,
             // server ctx
-            server_ctx_response_sender.clone(),
-            server_ctx_request_sender.subscribe(),
+            self.response_sender.clone(),
+            self.request_sender.subscribe(),
         );
         let backends_handle = runtime.spawn(async move {
             backends_app.run_loop().await;
@@ -235,8 +272,8 @@ impl ServerContext {
             bridge_to_dispatcher_sender,
             dispatcher_to_bridge_receiver,
             // server ctx
-            server_ctx_response_sender.clone(),
-            server_ctx_request_sender.subscribe(),
+            self.response_sender.clone(),
+            self.request_sender.subscribe(),
         );
         let bridge_handle = runtime.spawn(async move {
             bridge_app.run_loop().await;
@@ -253,8 +290,8 @@ impl ServerContext {
             gateway_to_dispatcher_sender,
             dispatcher_to_gateway_receiver,
             // server ctx
-            server_ctx_response_sender.clone(),
-            server_ctx_request_sender.subscribe(),
+            self.response_sender.clone(),
+            self.request_sender.subscribe(),
         );
         let gateway_handle = runtime.spawn(async move {
             gateway_app.run_loop().await;
@@ -271,8 +308,8 @@ impl ServerContext {
             rule_engine_to_dispatcher_sender,
             dispatcher_to_rule_engine_receiver,
             // server ctx
-            server_ctx_response_sender.clone(),
-            server_ctx_request_sender.subscribe(),
+            self.response_sender.clone(),
+            self.request_sender.subscribe(),
         );
         let rule_engine_handle = runtime.spawn(async move {
             rule_engine_app.run_loop().await;
@@ -304,10 +341,6 @@ impl ServerContext {
             dispatcher.run_loop().await;
         });
         handles.push(dispatcher_handle);
-
-        for handle in handles {
-            let _ret = handle.await;
-        }
 
         Ok(())
     }
