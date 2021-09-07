@@ -22,8 +22,8 @@ use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
 use tokio_rustls::TlsAcceptor;
 
 use crate::commands::{
-    AuthToListenerCmd, DispatcherToListenerCmd, ListenerToAuthCmd, ListenerToDispatcherCmd,
-    ListenerToSessionCmd, SessionToListenerCmd,
+    AclToListenerCmd, AuthToListenerCmd, DispatcherToListenerCmd, ListenerToAclCmd,
+    ListenerToAuthCmd, ListenerToDispatcherCmd, ListenerToSessionCmd, SessionToListenerCmd,
 };
 use crate::config;
 use crate::error::{Error, ErrorKind};
@@ -49,6 +49,9 @@ pub struct Listener {
 
     auth_sender: Sender<ListenerToAuthCmd>,
     auth_receiver: Option<Receiver<AuthToListenerCmd>>,
+
+    acl_sender: Sender<ListenerToAclCmd>,
+    acl_receiver: Option<Receiver<AclToListenerCmd>>,
 }
 
 /// Each Listener binds to a specific port
@@ -104,10 +107,15 @@ impl Listener {
         id: ListenerId,
         protocol: Protocol,
         listener_config: config::Listener,
+        // dispatcher module
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
+        // auth module
         auth_sender: Sender<ListenerToAuthCmd>,
         auth_receiver: Receiver<AuthToListenerCmd>,
+        // acl module
+        acl_sender: Sender<ListenerToAclCmd>,
+        acl_receiver: Receiver<AclToListenerCmd>,
     ) -> Self {
         let (session_sender, session_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         Listener {
@@ -124,6 +132,9 @@ impl Listener {
 
             auth_sender,
             auth_receiver: Some(auth_receiver),
+
+            acl_sender,
+            acl_receiver: Some(acl_receiver),
         }
     }
 
@@ -185,7 +196,10 @@ impl Listener {
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
         auth_sender: Sender<ListenerToAuthCmd>,
         auth_receiver: Receiver<AuthToListenerCmd>,
+        acl_sender: Sender<ListenerToAclCmd>,
+        acl_receiver: Receiver<AclToListenerCmd>,
     ) -> Result<Listener, Error> {
+        // TODO(Shaohua): Simplify parameters.
         match listener_config.protocol {
             config::Protocol::Mqtt => {
                 log::info!("bind mqtt://{}", listener_config.address);
@@ -200,6 +214,8 @@ impl Listener {
                         dispatcher_receiver,
                         auth_sender,
                         auth_receiver,
+                        acl_sender,
+                        acl_receiver,
                     ));
                 }
             }
@@ -218,6 +234,8 @@ impl Listener {
                         dispatcher_receiver,
                         auth_sender,
                         auth_receiver,
+                        acl_sender,
+                        acl_receiver,
                     ));
                 }
             }
@@ -234,6 +252,8 @@ impl Listener {
                         dispatcher_receiver,
                         auth_sender,
                         auth_receiver,
+                        acl_sender,
+                        acl_receiver,
                     ));
                 }
             }
@@ -252,6 +272,8 @@ impl Listener {
                         dispatcher_receiver,
                         auth_sender,
                         auth_receiver,
+                        acl_sender,
+                        acl_receiver,
                     ));
                 }
             }
@@ -272,6 +294,8 @@ impl Listener {
                     dispatcher_receiver,
                     auth_sender,
                     auth_receiver,
+                    acl_sender,
+                    acl_receiver,
                 ));
             }
 
@@ -331,6 +355,8 @@ impl Listener {
                         dispatcher_receiver,
                         auth_sender,
                         auth_receiver,
+                        acl_sender,
+                        acl_receiver,
                     ));
                 }
             }
@@ -419,12 +445,12 @@ impl Listener {
             .take()
             .expect("Invalid session receiver");
 
-        let mut auth_receiver = self.auth_receiver.take().expect("Invalid auth receiver");
-
         let mut dispatcher_receiver = self
             .dispatcher_receiver
             .take()
             .expect("Invalid dispatcher receiver");
+        let mut auth_receiver = self.auth_receiver.take().expect("Invalid auth receiver");
+        let mut acl_receiver = self.acl_receiver.take().expect("Invalid acl receiver");
 
         loop {
             tokio::select! {
@@ -445,6 +471,12 @@ impl Listener {
                 Some(cmd) = auth_receiver.recv() => {
                     if let Err(err) = self.handle_auth_cmd(cmd).await {
                         log::error!("handle auth cmd failed: {:?}", err);
+                    }
+                }
+
+                Some(cmd) = acl_receiver.recv() => {
+                    if let Err(err) = self.handle_acl_cmd(cmd).await {
+                        log::error!("handle acl cmd failed: {:?}", err);
                     }
                 }
             }
@@ -639,6 +671,12 @@ impl Listener {
         } else {
             Err(Error::session_error(session_id))
         }
+    }
+
+    /// Acl cmd handler.
+    async fn handle_acl_cmd(&mut self, cmd: AclToListenerCmd) -> Result<(), Error> {
+        log::info!("Handle acl cmd");
+        Ok(())
     }
 }
 

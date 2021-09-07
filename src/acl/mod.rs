@@ -2,6 +2,4 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-mod app;
-
-pub use app::AclApp;
+pub mod app;

@@ -10,8 +10,9 @@ use std::io::{Read, Write};
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
+use crate::acl::app::AclApp;
 use crate::auth::app::AuthApp;
-use crate::backends::BackendsApp;
+use crate::backends::app::BackendsApp;
 use crate::commands::DispatcherToMetricsCmd;
 use crate::config::Config;
 use crate::dispatcher::Dispatcher;
@@ -85,6 +86,8 @@ impl ServerContext {
         let (listeners_to_auth_sender, listeners_to_auth_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
         let mut auth_to_listener_senders = Vec::new();
+        let (listeners_to_acl_sender, listeners_to_acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let mut acl_to_listener_senders = Vec::new();
 
         let mut handles = Vec::new();
         let mut listener_id: u32 = 0;
@@ -101,13 +104,22 @@ impl ServerContext {
                 mpsc::channel(CHANNEL_CAPACITY);
             auth_to_listener_senders.push((listener_id, auth_to_listener_sender));
 
+            let (acl_to_listener_sender, acl_to_listener_receiver) =
+                mpsc::channel(CHANNEL_CAPACITY);
+            acl_to_listener_senders.push((listener_id, acl_to_listener_sender));
+
             let mut listener = Listener::bind(
                 listener_id,
                 l,
+                // dispatcher module
                 listeners_to_dispatcher_sender.clone(),
                 dispatcher_to_listener_receiver,
+                // Auth module
                 listeners_to_auth_sender.clone(),
                 auth_to_listener_receiver,
+                // acl module
+                listeners_to_acl_sender.clone(),
+                acl_to_listener_receiver,
             )
             .await
             .expect(&format!("Failed to listen at {:?}", &listeners_info.last()));
@@ -157,13 +169,17 @@ impl ServerContext {
             listeners_to_auth_receiver,
         )
         .expect("Failed to init auth app");
-
         let auth_app_handle = runtime.spawn(async move {
             auth_app.run_loop().await;
         });
         handles.push(auth_app_handle);
 
-        // TODO(Shaohua): ACL module.
+        // ACL module.
+        let mut acl_app = AclApp::new(acl_to_listener_senders, listeners_to_acl_receiver);
+        let acl_app_handle = runtime.spawn(async move {
+            acl_app.run_loop().await;
+        });
+        handles.push(acl_app_handle);
 
         // Backends module.
         let (backends_to_dispatcher_sender, backends_to_dispatcher_receiver) =
