@@ -11,6 +11,7 @@ use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
 use crate::auth::app::AuthApp;
+use crate::backends::BackendsApp;
 use crate::commands::DispatcherToMetricsCmd;
 use crate::config::Config;
 use crate::dispatcher::Dispatcher;
@@ -164,6 +165,20 @@ impl ServerContext {
 
         // TODO(Shaohua): ACL module.
 
+        // Backends module.
+        let (backends_to_dispatcher_sender, backends_to_dispatcher_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+        let (dispatcher_to_backends_sender, dispatcher_to_backends_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+        let mut backends_app = BackendsApp::new(
+            backends_to_dispatcher_sender,
+            dispatcher_to_backends_receiver,
+        );
+        let backends_handle = runtime.spawn(async move {
+            backends_app.run_loop().await;
+        });
+        handles.push(backends_handle);
+
         // Dispatcher module.
         let mut dispatcher = Dispatcher::new(
             // listeners module
@@ -172,6 +187,9 @@ impl ServerContext {
             // metrics module
             dispatcher_to_metrics_sender,
             metrics_to_dispatcher_receiver,
+            // backends module
+            dispatcher_to_backends_sender,
+            backends_to_dispatcher_receiver,
         );
         let dispatcher_handle = runtime.spawn(async move {
             dispatcher.run_loop().await;

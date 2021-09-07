@@ -6,8 +6,8 @@ use codec::PublishPacket;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
-    DispatcherToListenerCmd, DispatcherToMetricsCmd, ListenerToDispatcherCmd,
-    MetricsToDispatcherCmd,
+    BackendsToDispatcherCmd, DispatcherToBackendsCmd, DispatcherToListenerCmd,
+    DispatcherToMetricsCmd, ListenerToDispatcherCmd, MetricsToDispatcherCmd,
 };
 use crate::types::ListenerId;
 
@@ -19,6 +19,9 @@ pub struct Dispatcher {
 
     metrics_sender: Sender<DispatcherToMetricsCmd>,
     metrics_receiver: Receiver<MetricsToDispatcherCmd>,
+
+    backends_sender: Sender<DispatcherToBackendsCmd>,
+    backends_receiver: Receiver<BackendsToDispatcherCmd>,
 }
 
 impl Dispatcher {
@@ -27,6 +30,8 @@ impl Dispatcher {
         listener_receiver: Receiver<ListenerToDispatcherCmd>,
         metrics_sender: Sender<DispatcherToMetricsCmd>,
         metrics_receiver: Receiver<MetricsToDispatcherCmd>,
+        backends_sender: Sender<DispatcherToBackendsCmd>,
+        backends_receiver: Receiver<BackendsToDispatcherCmd>,
     ) -> Self {
         Dispatcher {
             listener_senders,
@@ -34,6 +39,9 @@ impl Dispatcher {
 
             metrics_sender,
             metrics_receiver,
+
+            backends_sender,
+            backends_receiver,
         }
     }
 
@@ -45,6 +53,9 @@ impl Dispatcher {
                 },
                 Some(cmd) = self.metrics_receiver.recv() => {
                     self.handle_metrics_cmd(cmd).await;
+                }
+                Some(cmd) = self.backends_receiver.recv() => {
+                    self.handle_backends_cmd(cmd).await;
                 }
             }
         }
@@ -172,5 +183,10 @@ impl Dispatcher {
                 err
             );
         }
+    }
+
+    /// Backends cmd handlers
+    async fn handle_backends_cmd(&mut self, cmd: BackendsToDispatcherCmd) {
+        log::info!("cmd: {:?}", cmd);
     }
 }
