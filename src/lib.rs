@@ -20,7 +20,6 @@ pub mod metrics;
 pub mod rule_engine;
 pub mod server;
 pub mod session;
-pub mod storage;
 pub mod stream;
 pub mod types;
 
