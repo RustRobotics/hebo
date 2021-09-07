@@ -105,6 +105,15 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
+impl From<std::net::AddrParseError> for Error {
+    fn from(err: std::net::AddrParseError) -> Self {
+        Error::from_string(
+            ErrorKind::ConfigError,
+            format!("Invalid ip address, {}", err),
+        )
+    }
+}
+
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
         Error::from_string(ErrorKind::IoError, format!("IoError {}", err))

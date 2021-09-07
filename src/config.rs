@@ -24,6 +24,9 @@ pub struct Config {
 
     #[serde(default = "Log::default")]
     pub log: Log,
+
+    #[serde(default = "Dashboard::default")]
+    pub dashboard: Dashboard,
 }
 
 /// General section in config.
@@ -493,6 +496,30 @@ impl Default for Log {
             console_log: Self::default_console_log(),
             level: Self::default_level(),
             log_file: Self::default_log_file(),
+        }
+    }
+}
+
+/// Configuration for dashboard app.
+#[derive(Debug, Deserialize, Clone)]
+pub struct Dashboard {
+    /// Binding address.
+    ///
+    /// Default is `127.0.0.1:18083`.
+    #[serde(default = "Dashboard::default_address")]
+    pub address: String,
+}
+
+impl Dashboard {
+    fn default_address() -> String {
+        "127.0.0.1:18083".to_string()
+    }
+}
+
+impl Default for Dashboard {
+    fn default() -> Self {
+        Self {
+            address: Self::default_address(),
         }
     }
 }

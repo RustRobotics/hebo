@@ -11,6 +11,8 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use warp::Filter;
 
 use crate::commands::{DashboardToServerContexCmd, ServerContextToDashboardCmd};
+use crate::config;
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct DashboardApp {
@@ -22,16 +24,17 @@ pub struct DashboardApp {
 }
 
 impl DashboardApp {
-    pub fn new<A: Into<SocketAddr>>(
-        addr: A,
+    pub fn new(
+        config: &config::Dashboard,
         server_ctx_sender: Sender<DashboardToServerContexCmd>,
         server_ctx_receiver: Receiver<ServerContextToDashboardCmd>,
-    ) -> Self {
-        Self {
-            addr: addr.into(),
+    ) -> Result<Self, Error> {
+        let addr = config.address.parse()?;
+        Ok(Self {
+            addr,
             server_ctx_sender,
             server_ctx_receiver,
-        }
+        })
     }
 
     pub async fn run_loop(&mut self) {

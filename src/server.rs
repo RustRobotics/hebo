@@ -311,13 +311,12 @@ impl ServerContext {
 
         // dashboard module.
         // TODO(Shaohua): Remove unwrap.
-        // TODO(Shaohua): Add dashboard config
         let mut dashboard_app = DashboardApp::new(
-            ([127, 0, 0, 1], 18082),
+            &self.config.dashboard,
             // server ctx
             self.from_dashboard_sender.take().unwrap(),
             self.to_dashboard_receiver.take().unwrap(),
-        );
+        )?;
         let dashboard_handle = runtime.spawn(async move {
             dashboard_app.run_loop().await;
         });
