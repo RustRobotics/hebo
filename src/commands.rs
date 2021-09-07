@@ -22,6 +22,12 @@ pub enum AuthToListenerCmd {
 }
 
 #[derive(Debug, Clone)]
+pub enum AclToListenerCmd {}
+
+#[derive(Debug, Clone)]
+pub enum ListenerToAclCmd {}
+
+#[derive(Debug, Clone)]
 pub enum ListenerToSessionCmd {
     /// Accepted or not.
     ConnectAck(ConnectAckPacket),
