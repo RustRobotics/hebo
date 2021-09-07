@@ -9,29 +9,26 @@ digraph {
 	"Rest API" -> Dashboard [style=dotted, color=red];
 
 	"Rest API" -> "Server Context" [style=dotted, color=blue];
-	"Rest API" -> Metrix [dir=both, style=dotted, color=red];
 
 	"Server Context" [shape=box];
-	"Server Context" -> ACL [style=dotted, color=blue];
-	"Server Context" -> Auth [style=dotted, color=blue];
-	"Server Context" -> Bridge [style=dotted, color=blue];
-	"Server Context" -> Gateway [style=dotted, color=blue];
-	"Server Context" -> Metrix [style=dotted, color=blue];
-	"Server Context" -> "Cluster Dispatcher" [style=dotted, color=blue];
-	"Server Context" -> "Rule Engine" [style=dotted, color=blue];
-	"Server Context" -> SysTree [style=dotted, color=blue];
-	"Server Context" -> Cache [style=dotted, color=blue];
+	"Server Context" -> ACL [dir=both, style=dotted, color=blue];
+	"Server Context" -> Auth [dir=both, style=dotted, color=blue];
+	"Server Context" -> Bridge [dir=both, style=dotted, color=blue];
+	"Server Context" -> Gateway [dir=both, style=dotted, color=blue];
+	"Server Context" -> Metrix [dir=both, style=dotted, color=blue];
+	"Server Context" -> "Cluster Dispatcher" [dir=both, style=dotted, color=blue];
+	"Server Context" -> "Rule Engine" [dir=both, style=dotted, color=blue];
+	"Server Context" -> Backends [dir=both, style=dotted, color=blue];
 
 	"Cluster Dispatcher" -> Dispatcher [dir=both, color=red, style=dotted];
 
 	Dispatcher -> Listeners [dir=both];
 	Listeners -> Sessions [dir=both];
 
-	Dispatcher -> SysTree [dir=both];
-
-	Dispatcher -> Cache [dir=both];
+	Dispatcher -> Backends [dir=both];
+	Backends -> Memory [color=red, style=dotted];
 	"Persistent Storage" [shape=cylinder];
-	Cache -> "Persistent Storage" [color=red, style=dotted];
+	Backends -> "Persistent Storage" [color=red, style=dotted];
 
 	// ACL app
 	ACL -> Listeners [dir=both];
@@ -56,6 +53,7 @@ digraph {
 	// monitor app
 	Dispatcher -> Metrix [dir=both, style=dotted, color=red];
 	Metrix -> Promethous [style=dotted, color=red];
+	Metrix -> SysTree [dir=both, style=dotted, color=red];
 
 	// rule engine app
 	Dispatcher -> "Rule Engine" [dir=both, style=dotted, color=red];

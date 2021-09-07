@@ -2,6 +2,8 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+//! ServerContex is the main entry pointer of hebo server.
+
 use clap::Arg;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -144,6 +146,7 @@ impl ServerContext {
         let mut listener_id: u32 = 0;
         let mut listeners_info = Vec::new();
 
+        // Listeners module.
         for l in self.config.listeners.clone() {
             listeners_info.push((listener_id, l.address.clone()));
             let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
@@ -171,6 +174,7 @@ impl ServerContext {
             listener_id += 1;
         }
 
+        // SysTree module.
         let (system_to_dispatcher_sender, system_to_dispatcher_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
         let (system_to_cache_sender, system_to_cache_receiver) = mpsc::channel(CHANNEL_CAPACITY);
@@ -187,6 +191,7 @@ impl ServerContext {
         });
         handles.push(system_handle);
 
+        // Cache module.
         let (cache_to_dispatcher_sender, cache_to_dispatcher_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
         let (dispatcher_to_cache_sender, dispatcher_to_cache_receiver) =
@@ -218,6 +223,7 @@ impl ServerContext {
             }
         }
 
+        // Auth module.
         // TODO(Shaohua): Returns an error.
         let mut auth_app = AuthApp::new(
             self.config.security.clone(),
@@ -231,6 +237,9 @@ impl ServerContext {
         });
         handles.push(auth_app_handle);
 
+        // TODO(Shaohua): ACL module.
+
+        // Dispatcher module.
         let mut dispatcher = Dispatcher::new(
             // listeners module
             dispatcher_to_listener_senders,
