@@ -194,7 +194,14 @@ impl ServerContext {
         handles.push(auth_app_handle);
 
         // ACL module.
-        let mut acl_app = AclApp::new(acl_to_listener_senders, listeners_to_acl_receiver);
+        let mut acl_app = AclApp::new(
+            // listeners
+            acl_to_listener_senders,
+            listeners_to_acl_receiver,
+            // server ctx
+            server_ctx_response_sender.clone(),
+            server_ctx_request_sender.subscribe(),
+        );
         let acl_app_handle = runtime.spawn(async move {
             acl_app.run_loop().await;
         });
