@@ -8,6 +8,7 @@ use clap::Arg;
 use std::fs::File;
 use std::io::{Read, Write};
 use tokio::runtime::Runtime;
+use tokio::sync::broadcast;
 use tokio::sync::mpsc;
 
 use crate::acl::app::AclApp;
@@ -133,6 +134,14 @@ impl ServerContext {
             listener_id += 1;
         }
 
+        // A broadcast channel connects server context to all apps.
+        // So that these apps will receive commands from server context.
+        let (server_ctx_request_sender, server_ctx_request_receiver) =
+            broadcast::channel(CHANNEL_CAPACITY);
+        // A mpsc channel is used to send response cmd from apps to server context.
+        let (server_ctx_response_sender, server_ctx_response_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+
         // Metrics module.
         let (metrics_to_dispatcher_sender, metrics_to_dispatcher_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
@@ -142,6 +151,9 @@ impl ServerContext {
             self.config.general.sys_interval,
             metrics_to_dispatcher_sender,
             dispatcher_to_metrics_receiver,
+            // server ctx
+            server_ctx_response_sender,
+            server_ctx_request_sender.subscribe(),
         );
         let metrics_handle = runtime.spawn(async move {
             metrics.run_loop().await;

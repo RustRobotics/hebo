@@ -8,11 +8,15 @@
 use codec::{PublishPacket, QoS};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
+use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
 use crate::cache_types::{ListenerMetrics, ListenersMapMetrics, SystemMetrics};
-use crate::commands::{DispatcherToMetricsCmd, MetricsToDispatcherCmd};
+use crate::commands::{
+    DispatcherToMetricsCmd, MetricsToDispatcherCmd, ServerContextRequestCmd,
+    ServerContextResponseCmd,
+};
 use crate::error::Error;
 
 pub const UPTIME: &str = "$SYS/uptime";
@@ -29,13 +33,20 @@ pub struct Metrics {
 
     dispatcher_sender: Sender<MetricsToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToMetricsCmd>,
+
+    server_ctx_sender: Sender<ServerContextResponseCmd>,
+    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
 }
 
 impl Metrics {
     pub fn new(
         interval: u32,
+        // dispatcher module
         dispatcher_sender: Sender<MetricsToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToMetricsCmd>,
+        // server ctx module
+        server_ctx_sender: Sender<ServerContextResponseCmd>,
+        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
     ) -> Self {
         Metrics {
             sys_tree_interval: Duration::from_secs(interval as u64),
@@ -46,6 +57,9 @@ impl Metrics {
 
             dispatcher_sender,
             dispatcher_receiver,
+
+            server_ctx_sender,
+            server_ctx_receiver,
         }
     }
 
@@ -57,6 +71,11 @@ impl Metrics {
                 Some(cmd) = self.dispatcher_receiver.recv() => {
                     self.handle_dispatcher_cmd(cmd).await;
                 }
+
+                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                    self.handle_server_ctx_cmd(cmd).await;
+                }
+
                 _ = sys_tree_timer.tick() => {
                     self.sys_tree_handle_timeout().await;
                 }
@@ -238,5 +257,10 @@ impl Metrics {
             .await
             .map(drop)
             .map_err(Into::into)
+    }
+
+    /// Server context handler
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+        log::info!("cmd: {:?}", cmd);
     }
 }
