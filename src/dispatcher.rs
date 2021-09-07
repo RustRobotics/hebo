@@ -8,7 +8,8 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use crate::commands::{
     BackendsToDispatcherCmd, BridgeToDispatcherCmd, DispatcherToBackendsCmd, DispatcherToBridgeCmd,
     DispatcherToGatewayCmd, DispatcherToListenerCmd, DispatcherToMetricsCmd,
-    GatewayToDispatcherCmd, ListenerToDispatcherCmd, MetricsToDispatcherCmd,
+    DispatcherToRuleEngineCmd, GatewayToDispatcherCmd, ListenerToDispatcherCmd,
+    MetricsToDispatcherCmd, RuleEngineToDispatcherCmd,
 };
 use crate::types::ListenerId;
 
@@ -29,6 +30,9 @@ pub struct Dispatcher {
 
     listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
     listener_receiver: Receiver<ListenerToDispatcherCmd>,
+
+    rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
+    rule_engine_receiver: Receiver<RuleEngineToDispatcherCmd>,
 }
 
 impl Dispatcher {
@@ -47,6 +51,9 @@ impl Dispatcher {
 
         listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToDispatcherCmd>,
+
+        rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
+        rule_engine_receiver: Receiver<RuleEngineToDispatcherCmd>,
     ) -> Self {
         Dispatcher {
             backends_sender,
@@ -63,6 +70,9 @@ impl Dispatcher {
 
             listener_senders,
             listener_receiver,
+
+            rule_engine_sender,
+            rule_engine_receiver,
         }
     }
 
@@ -83,6 +93,9 @@ impl Dispatcher {
                 }
                 Some(cmd) = self.listener_receiver.recv() => {
                     self.handle_listener_cmd(cmd).await;
+                },
+                Some(cmd) = self.rule_engine_receiver.recv() => {
+                    self.handle_rule_engine_cmd(cmd).await;
                 },
             }
         }
@@ -224,6 +237,11 @@ impl Dispatcher {
 
     /// Gateway app handler
     async fn handle_gateway_cmd(&mut self, cmd: GatewayToDispatcherCmd) {
+        log::info!("cmd: {:?}", cmd);
+    }
+
+    /// RuleEngine app handler
+    async fn handle_rule_engine_cmd(&mut self, cmd: RuleEngineToDispatcherCmd) {
         log::info!("cmd: {:?}", cmd);
     }
 }

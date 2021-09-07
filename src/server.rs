@@ -22,6 +22,7 @@ use crate::gateway::app::GatewayApp;
 use crate::listener::Listener;
 use crate::log::init_log;
 use crate::metrics::Metrics;
+use crate::rule_engine::app::RuleEngineApp;
 
 pub const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
 pub const CHANNEL_CAPACITY: usize = 16;
@@ -221,6 +222,20 @@ impl ServerContext {
         });
         handles.push(gateway_handle);
 
+        // rule engine module.
+        let (rule_engine_to_dispatcher_sender, rule_engine_to_dispatcher_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+        let (dispatcher_to_rule_engine_sender, dispatcher_to_rule_engine_receiver) =
+            mpsc::channel(CHANNEL_CAPACITY);
+        let mut rule_engine_app = RuleEngineApp::new(
+            rule_engine_to_dispatcher_sender,
+            dispatcher_to_rule_engine_receiver,
+        );
+        let rule_engine_handle = runtime.spawn(async move {
+            rule_engine_app.run_loop().await;
+        });
+        handles.push(rule_engine_handle);
+
         // Dispatcher module.
         let mut dispatcher = Dispatcher::new(
             // backends module
@@ -238,6 +253,9 @@ impl ServerContext {
             // listeners module
             dispatcher_to_listener_senders,
             listeners_to_dispatcher_receiver,
+            // rule engine module
+            dispatcher_to_rule_engine_sender,
+            rule_engine_to_dispatcher_receiver,
         );
         let dispatcher_handle = runtime.spawn(async move {
             dispatcher.run_loop().await;
