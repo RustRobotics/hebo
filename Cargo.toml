@@ -53,6 +53,7 @@ tokio-postgres = "0.7.2"
 tokio-rustls = "0.22.0"
 tokio-tungstenite = { version = "0.15.0", features = ["rustls-tls"] }
 toml = "0.5.8"
+warp = "0.3.1"
 webpki-roots = "0.22.0"
 
 [dev-dependencies]

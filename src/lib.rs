@@ -10,6 +10,7 @@ pub mod cache_types;
 pub mod commands;
 pub mod config;
 pub mod connectors;
+pub mod dashboard;
 pub mod dispatcher;
 pub mod error;
 pub mod gateway;
