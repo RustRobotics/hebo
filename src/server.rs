@@ -248,8 +248,14 @@ impl ServerContext {
             mpsc::channel(CHANNEL_CAPACITY);
         let (dispatcher_to_gateway_sender, dispatcher_to_gateway_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
-        let mut gateway_app =
-            GatewayApp::new(gateway_to_dispatcher_sender, dispatcher_to_gateway_receiver);
+        let mut gateway_app = GatewayApp::new(
+            // dispatcher
+            gateway_to_dispatcher_sender,
+            dispatcher_to_gateway_receiver,
+            // server ctx
+            server_ctx_response_sender.clone(),
+            server_ctx_request_sender.subscribe(),
+        );
         let gateway_handle = runtime.spawn(async move {
             gateway_app.run_loop().await;
         });

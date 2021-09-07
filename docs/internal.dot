@@ -15,7 +15,7 @@ digraph {
 	"Server Context" -> Auth [dir=both, color=blue];
 	"Server Context" -> Backends [dir=both, color=blue];
 	"Server Context" -> Bridge [dir=both, color=blue];
-	"Server Context" -> Gateway [dir=both, style=dotted, color=blue];
+	"Server Context" -> Gateway [dir=both, color=blue];
 	"Server Context" -> Metrix [dir=both, style=dotted, color=blue];
 	"Server Context" -> "Cluster Dispatcher" [dir=both, style=dotted, color=blue];
 	"Server Context" -> "Rule Engine" [dir=both, style=dotted, color=blue];
