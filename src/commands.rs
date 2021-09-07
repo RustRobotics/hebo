@@ -98,6 +98,18 @@ pub enum MetricsToDispatcherCmd {
 }
 
 #[derive(Debug, Clone)]
+pub enum DispatcherToBackendsCmd {
+    /// listener id, session id, client id
+    SessionAdded(ListenerId, SessionId, String),
+
+    /// listener id, session id
+    SessionRemoved(ListenerId, SessionId),
+}
+
+#[derive(Debug, Clone)]
+pub enum BackendsToDispatcherCmd {}
+
+#[derive(Debug, Clone)]
 pub enum ServerContextRequestCmd {}
 
 #[derive(Debug, Clone)]
