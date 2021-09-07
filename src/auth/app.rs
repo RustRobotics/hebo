@@ -2,10 +2,13 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use super::file_auth::FileAuth;
-use crate::commands::{AuthToListenerCmd, ListenerToAuthCmd};
+use crate::commands::{
+    AuthToListenerCmd, ListenerToAuthCmd, ServerContextRequestCmd, ServerContextResponseCmd,
+};
 use crate::config::Security;
 use crate::error::{Error, ErrorKind};
 use crate::types::{ListenerId, SessionId};
@@ -17,13 +20,20 @@ pub struct AuthApp {
 
     listener_senders: Vec<(ListenerId, Sender<AuthToListenerCmd>)>,
     listener_receiver: Receiver<ListenerToAuthCmd>,
+
+    server_ctx_sender: Sender<ServerContextResponseCmd>,
+    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
 }
 
 impl AuthApp {
     pub fn new(
         security: Security,
+        // listeners
         listener_senders: Vec<(ListenerId, Sender<AuthToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToAuthCmd>,
+        // server ctx module
+        server_ctx_sender: Sender<ServerContextResponseCmd>,
+        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
     ) -> Result<Self, Error> {
         let file_auth = if let Some(password_file) = security.password_file {
             Some(FileAuth::new(password_file)?)
@@ -37,6 +47,9 @@ impl AuthApp {
 
             listener_senders,
             listener_receiver,
+
+            server_ctx_sender,
+            server_ctx_receiver,
         })
     }
 
@@ -48,6 +61,9 @@ impl AuthApp {
                         log::error!("Failed to handle listener cmd: {:?}", err);
                     }
                 },
+                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                    self.handle_server_ctx_cmd(cmd).await;
+                }
             }
         }
     }
@@ -94,5 +110,10 @@ impl AuthApp {
                 listener_id
             ),
         ))
+    }
+
+    /// Server context handler
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+        log::info!("cmd: {:?}", cmd);
     }
 }

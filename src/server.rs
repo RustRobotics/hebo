@@ -152,7 +152,7 @@ impl ServerContext {
             metrics_to_dispatcher_sender,
             dispatcher_to_metrics_receiver,
             // server ctx
-            server_ctx_response_sender,
+            server_ctx_response_sender.clone(),
             server_ctx_request_sender.subscribe(),
         );
         let metrics_handle = runtime.spawn(async move {
@@ -180,8 +180,12 @@ impl ServerContext {
         // TODO(Shaohua): Returns an error.
         let mut auth_app = AuthApp::new(
             self.config.security.clone(),
+            // listeners
             auth_to_listener_senders,
             listeners_to_auth_receiver,
+            // server ctx
+            server_ctx_response_sender.clone(),
+            server_ctx_request_sender.subscribe(),
         )
         .expect("Failed to init auth app");
         let auth_app_handle = runtime.spawn(async move {
