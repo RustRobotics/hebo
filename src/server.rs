@@ -8,16 +8,15 @@ use clap::Arg;
 use std::fs::File;
 use std::io::{Read, Write};
 use tokio::runtime::Runtime;
-use tokio::sync::broadcast;
-use tokio::sync::mpsc;
+use tokio::sync::{broadcast, mpsc, oneshot};
 
 use crate::acl::app::AclApp;
 use crate::auth::app::AuthApp;
 use crate::backends::app::BackendsApp;
 use crate::bridge::app::BridgeApp;
 use crate::commands::{
-    DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
-    ServerContextResponseCmd, ServerContextToDashboardCmd,
+    DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContexToMetricsCmd,
+    ServerContextRequestCmd, ServerContextResponseCmd, ServerContextToDashboardCmd,
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
@@ -44,24 +43,22 @@ pub struct ServerContext {
     response_sender: mpsc::Sender<ServerContextResponseCmd>,
     response_receiver: mpsc::Receiver<ServerContextResponseCmd>,
 
-    to_dashboard_sender: mpsc::Sender<ServerContextToDashboardCmd>,
-    to_dashboard_receiver: Option<mpsc::Receiver<ServerContextToDashboardCmd>>,
-
-    from_dashboard_sender: Option<mpsc::Sender<DashboardToServerContexCmd>>,
-    from_dashboard_receiver: mpsc::Receiver<DashboardToServerContexCmd>,
+    dashboard_sender: Option<mpsc::Sender<DashboardToServerContexCmd>>,
+    dashboard_receiver: mpsc::Receiver<DashboardToServerContexCmd>,
 }
 
 impl ServerContext {
     pub fn new(config: Config) -> ServerContext {
+        // TODO(Shaohua): Remove
         // A broadcast channel connects server context to all apps.
         // So that these apps will receive commands from server context.
         let (request_sender, request_receiver) = broadcast::channel(CHANNEL_CAPACITY);
 
+        // TODO(Shaohua): Remove
         // A mpsc channel is used to send response cmd from apps to server context.
         let (response_sender, response_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
-        let (to_dashboard_sender, to_dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (from_dashboard_sender, from_dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (dashboard_sender, dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
         ServerContext {
             config,
@@ -72,11 +69,8 @@ impl ServerContext {
             response_sender,
             response_receiver,
 
-            to_dashboard_sender,
-            to_dashboard_receiver: Some(to_dashboard_receiver),
-
-            from_dashboard_sender: Some(from_dashboard_sender),
-            from_dashboard_receiver,
+            dashboard_sender: Some(dashboard_sender),
+            dashboard_receiver,
         }
     }
 
@@ -135,7 +129,7 @@ impl ServerContext {
                         log::error!("Failed to handle response cmd: {:?}", err);
                     }
                 },
-                Some(cmd) = self.from_dashboard_receiver.recv() => {
+                Some(cmd) = self.dashboard_receiver.recv() => {
                     if let Err(err) = self.handle_dashboard_cmd(cmd).await {
                         log::error!("Failed to handle dashboard cmd: {:?}", err);
                     }
@@ -154,8 +148,19 @@ impl ServerContext {
     }
 
     async fn handle_dashboard_cmd(&mut self, cmd: DashboardToServerContexCmd) -> Result<(), Error> {
-        log::info!("cmd: {:?}", cmd);
-        Ok(())
+        match cmd {
+            DashboardToServerContexCmd::MetricsGetUptime(resp_tx) => {
+                let (resp2_tx, resp2_rx) = oneshot::channel();
+
+                self.request_sender
+                    .send(ServerContextRequestCmd::MetricsGetUptime(resp2_tx));
+                let ret = resp2_rx.await;
+                log::info!("ret: {:?}", ret);
+
+                resp_tx.send(4);
+                Ok(())
+            }
+        }
     }
 
     async fn init_modules(&mut self, runtime: &Runtime) -> Result<(), Error> {
@@ -313,8 +318,7 @@ impl ServerContext {
         let mut dashboard_app = DashboardApp::new(
             &self.config.dashboard,
             // server ctx
-            self.from_dashboard_sender.take().unwrap(),
-            self.to_dashboard_receiver.take().unwrap(),
+            self.dashboard_sender.take().unwrap(),
         )?;
         let dashboard_handle = runtime.spawn(async move {
             dashboard_app.run_loop().await;

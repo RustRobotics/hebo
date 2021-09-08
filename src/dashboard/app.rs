@@ -18,22 +18,18 @@ use crate::error::Error;
 pub struct DashboardApp {
     addr: SocketAddr,
 
-    // TODO(Shaohua): Replace with oneshot.
     server_ctx_sender: Sender<DashboardToServerContexCmd>,
-    server_ctx_receiver: Receiver<ServerContextToDashboardCmd>,
 }
 
 impl DashboardApp {
     pub fn new(
         config: &config::Dashboard,
         server_ctx_sender: Sender<DashboardToServerContexCmd>,
-        server_ctx_receiver: Receiver<ServerContextToDashboardCmd>,
     ) -> Result<Self, Error> {
         let addr = config.address.parse()?;
         Ok(Self {
             addr,
             server_ctx_sender,
-            server_ctx_receiver,
         })
     }
 

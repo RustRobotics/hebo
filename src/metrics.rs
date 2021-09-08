@@ -269,6 +269,10 @@ impl Metrics {
 
     /// Server context handler
     async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
-        log::info!("cmd: {:?}", cmd);
+        match cmd {
+            ServerContextRequestCmd::MetricsGetUptime => {
+                // do nothing.
+            }
+        }
     }
 }

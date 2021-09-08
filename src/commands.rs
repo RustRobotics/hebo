@@ -6,6 +6,7 @@ use codec::{
     ConnectAckPacket, ConnectPacket, PublishPacket, SubscribeAckPacket, SubscribePacket,
     UnsubscribePacket,
 };
+use tokio::sync::oneshot;
 
 use crate::types::{ListenerId, SessionId, SessionInfo};
 
@@ -133,16 +134,19 @@ pub enum DispatcherToRuleEngineCmd {}
 pub enum RuleEngineToDispatcherCmd {}
 
 #[derive(Debug, Clone)]
-pub enum ServerContextRequestCmd {
-    MetrixGetUptime,
+pub enum ServerContextRequestCmd {}
+
+#[derive(Debug)]
+pub enum ServerContexToMetricsCmd {
+    MetricsGetUptime,
 }
 
 #[derive(Debug, Clone)]
 pub enum ServerContextResponseCmd {}
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum DashboardToServerContexCmd {
-    MetrixGetUptime,
+    MetricsGetUptime(oneshot::Sender<u32>),
 }
 
 #[derive(Debug, Clone)]
