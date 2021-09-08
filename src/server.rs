@@ -21,7 +21,7 @@ use crate::bridge::app::BridgeApp;
 use crate::commands::{
     DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
     ServerContextResponseCmd, ServerContextToAclCmd, ServerContextToAuthCmd,
-    ServerContextToBackendsCmd, ServerContextToMetricsCmd,
+    ServerContextToBackendsCmd, ServerContextToBridgeCmd, ServerContextToMetricsCmd,
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
@@ -65,6 +65,10 @@ pub struct ServerContext {
     backends_sender: Sender<ServerContextToBackendsCmd>,
     backends_receiver: Option<Receiver<ServerContextToBackendsCmd>>,
 
+    // server_ctx -> bridge
+    bridge_sender: Sender<ServerContextToBridgeCmd>,
+    bridge_receiver: Option<Receiver<ServerContextToBridgeCmd>>,
+
     // server_ctx -> metrics
     metrics_sender: Sender<ServerContextToMetricsCmd>,
     metrics_receiver: Option<Receiver<ServerContextToMetricsCmd>>,
@@ -85,6 +89,7 @@ impl ServerContext {
         let (acl_sender, acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (auth_sender, auth_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (backends_sender, backends_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (bridge_sender, bridge_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (metrics_sender, metrics_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
         ServerContext {
@@ -107,6 +112,9 @@ impl ServerContext {
 
             backends_sender,
             backends_receiver: Some(backends_receiver),
+
+            bridge_sender,
+            bridge_receiver: Some(bridge_receiver),
 
             metrics_sender,
             metrics_receiver: Some(metrics_receiver),
@@ -344,8 +352,7 @@ impl ServerContext {
             bridge_to_dispatcher_sender,
             dispatcher_to_bridge_receiver,
             // server ctx
-            self.response_sender.clone(),
-            self.request_sender.subscribe(),
+            self.bridge_receiver.take().unwrap(),
         );
         let bridge_handle = runtime.spawn(async move {
             bridge_app.run_loop().await;

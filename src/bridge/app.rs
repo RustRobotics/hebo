@@ -2,12 +2,9 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{
-    BridgeToDispatcherCmd, DispatcherToBridgeCmd, ServerContextRequestCmd, ServerContextResponseCmd,
-};
+use crate::commands::{BridgeToDispatcherCmd, DispatcherToBridgeCmd, ServerContextToBridgeCmd};
 use crate::error::Error;
 
 #[derive(Debug)]
@@ -15,8 +12,7 @@ pub struct BridgeApp {
     dispatcher_sender: Sender<BridgeToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToBridgeCmd>,
 
-    server_ctx_sender: Sender<ServerContextResponseCmd>,
-    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+    server_ctx_receiver: Receiver<ServerContextToBridgeCmd>,
 }
 
 impl BridgeApp {
@@ -25,13 +21,11 @@ impl BridgeApp {
         dispatcher_sender: Sender<BridgeToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToBridgeCmd>,
         // server ctx
-        server_ctx_sender: Sender<ServerContextResponseCmd>,
-        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+        server_ctx_receiver: Receiver<ServerContextToBridgeCmd>,
     ) -> Self {
         Self {
             dispatcher_sender,
             dispatcher_receiver,
-            server_ctx_sender,
             server_ctx_receiver,
         }
     }
@@ -44,7 +38,7 @@ impl BridgeApp {
                         log::error!("Failed to handle dispatcher cmd: {:?}", err);
                     }
                 }
-                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                Some(cmd) = self.server_ctx_receiver.recv() => {
                     self.handle_server_ctx_cmd(cmd).await;
                 }
             }
@@ -57,7 +51,7 @@ impl BridgeApp {
     }
 
     /// Server context handler
-    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToBridgeCmd) {
         log::info!("cmd: {:?}", cmd);
     }
 }
