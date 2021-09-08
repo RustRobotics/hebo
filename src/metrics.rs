@@ -67,6 +67,8 @@ impl Metrics {
     }
 
     pub async fn run_loop(&mut self) -> ! {
+        // Update uptime property each second.
+        let mut sys_tree_uptime_timer = interval(Duration::from_secs(1));
         let mut sys_tree_timer = interval(self.sys_tree_interval);
 
         loop {
@@ -77,6 +79,10 @@ impl Metrics {
 
                 Ok(cmd) = self.server_ctx_receiver.recv() => {
                     self.handle_server_ctx_cmd(cmd).await;
+                }
+
+                _ = sys_tree_uptime_timer.tick() => {
+                    self.sys_tree_update_uptime();
                 }
 
                 _ = sys_tree_timer.tick() => {
@@ -230,8 +236,7 @@ impl Metrics {
     }
 
     async fn sys_tree_handle_timeout(&mut self) {
-        self.sys_tree_update_time();
-
+        // TODO(Shaohua): Send other messages.
         if let Err(err) = self.sys_tree_send_uptime().await {
             log::error!(
                 "Failed to send publish packet from metrics to dispatcher: {:?}",
@@ -240,13 +245,13 @@ impl Metrics {
         }
     }
 
-    fn sys_tree_update_time(&mut self) {
+    fn sys_tree_update_uptime(&mut self) {
         match SystemTime::now().duration_since(self.startup) {
             Ok(duration) => {
                 self.uptime = duration.as_secs();
             }
             Err(err) => {
-                log::error!("Failed to update time, got error: {}", err);
+                log::error!("Failed to update uptime, got error: {}", err);
             }
         }
     }
