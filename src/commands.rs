@@ -148,6 +148,9 @@ pub enum ServerContextToAclCmd {}
 pub enum ServerContextToAuthCmd {}
 
 #[derive(Debug)]
+pub enum ServerContextToBackendsCmd {}
+
+#[derive(Debug)]
 pub enum ServerContextToMetricsCmd {
     MetricsGetUptime(oneshot::Sender<u64>),
 }

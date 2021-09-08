@@ -21,7 +21,7 @@ use crate::bridge::app::BridgeApp;
 use crate::commands::{
     DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
     ServerContextResponseCmd, ServerContextToAclCmd, ServerContextToAuthCmd,
-    ServerContextToMetricsCmd,
+    ServerContextToBackendsCmd, ServerContextToMetricsCmd,
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
@@ -61,6 +61,10 @@ pub struct ServerContext {
     auth_sender: Sender<ServerContextToAuthCmd>,
     auth_receiver: Option<Receiver<ServerContextToAuthCmd>>,
 
+    // server_ctx -> backends
+    backends_sender: Sender<ServerContextToBackendsCmd>,
+    backends_receiver: Option<Receiver<ServerContextToBackendsCmd>>,
+
     // server_ctx -> metrics
     metrics_sender: Sender<ServerContextToMetricsCmd>,
     metrics_receiver: Option<Receiver<ServerContextToMetricsCmd>>,
@@ -80,6 +84,7 @@ impl ServerContext {
         let (dashboard_sender, dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (acl_sender, acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (auth_sender, auth_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (backends_sender, backends_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (metrics_sender, metrics_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
         ServerContext {
@@ -99,6 +104,9 @@ impl ServerContext {
 
             auth_sender,
             auth_receiver: Some(auth_receiver),
+
+            backends_sender,
+            backends_receiver: Some(backends_receiver),
 
             metrics_sender,
             metrics_receiver: Some(metrics_receiver),
@@ -319,8 +327,7 @@ impl ServerContext {
             backends_to_dispatcher_sender,
             dispatcher_to_backends_receiver,
             // server ctx
-            self.response_sender.clone(),
-            self.request_sender.subscribe(),
+            self.backends_receiver.take().unwrap(),
         );
         let backends_handle = runtime.spawn(async move {
             backends_app.run_loop().await;

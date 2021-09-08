@@ -2,12 +2,10 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
-    BackendsToDispatcherCmd, DispatcherToBackendsCmd, ServerContextRequestCmd,
-    ServerContextResponseCmd,
+    BackendsToDispatcherCmd, DispatcherToBackendsCmd, ServerContextToBackendsCmd,
 };
 use crate::error::Error;
 use crate::types::{ListenerId, SessionId, SessionInfo};
@@ -17,8 +15,7 @@ pub struct BackendsApp {
     dispatcher_sender: Sender<BackendsToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToBackendsCmd>,
 
-    server_ctx_sender: Sender<ServerContextResponseCmd>,
-    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+    server_ctx_receiver: Receiver<ServerContextToBackendsCmd>,
 }
 
 impl BackendsApp {
@@ -27,14 +24,12 @@ impl BackendsApp {
         dispatcher_sender: Sender<BackendsToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToBackendsCmd>,
         // server ctx
-        server_ctx_sender: Sender<ServerContextResponseCmd>,
-        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+        server_ctx_receiver: Receiver<ServerContextToBackendsCmd>,
     ) -> Self {
         Self {
             dispatcher_sender,
             dispatcher_receiver,
 
-            server_ctx_sender,
             server_ctx_receiver,
         }
     }
@@ -47,7 +42,7 @@ impl BackendsApp {
                         log::error!("Failed to handle dispatcher cmd: {:?}", err);
                     }
                 }
-                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                Some(cmd) = self.server_ctx_receiver.recv() => {
                     self.handle_server_ctx_cmd(cmd).await;
                 }
             }
@@ -81,7 +76,7 @@ impl BackendsApp {
     }
 
     /// Server context handler
-    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToBackendsCmd) {
         log::info!("cmd: {:?}", cmd);
     }
 }
