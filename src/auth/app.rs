@@ -2,13 +2,10 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use super::file_auth::FileAuth;
-use crate::commands::{
-    AuthToListenerCmd, ListenerToAuthCmd, ServerContextRequestCmd, ServerContextResponseCmd,
-};
+use crate::commands::{AuthToListenerCmd, ListenerToAuthCmd, ServerContextToAuthCmd};
 use crate::config::Security;
 use crate::error::{Error, ErrorKind};
 use crate::types::{ListenerId, SessionId};
@@ -21,8 +18,7 @@ pub struct AuthApp {
     listener_senders: Vec<(ListenerId, Sender<AuthToListenerCmd>)>,
     listener_receiver: Receiver<ListenerToAuthCmd>,
 
-    server_ctx_sender: Sender<ServerContextResponseCmd>,
-    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+    server_ctx_receiver: Receiver<ServerContextToAuthCmd>,
 }
 
 impl AuthApp {
@@ -32,8 +28,7 @@ impl AuthApp {
         listener_senders: Vec<(ListenerId, Sender<AuthToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToAuthCmd>,
         // server ctx module
-        server_ctx_sender: Sender<ServerContextResponseCmd>,
-        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+        server_ctx_receiver: Receiver<ServerContextToAuthCmd>,
     ) -> Result<Self, Error> {
         let file_auth = if let Some(password_file) = security.password_file {
             let file_auth = FileAuth::new(password_file.as_path()).map_err(|err| {
@@ -54,7 +49,6 @@ impl AuthApp {
             listener_senders,
             listener_receiver,
 
-            server_ctx_sender,
             server_ctx_receiver,
         })
     }
@@ -67,7 +61,7 @@ impl AuthApp {
                         log::error!("Failed to handle listener cmd: {:?}", err);
                     }
                 },
-                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                Some(cmd) = self.server_ctx_receiver.recv() => {
                     self.handle_server_ctx_cmd(cmd).await;
                 }
             }
@@ -119,7 +113,7 @@ impl AuthApp {
     }
 
     /// Server context handler
-    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToAuthCmd) {
         log::info!("cmd: {:?}", cmd);
     }
 }

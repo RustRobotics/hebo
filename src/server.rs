@@ -20,7 +20,8 @@ use crate::backends::app::BackendsApp;
 use crate::bridge::app::BridgeApp;
 use crate::commands::{
     DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
-    ServerContextResponseCmd, ServerContextToAclCmd, ServerContextToMetricsCmd,
+    ServerContextResponseCmd, ServerContextToAclCmd, ServerContextToAuthCmd,
+    ServerContextToMetricsCmd,
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
@@ -56,6 +57,10 @@ pub struct ServerContext {
     acl_sender: Sender<ServerContextToAclCmd>,
     acl_receiver: Option<Receiver<ServerContextToAclCmd>>,
 
+    // server_ctx -> auth
+    auth_sender: Sender<ServerContextToAuthCmd>,
+    auth_receiver: Option<Receiver<ServerContextToAuthCmd>>,
+
     // server_ctx -> metrics
     metrics_sender: Sender<ServerContextToMetricsCmd>,
     metrics_receiver: Option<Receiver<ServerContextToMetricsCmd>>,
@@ -73,9 +78,8 @@ impl ServerContext {
         let (response_sender, response_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
         let (dashboard_sender, dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-
         let (acl_sender, acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-
+        let (auth_sender, auth_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (metrics_sender, metrics_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
         ServerContext {
@@ -92,6 +96,9 @@ impl ServerContext {
 
             acl_sender,
             acl_receiver: Some(acl_receiver),
+
+            auth_sender,
+            auth_receiver: Some(auth_receiver),
 
             metrics_sender,
             metrics_receiver: Some(metrics_receiver),
@@ -282,8 +289,7 @@ impl ServerContext {
             auth_to_listener_senders,
             listeners_to_auth_receiver,
             // server ctx
-            self.response_sender.clone(),
-            self.request_sender.subscribe(),
+            self.auth_receiver.take().unwrap(),
         )?;
         let auth_app_handle = runtime.spawn(async move {
             auth_app.run_loop().await;
