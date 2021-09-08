@@ -80,7 +80,6 @@ impl Metrics {
                 }
 
                 _ = sys_tree_timer.tick() => {
-                    log::info!("sys_tree tick()");
                     self.sys_tree_handle_timeout().await;
                 }
             }

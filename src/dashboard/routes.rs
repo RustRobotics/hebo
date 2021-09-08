@@ -2,13 +2,14 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::convert::Infallible;
 use warp::Filter;
 
 use super::metrics;
 use super::types::DashboardSender;
 
-pub fn init(sender: DashboardSender) -> dyn Filter {
+pub fn init(
+    sender: DashboardSender,
+) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     let sender_filter = warp::any().map(move || sender.clone());
 
     let get_metrics_uptime = warp::get()

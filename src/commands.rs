@@ -133,13 +133,17 @@ pub enum DispatcherToRuleEngineCmd {}
 pub enum RuleEngineToDispatcherCmd {}
 
 #[derive(Debug, Clone)]
-pub enum ServerContextRequestCmd {}
+pub enum ServerContextRequestCmd {
+    MetrixGetUptime,
+}
 
 #[derive(Debug, Clone)]
 pub enum ServerContextResponseCmd {}
 
 #[derive(Debug, Clone)]
-pub enum DashboardToServerContexCmd {}
+pub enum DashboardToServerContexCmd {
+    MetrixGetUptime,
+}
 
 #[derive(Debug, Clone)]
 pub enum ServerContextToDashboardCmd {}
