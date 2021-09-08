@@ -10,7 +10,7 @@ use crate::commands::DashboardToServerContexCmd;
 
 /// metrics api
 pub async fn get_uptime(sender: DashboardSender) -> Result<impl warp::Reply, warp::Rejection> {
-    log::info!("sender: {:?}", sender);
+    log::info!("Dashboard::get_uptime()");
     let (resp_tx, resp_rx) = oneshot::channel();
     if let Err(err) = sender
         .send(DashboardToServerContexCmd::MetricsGetUptime(resp_tx))
@@ -18,8 +18,21 @@ pub async fn get_uptime(sender: DashboardSender) -> Result<impl warp::Reply, war
     {
         log::error!("Failed to send cmd to server ctx, err: {:?}", err);
     } else {
-        let ret = resp_rx.await;
-        log::info!("ret: {:?}", ret);
+        match resp_rx.await {
+            Ok(uptime) => {
+                return Ok(warp::reply::with_status(
+                    format!("{}", uptime),
+                    StatusCode::OK,
+                ));
+            }
+            Err(err) => {
+                log::info!("metrics response err: {:?}", err);
+            }
+        }
     }
-    Ok(warp::reply::with_status("Uptime", StatusCode::CREATED))
+
+    Ok(warp::reply::with_status(
+        "Internal server error".to_string(),
+        StatusCode::INTERNAL_SERVER_ERROR,
+    ))
 }
