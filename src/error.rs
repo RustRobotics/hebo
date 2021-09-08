@@ -5,12 +5,13 @@
 use quinn::crypto::rustls;
 use std::fmt::{self, Display};
 use std::io;
-use tokio::sync::{broadcast, mpsc};
+use tokio::sync::{broadcast, mpsc, oneshot};
 use tokio_tungstenite::tungstenite;
 
 use crate::commands::{
     AuthToListenerCmd, DispatcherToMetricsCmd, ListenerToAuthCmd, ListenerToDispatcherCmd,
-    ListenerToSessionCmd, MetricsToDispatcherCmd, ServerContextRequestCmd, SessionToListenerCmd,
+    ListenerToSessionCmd, MetricsToDispatcherCmd, ServerContextRequestCmd,
+    ServerContextToMetricsCmd, SessionToListenerCmd,
 };
 use crate::types::SessionId;
 
@@ -223,6 +224,15 @@ impl From<codec::DecodeError> for Error {
     }
 }
 
+impl From<oneshot::error::RecvError> for Error {
+    fn from(err: oneshot::error::RecvError) -> Self {
+        Error::from_string(
+            ErrorKind::ChannelError,
+            format!("$cmd_type channel error: {}", err),
+        )
+    }
+}
+
 macro_rules! convert_send_error {
     ($cmd_type: ident) => {
         impl From<mpsc::error::SendError<$cmd_type>> for Error {
@@ -237,13 +247,15 @@ macro_rules! convert_send_error {
 }
 
 convert_send_error!(AuthToListenerCmd);
+convert_send_error!(DispatcherToMetricsCmd);
 convert_send_error!(ListenerToAuthCmd);
 convert_send_error!(ListenerToDispatcherCmd);
 convert_send_error!(ListenerToSessionCmd);
-convert_send_error!(SessionToListenerCmd);
 convert_send_error!(MetricsToDispatcherCmd);
-convert_send_error!(DispatcherToMetricsCmd);
+convert_send_error!(ServerContextToMetricsCmd);
+convert_send_error!(SessionToListenerCmd);
 
+// TODO(Shaohua): Remove macro
 macro_rules! convert_broadcast_error {
     ($cmd_type: ident) => {
         impl From<broadcast::error::SendError<$cmd_type>> for Error {

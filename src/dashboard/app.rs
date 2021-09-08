@@ -7,10 +7,10 @@
 //! Web ui part is located in `/dashboard`.
 
 use std::net::SocketAddr;
-use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::mpsc::Sender;
 
 use super::routes;
-use crate::commands::{DashboardToServerContexCmd, ServerContextToDashboardCmd};
+use crate::commands::DashboardToServerContexCmd;
 use crate::config;
 use crate::error::Error;
 

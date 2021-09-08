@@ -8,15 +8,11 @@
 use codec::{PublishPacket, QoS};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
-use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 use tokio::time::interval;
 
 use crate::cache_types::{ListenerMetrics, ListenersMapMetrics, SystemMetrics};
-use crate::commands::{
-    DispatcherToMetricsCmd, MetricsToDispatcherCmd, ServerContextRequestCmd,
-    ServerContextResponseCmd,
-};
+use crate::commands::{DispatcherToMetricsCmd, MetricsToDispatcherCmd, ServerContextToMetricsCmd};
 use crate::error::Error;
 
 pub const UPTIME: &str = "$SYS/uptime";
@@ -34,8 +30,7 @@ pub struct Metrics {
     dispatcher_sender: Sender<MetricsToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToMetricsCmd>,
 
-    server_ctx_sender: Sender<ServerContextResponseCmd>,
-    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+    server_ctx_receiver: Receiver<ServerContextToMetricsCmd>,
 }
 
 impl Metrics {
@@ -45,8 +40,7 @@ impl Metrics {
         dispatcher_sender: Sender<MetricsToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToMetricsCmd>,
         // server ctx module
-        server_ctx_sender: Sender<ServerContextResponseCmd>,
-        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+        server_ctx_receiver: Receiver<ServerContextToMetricsCmd>,
     ) -> Self {
         println!("interval: {}", interval);
         let sys_tree_interval = Duration::from_secs(interval as u64);
@@ -61,7 +55,6 @@ impl Metrics {
             dispatcher_sender,
             dispatcher_receiver,
 
-            server_ctx_sender,
             server_ctx_receiver,
         }
     }
@@ -77,7 +70,7 @@ impl Metrics {
                     self.handle_dispatcher_cmd(cmd).await;
                 }
 
-                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                Some(cmd) = self.server_ctx_receiver.recv() => {
                     self.handle_server_ctx_cmd(cmd).await;
                 }
 
@@ -268,10 +261,12 @@ impl Metrics {
     }
 
     /// Server context handler
-    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToMetricsCmd) {
         match cmd {
-            ServerContextRequestCmd::MetricsGetUptime => {
-                // do nothing.
+            ServerContextToMetricsCmd::MetricsGetUptime(resp_tx) => {
+                if let Err(err) = resp_tx.send(self.uptime) {
+                    log::error!("Failed to send uptime to server ctx: {:?}", err);
+                }
             }
         }
     }

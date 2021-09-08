@@ -15,8 +15,8 @@ use crate::auth::app::AuthApp;
 use crate::backends::app::BackendsApp;
 use crate::bridge::app::BridgeApp;
 use crate::commands::{
-    DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContexToMetricsCmd,
-    ServerContextRequestCmd, ServerContextResponseCmd, ServerContextToDashboardCmd,
+    DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
+    ServerContextResponseCmd, ServerContextToMetricsCmd,
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
@@ -37,14 +37,20 @@ pub const CHANNEL_CAPACITY: usize = 16;
 pub struct ServerContext {
     config: Config,
 
+    // TODO(Shaohua): Remove
     request_sender: broadcast::Sender<ServerContextRequestCmd>,
     request_receiver: broadcast::Receiver<ServerContextRequestCmd>,
 
     response_sender: mpsc::Sender<ServerContextResponseCmd>,
     response_receiver: mpsc::Receiver<ServerContextResponseCmd>,
 
+    // dashboard -> server_ctx
     dashboard_sender: Option<mpsc::Sender<DashboardToServerContexCmd>>,
     dashboard_receiver: mpsc::Receiver<DashboardToServerContexCmd>,
+
+    // server_ctx -> metrics
+    metrics_sender: mpsc::Sender<ServerContextToMetricsCmd>,
+    metrics_receiver: Option<mpsc::Receiver<ServerContextToMetricsCmd>>,
 }
 
 impl ServerContext {
@@ -60,6 +66,8 @@ impl ServerContext {
 
         let (dashboard_sender, dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
+        let (metrics_sender, metrics_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+
         ServerContext {
             config,
 
@@ -71,6 +79,9 @@ impl ServerContext {
 
             dashboard_sender: Some(dashboard_sender),
             dashboard_receiver,
+
+            metrics_sender,
+            metrics_receiver: Some(metrics_receiver),
         }
     }
 
@@ -152,13 +163,16 @@ impl ServerContext {
             DashboardToServerContexCmd::MetricsGetUptime(resp_tx) => {
                 let (resp2_tx, resp2_rx) = oneshot::channel();
 
-                self.request_sender
-                    .send(ServerContextRequestCmd::MetricsGetUptime(resp2_tx));
-                let ret = resp2_rx.await;
-                log::info!("ret: {:?}", ret);
-
-                resp_tx.send(4);
-                Ok(())
+                self.metrics_sender
+                    .send(ServerContextToMetricsCmd::MetricsGetUptime(resp2_tx))
+                    .await?;
+                let ret = resp2_rx.await?;
+                resp_tx.send(ret).map_err(|_| {
+                    Error::from_string(
+                        ErrorKind::ChannelError,
+                        format!("Failed to send metrics uptime to dashboard"),
+                    )
+                })
             }
         }
     }
@@ -225,8 +239,7 @@ impl ServerContext {
             metrics_to_dispatcher_sender,
             dispatcher_to_metrics_receiver,
             // server ctx
-            self.response_sender.clone(),
-            self.request_sender.subscribe(),
+            self.metrics_receiver.take().unwrap(),
         );
         let metrics_handle = runtime.spawn(async move {
             metrics.run_loop().await;
