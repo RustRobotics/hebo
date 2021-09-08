@@ -2,12 +2,9 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{
-    AclToListenerCmd, ListenerToAclCmd, ServerContextRequestCmd, ServerContextResponseCmd,
-};
+use crate::commands::{AclToListenerCmd, ListenerToAclCmd, ServerContextToAclCmd};
 use crate::error::Error;
 use crate::types::ListenerId;
 
@@ -17,8 +14,7 @@ pub struct AclApp {
     listener_senders: Vec<(ListenerId, Sender<AclToListenerCmd>)>,
     listener_receiver: Receiver<ListenerToAclCmd>,
 
-    server_ctx_sender: Sender<ServerContextResponseCmd>,
-    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+    server_ctx_receiver: Receiver<ServerContextToAclCmd>,
 }
 
 impl AclApp {
@@ -27,14 +23,12 @@ impl AclApp {
         listener_senders: Vec<(ListenerId, Sender<AclToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToAclCmd>,
         // server ctx
-        server_ctx_sender: Sender<ServerContextResponseCmd>,
-        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+        server_ctx_receiver: Receiver<ServerContextToAclCmd>,
     ) -> Self {
         Self {
             listener_senders,
             listener_receiver,
 
-            server_ctx_sender,
             server_ctx_receiver,
         }
     }
@@ -47,7 +41,7 @@ impl AclApp {
                         log::error!("Failed to handle listener cmd: {:?}", err);
                     }
                 },
-                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                Some(cmd) = self.server_ctx_receiver.recv() => {
                     self.handle_server_ctx_cmd(cmd).await;
                 }
             }
@@ -60,7 +54,7 @@ impl AclApp {
     }
 
     /// Server context handler
-    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToAclCmd) {
         log::info!("cmd: {:?}", cmd);
     }
 }

@@ -8,7 +8,11 @@ use clap::Arg;
 use std::fs::File;
 use std::io::{Read, Write};
 use tokio::runtime::Runtime;
-use tokio::sync::{broadcast, mpsc, oneshot};
+use tokio::sync::{
+    broadcast,
+    mpsc::{self, Receiver, Sender},
+    oneshot,
+};
 
 use crate::acl::app::AclApp;
 use crate::auth::app::AuthApp;
@@ -16,7 +20,7 @@ use crate::backends::app::BackendsApp;
 use crate::bridge::app::BridgeApp;
 use crate::commands::{
     DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
-    ServerContextResponseCmd, ServerContextToMetricsCmd,
+    ServerContextResponseCmd, ServerContextToAclCmd, ServerContextToMetricsCmd,
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
@@ -41,16 +45,20 @@ pub struct ServerContext {
     request_sender: broadcast::Sender<ServerContextRequestCmd>,
     request_receiver: broadcast::Receiver<ServerContextRequestCmd>,
 
-    response_sender: mpsc::Sender<ServerContextResponseCmd>,
-    response_receiver: mpsc::Receiver<ServerContextResponseCmd>,
+    response_sender: Sender<ServerContextResponseCmd>,
+    response_receiver: Receiver<ServerContextResponseCmd>,
 
     // dashboard -> server_ctx
-    dashboard_sender: Option<mpsc::Sender<DashboardToServerContexCmd>>,
-    dashboard_receiver: mpsc::Receiver<DashboardToServerContexCmd>,
+    dashboard_sender: Option<Sender<DashboardToServerContexCmd>>,
+    dashboard_receiver: Receiver<DashboardToServerContexCmd>,
+
+    // server_ctx -> acl
+    acl_sender: Sender<ServerContextToAclCmd>,
+    acl_receiver: Option<Receiver<ServerContextToAclCmd>>,
 
     // server_ctx -> metrics
-    metrics_sender: mpsc::Sender<ServerContextToMetricsCmd>,
-    metrics_receiver: Option<mpsc::Receiver<ServerContextToMetricsCmd>>,
+    metrics_sender: Sender<ServerContextToMetricsCmd>,
+    metrics_receiver: Option<Receiver<ServerContextToMetricsCmd>>,
 }
 
 impl ServerContext {
@@ -66,6 +74,8 @@ impl ServerContext {
 
         let (dashboard_sender, dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
+        let (acl_sender, acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+
         let (metrics_sender, metrics_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
         ServerContext {
@@ -79,6 +89,9 @@ impl ServerContext {
 
             dashboard_sender: Some(dashboard_sender),
             dashboard_receiver,
+
+            acl_sender,
+            acl_receiver: Some(acl_receiver),
 
             metrics_sender,
             metrics_receiver: Some(metrics_receiver),
@@ -283,8 +296,7 @@ impl ServerContext {
             acl_to_listener_senders,
             listeners_to_acl_receiver,
             // server ctx
-            self.response_sender.clone(),
-            self.request_sender.subscribe(),
+            self.acl_receiver.take().unwrap(),
         );
         let acl_app_handle = runtime.spawn(async move {
             acl_app.run_loop().await;

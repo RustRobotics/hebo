@@ -136,18 +136,20 @@ pub enum RuleEngineToDispatcherCmd {}
 #[derive(Debug, Clone)]
 pub enum ServerContextRequestCmd {}
 
+#[derive(Debug, Clone)]
+pub enum ServerContextResponseCmd {}
+
+// Server context
+
+#[derive(Debug)]
+pub enum ServerContextToAclCmd {}
+
 #[derive(Debug)]
 pub enum ServerContextToMetricsCmd {
     MetricsGetUptime(oneshot::Sender<u64>),
 }
 
-#[derive(Debug, Clone)]
-pub enum ServerContextResponseCmd {}
-
 #[derive(Debug)]
 pub enum DashboardToServerContexCmd {
     MetricsGetUptime(oneshot::Sender<u64>),
 }
-
-#[derive(Debug, Clone)]
-pub enum ServerContextToDashboardCmd {}
