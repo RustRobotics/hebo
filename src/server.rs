@@ -127,6 +127,7 @@ impl ServerContext {
     }
 
     async fn run_inner_loop(&mut self) -> Result<(), Error> {
+        log::info!("ServerContext::run_inner_loop()");
         loop {
             tokio::select! {
                 Some(cmd) = self.response_receiver.recv() => {
@@ -158,6 +159,7 @@ impl ServerContext {
     }
 
     async fn init_modules(&mut self, runtime: &Runtime) -> Result<(), Error> {
+        log::info!("ServerContext::init_modules()");
         let (listeners_to_dispatcher_sender, listeners_to_dispatcher_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
         let mut dispatcher_to_listener_senders = Vec::new();

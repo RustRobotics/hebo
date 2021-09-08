@@ -114,7 +114,7 @@ impl Dispatcher {
         log::info!("handle_listener_cmd: {:?}", cmd);
         match cmd {
             ListenerToDispatcherCmd::Publish(packet) => {
-                self.storage_store_packet(&packet).await;
+                self.backends_store_packet(&packet).await;
                 self.publish_packet_to_listners(&packet).await;
             }
             ListenerToDispatcherCmd::SessionAdded(listener_id) => {
@@ -132,9 +132,9 @@ impl Dispatcher {
         }
     }
 
-    /// Send packet to storage.
-    async fn storage_store_packet(&mut self, packet: &PublishPacket) {
-        log::info!("store packet: {:?}", packet);
+    /// Send packet to backends.
+    async fn backends_store_packet(&mut self, packet: &PublishPacket) {
+        log::info!("backends store packet: {:?}", packet);
     }
 
     async fn publish_packet_to_listners(&mut self, packet: &PublishPacket) {
@@ -149,7 +149,6 @@ impl Dispatcher {
         }
     }
 
-    // TODO(Shaohua): Remove method
     // Metrics related methods
     async fn metrics_publish_packet_sent(
         &mut self,

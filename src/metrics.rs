@@ -48,8 +48,11 @@ impl Metrics {
         server_ctx_sender: Sender<ServerContextResponseCmd>,
         server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
     ) -> Self {
+        println!("interval: {}", interval);
+        let sys_tree_interval = Duration::from_secs(interval as u64);
+        println!("sys tree interval: {:?}", sys_tree_interval);
         Metrics {
-            sys_tree_interval: Duration::from_secs(interval as u64),
+            sys_tree_interval,
             startup: SystemTime::now(),
             uptime: 0,
             system: SystemMetrics::default(),
@@ -64,9 +67,9 @@ impl Metrics {
     }
 
     pub async fn run_loop(&mut self) -> ! {
-        loop {
-            let mut sys_tree_timer = interval(self.sys_tree_interval);
+        let mut sys_tree_timer = interval(self.sys_tree_interval);
 
+        loop {
             tokio::select! {
                 Some(cmd) = self.dispatcher_receiver.recv() => {
                     self.handle_dispatcher_cmd(cmd).await;
@@ -77,6 +80,7 @@ impl Metrics {
                 }
 
                 _ = sys_tree_timer.tick() => {
+                    log::info!("sys_tree tick()");
                     self.sys_tree_handle_timeout().await;
                 }
             }
@@ -228,7 +232,6 @@ impl Metrics {
 
     async fn sys_tree_handle_timeout(&mut self) {
         self.sys_tree_update_time();
-        // TODO(Shaohua): Send statics msg to dispatcher.
 
         if let Err(err) = self.sys_tree_send_uptime().await {
             log::error!(
@@ -250,6 +253,7 @@ impl Metrics {
     }
 
     async fn sys_tree_send_uptime(&mut self) -> Result<(), Error> {
+        log::info!("metrics::sys_tree_send_uptime()");
         let msg = format!("{}", self.uptime).into_bytes();
         let packet = PublishPacket::new(UPTIME, QoS::AtMostOnce, &msg)?;
         self.dispatcher_sender
