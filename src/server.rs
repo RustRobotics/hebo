@@ -9,7 +9,6 @@ use std::fs::File;
 use std::io::{Read, Write};
 use tokio::runtime::Runtime;
 use tokio::sync::{
-    broadcast,
     mpsc::{self, Receiver, Sender},
     oneshot,
 };
@@ -19,10 +18,9 @@ use crate::auth::app::AuthApp;
 use crate::backends::app::BackendsApp;
 use crate::bridge::app::BridgeApp;
 use crate::commands::{
-    DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
-    ServerContextResponseCmd, ServerContextToAclCmd, ServerContextToAuthCmd,
-    ServerContextToBackendsCmd, ServerContextToBridgeCmd, ServerContextToGatewayCmd,
-    ServerContextToMetricsCmd, ServerContextToRuleEngineCmd,
+    DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextToAclCmd,
+    ServerContextToAuthCmd, ServerContextToBackendsCmd, ServerContextToBridgeCmd,
+    ServerContextToGatewayCmd, ServerContextToMetricsCmd, ServerContextToRuleEngineCmd,
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
@@ -42,13 +40,6 @@ pub const CHANNEL_CAPACITY: usize = 16;
 #[derive(Debug)]
 pub struct ServerContext {
     config: Config,
-
-    // TODO(Shaohua): Remove
-    request_sender: broadcast::Sender<ServerContextRequestCmd>,
-    request_receiver: broadcast::Receiver<ServerContextRequestCmd>,
-
-    response_sender: Sender<ServerContextResponseCmd>,
-    response_receiver: Receiver<ServerContextResponseCmd>,
 
     // dashboard -> server_ctx
     dashboard_sender: Option<Sender<DashboardToServerContexCmd>>,
@@ -85,15 +76,6 @@ pub struct ServerContext {
 
 impl ServerContext {
     pub fn new(config: Config) -> ServerContext {
-        // TODO(Shaohua): Remove
-        // A broadcast channel connects server context to all apps.
-        // So that these apps will receive commands from server context.
-        let (request_sender, request_receiver) = broadcast::channel(CHANNEL_CAPACITY);
-
-        // TODO(Shaohua): Remove
-        // A mpsc channel is used to send response cmd from apps to server context.
-        let (response_sender, response_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-
         let (dashboard_sender, dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (acl_sender, acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (auth_sender, auth_receiver) = mpsc::channel(CHANNEL_CAPACITY);
@@ -105,12 +87,6 @@ impl ServerContext {
 
         ServerContext {
             config,
-
-            request_sender,
-            request_receiver,
-
-            response_sender,
-            response_receiver,
 
             dashboard_sender: Some(dashboard_sender),
             dashboard_receiver,
@@ -188,11 +164,6 @@ impl ServerContext {
         log::info!("ServerContext::run_inner_loop()");
         loop {
             tokio::select! {
-                Some(cmd) = self.response_receiver.recv() => {
-                    if let Err(err) = self.handle_response_cmd(cmd).await {
-                        log::error!("Failed to handle response cmd: {:?}", err);
-                    }
-                },
                 Some(cmd) = self.dashboard_receiver.recv() => {
                     if let Err(err) = self.handle_dashboard_cmd(cmd).await {
                         log::error!("Failed to handle dashboard cmd: {:?}", err);
@@ -203,11 +174,6 @@ impl ServerContext {
 
         // TODO(Shaohua): Break main loop
         #[allow(unreachable_code)]
-        Ok(())
-    }
-
-    async fn handle_response_cmd(&mut self, cmd: ServerContextResponseCmd) -> Result<(), Error> {
-        log::info!("cmd: {:?}", cmd);
         Ok(())
     }
 

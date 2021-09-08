@@ -5,13 +5,12 @@
 use quinn::crypto::rustls;
 use std::fmt::{self, Display};
 use std::io;
-use tokio::sync::{broadcast, mpsc, oneshot};
+use tokio::sync::{mpsc, oneshot};
 use tokio_tungstenite::tungstenite;
 
 use crate::commands::{
     AuthToListenerCmd, DispatcherToMetricsCmd, ListenerToAuthCmd, ListenerToDispatcherCmd,
-    ListenerToSessionCmd, MetricsToDispatcherCmd, ServerContextRequestCmd,
-    ServerContextToMetricsCmd, SessionToListenerCmd,
+    ListenerToSessionCmd, MetricsToDispatcherCmd, ServerContextToMetricsCmd, SessionToListenerCmd,
 };
 use crate::types::SessionId;
 
@@ -254,19 +253,3 @@ convert_send_error!(ListenerToSessionCmd);
 convert_send_error!(MetricsToDispatcherCmd);
 convert_send_error!(ServerContextToMetricsCmd);
 convert_send_error!(SessionToListenerCmd);
-
-// TODO(Shaohua): Remove macro
-macro_rules! convert_broadcast_error {
-    ($cmd_type: ident) => {
-        impl From<broadcast::error::SendError<$cmd_type>> for Error {
-            fn from(err: broadcast::error::SendError<$cmd_type>) -> Self {
-                Error::from_string(
-                    ErrorKind::ChannelError,
-                    format!("$cmd_type channel error: {}", err),
-                )
-            }
-        }
-    };
-}
-
-convert_broadcast_error!(ServerContextRequestCmd);

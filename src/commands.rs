@@ -133,12 +133,6 @@ pub enum DispatcherToRuleEngineCmd {}
 #[derive(Debug, Clone)]
 pub enum RuleEngineToDispatcherCmd {}
 
-#[derive(Debug, Clone)]
-pub enum ServerContextRequestCmd {}
-
-#[derive(Debug, Clone)]
-pub enum ServerContextResponseCmd {}
-
 // Server context
 
 #[derive(Debug)]
