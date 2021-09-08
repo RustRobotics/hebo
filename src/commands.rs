@@ -8,7 +8,7 @@ use codec::{
 };
 use tokio::sync::oneshot;
 
-use crate::types::{ListenerId, SessionId, SessionInfo};
+use crate::types::{ListenerId, SessionId, SessionInfo, Uptime};
 
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
@@ -152,7 +152,7 @@ pub enum ServerContextToGatewayCmd {}
 
 #[derive(Debug)]
 pub enum ServerContextToMetricsCmd {
-    MetricsGetUptime(oneshot::Sender<u64>),
+    MetricsGetUptime(oneshot::Sender<Uptime>),
 }
 
 #[derive(Debug)]
@@ -160,5 +160,5 @@ pub enum ServerContextToRuleEngineCmd {}
 
 #[derive(Debug)]
 pub enum DashboardToServerContexCmd {
-    MetricsGetUptime(oneshot::Sender<u64>),
+    MetricsGetUptime(oneshot::Sender<Uptime>),
 }

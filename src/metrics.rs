@@ -14,6 +14,7 @@ use tokio::time::interval;
 use crate::cache_types::{ListenerMetrics, ListenersMapMetrics, SystemMetrics};
 use crate::commands::{DispatcherToMetricsCmd, MetricsToDispatcherCmd, ServerContextToMetricsCmd};
 use crate::error::Error;
+use crate::types::Uptime;
 
 pub const UPTIME: &str = "$SYS/uptime";
 
@@ -22,7 +23,7 @@ pub const UPTIME: &str = "$SYS/uptime";
 pub struct Metrics {
     sys_tree_interval: Duration,
     startup: SystemTime,
-    uptime: u64,
+    uptime: Uptime,
 
     system: SystemMetrics,
     listeners: ListenersMapMetrics,

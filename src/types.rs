@@ -6,6 +6,7 @@ use codec::QoS;
 
 pub type ListenerId = u32;
 pub type SessionId = u64;
+pub type Uptime = u64;
 
 /// Represents a session object.
 #[derive(Debug, Clone)]

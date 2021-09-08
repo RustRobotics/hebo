@@ -31,6 +31,7 @@ use crate::listener::Listener;
 use crate::log::init_log;
 use crate::metrics::Metrics;
 use crate::rule_engine::app::RuleEngineApp;
+use crate::types::Uptime;
 
 pub const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
 pub const CHANNEL_CAPACITY: usize = 16;
@@ -180,20 +181,27 @@ impl ServerContext {
     async fn handle_dashboard_cmd(&mut self, cmd: DashboardToServerContexCmd) -> Result<(), Error> {
         match cmd {
             DashboardToServerContexCmd::MetricsGetUptime(resp_tx) => {
-                let (resp2_tx, resp2_rx) = oneshot::channel();
-
-                self.metrics_sender
-                    .send(ServerContextToMetricsCmd::MetricsGetUptime(resp2_tx))
-                    .await?;
-                let ret = resp2_rx.await?;
-                resp_tx.send(ret).map_err(|_| {
-                    Error::from_string(
-                        ErrorKind::ChannelError,
-                        format!("Failed to send metrics uptime to dashboard"),
-                    )
-                })
+                self.handle_metrics_uptime(resp_tx).await
             }
         }
+    }
+
+    async fn handle_metrics_uptime(
+        &mut self,
+        resp_tx: oneshot::Sender<Uptime>,
+    ) -> Result<(), Error> {
+        let (resp2_tx, resp2_rx) = oneshot::channel();
+
+        self.metrics_sender
+            .send(ServerContextToMetricsCmd::MetricsGetUptime(resp2_tx))
+            .await?;
+        let ret = resp2_rx.await?;
+        resp_tx.send(ret).map_err(|_| {
+            Error::from_string(
+                ErrorKind::ChannelError,
+                format!("Failed to send metrics uptime to dashboard"),
+            )
+        })
     }
 
     async fn init_modules(&mut self, runtime: &Runtime) -> Result<(), Error> {
