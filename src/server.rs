@@ -22,7 +22,7 @@ use crate::commands::{
     DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
     ServerContextResponseCmd, ServerContextToAclCmd, ServerContextToAuthCmd,
     ServerContextToBackendsCmd, ServerContextToBridgeCmd, ServerContextToGatewayCmd,
-    ServerContextToMetricsCmd,
+    ServerContextToMetricsCmd, ServerContextToRuleEngineCmd,
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
@@ -77,6 +77,10 @@ pub struct ServerContext {
     // server_ctx -> metrics
     metrics_sender: Sender<ServerContextToMetricsCmd>,
     metrics_receiver: Option<Receiver<ServerContextToMetricsCmd>>,
+
+    // server_ctx -> rule_engine
+    rule_engine_sender: Sender<ServerContextToRuleEngineCmd>,
+    rule_engine_receiver: Option<Receiver<ServerContextToRuleEngineCmd>>,
 }
 
 impl ServerContext {
@@ -97,6 +101,7 @@ impl ServerContext {
         let (bridge_sender, bridge_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (gateway_sender, gateway_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (metrics_sender, metrics_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (rule_engine_sender, rule_engine_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
         ServerContext {
             config,
@@ -127,6 +132,9 @@ impl ServerContext {
 
             metrics_sender,
             metrics_receiver: Some(metrics_receiver),
+
+            rule_engine_sender,
+            rule_engine_receiver: Some(rule_engine_receiver),
         }
     }
 
@@ -406,8 +414,7 @@ impl ServerContext {
             rule_engine_to_dispatcher_sender,
             dispatcher_to_rule_engine_receiver,
             // server ctx
-            self.response_sender.clone(),
-            self.request_sender.subscribe(),
+            self.rule_engine_receiver.take().unwrap(),
         );
         let rule_engine_handle = runtime.spawn(async move {
             rule_engine_app.run_loop().await;

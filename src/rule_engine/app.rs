@@ -2,12 +2,10 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
-    DispatcherToRuleEngineCmd, RuleEngineToDispatcherCmd, ServerContextRequestCmd,
-    ServerContextResponseCmd,
+    DispatcherToRuleEngineCmd, RuleEngineToDispatcherCmd, ServerContextToRuleEngineCmd,
 };
 use crate::error::Error;
 
@@ -16,8 +14,7 @@ pub struct RuleEngineApp {
     dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToRuleEngineCmd>,
 
-    server_ctx_sender: Sender<ServerContextResponseCmd>,
-    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+    server_ctx_receiver: Receiver<ServerContextToRuleEngineCmd>,
 }
 
 impl RuleEngineApp {
@@ -26,13 +23,11 @@ impl RuleEngineApp {
         dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToRuleEngineCmd>,
         // server ctx
-        server_ctx_sender: Sender<ServerContextResponseCmd>,
-        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+        server_ctx_receiver: Receiver<ServerContextToRuleEngineCmd>,
     ) -> Self {
         Self {
             dispatcher_sender,
             dispatcher_receiver,
-            server_ctx_sender,
             server_ctx_receiver,
         }
     }
@@ -46,7 +41,7 @@ impl RuleEngineApp {
                     }
                 }
 
-                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                Some(cmd) = self.server_ctx_receiver.recv() => {
                     self.handle_server_ctx_cmd(cmd).await;
                 }
             }
@@ -59,7 +54,7 @@ impl RuleEngineApp {
     }
 
     /// Server context handler
-    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToRuleEngineCmd) {
         log::info!("cmd: {:?}", cmd);
     }
 }

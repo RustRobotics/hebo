@@ -162,6 +162,9 @@ pub enum ServerContextToMetricsCmd {
 }
 
 #[derive(Debug)]
+pub enum ServerContextToRuleEngineCmd {}
+
+#[derive(Debug)]
 pub enum DashboardToServerContexCmd {
     MetricsGetUptime(oneshot::Sender<u64>),
 }
