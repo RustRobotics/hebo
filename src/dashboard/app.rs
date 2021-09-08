@@ -8,8 +8,8 @@
 
 use std::net::SocketAddr;
 use tokio::sync::mpsc::{Receiver, Sender};
-use warp::Filter;
 
+use super::routes;
 use crate::commands::{DashboardToServerContexCmd, ServerContextToDashboardCmd};
 use crate::config;
 use crate::error::Error;
@@ -38,7 +38,8 @@ impl DashboardApp {
     }
 
     pub async fn run_loop(&mut self) {
-        let routes = warp::any().map(|| "Hello, World!");
+        let sender = self.server_ctx_sender.clone();
+        let routes = routes::init(sender);
         warp::serve(routes).run(self.addr).await
     }
 }

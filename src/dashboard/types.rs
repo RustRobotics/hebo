@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-pub mod app;
-mod metrics;
-mod routes;
-mod types;
+use crate::commands::DashboardToServerContexCmd;
+use tokio::sync::mpsc::Sender;
+
+pub type DashboardSender = Sender<DashboardToServerContexCmd>;
