@@ -2,13 +2,9 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use tokio::sync::broadcast;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{
-    DispatcherToGatewayCmd, GatewayToDispatcherCmd, ServerContextRequestCmd,
-    ServerContextResponseCmd,
-};
+use crate::commands::{DispatcherToGatewayCmd, GatewayToDispatcherCmd, ServerContextToGatewayCmd};
 use crate::error::Error;
 
 #[derive(Debug)]
@@ -16,8 +12,7 @@ pub struct GatewayApp {
     dispatcher_sender: Sender<GatewayToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToGatewayCmd>,
 
-    server_ctx_sender: Sender<ServerContextResponseCmd>,
-    server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+    server_ctx_receiver: Receiver<ServerContextToGatewayCmd>,
 }
 
 impl GatewayApp {
@@ -26,14 +21,12 @@ impl GatewayApp {
         dispatcher_sender: Sender<GatewayToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToGatewayCmd>,
         // server ctx
-        server_ctx_sender: Sender<ServerContextResponseCmd>,
-        server_ctx_receiver: broadcast::Receiver<ServerContextRequestCmd>,
+        server_ctx_receiver: Receiver<ServerContextToGatewayCmd>,
     ) -> Self {
         Self {
             dispatcher_sender,
             dispatcher_receiver,
 
-            server_ctx_sender,
             server_ctx_receiver,
         }
     }
@@ -47,7 +40,7 @@ impl GatewayApp {
                     }
                 }
 
-                Ok(cmd) = self.server_ctx_receiver.recv() => {
+                Some(cmd) = self.server_ctx_receiver.recv() => {
                     self.handle_server_ctx_cmd(cmd).await;
                 }
             }
@@ -60,7 +53,7 @@ impl GatewayApp {
     }
 
     /// Server context handler
-    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextRequestCmd) {
+    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToGatewayCmd) {
         log::info!("cmd: {:?}", cmd);
     }
 }

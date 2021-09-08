@@ -21,7 +21,8 @@ use crate::bridge::app::BridgeApp;
 use crate::commands::{
     DashboardToServerContexCmd, DispatcherToMetricsCmd, ServerContextRequestCmd,
     ServerContextResponseCmd, ServerContextToAclCmd, ServerContextToAuthCmd,
-    ServerContextToBackendsCmd, ServerContextToBridgeCmd, ServerContextToMetricsCmd,
+    ServerContextToBackendsCmd, ServerContextToBridgeCmd, ServerContextToGatewayCmd,
+    ServerContextToMetricsCmd,
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
@@ -69,6 +70,10 @@ pub struct ServerContext {
     bridge_sender: Sender<ServerContextToBridgeCmd>,
     bridge_receiver: Option<Receiver<ServerContextToBridgeCmd>>,
 
+    // server_ctx -> gateway
+    gateway_sender: Sender<ServerContextToGatewayCmd>,
+    gateway_receiver: Option<Receiver<ServerContextToGatewayCmd>>,
+
     // server_ctx -> metrics
     metrics_sender: Sender<ServerContextToMetricsCmd>,
     metrics_receiver: Option<Receiver<ServerContextToMetricsCmd>>,
@@ -90,6 +95,7 @@ impl ServerContext {
         let (auth_sender, auth_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (backends_sender, backends_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (bridge_sender, bridge_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (gateway_sender, gateway_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (metrics_sender, metrics_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
         ServerContext {
@@ -115,6 +121,9 @@ impl ServerContext {
 
             bridge_sender,
             bridge_receiver: Some(bridge_receiver),
+
+            gateway_sender,
+            gateway_receiver: Some(gateway_receiver),
 
             metrics_sender,
             metrics_receiver: Some(metrics_receiver),
@@ -380,8 +389,7 @@ impl ServerContext {
             gateway_to_dispatcher_sender,
             dispatcher_to_gateway_receiver,
             // server ctx
-            self.response_sender.clone(),
-            self.request_sender.subscribe(),
+            self.gateway_receiver.take().unwrap(),
         );
         let gateway_handle = runtime.spawn(async move {
             gateway_app.run_loop().await;
