@@ -1,0 +1,13 @@
+{
+  "data": {
+    "version": "4.3.7",
+    "uptime": "33 minutes, 6 seconds",
+    "sysdescr": "EMQ X Broker",
+    "otp_release": "23.2.7.2-emqx-2/11.1.8",
+    "node_status": "Running",
+    "node": "557ac18040ff@192.168.32.2",
+    "datetime": "2021-09-09 07:18:19"
+  },
+  "code": 0
+}
+
