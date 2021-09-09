@@ -13,7 +13,7 @@ async fn main() -> Result<(), Error> {
     let config = RedisConnConfig::default();
     let mut r = RedisConn::new(&config)?;
     r.init().await?;
-    let mut conn = r.conn().expect("redis connection is none");
+    let mut conn = r.get_conn().expect("redis connection is none");
     redis::cmd("SET")
         .arg("my_key")
         .arg(42)
