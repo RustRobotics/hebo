@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 pub mod app;
+mod error_code;
 mod metrics;
 mod routes;
 mod types;
