@@ -15,7 +15,7 @@ use crate::types::ListenerId;
 
 /// Dispatcher is a message router.
 #[derive(Debug)]
-pub struct Dispatcher {
+pub struct DispatcherApp {
     backends_sender: Sender<DispatcherToBackendsCmd>,
     backends_receiver: Receiver<BackendsToDispatcherCmd>,
 
@@ -35,7 +35,7 @@ pub struct Dispatcher {
     rule_engine_receiver: Receiver<RuleEngineToDispatcherCmd>,
 }
 
-impl Dispatcher {
+impl DispatcherApp {
     pub fn new(
         backends_sender: Sender<DispatcherToBackendsCmd>,
         backends_receiver: Receiver<BackendsToDispatcherCmd>,

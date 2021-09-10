@@ -24,7 +24,7 @@ use crate::commands::{
 };
 use crate::config::Config;
 use crate::dashboard::app::DashboardApp;
-use crate::dispatcher::Dispatcher;
+use crate::dispatcher::app::DispatcherApp;
 use crate::error::{Error, ErrorKind};
 use crate::gateway::app::GatewayApp;
 use crate::listener::Listener;
@@ -396,7 +396,7 @@ impl ServerContext {
         handles.push(rule_engine_handle);
 
         // Dispatcher module.
-        let mut dispatcher = Dispatcher::new(
+        let mut dispatcher = DispatcherApp::new(
             // backends module
             dispatcher_to_backends_sender,
             backends_to_dispatcher_receiver,
