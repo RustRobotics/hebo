@@ -55,7 +55,7 @@ impl DispatcherApp {
         rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
         rule_engine_receiver: Receiver<RuleEngineToDispatcherCmd>,
     ) -> Self {
-        Dispatcher {
+        Self {
             backends_sender,
             backends_receiver,
 
