@@ -41,7 +41,7 @@ log = "0.4.14"
 log4rs = { version = "1.0.0", features = [ "background_rotation", "gzip" ] }
 mongodb = "2.0.0"
 mysql_async = "0.28.0"
-nc = "0.7.9"
+nc = "0.7.10"
 openssl = "0.10.36"
 quinn = "0.7.2"
 rand = "0.8.4"
