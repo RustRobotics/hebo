@@ -7,7 +7,7 @@ use codec::{
     SubscribeAckPacket, SubscribePacket, Topic, UnsubscribePacket,
 };
 use futures_util::StreamExt;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::convert::Into;
 use std::fmt;
 use std::fs::{self, File};
@@ -40,6 +40,8 @@ pub struct Listener {
     listener_config: config::Listener,
     current_session_id: SessionId,
     pipelines: HashMap<SessionId, Pipeline>,
+    session_ids: HashMap<SessionId, String>,
+    client_ids: BTreeMap<String, SessionId>,
 
     session_sender: Sender<SessionToListenerCmd>,
     session_receiver: Option<Receiver<SessionToListenerCmd>>,
@@ -124,6 +126,9 @@ impl Listener {
             listener_config,
             current_session_id: 0,
             pipelines: HashMap::new(),
+            session_ids: HashMap::new(),
+            client_ids: BTreeMap::new(),
+
             session_sender,
             session_receiver: Some(session_receiver),
 
@@ -488,8 +493,8 @@ impl Listener {
         let session_id = self.next_session_id();
         let pipeline = Pipeline::new(sender, session_id);
         self.pipelines.insert(session_id, pipeline);
-        let connection = Session::new(session_id, stream, self.session_sender.clone(), receiver);
-        tokio::spawn(connection.run_loop());
+        let session = Session::new(session_id, stream, self.session_sender.clone(), receiver);
+        tokio::spawn(session.run_loop());
 
         if let Err(err) = self
             .dispatcher_sender
@@ -530,6 +535,21 @@ impl Listener {
         packet: ConnectPacket,
     ) -> Result<(), Error> {
         log::info!("Listener::on_session_connect()");
+        // If client id already exists, notify session to send disconnect packet.
+        if self.client_ids.get(packet.client_id()).is_some() {
+            let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
+            let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
+            if let Some(pipeline) = self.pipelines.get(&session_id) {
+                return pipeline.sender.send(cmd).await.map_err(Into::into);
+            } else {
+                return Err(Error::session_error(session_id));
+            }
+        }
+
+        self.session_ids
+            .insert(session_id, packet.client_id().to_string());
+
+        // Send request to auth app.
         self.auth_sender
             .send(ListenerToAuthCmd::RequestAuth(
                 self.id,
@@ -666,6 +686,19 @@ impl Listener {
             ConnectAckPacket::new(false, ConnectReturnCode::Unauthorized)
         };
         let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
+
+        if access_granted {
+            // Add client id to cache.
+            if let Some(client_id) = self.session_ids.get(&session_id) {
+                self.client_ids.insert(client_id.to_string(), session_id);
+            } else {
+                log::error!(
+                    "listener: Failed to find client id with session: {}",
+                    session_id
+                );
+            }
+        }
+
         if let Some(pipeline) = self.pipelines.get(&session_id) {
             pipeline.sender.send(cmd).await.map_err(Into::into)
         } else {

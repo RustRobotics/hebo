@@ -32,7 +32,6 @@ enum Status {
 ///
 // TODO(Shaohua): Handle Clean Session operation
 // TODO(Shaohua): Handle Will Message
-// TODO(Shaohua): Disconnect the network if ClientId is in use
 // TODO(Shaohua): Disconnect the network if Connect Packet is invalid
 // TODO(Shaohua): Disconnect the network if Connect Packet is not received within a reasonable amount of time.
 #[derive(Debug)]
@@ -67,7 +66,7 @@ impl Session {
     pub async fn run_loop(mut self) {
         // TODO(Shaohua): Set buffer cap based on settings
         let mut buf = Vec::with_capacity(1024);
-        // TODO(Shaohua): Handle timeout
+        // TODO(Shaohua): Tuning duration value.
         let mut timer = interval(Duration::from_secs(20));
         loop {
             tokio::select! {
@@ -83,8 +82,8 @@ impl Session {
                     }
                 }
                 _ = timer.tick() => {
-                    // TODO(Shaohua): Send ping
-                    log::info!("tick()");
+                    // TODO(Shaohua): Handle timeout
+                    //log::info!("tick()");
                 },
                 Some(cmd) = self.receiver.recv() => {
                     if let Err(err) = self.handle_listener_packet(cmd).await {
