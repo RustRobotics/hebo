@@ -197,31 +197,36 @@ impl Listener {
     pub async fn bind(
         id: u32,
         listener_config: config::Listener,
+        // dispatcher
         dispatcher_sender: Sender<ListenerToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToListenerCmd>,
+        // auth
         auth_sender: Sender<ListenerToAuthCmd>,
         auth_receiver: Receiver<AuthToListenerCmd>,
+        // acl
         acl_sender: Sender<ListenerToAclCmd>,
         acl_receiver: Receiver<AclToListenerCmd>,
     ) -> Result<Listener, Error> {
-        // TODO(Shaohua): Simplify parameters.
+        let new_listener = |protocol| {
+            Ok(Listener::new(
+                id,
+                protocol,
+                listener_config.clone(),
+                dispatcher_sender,
+                dispatcher_receiver,
+                auth_sender,
+                auth_receiver,
+                acl_sender,
+                acl_receiver,
+            ))
+        };
         match listener_config.protocol {
             config::Protocol::Mqtt => {
                 log::info!("bind mqtt://{}", listener_config.address);
                 let addrs = listener_config.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(
-                        id,
-                        Protocol::Mqtt(listener),
-                        listener_config,
-                        dispatcher_sender,
-                        dispatcher_receiver,
-                        auth_sender,
-                        auth_receiver,
-                        acl_sender,
-                        acl_receiver,
-                    ));
+                    return new_listener(Protocol::Mqtt(listener));
                 }
             }
             config::Protocol::Mqtts => {
@@ -231,17 +236,7 @@ impl Listener {
                 let addrs = listener_config.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(
-                        id,
-                        Protocol::Mqtts(listener, acceptor),
-                        listener_config,
-                        dispatcher_sender,
-                        dispatcher_receiver,
-                        auth_sender,
-                        auth_receiver,
-                        acl_sender,
-                        acl_receiver,
-                    ));
+                    return new_listener(Protocol::Mqtts(listener, acceptor));
                 }
             }
             config::Protocol::Ws => {
@@ -249,17 +244,7 @@ impl Listener {
                 let addrs = listener_config.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(
-                        id,
-                        Protocol::Ws(listener),
-                        listener_config,
-                        dispatcher_sender,
-                        dispatcher_receiver,
-                        auth_sender,
-                        auth_receiver,
-                        acl_sender,
-                        acl_receiver,
-                    ));
+                    return new_listener(Protocol::Ws(listener));
                 }
             }
             config::Protocol::Wss => {
@@ -269,17 +254,7 @@ impl Listener {
                 let addrs = listener_config.address.to_socket_addrs()?;
                 for addr in addrs {
                     let listener = TcpListener::bind(&addr).await?;
-                    return Ok(Listener::new(
-                        id,
-                        Protocol::Wss(listener, acceptor),
-                        listener_config,
-                        dispatcher_sender,
-                        dispatcher_receiver,
-                        auth_sender,
-                        auth_receiver,
-                        acl_sender,
-                        acl_receiver,
-                    ));
+                    return new_listener(Protocol::Wss(listener, acceptor));
                 }
             }
 
@@ -291,17 +266,7 @@ impl Listener {
                     fs::remove_file(&listener_config.address)?;
                 }
                 let listener = UnixListener::bind(&listener_config.address)?;
-                return Ok(Listener::new(
-                    id,
-                    Protocol::Uds(listener),
-                    listener_config,
-                    dispatcher_sender,
-                    dispatcher_receiver,
-                    auth_sender,
-                    auth_receiver,
-                    acl_sender,
-                    acl_receiver,
-                ));
+                return new_listener(Protocol::Uds(listener));
             }
 
             config::Protocol::Quic => {
@@ -352,17 +317,7 @@ impl Listener {
                 for addr in addrs {
                     // Bind this endpoint to a UDP socket on the given server address.
                     let (endpoint, incoming) = endpoint_builder.bind(&addr)?;
-                    return Ok(Listener::new(
-                        id,
-                        Protocol::Quic(endpoint, incoming),
-                        listener_config,
-                        dispatcher_sender,
-                        dispatcher_receiver,
-                        auth_sender,
-                        auth_receiver,
-                        acl_sender,
-                        acl_receiver,
-                    ));
+                    return new_listener(Protocol::Quic(endpoint, incoming));
                 }
             }
         }
