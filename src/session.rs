@@ -32,8 +32,6 @@ enum Status {
 ///
 // TODO(Shaohua): Handle Clean Session operation
 // TODO(Shaohua): Handle Will Message
-// TODO(Shaohua): Disconnect the network if Connect Packet is invalid
-// TODO(Shaohua): Disconnect the network if Connect Packet is not received within a reasonable amount of time.
 #[derive(Debug)]
 pub struct Session {
     id: SessionId,
@@ -75,6 +73,8 @@ impl Session {
                     if n_recv > 0 {
                         if let Err(err) = self.handle_client_packet(&buf).await {
                             log::error!("handle_client_packet() failed: {:?}", err);
+                            // Got invalid packet, disconnect client.
+                            break;
                         }
                         buf.clear();
                     } else {
@@ -113,9 +113,25 @@ impl Session {
         self.stream.write(&buf).await.map(drop).map_err(Into::into)
     }
 
+    /// Send disconnect packet to client and update status.
+    async fn send_disconnect(&mut self) -> Result<(), Error> {
+        self.status = Status::Disconnecting;
+        let packet = DisconnectPacket::new();
+        self.send(packet).await.map(drop);
+        self.status = Status::Disconnected;
+        Ok(())
+    }
+
     async fn handle_client_packet(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let fixed_header = FixedHeader::decode(&mut ba)?;
+        let fixed_header = match FixedHeader::decode(&mut ba) {
+            Ok(fixed_header) => fixed_header,
+            Err(err) => {
+                // Disconnect the network if Connect Packet is invalid.
+                log::error!("session: Invalid packet: {:?}, content: {:?}", err, buf);
+                return self.send_disconnect().await;
+            }
+        };
 
         match fixed_header.packet_type {
             PacketType::Connect => self.on_client_connect(&buf).await,
@@ -145,9 +161,7 @@ impl Session {
         // Check connection status first.
         // If this client is already connected, send disconnect packet.
         if self.status == Status::Connected || self.status == Status::Connecting {
-            let packet = DisconnectPacket::new();
-            self.status = Status::Disconnecting;
-            return self.send(packet).await.map(drop);
+            return self.send_disconnect().await;
         }
 
         // Send the connect packet to listener.

@@ -674,6 +674,7 @@ impl Listener {
     }
 }
 
+// TODO(Shaohua): Move to dispatcher app.
 fn topic_match(topics: &[SubscribedTopic], topic_str: &str) -> bool {
     for topic in topics {
         if topic.pattern.is_match(topic_str) {
