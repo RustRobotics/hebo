@@ -20,6 +20,9 @@ pub enum DecodeError {
     /// Protocol name must be "MQTT".
     InvalidProtocolName,
 
+    /// Resrved bit in connect packet is not zero.
+    InvalidConnectFlags,
+
     /// QoS not 0, 1, 2
     InvalidQoS,
 

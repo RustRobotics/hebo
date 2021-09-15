@@ -170,6 +170,11 @@ impl DecodePacket for ConnectFlags {
         let will_qos = QoS::try_from((flags & 0b0001_1000) >> 3)?;
         let will = flags & 0b0000_0100 == 0b0000_0100;
         let clean_session = flags & 0b0000_0010 == 0b0000_0010;
+        let reserved_is_zero = flags & 0b0000_0001 == 0b0000_0000;
+        if !reserved_is_zero {
+            return Err(DecodeError::InvalidConnectFlags);
+        }
+
         Ok(ConnectFlags {
             username,
             password,
