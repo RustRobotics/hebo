@@ -211,6 +211,10 @@ impl EncodePacket for RemainingLength {
         if self.0 > MAX_PACKET_LEN {
             return Err(EncodeError::TooManyData);
         }
+        if self.0 == 0 {
+            buf.push(0);
+            return Ok(1);
+        }
 
         let mut n = self.0;
         let mut count = 0;
