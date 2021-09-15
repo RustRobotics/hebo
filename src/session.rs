@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use codec::{
-    ByteArray, ConnectPacket, ConnectReturnCode, DecodePacket, DisconnectPacket, EncodePacket,
-    FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket,
+    ByteArray, ConnectPacket, ConnectReturnCode, DecodeError, DecodePacket, DisconnectPacket,
+    EncodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket,
     PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
     UnsubscribePacket,
 };
@@ -84,6 +84,7 @@ impl Session {
                             break;
                         }
                         buf.clear();
+
                     } else {
                         log::info!("session: Empty packet received, disconnect client, {}", self.id);
                         self.send_disconnect().await;
@@ -174,7 +175,23 @@ impl Session {
 
     async fn on_client_connect(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let packet = ConnectPacket::decode(&mut ba)?;
+        let packet = match ConnectPacket::decode(&mut ba) {
+            Ok(packet) => packet,
+            Err(err) => match err {
+                // The Server MUST respond to the CONNECT Packet with a CONNACK return code
+                // 0x01 (unacceptable protocol level) and then disconnect
+                // the Client if the Protocol Level is not supported by the Server
+                DecodeError::InvalidProtocolName | DecodeError::InvalidProtocolLevel => {
+                    let ack_packet =
+                        ConnectAckPacket::new(false, ConnectReturnCode::UnacceptedProtocol);
+                    self.send(ack_packet).await?;
+                    return Err(err.into());
+                }
+                _ => {
+                    return Err(err.into());
+                }
+            },
+        };
         self.client_id = packet.client_id().to_string();
 
         // Update keep_alive timer.
@@ -197,7 +214,6 @@ impl Session {
     }
 
     async fn on_client_ping(&mut self, buf: &[u8]) -> Result<(), Error> {
-        // TODO(Shaohua): Update last_message_timestamp.
         let mut ba = ByteArray::new(buf);
         let _packet = PingRequestPacket::decode(&mut ba)?;
 
