@@ -6,7 +6,7 @@ use super::byte_array::ByteArrayError;
 use super::topic::TopicError;
 use super::utils::StringError;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum DecodeError {
     /// ClientId is empty or its length exceeds 23.
     /// Or contains invalid characters.
@@ -46,7 +46,7 @@ pub enum DecodeError {
     OtherErrors,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum EncodeError {
     InvalidData,
 

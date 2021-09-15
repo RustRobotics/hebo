@@ -16,7 +16,7 @@ pub fn random_string(len: usize) -> String {
     .unwrap()
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 // Invalid UTF-8 string.
 pub enum StringError {
     TooManyData,
