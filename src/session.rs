@@ -36,12 +36,13 @@ enum Status {
 pub struct Session {
     id: SessionId,
     stream: Stream,
-    sender: Sender<SessionToListenerCmd>,
-    receiver: Receiver<ListenerToSessionCmd>,
     status: Status,
     client_id: String,
     // TODO(Shaohua): Add session flag
-    // TODO(Shaohua): Add keep alive
+    keep_alive: u16,
+
+    sender: Sender<SessionToListenerCmd>,
+    receiver: Receiver<ListenerToSessionCmd>,
 }
 
 impl Session {
@@ -54,10 +55,13 @@ impl Session {
         Session {
             id,
             stream,
-            sender,
-            receiver,
+
             status: Status::Invalid,
             client_id: String::new(),
+            keep_alive: 0,
+
+            sender,
+            receiver,
         }
     }
 
@@ -67,14 +71,16 @@ impl Session {
         // TODO(Shaohua): Tuning duration value.
         let mut timer = interval(Duration::from_secs(20));
         loop {
+            if self.status == Status::Disconnected {
+                break;
+            }
+
             tokio::select! {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
                     log::info!("n_recv: {}", n_recv);
                     if n_recv > 0 {
                         if let Err(err) = self.handle_client_packet(&buf).await {
                             log::error!("handle_client_packet() failed: {:?}", err);
-                            // Got invalid packet, disconnect client.
-                            break;
                         }
                         buf.clear();
                     } else {
