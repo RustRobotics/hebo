@@ -251,7 +251,7 @@ impl Metrics {
     }
 
     async fn sys_tree_send_uptime(&mut self) -> Result<(), Error> {
-        log::info!("metrics::sys_tree_send_uptime()");
+        //log::info!("metrics::sys_tree_send_uptime()");
         let msg = format!("{}", self.uptime).into_bytes();
         let packet = PublishPacket::new(UPTIME, QoS::AtMostOnce, &msg)?;
         self.dispatcher_sender

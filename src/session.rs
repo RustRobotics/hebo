@@ -9,9 +9,8 @@ use codec::{
     UnsubscribePacket,
 };
 use std::convert::Into;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::time::interval;
 
 use crate::commands::{ListenerToSessionCmd, SessionToListenerCmd};
 use crate::error::Error;
@@ -39,7 +38,8 @@ pub struct Session {
     status: Status,
     client_id: String,
     // TODO(Shaohua): Add session flag
-    keep_alive: u16,
+    keep_alive: u64,
+    instant: Instant,
 
     sender: Sender<SessionToListenerCmd>,
     receiver: Receiver<ListenerToSessionCmd>,
@@ -59,6 +59,7 @@ impl Session {
             status: Status::Invalid,
             client_id: String::new(),
             keep_alive: 0,
+            instant: Instant::now(),
 
             sender,
             receiver,
@@ -68,8 +69,7 @@ impl Session {
     pub async fn run_loop(mut self) {
         // TODO(Shaohua): Set buffer cap based on settings
         let mut buf = Vec::with_capacity(1024);
-        // TODO(Shaohua): Tuning duration value.
-        let mut timer = interval(Duration::from_secs(20));
+
         loop {
             if self.status == Status::Disconnected {
                 break;
@@ -81,22 +81,26 @@ impl Session {
                     if n_recv > 0 {
                         if let Err(err) = self.handle_client_packet(&buf).await {
                             log::error!("handle_client_packet() failed: {:?}", err);
+                            break;
                         }
                         buf.clear();
                     } else {
+                        log::info!("session: Empty packet received, disconnect client, {}", self.id);
+                        self.send_disconnect().await;
                         break;
                     }
                 }
-                _ = timer.tick() => {
-                    // TODO(Shaohua): Handle timeout
-                    //log::info!("tick()");
-                },
                 Some(cmd) = self.receiver.recv() => {
                     if let Err(err) = self.handle_listener_packet(cmd).await {
                         log::error!("Failed to handle server packet: {:?}", err);
                     }
                 },
-                else => break,
+            }
+
+            if self.keep_alive > 0 && self.instant.elapsed().as_secs() > self.keep_alive {
+                log::warn!("sessoin: keep_alive time reached, disconnect client!");
+                self.send_disconnect().await;
+                break;
             }
         }
 
@@ -113,19 +117,27 @@ impl Session {
         }
     }
 
+    /// Reset instant if packet is send to or receive from client.
+    fn reset_instant(&mut self) {
+        self.instant = Instant::now();
+    }
+
     async fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
-        self.stream.write(&buf).await.map(drop).map_err(Into::into)
+        self.stream.write(&buf).await.map(drop)?;
+        self.reset_instant();
+        Ok(())
     }
 
     /// Send disconnect packet to client and update status.
-    async fn send_disconnect(&mut self) -> Result<(), Error> {
+    async fn send_disconnect(&mut self) {
         self.status = Status::Disconnecting;
         let packet = DisconnectPacket::new();
-        self.send(packet).await.map(drop);
+        if let Err(err) = self.send(packet).await.map(drop) {
+            log::error!("session: Failed to send disconnect packet, {}", self.id);
+        }
         self.status = Status::Disconnected;
-        Ok(())
     }
 
     async fn handle_client_packet(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -135,9 +147,12 @@ impl Session {
             Err(err) => {
                 // Disconnect the network if Connect Packet is invalid.
                 log::error!("session: Invalid packet: {:?}, content: {:?}", err, buf);
-                return self.send_disconnect().await;
+                self.send_disconnect().await;
+                return Ok(());
             }
         };
+
+        self.reset_instant();
 
         match fixed_header.packet_type {
             PacketType::Connect => self.on_client_connect(&buf).await,
@@ -162,12 +177,14 @@ impl Session {
         let packet = ConnectPacket::decode(&mut ba)?;
         self.client_id = packet.client_id().to_string();
 
-        // TODO(Shaohua): Handle keep alive
+        // Update keep_alive timer.
+        self.keep_alive = packet.keep_alive as u64;
 
         // Check connection status first.
         // If this client is already connected, send disconnect packet.
         if self.status == Status::Connected || self.status == Status::Connecting {
-            return self.send_disconnect().await;
+            self.send_disconnect().await;
+            return Ok(());
         }
 
         // Send the connect packet to listener.

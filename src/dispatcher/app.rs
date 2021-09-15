@@ -102,7 +102,7 @@ impl DispatcherApp {
     }
 
     async fn handle_metrics_cmd(&mut self, cmd: MetricsToDispatcherCmd) {
-        log::info!("handle metrics cmd: {:?}", cmd);
+        //log::info!("handle metrics cmd: {:?}", cmd);
         match cmd {
             MetricsToDispatcherCmd::Publish(packet) => {
                 self.publish_packet_to_listners(&packet).await;
