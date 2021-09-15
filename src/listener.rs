@@ -563,10 +563,16 @@ impl Listener {
 
     async fn on_session_disconnect(&mut self, session_id: SessionId) -> Result<(), Error> {
         log::info!("Listener::on_session_disconnect()");
-        // Delete session from pipeline
+        // Delete session info
         if self.pipelines.remove(&session_id).is_none() {
             log::error!("Failed to remove pipeline with session id: {}", session_id);
-            return Err(Error::session_error(session_id));
+        }
+        if let Some(client_id) = self.session_ids.remove(&session_id) {
+            if self.client_ids.remove(&client_id).is_none() {
+                log::error!("Failed to remove client id: {}", client_id);
+            }
+        } else {
+            log::error!("Failed to remove session id: {}", session_id);
         }
 
         self.dispatcher_sender
