@@ -3,13 +3,13 @@
 // in the LICENSE file.
 
 use codec::{
-    ByteArray, ConnectPacket, ConnectReturnCode, DecodeError, DecodePacket, DisconnectPacket,
-    EncodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket,
-    PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
-    UnsubscribePacket,
+    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodeError, DecodePacket,
+    DisconnectPacket, EncodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket,
+    PublishAckPacket, PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket,
+    UnsubscribeAckPacket, UnsubscribePacket,
 };
 use std::convert::Into;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{ListenerToSessionCmd, SessionToListenerCmd};
@@ -136,7 +136,11 @@ impl Session {
         self.status = Status::Disconnecting;
         let packet = DisconnectPacket::new();
         if let Err(err) = self.send(packet).await.map(drop) {
-            log::error!("session: Failed to send disconnect packet, {}", self.id);
+            log::error!(
+                "session: Failed to send disconnect packet, {}, err: {:?}",
+                self.id,
+                err
+            );
         }
         self.status = Status::Disconnected;
     }
@@ -188,6 +192,8 @@ impl Session {
                     return Err(err.into());
                 }
                 _ => {
+                    // Got malformed packet, disconnect client.
+                    self.send_disconnect().await;
                     return Err(err.into());
                 }
             },
