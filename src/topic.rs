@@ -2,6 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use crate::QoS;
+
 #[derive(Debug, Default, Clone)]
 pub struct Topic {
     topic: String,
@@ -209,7 +211,7 @@ impl Default for TopicPart {
 
 #[derive(Debug, Default, Clone)]
 pub struct SubscribedTopic {
-    pattern: Topic,
+    topic: Topic,
     qos: QoS,
 }
 
