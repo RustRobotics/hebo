@@ -11,7 +11,6 @@ use codec::{
 use tokio::sync::mpsc;
 
 use super::Listener;
-use super::Pipeline;
 use super::CHANNEL_CAPACITY;
 use crate::commands::{
     AclToListenerCmd, AuthToListenerCmd, DispatcherToListenerCmd, ListenerToAuthCmd,
@@ -81,8 +80,7 @@ impl Listener {
     async fn new_connection(&mut self, stream: Stream) {
         let (sender, receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let session_id = self.next_session_id();
-        let pipeline = Pipeline::new(sender, session_id);
-        self.pipelines.insert(session_id, pipeline);
+        self.session_senders.insert(session_id, sender);
         let session = Session::new(session_id, stream, self.session_sender.clone(), receiver);
         tokio::spawn(session.run_loop());
 
@@ -129,8 +127,8 @@ impl Listener {
         if self.client_ids.get(packet.client_id()).is_some() {
             let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
             let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
-            if let Some(pipeline) = self.pipelines.get(&session_id) {
-                return pipeline.sender.send(cmd).await.map_err(Into::into);
+            if let Some(session_sender) = self.session_senders.get(&session_id) {
+                return session_sender.send(cmd).await.map_err(Into::into);
             } else {
                 return Err(Error::session_error(session_id));
             }
@@ -154,7 +152,7 @@ impl Listener {
     async fn on_session_disconnect(&mut self, session_id: SessionId) -> Result<(), Error> {
         log::info!("Listener::on_session_disconnect()");
         // Delete session info
-        if self.pipelines.remove(&session_id).is_none() {
+        if self.session_senders.remove(&session_id).is_none() {
             log::error!("Failed to remove pipeline with session id: {}", session_id);
         }
         if let Some(client_id) = self.session_ids.remove(&session_id) {
@@ -181,6 +179,7 @@ impl Listener {
         // TODO(Shaohua): Check acl.
 
         let packet_id = packet.packet_id();
+        /*
         if let Some(pipeline) = self.pipelines.get_mut(&session_id) {
             let mut ack_vec = vec![];
             for topic in packet.mut_topics() {
@@ -198,6 +197,7 @@ impl Listener {
         } else {
             return Err(Error::session_error(session_id));
         }
+        */
 
         // TODO(Shaohua): Send notify to dispatcher.
         Ok(())
@@ -209,6 +209,7 @@ impl Listener {
         packet: UnsubscribePacket,
     ) -> Result<(), Error> {
         // Remove topic from sub tree.
+        /*
         for (_, pipeline) in self.pipelines.iter_mut() {
             if pipeline.session_id == session_id {
                 pipeline
@@ -217,6 +218,7 @@ impl Listener {
             }
             break;
         }
+        */
 
         // Send subRemoved to dispatcher.
         self.dispatcher_sender
@@ -241,7 +243,8 @@ impl Listener {
         // TODO(Shaohua): Replace with a trie tree and a hash table.
 
         // TODO(Shaohua): Handle errors
-        for (_, pipeline) in self.pipelines.iter_mut() {
+        /*
+        for (_, session_sender) in self.session_senders.iter_mut() {
             if topic_match(&pipeline.topics, packet.topic()) {
                 if let Err(err) = pipeline.sender.send(cmd.clone()).await {
                     log::warn!(
@@ -251,6 +254,7 @@ impl Listener {
                 }
             }
         }
+        */
     }
 
     async fn handle_auth_cmd(&mut self, cmd: AuthToListenerCmd) -> Result<(), Error> {
@@ -285,8 +289,8 @@ impl Listener {
             }
         }
 
-        if let Some(pipeline) = self.pipelines.get(&session_id) {
-            pipeline.sender.send(cmd).await.map_err(Into::into)
+        if let Some(session_sender) = self.session_senders.get(&session_id) {
+            session_sender.send(cmd).await.map_err(Into::into)
         } else {
             Err(Error::session_error(session_id))
         }

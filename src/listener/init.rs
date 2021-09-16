@@ -50,7 +50,8 @@ impl Listener {
             protocol,
             listener_config,
             current_session_id: 0,
-            pipelines: HashMap::new(),
+
+            session_senders: HashMap::new(),
             session_ids: HashMap::new(),
             client_ids: BTreeMap::new(),
 

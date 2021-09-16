@@ -7,17 +7,15 @@ use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
     AclToListenerCmd, AuthToListenerCmd, DispatcherToListenerCmd, ListenerToAclCmd,
-    ListenerToAuthCmd, ListenerToDispatcherCmd, SessionToListenerCmd,
+    ListenerToAuthCmd, ListenerToDispatcherCmd, ListenerToSessionCmd, SessionToListenerCmd,
 };
 use crate::config;
 use crate::types::{ListenerId, SessionId};
 
 mod handlers;
 mod init;
-mod pipeline;
 mod protocol;
 
-use pipeline::Pipeline;
 use protocol::Protocol;
 
 const CHANNEL_CAPACITY: usize = 16;
@@ -29,9 +27,7 @@ pub struct Listener {
     listener_config: config::Listener,
     current_session_id: SessionId,
 
-    // TODO(Shaohua): Move subscription to dispatcher layer to support global
-    // subscriptions and clean sessions.
-    pipelines: HashMap<SessionId, Pipeline>,
+    session_senders: HashMap<SessionId, Sender<ListenerToSessionCmd>>,
     session_ids: HashMap<SessionId, String>,
     client_ids: BTreeMap<String, SessionId>,
 
