@@ -5,8 +5,8 @@
 //! Session cmd handlers.
 
 use codec::{
-    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, SubscribePacket,
-    UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, SubscribeAck,
+    SubscribeAckPacket, SubscribePacket, UnsubscribePacket,
 };
 
 use super::Listener;
@@ -105,28 +105,8 @@ impl Listener {
 
         // TODO(Shaohua): Check acl.
 
-        let packet_id = packet.packet_id();
-        /*
-        if let Some(pipeline) = self.pipelines.get_mut(&session_id) {
-            let mut ack_vec = vec![];
-            for topic in packet.mut_topics() {
-                // Update sub tree
-                ack_vec.push(SubscribeAck::QoS(topic.qos()));
-                pipeline.topics.push(topic);
-            }
-
-            // Send subscribe ack to session.
-            let ack_packet = SubscribeAckPacket::with_vec(ack_vec, packet_id);
-            pipeline
-                .sender
-                .send(ListenerToSessionCmd::SubscribeAck(ack_packet))
-                .await?;
-        } else {
-            return Err(Error::session_error(session_id));
-        }
-        */
-
         // TODO(Shaohua): Send notify to dispatcher.
+
         Ok(())
     }
 
@@ -157,5 +137,28 @@ impl Listener {
     async fn on_session_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
         let cmd = ListenerToDispatcherCmd::Publish(packet.clone());
         self.dispatcher_sender.send(cmd).await.map_err(Into::into)
+    }
+
+    /// Send subscribe ack to session.
+    async fn send_subscribe_ack(
+        &mut self,
+        session_id: SessionId,
+        packet: SubscribePacket,
+    ) -> Result<(), Error> {
+        if let Some(session_sender) = self.session_senders.get_mut(&session_id) {
+            let ack_vec = packet
+                .topics()
+                .iter()
+                .map(|topic| SubscribeAck::QoS(topic.qos()))
+                .collect();
+
+            let ack_packet = SubscribeAckPacket::with_vec(ack_vec, packet.packet_id());
+            session_sender
+                .send(ListenerToSessionCmd::SubscribeAck(ack_packet))
+                .await
+                .map_err(Into::into)
+        } else {
+            Err(Error::session_error(session_id))
+        }
     }
 }

@@ -56,9 +56,12 @@ pub enum DispatcherToListenerCmd {
 pub enum ListenerToDispatcherCmd {
     Publish(PublishPacket),
 
+    Subscribe(SessionId, SubscribePacket),
+
     SessionAdded(ListenerId),
     SessionRemoved(ListenerId),
 
+    // TODO(Shaohua): Remove these cmds
     SubscriptionsAdded(ListenerId),
     SubscriptionsRemoved(ListenerId),
 }

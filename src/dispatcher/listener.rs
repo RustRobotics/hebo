@@ -15,6 +15,9 @@ impl Dispatcher {
                 self.backends_store_packet(&packet).await;
                 self.publish_packet_to_listners(&packet).await;
             }
+            ListenerToDispatcherCmd::Subscribe(session_gid, packet) => {
+                unimplemented!();
+            }
             ListenerToDispatcherCmd::SessionAdded(listener_id) => {
                 self.metrics_on_session_added(listener_id).await;
             }
