@@ -82,6 +82,10 @@ impl SubscribePacket {
     pub fn topics(&self) -> &[SubscribedTopic] {
         &self.topics
     }
+
+    pub fn mut_topics(self) -> Vec<SubscribedTopic> {
+        self.topics
+    }
 }
 
 impl DecodePacket for SubscribePacket {
