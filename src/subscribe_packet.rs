@@ -9,28 +9,8 @@ use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
-    PacketType, QoS, RemainingLength, Topic,
+    PacketType, QoS, RemainingLength, SubscribedTopic, Topic,
 };
-
-/// Topic/QoS pair.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct SubscribeTopic {
-    /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
-    topic: String,
-
-    /// Maximum level of QoS of packet the Server can send to the Client.
-    qos: QoS,
-}
-
-impl SubscribeTopic {
-    pub fn topic(&self) -> &str {
-        &self.topic
-    }
-
-    pub fn qos(&self) -> QoS {
-        self.qos
-    }
-}
 
 /// Subscribe packet is sent from the Client to the Server to subscribe one or more topics.
 /// This packet also specifies the maximum QoS with which the Server can send Application
@@ -77,17 +57,17 @@ pub struct SubscribePacket {
     packet_id: PacketId,
 
     /// A list of topic the Client subscribes to.
-    topics: Vec<SubscribeTopic>,
+    topics: Vec<SubscribedTopic>,
 }
 
 impl SubscribePacket {
     pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> Result<SubscribePacket, DecodeError> {
         // TODO(Shaohua): Do not copy topic string.
         Topic::validate_sub_topic(&topic)?;
-        let topic = topic.to_string();
+        let topic = SubscribedTopic::parse(topic, qos)?;
         Ok(SubscribePacket {
             packet_id,
-            topics: vec![SubscribeTopic { topic, qos }],
+            topics: vec![topic],
         })
     }
 
@@ -99,12 +79,8 @@ impl SubscribePacket {
         self.packet_id = packet_id
     }
 
-    pub fn topics(&self) -> &[SubscribeTopic] {
+    pub fn topics(&self) -> &[SubscribedTopic] {
         &self.topics
-    }
-
-    pub fn mut_topics(self) -> Vec<SubscribeTopic> {
-        self.topics
     }
 }
 
@@ -133,7 +109,8 @@ impl DecodePacket for SubscribePacket {
             remaining_length += 1;
             let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
 
-            topics.push(SubscribeTopic { topic, qos });
+            let topic = SubscribedTopic::parse(&topic, qos)?;
+            topics.push(topic);
         }
 
         if topics.is_empty() {
@@ -151,7 +128,7 @@ impl EncodePacket for SubscribePacket {
         let mut remaining_length = 2; // Variable length
         for topic in &self.topics {
             remaining_length += 2 // Topic length bytes
-                + topic.topic.len() // Topic
+                + topic.topic().len() // Topic
                 + 1; // Requested QoS
         }
 
@@ -166,9 +143,9 @@ impl EncodePacket for SubscribePacket {
 
         // Payload
         for topic in &self.topics {
-            buf.write_u16::<BigEndian>(topic.topic.len() as u16)?;
-            buf.write_all(&topic.topic.as_bytes())?;
-            let qos: u8 = 0b0000_0011 & (topic.qos as u8);
+            buf.write_u16::<BigEndian>(topic.topic().len() as u16)?;
+            buf.write_all(&topic.topic().as_bytes())?;
+            let qos: u8 = 0b0000_0011 & (topic.qos() as u8);
             buf.push(qos);
         }
 

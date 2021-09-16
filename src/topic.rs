@@ -156,7 +156,7 @@ impl Topic {
 }
 
 // TODO(Shaohua): Impl internal reference to `topic` String.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TopicPart {
     /// Special internal part, like `$SYS`.
     /// Topics start will `$` char will be traited as internal topic, even so
@@ -209,13 +209,22 @@ impl Default for TopicPart {
     }
 }
 
-#[derive(Debug, Default, Clone)]
+/// Topic/QoS pair.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SubscribedTopic {
+    /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
     topic: Topic,
+
+    /// Maximum level of QoS of packet the Server can send to the Client.
     qos: QoS,
 }
 
 impl SubscribedTopic {
+    pub fn parse(topic: &str, qos: QoS) -> Result<Self, TopicError> {
+        let topic = Topic::parse(topic)?;
+        Ok(Self { topic, qos })
+    }
+
     pub fn new(topic: Topic, qos: QoS) -> Self {
         Self { topic, qos }
     }
