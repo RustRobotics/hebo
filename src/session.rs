@@ -27,9 +27,8 @@ enum Status {
 }
 
 /// ConnectionContext represents a client connection.
-/// All the status of this client is maintained in this struct.
 ///
-// TODO(Shaohua): Handle Clean Session operation
+/// All the status of this client is maintained in this struct.
 // TODO(Shaohua): Handle Will Message
 #[derive(Debug)]
 pub struct Session {
@@ -40,6 +39,7 @@ pub struct Session {
     // TODO(Shaohua): Add session flag
     keep_alive: u64,
     instant: Instant,
+    clean_session: bool,
 
     sender: Sender<SessionToListenerCmd>,
     receiver: Receiver<ListenerToSessionCmd>,
@@ -60,10 +60,15 @@ impl Session {
             client_id: String::new(),
             keep_alive: 0,
             instant: Instant::now(),
+            clean_session: true,
 
             sender,
             receiver,
         }
+    }
+
+    pub fn clean_session(&self) -> bool {
+        self.clean_session
     }
 
     pub async fn run_loop(mut self) {
