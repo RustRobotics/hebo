@@ -4,7 +4,7 @@
 
 use codec::{
     ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, QoS, SubscribeAck,
-    SubscribeAckPacket, SubscribePacket, Topic, UnsubscribePacket,
+    SubscribeAckPacket, SubscribePacket, SubscribedTopic, Topic, UnsubscribePacket,
 };
 use futures_util::StreamExt;
 use std::collections::{BTreeMap, HashMap};
@@ -95,12 +95,6 @@ impl Pipeline {
             session_id,
         }
     }
-}
-
-#[derive(Debug)]
-pub struct SubscribedTopic {
-    pattern: Topic,
-    qos: QoS,
 }
 
 // Initialize Listener
@@ -543,29 +537,19 @@ impl Listener {
     ) -> Result<(), Error> {
         log::info!("Listener::on_session_subscribe()");
 
-        // TODO(Shaohua): Check auth.
+        // TODO(Shaohua): Check acl.
 
+        let packet_id = packet.packet_id();
         if let Some(pipeline) = self.pipelines.get_mut(&session_id) {
             let mut ack_vec = vec![];
-            for topic in packet.topics() {
+            for topic in packet.mut_topics() {
                 // Update sub tree
-                match Topic::parse(topic.topic()) {
-                    Ok(pattern) => {
-                        ack_vec.push(SubscribeAck::QoS(topic.qos()));
-                        pipeline.topics.push(SubscribedTopic {
-                            pattern,
-                            qos: topic.qos(),
-                        });
-                    }
-                    Err(err) => {
-                        log::error!("Invalid sub topic: {:?}, err: {:?}", topic, err);
-                        ack_vec.push(SubscribeAck::Failed);
-                    }
-                }
+                ack_vec.push(SubscribeAck::QoS(topic.qos()));
+                pipeline.topics.push(topic);
             }
 
             // Send subscribe ack to session.
-            let ack_packet = SubscribeAckPacket::with_vec(ack_vec, packet.packet_id());
+            let ack_packet = SubscribeAckPacket::with_vec(ack_vec, packet_id);
             pipeline
                 .sender
                 .send(ListenerToSessionCmd::SubscribeAck(ack_packet))
@@ -588,7 +572,7 @@ impl Listener {
             if pipeline.session_id == session_id {
                 pipeline
                     .topics
-                    .retain(|ref topic| !packet.topics().any(|t| t == topic.pattern.topic()));
+                    .retain(|ref topic| !packet.topics().any(|t| t == topic.topic().topic()));
             }
             break;
         }
@@ -677,7 +661,7 @@ impl Listener {
 // TODO(Shaohua): Move to dispatcher app.
 fn topic_match(topics: &[SubscribedTopic], topic_str: &str) -> bool {
     for topic in topics {
-        if topic.pattern.is_match(topic_str) {
+        if topic.topic().is_match(topic_str) {
             return true;
         }
     }
