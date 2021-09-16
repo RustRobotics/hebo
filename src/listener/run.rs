@@ -4,7 +4,7 @@
 
 //! Handles commands and new connections
 
-use codec::SubscribedTopic;
+use codec::SubscribePattern;
 use tokio::sync::mpsc;
 
 use super::Listener;
@@ -12,16 +12,6 @@ use super::CHANNEL_CAPACITY;
 use crate::commands::ListenerToDispatcherCmd;
 use crate::session::Session;
 use crate::stream::Stream;
-
-// TODO(Shaohua): Move to dispatcher app.
-fn topic_match(topics: &[SubscribedTopic], topic_str: &str) -> bool {
-    for topic in topics {
-        if topic.topic().is_match(topic_str) {
-            return true;
-        }
-    }
-    false
-}
 
 impl Listener {
     pub async fn run_loop(&mut self) -> ! {

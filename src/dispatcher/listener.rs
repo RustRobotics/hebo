@@ -58,13 +58,13 @@ impl Dispatcher {
                 DispatcherToListenerCmd::SubscribeAck(session_gid.session_id(), sub_ack_packet);
             if let Err(err) = listener_sender.send(cmd).await {
                 log::error!(
-                    "Dispatcher failed to send subscribe ack to listener: {:?}",
+                    "dispatcher: Failed to send subscribe ack to listener: {:?}",
                     session_gid
                 );
             }
         } else {
             log::error!(
-                "Failed to find listener sender with id: {}",
+                "dispatcher: Failed to find listener sender with id: {}",
                 session_gid.listener_id()
             );
         }

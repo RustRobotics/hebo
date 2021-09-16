@@ -42,6 +42,20 @@ impl Listener {
         session_id: SessionId,
         packet: SubscribeAckPacket,
     ) {
-        unimplemented!()
+        if let Some(session_sender) = self.session_senders.get(&session_id) {
+            let cmd = ListenerToSessionCmd::SubscribeAck(packet);
+            if let Err(err) = session_sender.send(cmd).await {
+                log::warn!(
+                    "listener: Failed to send subscribe ack packet to session {}, err: {:?}",
+                    session_id,
+                    err
+                );
+            }
+        } else {
+            log::error!(
+                "listener: Failed to find session_sender with id: {}",
+                session_id
+            );
+        }
     }
 }
