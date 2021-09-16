@@ -4,22 +4,24 @@
 
 //! Dispatcher cmd handlers.
 
-use codec::PublishPacket;
+use codec::{PublishPacket, SubscribeAckPacket};
 
 use super::Listener;
 use crate::commands::{DispatcherToListenerCmd, ListenerToSessionCmd};
+use crate::types::SessionId;
 
 impl Listener {
     pub(super) async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
         match cmd {
             DispatcherToListenerCmd::Publish(packet) => self.on_dispatcher_publish(packet).await,
+            DispatcherToListenerCmd::SubscribeAck(session_id, packet) => {
+                self.on_dispatcher_subscribe_ack(session_id, packet).await
+            }
         }
     }
 
     async fn on_dispatcher_publish(&mut self, packet: PublishPacket) {
         let cmd = ListenerToSessionCmd::Publish(packet.clone());
-        // TODO(Shaohua): Replace with a trie tree and a hash table.
-
         // TODO(Shaohua): Handle errors
         /*
         for (_, session_sender) in self.session_senders.iter_mut() {
@@ -33,5 +35,13 @@ impl Listener {
             }
         }
         */
+    }
+
+    async fn on_dispatcher_subscribe_ack(
+        &mut self,
+        session_id: SessionId,
+        packet: SubscribeAckPacket,
+    ) {
+        unimplemented!()
     }
 }

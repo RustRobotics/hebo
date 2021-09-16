@@ -8,7 +8,7 @@ use codec::{
 };
 use tokio::sync::oneshot;
 
-use crate::types::{ListenerId, SessionId, SessionInfo, Uptime};
+use crate::types::{ListenerId, SessionGid, SessionId, SessionInfo, Uptime};
 
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
@@ -50,13 +50,14 @@ pub enum SessionToListenerCmd {
 #[derive(Debug, Clone)]
 pub enum DispatcherToListenerCmd {
     Publish(PublishPacket),
+    SubscribeAck(SessionId, SubscribeAckPacket),
 }
 
 #[derive(Debug, Clone)]
 pub enum ListenerToDispatcherCmd {
     Publish(PublishPacket),
 
-    Subscribe(SessionId, SubscribePacket),
+    Subscribe(SessionGid, SubscribePacket),
 
     SessionAdded(ListenerId),
     SessionRemoved(ListenerId),

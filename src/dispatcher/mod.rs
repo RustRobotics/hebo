@@ -2,6 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use std::collections::HashMap;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
@@ -37,7 +38,7 @@ pub struct Dispatcher {
     metrics_sender: Sender<DispatcherToMetricsCmd>,
     metrics_receiver: Receiver<MetricsToDispatcherCmd>,
 
-    listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
+    listener_senders: HashMap<ListenerId, Sender<DispatcherToListenerCmd>>,
     listener_receiver: Receiver<ListenerToDispatcherCmd>,
 
     rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
@@ -79,7 +80,7 @@ impl Dispatcher {
             metrics_sender,
             metrics_receiver,
 
-            listener_senders,
+            listener_senders: listener_senders.into_iter().collect(),
             listener_receiver,
 
             rule_engine_sender,

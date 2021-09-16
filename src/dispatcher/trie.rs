@@ -4,7 +4,7 @@
 
 //! Manage subscription trie.
 
-use codec::SubscribedTopic;
+use codec::{SubscribeAckPacket, SubscribePacket, SubscribedTopic};
 use std::collections::BTreeMap;
 
 use crate::types::SessionGid;
@@ -19,5 +19,13 @@ impl SubTrie {
         Self {
             map: BTreeMap::new(),
         }
+    }
+
+    pub fn subscribe(
+        &mut self,
+        session_gid: SessionGid,
+        packet: SubscribePacket,
+    ) -> SubscribeAckPacket {
+        unimplemented!()
     }
 }

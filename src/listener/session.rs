@@ -13,7 +13,7 @@ use super::Listener;
 use crate::listener::{
     ListenerToAuthCmd, ListenerToDispatcherCmd, ListenerToSessionCmd, SessionToListenerCmd,
 };
-use crate::types::SessionId;
+use crate::types::{SessionGid, SessionId};
 use crate::Error;
 
 impl Listener {
@@ -105,9 +105,12 @@ impl Listener {
 
         // TODO(Shaohua): Check acl.
 
-        // TODO(Shaohua): Send notify to dispatcher.
-
-        Ok(())
+        // Send notification to dispatcher.
+        let id = SessionGid::new(self.id, session_id);
+        self.dispatcher_sender
+            .send(ListenerToDispatcherCmd::Subscribe(id, packet))
+            .await
+            .map_err(Into::into)
     }
 
     async fn on_session_unsubscribe(

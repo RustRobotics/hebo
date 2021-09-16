@@ -2,10 +2,11 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::PublishPacket;
+use codec::{PublishPacket, SubscribeAckPacket, SubscribePacket};
 
 use super::Dispatcher;
 use crate::commands::{DispatcherToListenerCmd, ListenerToDispatcherCmd};
+use crate::types::SessionGid;
 
 impl Dispatcher {
     pub(super) async fn handle_listener_cmd(&mut self, cmd: ListenerToDispatcherCmd) {
@@ -13,10 +14,10 @@ impl Dispatcher {
         match cmd {
             ListenerToDispatcherCmd::Publish(packet) => {
                 self.backends_store_packet(&packet).await;
-                self.publish_packet_to_listners(&packet).await;
+                self.on_listener_publish(&packet).await;
             }
             ListenerToDispatcherCmd::Subscribe(session_gid, packet) => {
-                unimplemented!();
+                self.on_listener_subscribe(session_gid, packet).await;
             }
             ListenerToDispatcherCmd::SessionAdded(listener_id) => {
                 self.metrics_on_session_added(listener_id).await;
@@ -32,6 +33,7 @@ impl Dispatcher {
             }
         }
     }
+
     pub(super) async fn publish_packet_to_listners(&mut self, packet: &PublishPacket) {
         for (_listener_id, sender) in &self.listener_senders {
             let cmd = DispatcherToListenerCmd::Publish(packet.clone());
@@ -41,6 +43,30 @@ impl Dispatcher {
                     err
                 );
             }
+        }
+    }
+
+    async fn on_listener_publish(&mut self, packet: &PublishPacket) {
+        // match topic
+        // send packet to listener
+    }
+
+    async fn on_listener_subscribe(&mut self, session_gid: SessionGid, packet: SubscribePacket) {
+        let sub_ack_packet = self.sub_trie.subscribe(session_gid, packet);
+        if let Some(listener_sender) = self.listener_senders.get(&session_gid.listener_id()) {
+            let cmd =
+                DispatcherToListenerCmd::SubscribeAck(session_gid.session_id(), sub_ack_packet);
+            if let Err(err) = listener_sender.send(cmd).await {
+                log::error!(
+                    "Dispatcher failed to send subscribe ack to listener: {:?}",
+                    session_gid
+                );
+            }
+        } else {
+            log::error!(
+                "Failed to find listener sender with id: {}",
+                session_gid.listener_id()
+            );
         }
     }
 }
