@@ -12,9 +12,13 @@ use crate::commands::{
 use crate::config;
 use crate::types::{ListenerId, SessionId};
 
-mod handlers;
+mod acl;
+mod auth;
+mod dispatcher;
 mod init;
 mod protocol;
+mod run;
+mod session;
 
 use protocol::Protocol;
 
