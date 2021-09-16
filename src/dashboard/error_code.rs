@@ -2,10 +2,11 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
+#[allow(dead_code)]
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ErrorCode {
-    Ok = 0,
+    OK = 0,
 
     /// Bad rpc.
     ///
@@ -44,4 +45,10 @@ pub enum ErrorCode {
 
     /// User is not online.
     UserOffline = 112,
+}
+
+impl Default for ErrorCode {
+    fn default() -> Self {
+        Self::OK
+    }
 }

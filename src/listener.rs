@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use codec::{
-    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, QoS, SubscribeAck,
-    SubscribeAckPacket, SubscribePacket, SubscribedTopic, Topic, UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, SubscribeAck,
+    SubscribeAckPacket, SubscribePacket, SubscribedTopic, UnsubscribePacket,
 };
 use futures_util::StreamExt;
 use std::collections::{BTreeMap, HashMap};
