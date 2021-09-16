@@ -207,6 +207,26 @@ impl Default for TopicPart {
     }
 }
 
+#[derive(Debug, Default, Clone)]
+pub struct SubscribedTopic {
+    pattern: Topic,
+    qos: QoS,
+}
+
+impl SubscribedTopic {
+    pub fn new(topic: Topic, qos: QoS) -> Self {
+        Self { topic, qos }
+    }
+
+    pub fn topic(&self) -> &Topic {
+        &self.topic
+    }
+
+    pub fn qos(&self) -> QoS {
+        self.qos
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
