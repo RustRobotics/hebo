@@ -18,6 +18,8 @@ impl Dispatcher {
         }
     }
 
+    // TODO(Shaohua): publish packet
+    #[allow(dead_code)]
     pub(super) async fn metrics_publish_packet_sent(
         &mut self,
         listener_id: ListenerId,
