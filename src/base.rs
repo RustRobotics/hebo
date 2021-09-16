@@ -20,7 +20,7 @@ pub trait DecodePacket: Sized {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum QoS {
     /// At most once delivery.
     AtMostOnce = 0,

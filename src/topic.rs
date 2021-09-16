@@ -4,7 +4,7 @@
 
 use crate::QoS;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Eq, PartialOrd, Ord, Hash)]
 pub struct Topic {
     topic: String,
     parts: Vec<TopicPart>,
@@ -156,7 +156,7 @@ impl Topic {
 }
 
 // TODO(Shaohua): Impl internal reference to `topic` String.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TopicPart {
     /// Special internal part, like `$SYS`.
     /// Topics start will `$` char will be traited as internal topic, even so
@@ -210,7 +210,7 @@ impl Default for TopicPart {
 }
 
 /// Topic/QoS pair.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubscribePattern {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
     topic: Topic,
