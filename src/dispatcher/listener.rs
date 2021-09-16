@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{PublishPacket, SubscribeAckPacket, SubscribePacket};
+use codec::{PublishPacket, SubscribePacket};
 
 use super::Dispatcher;
 use crate::commands::{DispatcherToListenerCmd, ListenerToDispatcherCmd};
@@ -58,8 +58,9 @@ impl Dispatcher {
                 DispatcherToListenerCmd::SubscribeAck(session_gid.session_id(), sub_ack_packet);
             if let Err(err) = listener_sender.send(cmd).await {
                 log::error!(
-                    "dispatcher: Failed to send subscribe ack to listener: {:?}",
-                    session_gid
+                    "dispatcher: Failed to send subscribe ack to listener: {:?}, err: {:?}",
+                    session_gid,
+                    err
                 );
             }
         } else {

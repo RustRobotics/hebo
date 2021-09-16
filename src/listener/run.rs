@@ -4,7 +4,6 @@
 
 //! Handles commands and new connections
 
-use codec::SubscribePattern;
 use tokio::sync::mpsc;
 
 use super::Listener;

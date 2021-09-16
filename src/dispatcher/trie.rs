@@ -4,9 +4,7 @@
 
 //! Manage subscription trie.
 
-use codec::{
-    PublishPacket, QoS, SubscribeAck, SubscribeAckPacket, SubscribePacket, SubscribePattern,
-};
+use codec::{PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, SubscribePattern};
 use std::collections::{BTreeSet, HashMap};
 
 use super::Dispatcher;

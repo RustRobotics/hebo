@@ -5,8 +5,8 @@
 //! Session cmd handlers.
 
 use codec::{
-    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, SubscribeAck,
-    SubscribeAckPacket, SubscribePacket, UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, SubscribePacket,
+    UnsubscribePacket,
 };
 
 use super::Listener;
@@ -115,8 +115,8 @@ impl Listener {
 
     async fn on_session_unsubscribe(
         &mut self,
-        session_id: SessionId,
-        packet: UnsubscribePacket,
+        _session_id: SessionId,
+        _packet: UnsubscribePacket,
     ) -> Result<(), Error> {
         // Remove topic from sub tree.
         /*
@@ -140,28 +140,5 @@ impl Listener {
     async fn on_session_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
         let cmd = ListenerToDispatcherCmd::Publish(packet.clone());
         self.dispatcher_sender.send(cmd).await.map_err(Into::into)
-    }
-
-    /// Send subscribe ack to session.
-    async fn send_subscribe_ack(
-        &mut self,
-        session_id: SessionId,
-        packet: SubscribePacket,
-    ) -> Result<(), Error> {
-        if let Some(session_sender) = self.session_senders.get_mut(&session_id) {
-            let ack_vec = packet
-                .topics()
-                .iter()
-                .map(|topic| SubscribeAck::QoS(topic.qos()))
-                .collect();
-
-            let ack_packet = SubscribeAckPacket::with_vec(ack_vec, packet.packet_id());
-            session_sender
-                .send(ListenerToSessionCmd::SubscribeAck(ack_packet))
-                .await
-                .map_err(Into::into)
-        } else {
-            Err(Error::session_error(session_id))
-        }
     }
 }
