@@ -9,8 +9,32 @@ use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
-    PacketType, QoS, RemainingLength, SubscribedTopic, Topic,
+    PacketType, QoS, RemainingLength, Topic,
 };
+
+/// Topic/QoS pair.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SubscribeTopic {
+    /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
+    topic: String,
+
+    /// Maximum level of QoS of packet the Server can send to the Client.
+    qos: QoS,
+}
+
+impl SubscribeTopic {
+    pub fn new(topic: String, qos: QoS) -> Self {
+        Self { topic, qos }
+    }
+
+    pub fn topic(&self) -> &str {
+        &self.topic
+    }
+
+    pub fn qos(&self) -> QoS {
+        self.qos
+    }
+}
 
 /// Subscribe packet is sent from the Client to the Server to subscribe one or more topics.
 /// This packet also specifies the maximum QoS with which the Server can send Application
@@ -57,14 +81,14 @@ pub struct SubscribePacket {
     packet_id: PacketId,
 
     /// A list of topic the Client subscribes to.
-    topics: Vec<SubscribedTopic>,
+    topics: Vec<SubscribeTopic>,
 }
 
 impl SubscribePacket {
     pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> Result<SubscribePacket, DecodeError> {
         // TODO(Shaohua): Do not copy topic string.
         Topic::validate_sub_topic(&topic)?;
-        let topic = SubscribedTopic::parse(topic, qos)?;
+        let topic = SubscribeTopic::new(topic.to_string(), qos);
         Ok(SubscribePacket {
             packet_id,
             topics: vec![topic],
@@ -79,11 +103,11 @@ impl SubscribePacket {
         self.packet_id = packet_id
     }
 
-    pub fn topics(&self) -> &[SubscribedTopic] {
+    pub fn topics(&self) -> &[SubscribeTopic] {
         &self.topics
     }
 
-    pub fn mut_topics(self) -> Vec<SubscribedTopic> {
+    pub fn mut_topics(self) -> Vec<SubscribeTopic> {
         self.topics
     }
 }
@@ -113,7 +137,7 @@ impl DecodePacket for SubscribePacket {
             remaining_length += 1;
             let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
 
-            let topic = SubscribedTopic::parse(&topic, qos)?;
+            let topic = SubscribeTopic::new(topic, qos);
             topics.push(topic);
         }
 

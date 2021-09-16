@@ -211,7 +211,7 @@ impl Default for TopicPart {
 
 /// Topic/QoS pair.
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct SubscribedTopic {
+pub struct SubscribePattern {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
     topic: Topic,
 
@@ -219,7 +219,7 @@ pub struct SubscribedTopic {
     qos: QoS,
 }
 
-impl SubscribedTopic {
+impl SubscribePattern {
     pub fn parse(topic: &str, qos: QoS) -> Result<Self, TopicError> {
         let topic = Topic::parse(topic)?;
         Ok(Self { topic, qos })
