@@ -10,10 +10,9 @@ use crate::types::ListenerId;
 
 impl Dispatcher {
     pub(super) async fn handle_metrics_cmd(&mut self, cmd: MetricsToDispatcherCmd) {
-        //log::info!("handle metrics cmd: {:?}", cmd);
         match cmd {
             MetricsToDispatcherCmd::Publish(packet) => {
-                self.publish_packet_to_listners(&packet).await;
+                self.publish_packet_to_sub_trie(&packet).await;
             }
         }
     }

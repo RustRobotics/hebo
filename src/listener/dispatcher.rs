@@ -13,28 +13,30 @@ use crate::types::SessionId;
 impl Listener {
     pub(super) async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
         match cmd {
-            DispatcherToListenerCmd::Publish(packet) => self.on_dispatcher_publish(packet).await,
+            DispatcherToListenerCmd::Publish(session_id, packet) => {
+                self.on_dispatcher_publish(session_id, packet).await
+            }
             DispatcherToListenerCmd::SubscribeAck(session_id, packet) => {
                 self.on_dispatcher_subscribe_ack(session_id, packet).await
             }
         }
     }
 
-    async fn on_dispatcher_publish(&mut self, packet: PublishPacket) {
-        let cmd = ListenerToSessionCmd::Publish(packet.clone());
-        // TODO(Shaohua): Handle errors
-        /*
-        for (_, session_sender) in self.session_senders.iter_mut() {
-            if topic_match(&pipeline.topics, packet.topic()) {
-                if let Err(err) = pipeline.sender.send(cmd.clone()).await {
-                    log::warn!(
-                        "Failed to send publish packet from listener to session: {:?}",
-                        err
-                    );
-                }
+    async fn on_dispatcher_publish(&mut self, session_id: SessionId, packet: PublishPacket) {
+        if let Some(session_sender) = self.session_senders.get(&session_id) {
+            let cmd = ListenerToSessionCmd::Publish(packet);
+            if let Err(err) = session_sender.send(cmd).await {
+                log::warn!(
+                    "Failed to send publish packet from listener to session: {:?}",
+                    err
+                );
             }
+        } else {
+            log::error!(
+                "listener: Failed to find session_sender with id: {}",
+                session_id
+            );
         }
-        */
     }
 
     async fn on_dispatcher_subscribe_ack(

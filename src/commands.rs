@@ -49,7 +49,8 @@ pub enum SessionToListenerCmd {
 
 #[derive(Debug, Clone)]
 pub enum DispatcherToListenerCmd {
-    Publish(PublishPacket),
+    Publish(SessionId, PublishPacket),
+
     SubscribeAck(SessionId, SubscribeAckPacket),
 }
 
