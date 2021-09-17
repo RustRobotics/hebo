@@ -99,8 +99,18 @@ impl ConnectAckPacket {
         }
     }
 
+    pub fn set_return_code(&mut self, code: ConnectReturnCode) -> &mut Self {
+        self.return_code = code;
+        self
+    }
+
     pub fn return_code(&self) -> ConnectReturnCode {
         self.return_code
+    }
+
+    pub fn set_session_present(&mut self, present: bool) -> &mut Self {
+        self.session_present = present;
+        self
     }
 
     pub fn session_present(&self) -> bool {
