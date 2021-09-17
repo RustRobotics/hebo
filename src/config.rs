@@ -65,19 +65,19 @@ pub struct General {
     ///
     /// Default is 3s.
     #[serde(default = "General::default_sys_interval")]
-    pub sys_interval: u32,
+    sys_interval: u64,
 
     /// When run as root, drop privileges to this user.
     ///
     /// Default user is "hebo".
     #[serde(default = "General::default_user")]
-    pub user: String,
+    user: String,
 
     /// Write process id to a file. A blank string means a pid file shouldn't be written.
     ///
     /// Default is `/var/run/hebo.pid`.
     #[serde(default = "General::default_pid_file")]
-    pub pid_file: PathBuf,
+    pid_file: PathBuf,
 
     /// Disable Nagle's algorithm on client sockets.
     ///
@@ -86,7 +86,7 @@ pub struct General {
     ///
     /// Default is false.
     #[serde(default = "General::default_no_delay")]
-    pub no_delay: bool,
+    no_delay: bool,
 
     /// Set maximium size for publish message payload.
     ///
@@ -95,21 +95,21 @@ pub struct General {
     ///
     /// Default value is 0, which means that all valid MQTT messages are accepted.
     #[serde(default = "General::default_message_size_limit")]
-    pub message_size_limit: usize,
+    message_size_limit: usize,
 
-    /// For MQTT v5 clients, it is possible to have the server send a "server keepalive" value
-    /// that will override the keepalive value set by the client.
+    /// For MQTT v5 clients, it is possible to have the server send a "server keep_alive" value
+    /// that will override the keep_alive value set by the client.
     ///
     /// This is intended to be used as a mechanism to say that the server will disconnect the client
-    /// earlier than it anticipated, and that the client should use the new keepalive value.
-    /// The `max_keepalive` option allows you to specify that clients may only
-    /// connect with keepalive less than or equal to this value, otherwise they will be
-    /// sent a server keepalive telling them to use `max_keepalive`.
+    /// earlier than it anticipated, and that the client should use the new keep_alive value.
+    /// The `max_keep_alive` option allows you to specify that clients may only
+    /// connect with keep_alive less than or equal to this value, otherwise they will be
+    /// sent a server keep_alive telling them to use `max_keep_alive`.
     /// This only applies to MQTT v5 clients. The maximum value allowable is 65535. Do not set below 10.
     ///
     /// Default value is 65535.
-    #[serde(default = "General::default_max_keepalive")]
-    pub max_keepalive: u32,
+    #[serde(default = "General::default_max_keep_alive")]
+    max_keep_alive: u64,
 
     /// Set the maximum QoS supported.
     ///
@@ -118,7 +118,7 @@ pub struct General {
     ///
     /// Default is 2.
     #[serde(default = "General::default_max_qos")]
-    pub max_qos: QoS,
+    max_qos: QoS,
 
     /// For MQTT v5 clients, it is possible to have the server send a "maximum packet size" value
     /// that will instruct the client it will not accept MQTT packets with size
@@ -134,13 +134,13 @@ pub struct General {
     ///
     /// Defaults is 0, which means no limit.
     #[serde(default = "General::default_max_packet_size")]
-    pub max_packet_size: usize,
+    max_packet_size: usize,
     //pub max_queued_messages: usize,
     //pub max_queued_bytes: usize,
 }
 
 impl General {
-    pub const fn default_sys_interval() -> u32 {
+    pub const fn default_sys_interval() -> u64 {
         3
     }
 
@@ -164,12 +164,44 @@ impl General {
         QoS::ExactOnce
     }
 
-    pub const fn default_max_keepalive() -> u32 {
+    pub const fn default_max_keep_alive() -> u64 {
         65535
     }
 
     pub const fn default_max_packet_size() -> usize {
         0
+    }
+
+    pub fn sys_interval(&self) -> Duration {
+        Duration::from_secs(self.sys_interval)
+    }
+
+    pub fn user(&self) -> &str {
+        &self.user
+    }
+
+    pub fn pid_file(&self) -> &Path {
+        self.pid_file.as_path()
+    }
+
+    pub fn no_delay(&self) -> bool {
+        self.no_delay
+    }
+
+    pub fn message_size_limit(&self) -> usize {
+        self.message_size_limit
+    }
+
+    pub fn max_keep_alive(&self) -> u64 {
+        self.max_keep_alive
+    }
+
+    pub fn max_qos(&self) -> QoS {
+        self.max_qos
+    }
+
+    pub fn max_packet_size(&self) -> usize {
+        self.max_packet_size
     }
 }
 
@@ -182,7 +214,7 @@ impl Default for General {
             no_delay: Self::default_no_delay(),
             message_size_limit: Self::default_message_size_limit(),
             max_qos: Self::default_max_qos(),
-            max_keepalive: Self::default_max_keepalive(),
+            max_keep_alive: Self::default_max_keep_alive(),
             max_packet_size: Self::default_max_packet_size(),
         }
     }

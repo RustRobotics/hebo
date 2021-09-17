@@ -118,7 +118,7 @@ impl ServerContext {
     /// Notify server process to reload config by sending `SIGUSR1` signal.
     pub fn reload(&mut self) -> Result<(), Error> {
         log::info!("reload()");
-        let mut fd = File::open(&self.config.general().pid_file)?;
+        let mut fd = File::open(&self.config.general().pid_file())?;
         let mut pid_str = String::new();
         fd.read_to_string(&mut pid_str)?;
         log::info!("pid str: {}", pid_str);
@@ -128,7 +128,7 @@ impl ServerContext {
                 format!(
                     "Failed to parse pid {} from file {:?}, err: {:?}",
                     pid_str,
-                    &self.config.general().pid_file,
+                    &self.config.general().pid_file(),
                     err
                 ),
             )
@@ -148,7 +148,7 @@ impl ServerContext {
 
     fn write_pid(&self) -> Result<(), Error> {
         let pid = std::process::id();
-        let mut fd = File::create(&self.config.general().pid_file)?;
+        let mut fd = File::create(&self.config.general().pid_file())?;
         write!(fd, "{}", pid)?;
         Ok(())
     }
@@ -264,7 +264,7 @@ impl ServerContext {
         let (dispatcher_to_metrics_sender, dispatcher_to_metrics_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
         let mut metrics = Metrics::new(
-            self.config.general().sys_interval,
+            self.config.general().sys_interval(),
             metrics_to_dispatcher_sender,
             dispatcher_to_metrics_receiver,
             // server ctx

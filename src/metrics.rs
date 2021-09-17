@@ -36,16 +36,13 @@ pub struct Metrics {
 
 impl Metrics {
     pub fn new(
-        interval: u32,
+        sys_tree_interval: Duration,
         // dispatcher module
         dispatcher_sender: Sender<MetricsToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToMetricsCmd>,
         // server ctx module
         server_ctx_receiver: Receiver<ServerContextToMetricsCmd>,
     ) -> Self {
-        println!("interval: {}", interval);
-        let sys_tree_interval = Duration::from_secs(interval as u64);
-        println!("sys tree interval: {:?}", sys_tree_interval);
         Metrics {
             sys_tree_interval,
             startup: SystemTime::now(),
