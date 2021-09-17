@@ -22,7 +22,7 @@ const PROTOCOL_NAME: &str = "MQTT";
 /// * 3.1.1
 /// * 5.0
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ProtocolLevel {
     V31 = 3,
     V311 = 4,
@@ -66,18 +66,18 @@ impl EncodePacket for ProtocolLevel {
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct ConnectFlags {
     /// `username` field specifies whether `username` shall be presented in the Payload.
-    pub username: bool,
+    username: bool,
 
     /// `password` field specifies whether `password` shall be presented in the Payload.
     /// If `username` field is false, then this field shall be false too.
-    pub password: bool,
+    password: bool,
 
     /// `retain` field specifies if the Will Message is to be Retained when it is published.
     /// If the `will` field is false, then the `retain` field msut be false.
-    pub will_retain: bool,
+    will_retain: bool,
 
     /// QoS level to be used in the Will Message.
-    pub will_qos: QoS,
+    will_qos: QoS,
 
     /// If this field is set to true, a Will Message will be stored on the Server side when
     /// Client connected, and this message must be sent back when Client connection
@@ -88,7 +88,7 @@ pub struct ConnectFlags {
     /// * Keep alive timeout
     /// * network disconnected without Disconnect Packet
     /// * protocol error
-    pub will: bool,
+    will: bool,
 
     /// To control how to handle Session State.
     /// If `clean_sessions` is true, the Client and Server must discard any previous Session State
@@ -104,7 +104,63 @@ pub struct ConnectFlags {
     /// * QoS 1 and QoS 2 messages which have been sent to subscribed Clients, but have not been acknowledged yet.
     /// * QoS 1 and QoS 2 messages pending transmission to the Client.
     /// * QoS 2 messages which have been received from the Clients, but have not been fully acknowledged yet.
-    pub clean_session: bool,
+    clean_session: bool,
+}
+
+impl ConnectFlags {
+    pub fn set_username(&mut self, username: bool) -> &mut Self {
+        self.username = username;
+        self
+    }
+
+    pub fn username(&self) -> bool {
+        self.username
+    }
+
+    pub fn set_password(&mut self, password: bool) -> &mut Self {
+        self.password = password;
+        self
+    }
+
+    pub fn password(&self) -> bool {
+        self.password
+    }
+
+    pub fn set_will_retain(&mut self, will_retain: bool) -> &mut Self {
+        self.will_retain = will_retain;
+        self
+    }
+
+    pub fn will_retain(&self) -> bool {
+        self.will_retain
+    }
+
+    pub fn set_will_qos(&mut self, qos: QoS) -> &mut Self {
+        self.will_qos = qos;
+        self
+    }
+
+    pub fn will_qos(&self) -> QoS {
+        self.will_qos
+    }
+
+    pub fn set_will(&mut self, will: bool) -> &mut Self {
+        self.will = will;
+        self
+    }
+
+    pub fn will(&self) -> bool {
+        self.will
+    }
+
+    pub fn set_clean_session(&mut self, clean_session: bool) -> &mut Self {
+        self.clean_session = clean_session;
+        self
+    }
+
+    pub fn clean_session(&self) -> bool {
+        self.clean_session
+    }
 }
 
 impl Default for ConnectFlags {
@@ -237,9 +293,9 @@ pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
     protocol_name: String,
 
-    pub protocol_level: ProtocolLevel,
+    protocol_level: ProtocolLevel,
 
-    pub connect_flags: ConnectFlags,
+    connect_flags: ConnectFlags,
 
     /// Time interval between two packets in seconds.
     /// Client must send PingRequest Packet before exceeding this interval.
@@ -279,12 +335,31 @@ pub struct ConnectPacket {
 
 impl ConnectPacket {
     pub fn new(client_id: &str) -> ConnectPacket {
+        // TODO(Shaohua): Validate client_id.
         ConnectPacket {
             protocol_name: PROTOCOL_NAME.to_string(),
             keep_alive: 60,
             client_id: client_id.to_string(),
             ..ConnectPacket::default()
         }
+    }
+
+    pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> &Self {
+        self.protocol_level = level;
+        self
+    }
+
+    pub fn protocol_level(&self) -> ProtocolLevel {
+        self.protocol_level
+    }
+
+    pub fn set_connect_flags(&mut self, flags: ConnectFlags) -> &Self {
+        self.connect_flags = flags;
+        self
+    }
+
+    pub fn connect_flags(&self) -> &ConnectFlags {
+        &self.connect_flags
     }
 
     pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
@@ -334,10 +409,10 @@ impl ConnectPacket {
         &self.will_topic
     }
 
-    pub fn set_will_message(&mut self, message: &[u8]) -> Result<(), DecodeError> {
+    pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, DecodeError> {
         utils::validate_two_bytes_data(message)?;
         self.will_message = message.to_vec();
-        Ok(())
+        Ok(self)
     }
 
     pub fn will_message(&self) -> &[u8] {
