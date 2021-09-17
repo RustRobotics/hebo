@@ -75,7 +75,7 @@ impl SubscribeTopic {
 /// Subscription with a new Subscription. The Topic Filter in the new Subscription will
 /// be identical to the previous Subscription, also QoS may be different. Any existing
 /// retained message will be re-sent to the new Subscrption.
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct SubscribePacket {
     /// `packet_id` is used by the Server to reply SubscribeAckPacket to the client.
     packet_id: PacketId,

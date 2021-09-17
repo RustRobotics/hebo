@@ -25,7 +25,7 @@ use super::{
 /// ```
 ///
 /// Note that this packet does not contain payload message.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UnsubscribeAckPacket {
     /// `packet_id` field is read from Unsubscribe packet.
     packet_id: PacketId,

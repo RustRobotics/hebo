@@ -11,7 +11,7 @@ use super::{
 
 /// Reply to each subscribed topic.
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SubscribeAck {
     /// Maximum level of QoS the Server granted for this topic.
     QoS(QoS),

@@ -41,7 +41,7 @@ use super::{
 /// | Topic N ...             |
 /// +-------------------------+
 /// ```
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct UnsubscribePacket {
     /// Used in UnsubscribeAck packet.
     packet_id: PacketId,
@@ -60,19 +60,20 @@ impl UnsubscribePacket {
         }
     }
 
-    pub fn new_with_topics(topics: &[&str], packet_id: PacketId) -> Self {
+    pub fn with_topics(topics: &[&str], packet_id: PacketId) -> Self {
         UnsubscribePacket {
             packet_id,
             topics: topics.iter().map(|t| t.to_string()).collect(),
         }
     }
 
-    pub fn packet_id(&self) -> PacketId {
-        self.packet_id
+    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+        self.packet_id = packet_id;
+        self
     }
 
-    pub fn set_packet_id(&mut self, packet_id: PacketId) {
-        self.packet_id = packet_id;
+    pub fn packet_id(&self) -> PacketId {
+        self.packet_id
     }
 
     pub fn add_topic(&mut self, topic: &str) -> &mut Self {
@@ -80,8 +81,17 @@ impl UnsubscribePacket {
         self
     }
 
-    pub fn topics(&self) -> impl Iterator<Item = &str> {
-        self.topics.iter().map(|s| s.as_str())
+    pub fn set_topics(&mut self, topics: &[&str]) -> &mut Self {
+        self.topics = topics.iter().map(|t| t.to_string()).collect();
+        self
+    }
+
+    pub fn topics(&self) -> &[String] {
+        &self.topics
+    }
+
+    pub fn mut_topics(&mut self) -> &mut Vec<String> {
+        &mut self.topics
     }
 }
 
