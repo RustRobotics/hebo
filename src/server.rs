@@ -223,7 +223,7 @@ impl ServerContext {
 
         // Listeners module.
         for l in self.config.listeners() {
-            listeners_info.push((listener_id, l.address.clone()));
+            listeners_info.push((listener_id, l.address().clone()));
             let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
                 mpsc::channel(CHANNEL_CAPACITY);
             dispatcher_to_listener_senders.push((listener_id, dispatcher_to_listener_sender));
@@ -279,7 +279,7 @@ impl ServerContext {
             if let Err(err) = dispatcher_to_metrics_sender
                 .send(DispatcherToMetricsCmd::ListenerAdded(
                     listener_info.0,
-                    listener_info.1.clone(),
+                    listener_info.1.to_string(),
                 ))
                 .await
             {

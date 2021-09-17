@@ -64,7 +64,7 @@ impl Listener {
         self.session_senders.insert(session_id, sender);
         let session = Session::new(
             session_id,
-            self.config.keep_alive,
+            self.config.keep_alive(),
             stream,
             self.session_sender.clone(),
             receiver,

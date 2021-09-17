@@ -200,7 +200,7 @@ pub struct Listener {
     ///
     /// Default is empty.
     #[serde(default = "Listener::default_bind_interface")]
-    pub bind_interface: String,
+    bind_interface: String,
 
     /// The maximum number of client connections to this listener allowed.
     ///
@@ -210,13 +210,13 @@ pub struct Listener {
     ///
     /// Default is 0, which means unlimited connections.
     #[serde(default = "Listener::default_max_connections")]
-    pub max_connections: usize,
+    max_connections: usize,
 
     /// Binding protocol.
     ///
     /// Default is mqtt.
     #[serde(default = "Listener::default_protocol")]
-    pub protocol: Protocol,
+    protocol: Protocol,
 
     /// Binding address, including domain name and port.
     ///
@@ -230,25 +230,25 @@ pub struct Listener {
     ///
     /// Default is 0.0.0.0:1883
     #[serde(default = "Listener::default_address")]
-    pub address: String,
+    address: String,
 
     /// Url path to bind to, only used for websocket protocols.
     ///
     /// Default is None, which means do not check url path.
     #[serde(default = "Listener::default_path")]
-    pub path: Option<String>,
+    path: Option<String>,
 
     /// Path to TLS cert file.
     ///
     /// Default is None.
     #[serde(default = "Listener::default_cert_file")]
-    pub cert_file: Option<PathBuf>,
+    cert_file: Option<PathBuf>,
 
     /// Path to TLS private key file.
     ///
     /// Default is None.
     #[serde(default = "Listener::default_key_file")]
-    pub key_file: Option<PathBuf>,
+    key_file: Option<PathBuf>,
 
     /// Set `username_as_client_id` to true to replace the client id that a client
     /// connected with with its username.
@@ -261,7 +261,7 @@ pub struct Listener {
     ///
     /// Default is false.
     #[serde(default = "Listener::default_username_as_client_id")]
-    pub username_as_client_id: bool,
+    username_as_client_id: bool,
 
     /// Connection keep alive timeout in seconds.
     ///
@@ -273,7 +273,7 @@ pub struct Listener {
     ///
     /// Default is 60.
     #[serde(default = "Listener::default_keep_alive")]
-    pub keep_alive: u64,
+    keep_alive: u64,
 }
 
 impl Listener {
@@ -316,6 +316,42 @@ impl Listener {
     pub const fn default_keep_alive() -> u64 {
         60
     }
+
+    pub fn bind_interface(&self) -> &str {
+        &self.bind_interface
+    }
+
+    pub fn max_connections(&self) -> usize {
+        self.max_connections
+    }
+
+    pub fn protocol(&self) -> Protocol {
+        self.protocol
+    }
+
+    pub fn address(&self) -> &str {
+        &self.address
+    }
+
+    pub fn path(&self) -> Option<&str> {
+        self.path.as_ref().and_then(|s| Some(s.as_str()))
+    }
+
+    pub fn cert_file(&self) -> Option<&Path> {
+        self.cert_file.as_ref().and_then(|p| Some(p.as_path()))
+    }
+
+    pub fn key_file(&self) -> Option<&Path> {
+        self.key_file.as_ref().and_then(|p| Some(p.as_path()))
+    }
+
+    pub fn username_as_client_id(&self) -> bool {
+        self.username_as_client_id
+    }
+
+    pub fn keep_alive(&self) -> u64 {
+        self.keep_alive
+    }
 }
 
 impl Default for Listener {
@@ -335,7 +371,7 @@ impl Default for Listener {
 }
 
 /// Binding protocol types.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub enum Protocol {
     /// Raw Mqtt protocol, int TCP.
     #[serde(alias = "mqtt")]
