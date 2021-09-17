@@ -85,6 +85,7 @@ pub struct PublishPacket {
     packet_id: PacketId,
 
     /// Payload contains `msg` field.
+    /// TODO(Shaohua): Replace with Bytes or Vec<u8>, BytewMut is useless.
     msg: BytesMut,
 }
 
@@ -139,6 +140,13 @@ impl PublishPacket {
         self.packet_id
     }
 
+    pub fn set_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
+        utils::validate_utf8_string(topic)?;
+        Topic::validate_pub_topic(topic)?;
+        self.topic = topic.to_string();
+        Ok(self)
+    }
+
     pub fn topic(&self) -> &str {
         &self.topic
     }
@@ -146,6 +154,8 @@ impl PublishPacket {
     pub fn message(&self) -> &[u8] {
         &self.msg
     }
+
+    // TODO(Shaohua): Add message related operations.
 }
 
 impl DecodePacket for PublishPacket {
