@@ -201,6 +201,8 @@ impl Session {
         let packet = match ConnectPacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => match err {
+                // From [MQTT-3.1.2-2].
+                //
                 // The Server MUST respond to the CONNECT Packet with a CONNACK return code
                 // 0x01 (unacceptable protocol level) and then disconnect
                 // the Client if the Protocol Level is not supported by the Server
@@ -208,6 +210,7 @@ impl Session {
                     let ack_packet =
                         ConnectAckPacket::new(false, ConnectReturnCode::UnacceptedProtocol);
                     self.send(ack_packet).await?;
+                    self.send_disconnect().await;
                     return Err(err.into());
                 }
                 _ => {
@@ -222,6 +225,18 @@ impl Session {
         // Update keep_alive timer.
         if packet.keep_alive > 0 {
             self.keep_alive = (packet.keep_alive as f64 * 1.5) as u64;
+        }
+
+        // From [MQTT-3.1.3-8].
+        //
+        // If the Client supplies a zero-byte ClientId with CleanSession set to 0,
+        // the Server MUST respond to the CONNECT Packet with a CONNACK return code
+        // 0x02 (Identifier rejected) and then close the Network Connection
+        if !packet.connect_flags.clean_session && packet.client_id().is_empty() {
+            let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
+            self.send(ack_packet).await?;
+            self.send_disconnect().await;
+            return Ok(());
         }
 
         self.clean_session = packet.connect_flags.clean_session;
