@@ -11,22 +11,48 @@ use codec::QoS;
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
     #[serde(default = "General::default")]
-    pub general: General,
+    general: General,
 
     #[serde(default = "Listener::default_listeners")]
-    pub listeners: Vec<Listener>,
+    listeners: Vec<Listener>,
 
     #[serde(default = "Security::default")]
-    pub security: Security,
+    security: Security,
 
     #[serde(default = "Storage::default")]
-    pub storage: Storage,
+    storage: Storage,
 
     #[serde(default = "Log::default")]
-    pub log: Log,
+    log: Log,
 
     #[serde(default = "Dashboard::default")]
-    pub dashboard: Dashboard,
+    dashboard: Dashboard,
+}
+
+impl Config {
+    pub fn general(&self) -> &General {
+        &self.general
+    }
+
+    pub fn listeners(&self) -> &[Listener] {
+        &self.listeners
+    }
+
+    pub fn security(&self) -> &Security {
+        &self.security
+    }
+
+    pub fn storage(&self) -> &Storage {
+        &self.storage
+    }
+
+    pub fn log(&self) -> &Log {
+        &self.log
+    }
+
+    pub fn dashboard(&self) -> &Dashboard {
+        &self.dashboard
+    }
 }
 
 /// General section in config.

@@ -118,7 +118,7 @@ impl ServerContext {
     /// Notify server process to reload config by sending `SIGUSR1` signal.
     pub fn reload(&mut self) -> Result<(), Error> {
         log::info!("reload()");
-        let mut fd = File::open(&self.config.general.pid_file)?;
+        let mut fd = File::open(&self.config.general().pid_file)?;
         let mut pid_str = String::new();
         fd.read_to_string(&mut pid_str)?;
         log::info!("pid str: {}", pid_str);
@@ -127,7 +127,9 @@ impl ServerContext {
                 ErrorKind::PidError,
                 format!(
                     "Failed to parse pid {} from file {:?}, err: {:?}",
-                    pid_str, &self.config.general.pid_file, err
+                    pid_str,
+                    &self.config.general().pid_file,
+                    err
                 ),
             )
         })?;
@@ -146,7 +148,7 @@ impl ServerContext {
 
     fn write_pid(&self) -> Result<(), Error> {
         let pid = std::process::id();
-        let mut fd = File::create(&self.config.general.pid_file)?;
+        let mut fd = File::create(&self.config.general().pid_file)?;
         write!(fd, "{}", pid)?;
         Ok(())
     }
@@ -220,7 +222,7 @@ impl ServerContext {
         let mut listeners_info = Vec::new();
 
         // Listeners module.
-        for l in self.config.listeners.clone() {
+        for l in self.config.listeners() {
             listeners_info.push((listener_id, l.address.clone()));
             let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
                 mpsc::channel(CHANNEL_CAPACITY);
@@ -236,7 +238,7 @@ impl ServerContext {
 
             let mut listener = Listener::bind(
                 listener_id,
-                l,
+                l.clone(),
                 // dispatcher module
                 listeners_to_dispatcher_sender.clone(),
                 dispatcher_to_listener_receiver,
@@ -262,7 +264,7 @@ impl ServerContext {
         let (dispatcher_to_metrics_sender, dispatcher_to_metrics_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
         let mut metrics = Metrics::new(
-            self.config.general.sys_interval,
+            self.config.general().sys_interval,
             metrics_to_dispatcher_sender,
             dispatcher_to_metrics_receiver,
             // server ctx
@@ -291,7 +293,7 @@ impl ServerContext {
 
         // Auth module.
         let mut auth_app = AuthApp::new(
-            self.config.security.clone(),
+            self.config.security().clone(),
             // listeners
             auth_to_listener_senders,
             listeners_to_auth_receiver,
@@ -352,7 +354,7 @@ impl ServerContext {
 
         // dashboard module.
         let mut dashboard_app = DashboardApp::new(
-            &self.config.dashboard,
+            self.config.dashboard(),
             // server ctx
             self.dashboard_sender.take().unwrap(),
         )?;
@@ -466,7 +468,7 @@ pub fn run_server() -> Result<(), Error> {
         return Ok(());
     }
 
-    init_log(&config.log)?;
+    init_log(&config.log())?;
 
     let mut server = ServerContext::new(config);
 
