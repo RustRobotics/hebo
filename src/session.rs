@@ -232,14 +232,14 @@ impl Session {
         // If the Client supplies a zero-byte ClientId with CleanSession set to 0,
         // the Server MUST respond to the CONNECT Packet with a CONNACK return code
         // 0x02 (Identifier rejected) and then close the Network Connection
-        if !packet.connect_flags.clean_session && packet.client_id().is_empty() {
+        if !packet.connect_flags().clean_session() && packet.client_id().is_empty() {
             let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
             self.send(ack_packet).await?;
             self.send_disconnect().await;
             return Ok(());
         }
 
-        self.clean_session = packet.connect_flags.clean_session;
+        self.clean_session = packet.connect_flags().clean_session();
         // TODO(Shaohua): Handle other connection flags.
 
         // Check connection status first.
@@ -298,7 +298,7 @@ impl Session {
             log::error!("Failed to send subscribe command to server: {:?}", err);
             let ack = SubscribeAck::Failed;
 
-            let subscribe_ack_packet = SubscribeAckPacket::new(ack, packet.packet_id());
+            let subscribe_ack_packet = SubscribeAckPacket::new(packet.packet_id(), ack);
             self.send(subscribe_ack_packet).await
         } else {
             Ok(())

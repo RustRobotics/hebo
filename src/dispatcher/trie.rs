@@ -54,7 +54,7 @@ impl SubTrie {
             }
         }
 
-        SubscribeAckPacket::with_vec(ack_vec, packet.packet_id())
+        SubscribeAckPacket::with_vec(packet.packet_id(), ack_vec)
     }
 
     pub fn match_packet(&mut self, packet: &PublishPacket) -> Vec<SessionGid> {
