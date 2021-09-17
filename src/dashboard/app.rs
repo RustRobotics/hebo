@@ -26,7 +26,7 @@ impl DashboardApp {
         config: &config::Dashboard,
         server_ctx_sender: Sender<DashboardToServerContexCmd>,
     ) -> Result<Self, Error> {
-        let addr = config.address.parse()?;
+        let addr = config.address().parse()?;
         Ok(Self {
             addr,
             server_ctx_sender,

@@ -35,10 +35,10 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
         .encoder(Box::new(PatternEncoder::new("{d} {h({l})} - {m}{n}")))
         .build();
 
-    let roller_pattern = log_conf.log_file.to_str().ok_or_else(|| {
+    let roller_pattern = log_conf.log_file().to_str().ok_or_else(|| {
         Error::from_string(
             ErrorKind::ConfigError,
-            format!("config: Invalid log file {:?}", log_conf.log_file),
+            format!("config: Invalid log file {:?}", log_conf.log_file()),
         )
     })?;
     let roller_pattern = roller_pattern.to_string() + ROLLER_PATTERN;
@@ -55,7 +55,7 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
         Box::new(roller),
     ));
     let requests = RollingFileAppender::builder()
-        .build(&log_conf.log_file, rolling_policy)
+        .build(log_conf.log_file(), rolling_policy)
         .map_err(|err| {
             Error::from_string(
                 ErrorKind::LoggerError,
@@ -63,7 +63,7 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
             )
         })?;
 
-    let log_level = get_log_level(log_conf.level);
+    let log_level = get_log_level(log_conf.log_level());
 
     const STDOUT_NAME: &str = "stdout";
     const ROLLER_NAME: &str = "roller";
