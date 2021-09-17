@@ -11,7 +11,7 @@ use super::{
 
 /// Reply to each subscribed topic.
 #[repr(u8)]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SubscribeAck {
     /// Maximum level of QoS the Server granted for this topic.
     QoS(QoS),
@@ -55,25 +55,33 @@ pub struct SubscribeAckPacket {
 }
 
 impl SubscribeAckPacket {
-    pub fn new(ack: SubscribeAck, packet_id: PacketId) -> SubscribeAckPacket {
-        SubscribeAckPacket {
+    pub fn new(packet_id: PacketId, ack: SubscribeAck) -> Self {
+        Self {
             packet_id,
             acknowledgements: vec![ack],
         }
     }
 
-    pub fn with_vec(
-        acknowledgements: Vec<SubscribeAck>,
-        packet_id: PacketId,
-    ) -> SubscribeAckPacket {
-        SubscribeAckPacket {
+    pub fn with_vec(packet_id: PacketId, acknowledgements: Vec<SubscribeAck>) -> Self {
+        Self {
             packet_id,
             acknowledgements,
         }
     }
 
+    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+        self.packet_id = packet_id;
+        self
+    }
+
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
+    }
+
+    pub fn set_ack(&mut self, ack: &[SubscribeAck]) -> &mut Self {
+        self.acknowledgements.clear();
+        self.acknowledgements.extend(ack);
+        self
     }
 
     pub fn acknowledgements(&self) -> &[SubscribeAck] {
