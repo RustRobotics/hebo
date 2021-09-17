@@ -24,7 +24,7 @@ use super::{
 /// ```
 ///
 /// This type of packet does not contain payload.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PublishAckPacket {
     packet_id: PacketId,
 }

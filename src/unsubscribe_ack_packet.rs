@@ -25,15 +25,15 @@ use super::{
 /// ```
 ///
 /// Note that this packet does not contain payload message.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UnsubscribeAckPacket {
     /// `packet_id` field is read from Unsubscribe packet.
     packet_id: PacketId,
 }
 
 impl UnsubscribeAckPacket {
-    pub fn new(packet_id: PacketId) -> UnsubscribeAckPacket {
-        UnsubscribeAckPacket { packet_id }
+    pub fn new(packet_id: PacketId) -> Self {
+        Self { packet_id }
     }
 
     pub fn packet_id(&self) -> PacketId {

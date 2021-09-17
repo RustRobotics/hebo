@@ -44,7 +44,7 @@ impl Default for SubscribeAck {
 /// | Ack N ...                 |
 /// +---------------------------+
 /// ```
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SubscribeAckPacket {
     /// `packet_id` field is identical in Subscribe packet.
     packet_id: PacketId,
