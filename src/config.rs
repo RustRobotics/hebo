@@ -4,6 +4,7 @@
 
 use serde_derive::Deserialize;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use codec::QoS;
 
@@ -413,13 +414,13 @@ pub struct Storage {
     ///
     /// Default is true.
     #[serde(default = "Storage::default_persistence")]
-    pub persistence: bool,
+    persistence: bool,
 
     /// Location for persistent database.
     ///
     /// Default is "/var/lib/hebo/hebo.db"
     #[serde(default = "Storage::default_db_path")]
-    pub db_path: PathBuf,
+    db_path: PathBuf,
 
     /// If persistence is enabled, save the in-memory database to disk every autosave_interval seconds.
     ///
@@ -429,7 +430,7 @@ pub struct Storage {
     ///
     /// Default is 1800 seconds.
     #[serde(default = "Storage::default_auto_save_interval")]
-    pub auto_save_interval: usize,
+    auto_save_interval: u64,
 
     /// If is not None, hebo will count the number of subscription changes, retained messages received
     /// and queued messages and if the total exceeds specified threshold then
@@ -437,7 +438,7 @@ pub struct Storage {
     ///
     /// Default is None.
     #[serde(default = "Storage::default_auto_save_on_change")]
-    pub auto_save_on_change: Option<usize>,
+    auto_save_on_change: Option<u64>,
 }
 
 impl Storage {
@@ -449,12 +450,29 @@ impl Storage {
         PathBuf::from("/var/lib/hebo/hebo.db")
     }
 
-    pub const fn default_auto_save_interval() -> usize {
+    pub const fn default_auto_save_interval() -> u64 {
         1800
     }
 
-    pub const fn default_auto_save_on_change() -> Option<usize> {
+    pub const fn default_auto_save_on_change() -> Option<u64> {
         None
+    }
+
+    pub fn persistence(&self) -> bool {
+        self.persistence
+    }
+
+    pub fn db_path(&self) -> &Path {
+        self.db_path.as_path()
+    }
+
+    pub fn auto_save_interval(&self) -> Duration {
+        Duration::from_secs(self.auto_save_interval)
+    }
+
+    pub fn auto_save_on_change(&self) -> Option<Duration> {
+        self.auto_save_on_change
+            .and_then(|interval| Some(Duration::from_secs(interval)))
     }
 }
 
