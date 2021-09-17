@@ -31,6 +31,10 @@ pub struct PublishReleasePacket {
 }
 
 impl PublishReleasePacket {
+    pub fn new(packet_id: PacketId) -> Self {
+        Self { packet_id }
+    }
+
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
     }
