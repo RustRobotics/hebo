@@ -369,7 +369,7 @@ pub struct Security {
     ///
     /// Default is true.
     #[serde(default = "Security::default_allow_anonymous")]
-    pub allow_anonymous: bool,
+    allow_anonymous: bool,
 
     /// Control access to the broker using a password file.
     ///
@@ -383,7 +383,7 @@ pub struct Security {
     ///
     /// Default is None.
     #[serde(default = "Security::default_password_file")]
-    pub password_file: Option<PathBuf>,
+    password_file: Option<PathBuf>,
 }
 
 impl Security {
@@ -393,6 +393,14 @@ impl Security {
 
     pub fn default_password_file() -> Option<PathBuf> {
         None
+    }
+
+    pub fn allow_anonymous(&self) -> bool {
+        self.allow_anonymous
+    }
+
+    pub fn password_file(&self) -> Option<&Path> {
+        self.password_file.as_ref().and_then(|p| Some(p.as_path()))
     }
 }
 

@@ -30,8 +30,8 @@ impl AuthApp {
         // server ctx module
         server_ctx_receiver: Receiver<ServerContextToAuthCmd>,
     ) -> Result<Self, Error> {
-        let file_auth = if let Some(password_file) = security.password_file {
-            let file_auth = FileAuth::new(password_file.as_path()).map_err(|err| {
+        let file_auth = if let Some(password_file) = security.password_file() {
+            let file_auth = FileAuth::new(password_file).map_err(|err| {
                 Error::from_string(
                     ErrorKind::ConfigError,
                     format!("Invalid password file: {:?}, err: {:?}", password_file, err),
@@ -43,7 +43,7 @@ impl AuthApp {
         };
 
         Ok(Self {
-            allow_anonymous: security.allow_anonymous,
+            allow_anonymous: security.allow_anonymous(),
             file_auth,
 
             listener_senders,
