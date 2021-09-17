@@ -159,6 +159,10 @@ impl DecodePacket for PublishPacket {
                 return Err(DecodeError::InvalidPacketType);
             };
 
+        // If dup is true, qos cannot be 0.
+        if dup && qos == QoS::AtMostOnce {
+            return Err(DecodeError::InvalidPacketType);
+        }
         let topic_len = ba.read_u16()? as usize;
         let topic = ba.read_string(topic_len)?;
         Topic::validate_pub_topic(&topic)?;
