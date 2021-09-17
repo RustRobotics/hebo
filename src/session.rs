@@ -48,6 +48,7 @@ pub struct Session {
 impl Session {
     pub fn new(
         id: SessionId,
+        keep_alive: u64,
         stream: Stream,
         sender: Sender<SessionToListenerCmd>,
         receiver: Receiver<ListenerToSessionCmd>,
@@ -58,7 +59,7 @@ impl Session {
 
             status: Status::Invalid,
             client_id: String::new(),
-            keep_alive: 0,
+            keep_alive,
             instant: Instant::now(),
             clean_session: true,
 
@@ -109,6 +110,13 @@ impl Session {
             // from the Client within one and a half times the Keep Alive time period,
             // it MUST disconnect the Network Connection to the Client as if the network had
             // failed.
+            //
+            // A Keep Alive value of zero (0) has the effect of turning off the keep alive mechanism.
+            // This means that, in this case, the Server is not required to disconnect the Client
+            // on the grounds of inactivity.
+            //
+            // Note that a Server is permitted to disconnect a Client that it determines to be inactive
+            // or non-responsive at any time, regardless of the Keep Alive value provided by that Client.
             if self.keep_alive > 0 && self.instant.elapsed().as_secs() > self.keep_alive {
                 log::warn!("sessoin: keep_alive time reached, disconnect client!");
                 self.send_disconnect().await;
@@ -212,7 +220,9 @@ impl Session {
         self.client_id = packet.client_id().to_string();
 
         // Update keep_alive timer.
-        self.keep_alive = (packet.keep_alive as f64 * 1.5) as u64;
+        if packet.keep_alive > 0 {
+            self.keep_alive = (packet.keep_alive as f64 * 1.5) as u64;
+        }
 
         self.clean_session = packet.connect_flags.clean_session;
         // TODO(Shaohua): Handle other connection flags.

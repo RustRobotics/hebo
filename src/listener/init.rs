@@ -48,7 +48,7 @@ impl Listener {
         Listener {
             id,
             protocol,
-            listener_config,
+            config: listener_config,
             current_session_id: 0,
 
             session_senders: HashMap::new(),
@@ -258,7 +258,7 @@ impl Listener {
 
     pub(super) async fn accept(&mut self) -> Result<Stream, Error> {
         use tokio_tungstenite::tungstenite::handshake::server as ws_server;
-        let listener_path = self.listener_config.path.as_ref();
+        let listener_path = self.config.path.as_ref();
         let check_ws_path = |request: &ws_server::Request,
                              response: ws_server::Response|
          -> Result<ws_server::Response, ws_server::ErrorResponse> {

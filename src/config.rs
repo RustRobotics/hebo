@@ -235,6 +235,18 @@ pub struct Listener {
     /// Default is false.
     #[serde(default = "Listener::default_username_as_client_id")]
     pub username_as_client_id: bool,
+
+    /// Connection keep alive timeout in seconds.
+    ///
+    /// Disconnect the client if the maximium time interval is reached before
+    /// receiving Control Packet from client.
+    ///
+    /// If client does not set keep_alive flag in ConnectPacket, this value will be
+    /// used.
+    ///
+    /// Default is 60.
+    #[serde(default = "Listener::default_keep_alive")]
+    pub keep_alive: u64,
 }
 
 impl Listener {
@@ -273,6 +285,10 @@ impl Listener {
     pub const fn default_username_as_client_id() -> bool {
         false
     }
+
+    pub const fn default_keep_alive() -> u64 {
+        60
+    }
 }
 
 impl Default for Listener {
@@ -286,6 +302,7 @@ impl Default for Listener {
             cert_file: Self::default_cert_file(),
             key_file: Self::default_key_file(),
             username_as_client_id: Self::default_username_as_client_id(),
+            keep_alive: Self::default_keep_alive(),
         }
     }
 }

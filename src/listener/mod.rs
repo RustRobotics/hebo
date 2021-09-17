@@ -28,7 +28,7 @@ const CHANNEL_CAPACITY: usize = 16;
 pub struct Listener {
     id: ListenerId,
     protocol: Protocol,
-    listener_config: config::Listener,
+    config: config::Listener,
     current_session_id: SessionId,
 
     session_senders: HashMap<SessionId, Sender<ListenerToSessionCmd>>,

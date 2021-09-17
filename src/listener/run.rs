@@ -62,7 +62,13 @@ impl Listener {
         let (sender, receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let session_id = self.next_session_id();
         self.session_senders.insert(session_id, sender);
-        let session = Session::new(session_id, stream, self.session_sender.clone(), receiver);
+        let session = Session::new(
+            session_id,
+            self.config.keep_alive,
+            stream,
+            self.session_sender.clone(),
+            receiver,
+        );
         tokio::spawn(session.run_loop());
 
         if let Err(err) = self
