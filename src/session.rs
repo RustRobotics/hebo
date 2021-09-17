@@ -103,6 +103,12 @@ impl Session {
                 },
             }
 
+            // From [MQTT-3.1.2-24]
+            //
+            // If the Keep Alive value is non-zero and the Server does not receive a Control Packet
+            // from the Client within one and a half times the Keep Alive time period,
+            // it MUST disconnect the Network Connection to the Client as if the network had
+            // failed.
             if self.keep_alive > 0 && self.instant.elapsed().as_secs() > self.keep_alive {
                 log::warn!("sessoin: keep_alive time reached, disconnect client!");
                 self.send_disconnect().await;
@@ -206,7 +212,10 @@ impl Session {
         self.client_id = packet.client_id().to_string();
 
         // Update keep_alive timer.
-        self.keep_alive = packet.keep_alive as u64;
+        self.keep_alive = (packet.keep_alive as f64 * 1.5) as u64;
+
+        self.clean_session = packet.connect_flags.clean_session;
+        // TODO(Shaohua): Handle other connection flags.
 
         // Check connection status first.
         // If this client is already connected, send disconnect packet.
