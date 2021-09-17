@@ -95,20 +95,27 @@ impl SubscribePacket {
         })
     }
 
+    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+        self.packet_id = packet_id;
+        self
+    }
+
     pub fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
-    pub fn set_packet_id(&mut self, packet_id: PacketId) {
-        self.packet_id = packet_id
+    pub fn set_topics(&mut self, topics: &[SubscribeTopic]) -> &mut Self {
+        self.topics.clear();
+        self.topics.extend_from_slice(topics);
+        self
     }
 
     pub fn topics(&self) -> &[SubscribeTopic] {
         &self.topics
     }
 
-    pub fn mut_topics(self) -> Vec<SubscribeTopic> {
-        self.topics
+    pub fn mut_topics(&mut self) -> &mut Vec<SubscribeTopic> {
+        &mut self.topics
     }
 }
 
