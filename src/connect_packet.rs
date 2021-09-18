@@ -429,6 +429,13 @@ pub fn validate_keep_alive(keep_alive: u16) -> Result<(), DecodeError> {
     }
 }
 
+/// ClientId is based on rules below:
+///
+/// - The ClientId MUST be a UTF-8 encoded string as defined in Section 1.5.3 [MQTT-3.1.3-4].
+///
+/// - The Server MUST allow ClientIds which are between 1 and 23 UTF-8 encoded bytes in length, and that
+///   contain only the characters
+///   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" [MQTT-3.1.3-5].
 pub fn validate_client_id(id: &str) -> Result<(), StringError> {
     if id.is_empty() || id.len() > 23 {
         return Err(StringError::InvalidLength);
@@ -526,6 +533,9 @@ impl DecodePacket for ConnectPacket {
 
         let client_id_len = ba.read_u16()? as usize;
         let client_id = ba.read_string(client_id_len)?;
+        // TODO(Shaohua): client_id may not be present.
+        // If so, generate a random one here.
+        validate_client_id(client_id)?;
 
         let will_topic = if connect_flags.will {
             let will_topic_len = ba.read_u16()? as usize;
