@@ -280,7 +280,9 @@ impl Session {
                     //
                     // The Server MUST validate that the CONNECT Packet conforms to section 3.1 and close the
                     // Network Connection without sending a CONNACK if it does not conform [MQTT-3.1.4-1].
-                    self.send_disconnect().await;
+                    //
+                    // We do not send any packets, just disconnect the stream.
+                    self.status = Status::Disconnected;
                     return Err(err.into());
                 }
             },
