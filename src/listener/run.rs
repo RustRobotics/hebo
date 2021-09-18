@@ -65,6 +65,8 @@ impl Listener {
         let session = Session::new(
             session_id,
             self.config.keep_alive(),
+            // TODO(Shaohua): Add option
+            60,
             self.config.allow_empty_client_id(),
             stream,
             self.session_sender.clone(),

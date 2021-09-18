@@ -34,6 +34,7 @@ enum Status {
 pub struct Session {
     id: SessionId,
     keep_alive: u64,
+    connect_timeout: u64,
     allow_empty_client_id: bool,
     stream: Stream,
     status: Status,
@@ -50,6 +51,7 @@ impl Session {
     pub fn new(
         id: SessionId,
         keep_alive: u64,
+        connect_timeout: u64,
         allow_empty_client_id: bool,
         stream: Stream,
         sender: Sender<SessionToListenerCmd>,
@@ -58,6 +60,7 @@ impl Session {
         Session {
             id,
             keep_alive,
+            connect_timeout,
             allow_empty_client_id,
             stream,
 
@@ -79,7 +82,18 @@ impl Session {
         // TODO(Shaohua): Set buffer cap based on settings
         let mut buf = Vec::with_capacity(1024);
 
+        let connect_timeout = Instant::now();
+
         loop {
+            // If the Server does not receive a CONNECT Packet within a reasonable amount of time after the
+            // Network Connection is established, the Server SHOULD close the connection.
+            if self.status == Status::Invalid
+                && self.connect_timeout > 0
+                && connect_timeout.elapsed().as_secs() > self.connect_timeout
+            {
+                break;
+            }
+
             if self.status == Status::Disconnected {
                 break;
             }
@@ -229,10 +243,9 @@ impl Session {
                 }
                 _ => {
                     // Got malformed packet, disconnect client.
-                    // NOTE(Shaohua): There is no other error code to present malformed packet.
-                    let ack_packet =
-                        ConnectAckPacket::new(false, ConnectReturnCode::UnacceptedProtocol);
-                    self.send(ack_packet).await?;
+                    //
+                    // The Server MUST validate that the CONNECT Packet conforms to section 3.1 and close the
+                    // Network Connection without sending a CONNACK if it does not conform [MQTT-3.1.4-1].
                     self.send_disconnect().await;
                     return Err(err.into());
                 }
