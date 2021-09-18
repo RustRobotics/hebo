@@ -141,7 +141,9 @@ impl Session {
 
                     } else {
                         log::info!("session: Empty packet received, disconnect client, {}", self.id);
-                        self.send_disconnect().await;
+                        if let Err(err) = self.send_disconnect().await {
+                            log::error!("session: Failed to send disconnect packet: {:?}", err);
+                        }
                         break;
                     }
                 }
@@ -169,7 +171,9 @@ impl Session {
                 && self.instant.elapsed().as_secs() > self.config.keep_alive()
             {
                 log::warn!("sessoin: keep_alive time reached, disconnect client!");
-                self.send_disconnect().await;
+                if let Err(err) = self.send_disconnect().await {
+                    log::error!("session: Failed to send disconnect packet: {:?}", err);
+                }
                 break;
             }
         }
@@ -260,8 +264,7 @@ impl Session {
     async fn reject_client_id(&mut self) -> Result<(), Error> {
         let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
         self.send(ack_packet).await?;
-        self.send_disconnect().await;
-        Ok(())
+        self.send_disconnect().await
     }
 
     async fn on_client_connect(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -278,7 +281,7 @@ impl Session {
                     let ack_packet =
                         ConnectAckPacket::new(false, ConnectReturnCode::UnacceptedProtocol);
                     self.send(ack_packet).await?;
-                    self.send_disconnect().await;
+                    self.send_disconnect().await?;
                     return Err(err.into());
                 }
                 DecodeError::InvalidClientId => {
@@ -336,8 +339,7 @@ impl Session {
         if !packet.connect_flags().clean_session() && packet.client_id().is_empty() {
             let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
             self.send(ack_packet).await?;
-            self.send_disconnect().await;
-            return Ok(());
+            return self.send_disconnect().await;
         }
 
         self.clean_session = packet.connect_flags().clean_session();
@@ -346,8 +348,7 @@ impl Session {
         // Check connection status first.
         // If this client is already connected, send disconnect packet.
         if self.status == Status::Connected || self.status == Status::Connecting {
-            self.send_disconnect().await;
-            return Ok(());
+            return self.send_disconnect().await;
         }
 
         // Send the connect packet to listener.
