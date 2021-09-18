@@ -5,8 +5,8 @@
 //! Session cmd handlers.
 
 use codec::{
-    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, SubscribePacket,
-    UnsubscribePacket,
+    connect_packet::random_client_id, ConnectAckPacket, ConnectPacket, ConnectReturnCode,
+    PublishPacket, SubscribePacket, UnsubscribePacket,
 };
 
 use super::Listener;
@@ -44,21 +44,38 @@ impl Listener {
         }
     }
 
+    async fn reject_client_id(&mut self, session_id: SessionId) -> Result<(), Error> {
+        let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
+        let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
+        if let Some(session_sender) = self.session_senders.get(&session_id) {
+            session_sender.send(cmd).await.map_err(Into::into)
+        } else {
+            Err(Error::session_error(session_id))
+        }
+    }
+
     async fn on_session_connect(
         &mut self,
         session_id: SessionId,
-        packet: ConnectPacket,
+        mut packet: ConnectPacket,
     ) -> Result<(), Error> {
         log::info!("Listener::on_session_connect()");
+        // A Server MAY allow a Client to supply a ClientId that has a length of zero bytes,
+        // however if it does so the Server MUST treat this as a special case and
+        // assign a unique ClientId to that Client. It MUST then process the CONNECT packet
+        // as if the Client had provided that unique ClientId [MQTT-3.1.3-6].
+        if packet.client_id().is_empty() {
+            if self.config.allow_empty_client_id() {
+                let new_client_id = random_client_id().unwrap();
+                packet.set_client_id(&new_client_id);
+            } else {
+                return self.reject_client_id(session_id).await;
+            }
+        }
+
         // If client id already exists, notify session to send disconnect packet.
         if self.client_ids.get(packet.client_id()).is_some() {
-            let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
-            let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
-            if let Some(session_sender) = self.session_senders.get(&session_id) {
-                return session_sender.send(cmd).await.map_err(Into::into);
-            } else {
-                return Err(Error::session_error(session_id));
-            }
+            return self.reject_client_id(session_id).await;
         }
 
         self.session_ids

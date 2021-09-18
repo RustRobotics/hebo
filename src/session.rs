@@ -231,6 +231,7 @@ impl Session {
                 }
             },
         };
+
         self.client_id = packet.client_id().to_string();
 
         // Update keep_alive timer.
