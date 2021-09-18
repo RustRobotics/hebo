@@ -213,8 +213,19 @@ impl Session {
                     self.send_disconnect().await;
                     return Err(err.into());
                 }
+                DecodeError::InvalidClientId => {
+                    let ack_packet =
+                        ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
+                    self.send(ack_packet).await?;
+                    self.send_disconnect().await;
+                    return Err(err.into());
+                }
                 _ => {
                     // Got malformed packet, disconnect client.
+                    // NOTE(Shaohua): There is no other error code to present malformed packet.
+                    let ack_packet =
+                        ConnectAckPacket::new(false, ConnectReturnCode::UnacceptedProtocol);
+                    self.send(ack_packet).await?;
                     self.send_disconnect().await;
                     return Err(err.into());
                 }
