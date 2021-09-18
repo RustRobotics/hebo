@@ -26,6 +26,42 @@ enum Status {
     Disconnected,
 }
 
+#[derive(Debug, Default, Clone)]
+pub struct SessionConfig {
+    keep_alive: u64,
+    connect_timeout: u64,
+    allow_empty_client_id: bool,
+}
+
+impl SessionConfig {
+    pub fn new(keep_alive: u64, connect_timeout: u64, allow_empty_client_id: bool) -> Self {
+        Self {
+            keep_alive,
+            connect_timeout,
+            allow_empty_client_id,
+        }
+    }
+
+    pub fn set_keep_alive(&mut self, keep_alive: u64) {
+        self.keep_alive = keep_alive;
+    }
+
+    #[inline]
+    pub fn keep_alive(&self) -> u64 {
+        self.keep_alive
+    }
+
+    #[inline]
+    pub fn connect_timeout(&self) -> u64 {
+        self.connect_timeout
+    }
+
+    #[inline]
+    fn allow_empty_client_id(&self) -> bool {
+        self.allow_empty_client_id
+    }
+}
+
 /// ConnectionContext represents a client connection.
 ///
 /// All the status of this client is maintained in this struct.
@@ -33,10 +69,9 @@ enum Status {
 #[derive(Debug)]
 pub struct Session {
     id: SessionId,
-    keep_alive: u64,
-    connect_timeout: u64,
-    allow_empty_client_id: bool,
+    config: SessionConfig,
     stream: Stream,
+
     status: Status,
     client_id: String,
     // TODO(Shaohua): Add session flag
@@ -50,18 +85,14 @@ pub struct Session {
 impl Session {
     pub fn new(
         id: SessionId,
-        keep_alive: u64,
-        connect_timeout: u64,
-        allow_empty_client_id: bool,
+        config: SessionConfig,
         stream: Stream,
         sender: Sender<SessionToListenerCmd>,
         receiver: Receiver<ListenerToSessionCmd>,
     ) -> Session {
         Session {
             id,
-            keep_alive,
-            connect_timeout,
-            allow_empty_client_id,
+            config,
             stream,
 
             status: Status::Invalid,
@@ -88,8 +119,8 @@ impl Session {
             // If the Server does not receive a CONNECT Packet within a reasonable amount of time after the
             // Network Connection is established, the Server SHOULD close the connection.
             if self.status == Status::Invalid
-                && self.connect_timeout > 0
-                && connect_timeout.elapsed().as_secs() > self.connect_timeout
+                && self.config.connect_timeout() > 0
+                && connect_timeout.elapsed().as_secs() > self.config.connect_timeout()
             {
                 break;
             }
@@ -134,7 +165,9 @@ impl Session {
             //
             // Note that a Server is permitted to disconnect a Client that it determines to be inactive
             // or non-responsive at any time, regardless of the Keep Alive value provided by that Client.
-            if self.keep_alive > 0 && self.instant.elapsed().as_secs() > self.keep_alive {
+            if self.config.keep_alive() > 0
+                && self.instant.elapsed().as_secs() > self.config.keep_alive()
+            {
                 log::warn!("sessoin: keep_alive time reached, disconnect client!");
                 self.send_disconnect().await;
                 break;
@@ -257,7 +290,7 @@ impl Session {
         // assign a unique ClientId to that Client. It MUST then process the CONNECT packet
         // as if the Client had provided that unique ClientId [MQTT-3.1.3-6].
         if packet.client_id().is_empty() {
-            if self.allow_empty_client_id {
+            if self.config.allow_empty_client_id() {
                 if let Ok(new_client_id) = random_client_id() {
                     // No need to catch errors as client id is always valid.
                     let _ = packet.set_client_id(&new_client_id);
@@ -272,8 +305,14 @@ impl Session {
         self.client_id = packet.client_id().to_string();
 
         // Update keep_alive timer.
+        //
+        // If the Keep Alive value is non-zero and the Server does not receive a Control Packet
+        // from the Client within one and a half times the Keep Alive time period,
+        // it MUST disconnect the Network Connection to the Client as if the network
+        // had failed [MQTT-3.1.2-24].
         if packet.keep_alive > 0 {
-            self.keep_alive = (packet.keep_alive as f64 * 1.5) as u64;
+            self.config
+                .set_keep_alive((packet.keep_alive as f64 * 1.5) as u64);
         }
 
         // From [MQTT-3.1.3-8].

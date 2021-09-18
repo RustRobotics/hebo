@@ -9,7 +9,7 @@ use tokio::sync::mpsc;
 use super::Listener;
 use super::CHANNEL_CAPACITY;
 use crate::commands::ListenerToDispatcherCmd;
-use crate::session::Session;
+use crate::session::{Session, SessionConfig};
 use crate::stream::Stream;
 
 impl Listener {
@@ -62,12 +62,14 @@ impl Listener {
         let (sender, receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let session_id = self.next_session_id();
         self.session_senders.insert(session_id, sender);
-        let session = Session::new(
-            session_id,
+        let session_config = SessionConfig::new(
             self.config.keep_alive(),
-            // TODO(Shaohua): Add option
             60,
             self.config.allow_empty_client_id(),
+        );
+        let session = Session::new(
+            session_id,
+            session_config,
             stream,
             self.session_sender.clone(),
             receiver,
