@@ -8,7 +8,7 @@ use rand::Rng;
 use std::convert::TryFrom;
 use std::io::Write;
 
-use super::topic::Topic;
+use super::topic;
 use super::utils::{self, StringError};
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType, QoS,
@@ -400,7 +400,7 @@ impl ConnectPacket {
 
     pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, DecodeError> {
         utils::validate_utf8_string(topic)?;
-        Topic::validate_pub_topic(topic)?;
+        topic::validate_pub_topic(topic)?;
         self.will_topic = topic.to_string();
         Ok(self)
     }
@@ -587,7 +587,10 @@ impl DecodePacket for ConnectPacket {
 
         let will_topic = if connect_flags.will {
             let will_topic_len = ba.read_u16()? as usize;
-            ba.read_string(will_topic_len)?
+            let will_topic = ba.read_string(will_topic_len)?;
+            utils::validate_utf8_string(&will_topic)?;
+            topic::validate_pub_topic(&will_topic)?;
+            will_topic
         } else {
             String::new()
         };
