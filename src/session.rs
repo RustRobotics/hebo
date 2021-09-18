@@ -3,10 +3,10 @@
 // in the LICENSE file.
 
 use codec::{
-    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodeError, DecodePacket,
-    DisconnectPacket, EncodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket,
-    PublishAckPacket, PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket,
-    UnsubscribeAckPacket, UnsubscribePacket,
+    utils::random_client_id, ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode,
+    DecodeError, DecodePacket, DisconnectPacket, EncodePacket, FixedHeader, PacketType,
+    PingRequestPacket, PingResponsePacket, PublishAckPacket, PublishPacket, SubscribeAck,
+    SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
 };
 use std::convert::Into;
 use std::time::Instant;
@@ -33,11 +33,12 @@ enum Status {
 #[derive(Debug)]
 pub struct Session {
     id: SessionId,
+    keep_alive: u64,
+    allow_empty_client_id: bool,
     stream: Stream,
     status: Status,
     client_id: String,
     // TODO(Shaohua): Add session flag
-    keep_alive: u64,
     instant: Instant,
     clean_session: bool,
 
@@ -49,17 +50,19 @@ impl Session {
     pub fn new(
         id: SessionId,
         keep_alive: u64,
+        allow_empty_client_id: bool,
         stream: Stream,
         sender: Sender<SessionToListenerCmd>,
         receiver: Receiver<ListenerToSessionCmd>,
     ) -> Session {
         Session {
             id,
+            keep_alive,
+            allow_empty_client_id,
             stream,
 
             status: Status::Invalid,
             client_id: String::new(),
-            keep_alive,
             instant: Instant::now(),
             clean_session: true,
 
@@ -196,9 +199,16 @@ impl Session {
         }
     }
 
+    async fn reject_client_id(&mut self) -> Result<(), Error> {
+        let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
+        self.send(ack_packet).await?;
+        self.send_disconnect().await;
+        Ok(())
+    }
+
     async fn on_client_connect(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let packet = match ConnectPacket::decode(&mut ba) {
+        let mut packet = match ConnectPacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => match err {
                 // From [MQTT-3.1.2-2].
@@ -214,10 +224,7 @@ impl Session {
                     return Err(err.into());
                 }
                 DecodeError::InvalidClientId => {
-                    let ack_packet =
-                        ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
-                    self.send(ack_packet).await?;
-                    self.send_disconnect().await;
+                    self.reject_client_id().await?;
                     return Err(err.into());
                 }
                 _ => {
@@ -232,6 +239,23 @@ impl Session {
             },
         };
 
+        // A Server MAY allow a Client to supply a ClientId that has a length of zero bytes,
+        // however if it does so the Server MUST treat this as a special case and
+        // assign a unique ClientId to that Client. It MUST then process the CONNECT packet
+        // as if the Client had provided that unique ClientId [MQTT-3.1.3-6].
+        if packet.client_id().is_empty() {
+            if self.allow_empty_client_id {
+                if let Ok(new_client_id) = random_client_id() {
+                    // No need to catch errors as client id is always valid.
+                    let _ = packet.set_client_id(&new_client_id);
+                } else {
+                    // Almost never happens.
+                    return self.reject_client_id().await;
+                }
+            } else {
+                return self.reject_client_id().await;
+            }
+        }
         self.client_id = packet.client_id().to_string();
 
         // Update keep_alive timer.

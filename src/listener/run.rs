@@ -65,6 +65,7 @@ impl Listener {
         let session = Session::new(
             session_id,
             self.config.keep_alive(),
+            self.config.allow_empty_client_id(),
             stream,
             self.session_sender.clone(),
             receiver,
