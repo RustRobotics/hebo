@@ -201,7 +201,7 @@ impl Session {
     }
 
     /// Send disconnect packet to client and update status.
-    async fn send_disconnect(&mut self) {
+    async fn send_disconnect(&mut self) -> Result<(), Error> {
         self.status = Status::Disconnecting;
         let packet = DisconnectPacket::new();
         if let Err(err) = self.send(packet).await.map(drop) {
@@ -210,8 +210,10 @@ impl Session {
                 self.id,
                 err
             );
+            return Err(err);
         }
         self.status = Status::Disconnected;
+        Ok(())
     }
 
     async fn handle_client_packet(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -221,8 +223,7 @@ impl Session {
             Err(err) => {
                 // Disconnect the network if Connect Packet is invalid.
                 log::error!("session: Invalid packet: {:?}, content: {:?}", err, buf);
-                self.send_disconnect().await;
-                return Ok(());
+                return self.send_disconnect().await;
             }
         };
 
@@ -408,6 +409,7 @@ impl Session {
         self.send(unsubscribe_ack_packet).await
     }
 
+    /// Handle disconnect request from client.
     async fn on_client_disconnect(&mut self, _buf: &[u8]) -> Result<(), Error> {
         self.status = Status::Disconnected;
         if let Err(err) = self
@@ -433,6 +435,7 @@ impl Session {
             }
             ListenerToSessionCmd::Publish(packet) => self.send(packet).await,
             ListenerToSessionCmd::SubscribeAck(packet) => self.send(packet).await,
+            ListenerToSessionCmd::Disconnect => self.send_disconnect().await,
         }
     }
 }

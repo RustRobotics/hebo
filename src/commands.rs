@@ -36,6 +36,9 @@ pub enum ListenerToSessionCmd {
     Publish(PublishPacket),
 
     SubscribeAck(SubscribeAckPacket),
+
+    /// Disconnect client connection.
+    Disconnect,
 }
 
 #[derive(Debug, Clone)]
