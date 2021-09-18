@@ -539,6 +539,11 @@ impl DecodePacket for ConnectPacket {
         let protocol_level = ProtocolLevel::try_from(ba.read_byte()?)?;
         let connect_flags = ConnectFlags::decode(ba)?;
 
+        // If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].
+        if !connect_flags.username() && connect_flags.password() {
+            return Err(DecodeError::InvalidConnectFlags);
+        }
+
         let keep_alive = ba.read_u16()?;
         validate_keep_alive(keep_alive)?;
 
