@@ -77,81 +77,79 @@ impl Topic {
     }
 }
 
-impl Topic {
-    /// Validate topic filter.
-    /// Rules are defined in `MQTT chapter-4.7 Topic Name and Filters`
-    /// ```
-    /// use codec::Topic;
-    /// let name = "sport/tennis/player/#";
-    /// assert!(Topic::validate_sub_topic(name).is_ok());
-    ///
-    /// let name = "sport/tennis/player#";
-    /// assert!(Topic::validate_sub_topic(name).is_err());
-    ///
-    /// let name = "#";
-    /// assert!(Topic::validate_sub_topic(name).is_ok());
-    ///
-    /// let name = "sport/#/player/ranking";
-    /// assert!(Topic::validate_sub_topic(name).is_err());
-    ///
-    /// let name = "+";
-    /// assert!(Topic::validate_sub_topic(name).is_ok());
-    ///
-    /// let name = "sport+";
-    /// assert!(Topic::validate_sub_topic(name).is_err());
-    /// ```
-    pub fn validate_sub_topic(topic: &str) -> Result<(), TopicError> {
-        if topic.is_empty() {
-            return Err(TopicError::EmptyTopic);
-        }
-        if topic == "#" {
-            return Ok(());
-        }
-        let bytes = topic.as_bytes();
-        for (index, b) in bytes.iter().enumerate() {
-            if b == &b'#' {
-                // Must have a prefix level separator.
-                if index > 0 && bytes[index - 1] != b'/' {
-                    return Err(TopicError::InvalidChar);
-                }
+/// Validate topic filter.
+/// Rules are defined in `MQTT chapter-4.7 Topic Name and Filters`
+/// ```
+/// use codec::Topic;
+/// let name = "sport/tennis/player/#";
+/// assert!(Topic::validate_sub_topic(name).is_ok());
+///
+/// let name = "sport/tennis/player#";
+/// assert!(Topic::validate_sub_topic(name).is_err());
+///
+/// let name = "#";
+/// assert!(Topic::validate_sub_topic(name).is_ok());
+///
+/// let name = "sport/#/player/ranking";
+/// assert!(Topic::validate_sub_topic(name).is_err());
+///
+/// let name = "+";
+/// assert!(Topic::validate_sub_topic(name).is_ok());
+///
+/// let name = "sport+";
+/// assert!(Topic::validate_sub_topic(name).is_err());
+/// ```
+pub fn validate_sub_topic(topic: &str) -> Result<(), TopicError> {
+    if topic.is_empty() {
+        return Err(TopicError::EmptyTopic);
+    }
+    if topic == "#" {
+        return Ok(());
+    }
+    let bytes = topic.as_bytes();
+    for (index, b) in bytes.iter().enumerate() {
+        if b == &b'#' {
+            // Must have a prefix level separator.
+            if index > 0 && bytes[index - 1] != b'/' {
+                return Err(TopicError::InvalidChar);
+            }
 
-                // Must be the last wildcard.
-                if index != bytes.len() - 1 {
-                    return Err(TopicError::InvalidChar);
-                }
-            } else if b == &b'+' {
-                // Must have a prefix level separator.
-                if index > 0 && bytes[index - 1] != b'/' {
-                    return Err(TopicError::InvalidChar);
-                }
+            // Must be the last wildcard.
+            if index != bytes.len() - 1 {
+                return Err(TopicError::InvalidChar);
+            }
+        } else if b == &b'+' {
+            // Must have a prefix level separator.
+            if index > 0 && bytes[index - 1] != b'/' {
+                return Err(TopicError::InvalidChar);
             }
         }
-
-        Ok(())
     }
 
-    /// Check whether topic name contains wildchard characters.
-    /// ```
-    /// use codec::Topic;
-    /// let name = "sport/tennis/player/#";
-    /// assert!(Topic::validate_pub_topic(name).is_err());
-    ///
-    /// let name = "sport/tennis/player/ranking";
-    /// assert!(Topic::validate_pub_topic(name).is_ok());
-    /// ```
-    pub fn validate_pub_topic(topic: &str) -> Result<(), TopicError> {
-        if topic.is_empty() {
-            return Err(TopicError::EmptyTopic);
-        }
-        if topic.len() > u16::MAX as usize {
-            return Err(TopicError::TooManyData);
-        }
+    Ok(())
+}
 
-        if topic.as_bytes().iter().find(|c| c == &&b'+' || c == &&b'#') == None {
-            Ok(())
-        } else {
-            Err(TopicError::InvalidChar)
-        }
+/// Check whether topic name contains wildchard characters.
+/// ```
+/// use codec::Topic;
+/// let name = "sport/tennis/player/#";
+/// assert!(Topic::validate_pub_topic(name).is_err());
+///
+/// let name = "sport/tennis/player/ranking";
+/// assert!(Topic::validate_pub_topic(name).is_ok());
+/// ```
+pub fn validate_pub_topic(topic: &str) -> Result<(), TopicError> {
+    if topic.is_empty() {
+        return Err(TopicError::EmptyTopic);
+    }
+    if topic.len() > u16::MAX as usize {
+        return Err(TopicError::TooManyData);
+    }
+
+    if topic.as_bytes().iter().find(|c| c == &&b'+' || c == &&b'#') == None {
+        Ok(())
+    } else {
+        Err(TopicError::InvalidChar)
     }
 }
 

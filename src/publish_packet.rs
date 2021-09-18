@@ -6,11 +6,9 @@ use byteorder::{BigEndian, WriteBytesExt};
 use bytes::BytesMut;
 use std::io::Write;
 
-use super::topic::Topic;
-use super::utils;
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
-    PacketType, QoS, RemainingLength,
+    topic, utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
+    PacketId, PacketType, QoS, RemainingLength,
 };
 
 /// PublishPacket is used to transport application messages from the Client to the Server,
@@ -93,7 +91,7 @@ impl PublishPacket {
     // TODO(Shaohua): No need to copy topic and msg
     pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> Result<PublishPacket, EncodeError> {
         utils::validate_utf8_string(topic)?;
-        Topic::validate_pub_topic(topic)?;
+        topic::validate_pub_topic(topic)?;
 
         Ok(PublishPacket {
             qos,
@@ -142,7 +140,7 @@ impl PublishPacket {
 
     pub fn set_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
         utils::validate_utf8_string(topic)?;
-        Topic::validate_pub_topic(topic)?;
+        topic::validate_pub_topic(topic)?;
         self.topic = topic.to_string();
         Ok(self)
     }
@@ -175,7 +173,7 @@ impl DecodePacket for PublishPacket {
         }
         let topic_len = ba.read_u16()? as usize;
         let topic = ba.read_string(topic_len)?;
-        Topic::validate_pub_topic(&topic)?;
+        topic::validate_pub_topic(&topic)?;
 
         // Parse packet id
         let packet_id = if qos != QoS::AtMostOnce {

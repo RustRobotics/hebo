@@ -8,8 +8,8 @@ use std::io::Write;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
-    PacketType, QoS, RemainingLength, Topic,
+    topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    PacketType, QoS, RemainingLength,
 };
 
 /// Topic/QoS pair.
@@ -87,7 +87,7 @@ pub struct SubscribePacket {
 impl SubscribePacket {
     pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> Result<SubscribePacket, DecodeError> {
         // TODO(Shaohua): Do not copy topic string.
-        Topic::validate_sub_topic(&topic)?;
+        topic::validate_sub_topic(&topic)?;
         let topic = SubscribeTopic::new(topic.to_string(), qos);
         Ok(SubscribePacket {
             packet_id,
@@ -137,7 +137,7 @@ impl DecodePacket for SubscribePacket {
             remaining_length += 2;
 
             let topic = ba.read_string(topic_len)?;
-            Topic::validate_sub_topic(&topic)?;
+            topic::validate_sub_topic(&topic)?;
             remaining_length += topic_len as u32;
 
             let qos_flag = ba.read_byte()?;
