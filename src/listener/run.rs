@@ -64,7 +64,7 @@ impl Listener {
         self.session_senders.insert(session_id, sender);
         let session_config = SessionConfig::new(
             self.config.keep_alive(),
-            60,
+            self.config.connect_timeout(),
             self.config.allow_empty_client_id(),
         );
         let session = Session::new(

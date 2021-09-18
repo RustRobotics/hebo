@@ -307,6 +307,14 @@ pub struct Listener {
     #[serde(default = "Listener::default_keep_alive")]
     keep_alive: u64,
 
+    /// Timeout value in seconds before receiving Connect Packet from client.
+    ///
+    /// The timer is triggered when client stream is connected.
+    ///
+    /// Default is 60s.
+    #[serde(default = "Listener::default_connect_timeout")]
+    connect_timeout: u64,
+
     /// MAY allow a Client to supply a ClientId that has a length of zero bytes.
     ///
     /// Hebo treats this as a special case and assignis a unique ClientId to that Client.
@@ -360,6 +368,10 @@ impl Listener {
         60
     }
 
+    pub const fn default_connect_timeout() -> u64 {
+        60
+    }
+
     pub const fn default_allow_empty_client_id() -> bool {
         false
     }
@@ -400,6 +412,10 @@ impl Listener {
         self.keep_alive
     }
 
+    pub fn connect_timeout(&self) -> u64 {
+        self.connect_timeout
+    }
+
     pub fn allow_empty_client_id(&self) -> bool {
         self.allow_empty_client_id
     }
@@ -417,6 +433,7 @@ impl Default for Listener {
             key_file: Self::default_key_file(),
             username_as_client_id: Self::default_username_as_client_id(),
             keep_alive: Self::default_keep_alive(),
+            connect_timeout: Self::default_connect_timeout(),
             allow_empty_client_id: Self::default_allow_empty_client_id(),
         }
     }
