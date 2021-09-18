@@ -532,10 +532,28 @@ impl DecodePacket for ConnectPacket {
         validate_keep_alive(keep_alive)?;
 
         let client_id_len = ba.read_u16()? as usize;
-        let client_id = ba.read_string(client_id_len)?;
-        // TODO(Shaohua): client_id may not be present.
-        // If so, generate a random one here.
-        validate_client_id(client_id)?;
+        // A Server MAY allow a Client to supply a ClientId that has a length of zero bytes,
+        // however if it does so the Server MUST treat this as a special case and assign
+        // a unique ClientId to that Client. It MUST then process the CONNECT packet
+        // as if the Client had provided that unique ClientId [MQTT-3.1.3-6].
+        let client_id = if client_id_len > 0 {
+            let client_id = ba
+                .read_string(client_id_len)
+                .map_err(|_err| DecodeError::InvalidClientId)?;
+            validate_client_id(&client_id).map_err(|_err| DecodeError::InvalidClientId)?;
+            client_id
+        } else {
+            // If the Client supplies a zero-byte ClientId, the Client MUST also set CleanSession
+            // to 1 [MQTT-3.1.3-7].
+            //
+            // If the Client supplies a zero-byte ClientId with CleanSession set to 0, the Server
+            // MUST respond to the CONNECT Packet with a CONNACK return code 0x02 (Identifier rejected)
+            // and then close the Network Connection [MQTT-3.1.3-8].
+            if !connect_flags.clean_session() {
+                return Err(DecodeError::InvalidClientId);
+            }
+            "".to_string()
+        };
 
         let will_topic = if connect_flags.will {
             let will_topic_len = ba.read_u16()? as usize;
