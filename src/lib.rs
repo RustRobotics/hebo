@@ -23,7 +23,7 @@ pub mod unsubscribe_ack_packet;
 pub mod unsubscribe_packet;
 pub mod utils;
 
-pub use base::{DecodePacket, EncodePacket, PacketId, QoS};
+pub use base::{DecodePacket, EncodePacket, Packet, PacketId, QoS};
 pub use byte_array::ByteArray;
 pub use connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 pub use connect_packet::ConnectPacket;

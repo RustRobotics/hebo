@@ -8,7 +8,7 @@ use std::io::Write;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
     PacketType, RemainingLength,
 };
 
@@ -140,5 +140,11 @@ impl EncodePacket for UnsubscribePacket {
         }
 
         Ok(v.len() - old_len)
+    }
+}
+
+impl Packet for UnsubscribePacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Unsubscribe
     }
 }

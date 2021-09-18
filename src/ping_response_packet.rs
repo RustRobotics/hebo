@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType,
-    RemainingLength,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketType, RemainingLength,
 };
 
 /// The PingResponse packet is sent to a Client from the Server to reply to PingRequest packet.
@@ -28,6 +28,12 @@ impl EncodePacket for PingResponsePacket {
             remaining_length: RemainingLength(0), // Payload is empty
         };
         fixed_header.encode(v)
+    }
+}
+
+impl Packet for PingResponsePacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::PingResponse
     }
 }
 

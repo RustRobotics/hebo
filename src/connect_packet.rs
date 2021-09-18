@@ -9,8 +9,8 @@ use std::io::Write;
 use super::topic;
 use super::utils::{self, StringError};
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType, QoS,
-    RemainingLength,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketType, QoS, RemainingLength,
 };
 
 const PROTOCOL_NAME: &str = "MQTT";
@@ -507,6 +507,12 @@ impl EncodePacket for ConnectPacket {
         }
 
         Ok(v.len() - old_len)
+    }
+}
+
+impl Packet for ConnectPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Connect
     }
 }
 

@@ -5,7 +5,7 @@
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
     PacketType, QoS, RemainingLength,
 };
 
@@ -142,5 +142,11 @@ impl EncodePacket for SubscribeAckPacket {
         }
 
         Ok(buf.len() - old_len)
+    }
+}
+
+impl Packet for SubscribeAckPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::SubscribeAck
     }
 }

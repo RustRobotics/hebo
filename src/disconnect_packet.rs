@@ -5,8 +5,8 @@
 use std::default::Default;
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType,
-    RemainingLength,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketType, RemainingLength,
 };
 
 /// The Disconnect packet is the final packet sent to the Server from a Client.
@@ -32,6 +32,12 @@ impl EncodePacket for DisconnectPacket {
             remaining_length: RemainingLength(0), // No payload
         };
         fixed_header.encode(v)
+    }
+}
+
+impl Packet for DisconnectPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Disconnect
     }
 }
 

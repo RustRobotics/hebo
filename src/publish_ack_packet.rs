@@ -5,7 +5,7 @@
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
     PacketType, RemainingLength,
 };
 
@@ -50,6 +50,12 @@ impl EncodePacket for PublishAckPacket {
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)
+    }
+}
+
+impl Packet for PublishAckPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::PublishAck
     }
 }
 

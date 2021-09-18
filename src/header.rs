@@ -8,7 +8,7 @@ use super::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS
 
 pub const MAX_PACKET_LEN: u32 = 0x7F_FF_FF_FF;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PacketType {
     /// Request to connect to broker
     Connect,

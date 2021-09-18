@@ -8,8 +8,8 @@ use std::io::Write;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
-    topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketId,
-    PacketType, QoS, RemainingLength,
+    topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketId, PacketType, QoS, RemainingLength,
 };
 
 /// Topic/QoS pair.
@@ -185,5 +185,11 @@ impl EncodePacket for SubscribePacket {
         }
 
         Ok(buf.len() - old_len)
+    }
+}
+
+impl Packet for SubscribePacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Subscribe
     }
 }

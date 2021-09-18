@@ -8,7 +8,7 @@ use std::io::Write;
 
 use super::{
     topic, utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
-    PacketId, PacketType, QoS, RemainingLength,
+    Packet, PacketId, PacketType, QoS, RemainingLength,
 };
 
 /// PublishPacket is used to transport application messages from the Client to the Server,
@@ -235,5 +235,15 @@ impl EncodePacket for PublishPacket {
         v.write_all(&self.msg)?;
 
         Ok(v.len() - old_len)
+    }
+}
+
+impl Packet for PublishPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Publish {
+            dup: self.dup,
+            retain: self.retain,
+            qos: self.qos,
+        }
     }
 }

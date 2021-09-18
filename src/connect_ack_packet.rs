@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType,
-    RemainingLength,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketType, RemainingLength,
 };
 
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
@@ -148,6 +148,12 @@ impl EncodePacket for ConnectAckPacket {
         buf.push(self.return_code as u8);
 
         Ok(buf.len() - old_len)
+    }
+}
+
+impl Packet for ConnectAckPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::ConnectAck
     }
 }
 

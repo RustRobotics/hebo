@@ -5,7 +5,7 @@
 use serde_derive::Deserialize;
 use std::convert::TryFrom;
 
-use super::{ByteArray, DecodeError, EncodeError};
+use super::{ByteArray, DecodeError, EncodeError, PacketType};
 
 /// Packet identifier
 pub type PacketId = u16;
@@ -13,6 +13,10 @@ pub type PacketId = u16;
 /// Convert native data types to network byte stream.
 pub trait EncodePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError>;
+}
+
+pub trait Packet {
+    fn packet_type(&self) -> PacketType;
 }
 
 pub trait DecodePacket: Sized {
