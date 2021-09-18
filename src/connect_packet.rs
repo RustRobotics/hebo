@@ -537,7 +537,21 @@ impl DecodePacket for ConnectPacket {
         }
 
         let protocol_level = ProtocolLevel::try_from(ba.read_byte()?)?;
+
         let connect_flags = ConnectFlags::decode(ba)?;
+        // If the Will Flag is set to 0 the Will QoS and Will Retain fields in the
+        // Connect Flags MUST be set to zero and the Will Topic and Will Message fields
+        // MUST NOT be present in the payload [MQTT-3.1.2-11].
+        //
+        // If the Will Flag is set to 0, then the Will QoS MUST be set to 0 (0x00) [MQTT-3.1.2-13].
+        //
+        // If the Will Flag is set to 1, the value of Will QoS can be 0 (0x00), 1 (0x01), or 2 (0x02).
+        // It MUST NOT be 3 (0x03) [MQTT-3.1.2-14].
+        if !connect_flags.will()
+            && (connect_flags.will_qos() != QoS::AtMostOnce || connect_flags.will_retain())
+        {
+            return Err(DecodeError::InvalidConnectFlags);
+        }
 
         // If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].
         if !connect_flags.username() && connect_flags.password() {
