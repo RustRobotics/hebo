@@ -306,6 +306,17 @@ pub struct Listener {
     /// Default is 60.
     #[serde(default = "Listener::default_keep_alive")]
     keep_alive: u64,
+
+    /// MAY allow a Client to supply a ClientId that has a length of zero bytes.
+    ///
+    /// Hebo treats this as a special case and assignis a unique ClientId to that Client.
+    /// if this flags is true.
+    ///
+    /// Or send IdentifierRejected ConnectAckPackdet if this flag is false.
+    ///
+    /// Default is false.
+    #[serde(default = "Listener::default_allow_empty_client_id")]
+    allow_empty_client_id: bool,
 }
 
 impl Listener {
@@ -349,6 +360,10 @@ impl Listener {
         60
     }
 
+    pub const fn default_allow_empty_client_id() -> bool {
+        false
+    }
+
     pub fn bind_interface(&self) -> &str {
         &self.bind_interface
     }
@@ -384,6 +399,10 @@ impl Listener {
     pub fn keep_alive(&self) -> u64 {
         self.keep_alive
     }
+
+    pub fn allow_empty_client_id(&self) -> bool {
+        self.allow_empty_client_id
+    }
 }
 
 impl Default for Listener {
@@ -398,6 +417,7 @@ impl Default for Listener {
             key_file: Self::default_key_file(),
             username_as_client_id: Self::default_username_as_client_id(),
             keep_alive: Self::default_keep_alive(),
+            allow_empty_client_id: Self::default_allow_empty_client_id(),
         }
     }
 }
