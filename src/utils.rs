@@ -16,6 +16,18 @@ pub fn random_string(len: usize) -> Result<String, StringError> {
     .map_err(|_err| StringError::InvalidRandomString)
 }
 
+/// Generate random client id in valid characters.
+pub fn random_client_id() -> Result<String, StringError> {
+    let mut rng = rand::thread_rng();
+    let len = rng.gen_range(14..22);
+    String::from_utf8(
+        rng.sample_iter(&Alphanumeric)
+            .take(len)
+            .collect::<Vec<u8>>(),
+    )
+    .map_err(|_err| StringError::InvalidRandomString)
+}
+
 #[derive(Debug, PartialEq)]
 // Invalid UTF-8 string.
 pub enum StringError {
