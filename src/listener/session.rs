@@ -44,6 +44,7 @@ impl Listener {
         }
     }
 
+    #[allow(dead_code)]
     async fn reject_client_id(&mut self, session_id: SessionId) -> Result<(), Error> {
         let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
         let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
@@ -61,9 +62,18 @@ impl Listener {
     ) -> Result<(), Error> {
         log::info!("Listener::on_session_connect()");
 
-        // If client id already exists, notify session to send disconnect packet.
-        if self.client_ids.get(packet.client_id()).is_some() {
-            return self.reject_client_id(session_id).await;
+        // If the ClientId represents a Client already connected to the Server then the Server MUST
+        // disconnect the existing Client [MQTT-3.1.4-2].
+        let old_session_id = self.client_ids.get(packet.client_id());
+        if let Some(old_session_id) = old_session_id {
+            let old_session_id = *old_session_id;
+            if let Err(err) = self.disconnect_session(old_session_id).await {
+                log::error!(
+                    "Failed to send disconnect cmd to {}, err: {:?}",
+                    old_session_id,
+                    err
+                );
+            }
         }
 
         self.session_ids
@@ -124,17 +134,6 @@ impl Listener {
         _packet: UnsubscribePacket,
     ) -> Result<(), Error> {
         // Remove topic from sub tree.
-        /*
-        for (_, pipeline) in self.pipelines.iter_mut() {
-            if pipeline.session_id == session_id {
-                pipeline
-                    .topics
-                    .retain(|ref topic| !packet.topics().any(|t| t == topic.topic().topic()));
-            }
-            break;
-        }
-        */
-
         // Send subRemoved to dispatcher.
         self.dispatcher_sender
             .send(ListenerToDispatcherCmd::SubscriptionsRemoved(self.id))
@@ -145,5 +144,15 @@ impl Listener {
     async fn on_session_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
         let cmd = ListenerToDispatcherCmd::Publish(packet.clone());
         self.dispatcher_sender.send(cmd).await.map_err(Into::into)
+    }
+
+    /// Send disconnect cmd to session.
+    async fn disconnect_session(&mut self, session_id: SessionId) -> Result<(), Error> {
+        let cmd = ListenerToSessionCmd::Disconnect;
+        if let Some(session_sender) = self.session_senders.get(&session_id) {
+            session_sender.send(cmd).await.map_err(Into::into)
+        } else {
+            Err(Error::session_error(session_id))
+        }
     }
 }
