@@ -6,14 +6,14 @@ use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
 /// Generate random string.
-pub fn random_string(len: usize) -> String {
+pub fn random_string(len: usize) -> Result<String, StringError> {
     String::from_utf8(
         thread_rng()
             .sample_iter(&Alphanumeric)
             .take(len)
             .collect::<Vec<u8>>(),
     )
-    .unwrap()
+    .map_err(|_err| StringError::InvalidRandomString)
 }
 
 #[derive(Debug, PartialEq)]
@@ -27,6 +27,8 @@ pub enum StringError {
 
     /// Server or client shall DISCONNECT immediately.
     SeriousError,
+
+    InvalidRandomString,
 }
 
 impl From<std::string::FromUtf8Error> for StringError {

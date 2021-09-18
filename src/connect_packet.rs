@@ -2,11 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
-use std::default::Default;
-use std::io::Write;
-
 use byteorder::{BigEndian, WriteBytesExt};
+use rand::distributions::Alphanumeric;
+use rand::Rng;
+use std::convert::TryFrom;
+use std::io::Write;
 
 use super::topic::Topic;
 use super::utils::{self, StringError};
@@ -449,6 +449,17 @@ pub fn validate_client_id(id: &str) -> Result<(), StringError> {
         }
     }
     Ok(())
+}
+
+pub fn random_client_id() -> Result<String, StringError> {
+    let mut rng = rand::thread_rng();
+    let len = rng.gen_range(12..22);
+    String::from_utf8(
+        rng.sample_iter(&Alphanumeric)
+            .take(len)
+            .collect::<Vec<u8>>(),
+    )
+    .map_err(|_err| StringError::InvalidRandomString)
 }
 
 impl EncodePacket for ConnectPacket {
