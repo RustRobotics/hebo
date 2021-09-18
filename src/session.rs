@@ -4,7 +4,7 @@
 
 use codec::{
     utils::random_client_id, ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode,
-    DecodeError, DecodePacket, DisconnectPacket, EncodePacket, FixedHeader, PacketType,
+    DecodeError, DecodePacket, DisconnectPacket, EncodePacket, FixedHeader, Packet, PacketType,
     PingRequestPacket, PingResponsePacket, PublishAckPacket, PublishPacket, SubscribeAck,
     SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
 };
@@ -192,7 +192,17 @@ impl Session {
         self.instant = Instant::now();
     }
 
-    async fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
+    async fn send<P: EncodePacket + Packet>(&mut self, packet: P) -> Result<(), Error> {
+        // The CONNACK Packet is the packet sent by the Server in response to a CONNECT Packet
+        // received from a Client. The first packet sent from the Server to the Client MUST be
+        // a CONNACK Packet [MQTT-3.2.0-1].
+        if self.status == Status::Connecting && packet.packet_type() != PacketType::ConnectAck {
+            log::error!(
+                "ConnectAck is not the first packet to send: {:?}",
+                packet.packet_type()
+            );
+        }
+
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
         self.stream.write(&buf).await.map(drop)?;
@@ -427,13 +437,15 @@ impl Session {
     async fn handle_listener_packet(&mut self, cmd: ListenerToSessionCmd) -> Result<(), Error> {
         match cmd {
             ListenerToSessionCmd::ConnectAck(packet) => {
-                self.status = if packet.return_code() == ConnectReturnCode::Accepted {
-                    Status::Connected
-                } else {
-                    Status::Disconnected
-                };
+                // Send connect ack first, then update status.
+                let return_code = packet.return_code();
+                self.send(packet).await?;
 
-                self.send(packet).await
+                self.status = match return_code {
+                    ConnectReturnCode::Accepted => Status::Connected,
+                    _ => Status::Disconnected,
+                };
+                Ok(())
             }
             ListenerToSessionCmd::Publish(packet) => self.send(packet).await,
             ListenerToSessionCmd::SubscribeAck(packet) => self.send(packet).await,
