@@ -59,6 +59,8 @@ pub enum EncodeError {
 
     IoError,
 
+    InvalidPacketType,
+
     /// Length of data exceeds its limitation
     TooManyData,
 

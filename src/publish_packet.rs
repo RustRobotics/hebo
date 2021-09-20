@@ -116,9 +116,13 @@ impl PublishPacket {
         self.retain
     }
 
-    pub fn set_dup(&mut self, dup: bool) -> &mut Self {
+    pub fn set_dup(&mut self, dup: bool) -> Result<&mut Self, EncodeError> {
+        // The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
+        if dup && self.qos == QoS::AtMostOnce {
+            return Err(EncodeError::InvalidPacketType);
+        }
         self.dup = dup;
-        self
+        Ok(self)
     }
 
     pub fn dup(&self) -> bool {
@@ -167,10 +171,11 @@ impl DecodePacket for PublishPacket {
                 return Err(DecodeError::InvalidPacketType);
             };
 
-        // If dup is true, qos cannot be 0.
+        // The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
         if dup && qos == QoS::AtMostOnce {
             return Err(DecodeError::InvalidPacketType);
         }
+
         let topic_len = ba.read_u16()? as usize;
         let topic = ba.read_string(topic_len)?;
         topic::validate_pub_topic(&topic)?;
