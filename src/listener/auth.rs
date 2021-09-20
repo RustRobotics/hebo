@@ -23,8 +23,24 @@ impl Listener {
         session_id: SessionId,
         access_granted: bool,
     ) -> Result<(), Error> {
+        // If the Server accepts a connection with CleanSession set to 1,
+        // the Server MUST set Session Present to 0 in the CONNACK packet
+        // in addition to setting a zero return code in the CONNACK packet [MQTT-3.2.2- 1].
+        //
+        // If the Server accepts a connection with CleanSession set to 0, the value
+        // set in Session Present depends on whether the Server already has
+        // stored Session state for the supplied client ID. If the Server has stored
+        // Session state, it MUST set Session Present to 1 in the CONNACK packet [MQTT-3.2.2-2].
+        // If the Server does not have stored Session state, it MUST set Session Present
+        // to 0 in the CONNACK packet. This is in addition to setting a zero return code
+        // in the CONNACK packet [MQTT-3.2.2-3].
+        //
+        // If a server sends a CONNACK packet containing a non-zero return code
+        // it MUST set Session Present to 0 [MQTT-3.2.2-4].
+
+        // TODO(Shaohua): Check cached session store and update session_present flag.
         let ack_packet = if access_granted {
-            ConnectAckPacket::new(true, ConnectReturnCode::Accepted)
+            ConnectAckPacket::new(false, ConnectReturnCode::Accepted)
         } else {
             ConnectAckPacket::new(false, ConnectReturnCode::Unauthorized)
         };

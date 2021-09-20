@@ -262,6 +262,8 @@ impl Session {
     }
 
     async fn reject_client_id(&mut self) -> Result<(), Error> {
+        // If a server sends a CONNACK packet containing a non-zero return code
+        // it MUST set Session Present to 0 [MQTT-3.2.2-4].
         let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
         self.send(ack_packet).await?;
         self.send_disconnect().await
@@ -277,6 +279,9 @@ impl Session {
                 // The Server MUST respond to the CONNECT Packet with a CONNACK return code
                 // 0x01 (unacceptable protocol level) and then disconnect
                 // the Client if the Protocol Level is not supported by the Server
+                //
+                // If a server sends a CONNACK packet containing a non-zero return code
+                // it MUST set Session Present to 0 [MQTT-3.2.2-4].
                 DecodeError::InvalidProtocolName | DecodeError::InvalidProtocolLevel => {
                     let ack_packet =
                         ConnectAckPacket::new(false, ConnectReturnCode::UnacceptedProtocol);

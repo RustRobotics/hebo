@@ -46,6 +46,8 @@ impl Listener {
 
     #[allow(dead_code)]
     async fn reject_client_id(&mut self, session_id: SessionId) -> Result<(), Error> {
+        // If a server sends a CONNACK packet containing a non-zero return code
+        // it MUST set Session Present to 0 [MQTT-3.2.2-4].
         let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
         let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
         if let Some(session_sender) = self.session_senders.get(&session_id) {
