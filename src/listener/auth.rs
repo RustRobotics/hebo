@@ -46,6 +46,8 @@ impl Listener {
         };
         let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
 
+        self.connecting_sessions.remove(&session_id);
+
         if access_granted {
             // Add client id to cache.
             if let Some(client_id) = self.session_ids.get(&session_id) {

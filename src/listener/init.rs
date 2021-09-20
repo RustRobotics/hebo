@@ -54,6 +54,7 @@ impl Listener {
             session_senders: HashMap::new(),
             session_ids: HashMap::new(),
             client_ids: BTreeMap::new(),
+            connecting_sessions: HashMap::new(),
 
             session_sender,
             session_receiver: Some(session_receiver),
