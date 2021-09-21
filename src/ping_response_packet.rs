@@ -4,7 +4,7 @@
 
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketType, RemainingLength,
+    PacketType,
 };
 
 /// The PingResponse packet is sent to a Client from the Server to reply to PingRequest packet.
@@ -23,10 +23,8 @@ impl PingResponsePacket {
 
 impl EncodePacket for PingResponsePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::PingResponse,
-            remaining_length: RemainingLength(0), // Payload is empty
-        };
+        // Payload is empty
+        let fixed_header = FixedHeader::new(PacketType::PingResponse, 0);
         fixed_header.encode(v)
     }
 }
@@ -40,9 +38,9 @@ impl Packet for PingResponsePacket {
 impl DecodePacket for PingResponsePacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        if fixed_header.packet_type != PacketType::PingResponse {
+        if fixed_header.packet_type() != PacketType::PingResponse {
             Err(DecodeError::InvalidPacketType)
-        } else if fixed_header.remaining_length.0 != 0 {
+        } else if fixed_header.remaining_length() != 0 {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             Ok(PingResponsePacket())

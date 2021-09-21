@@ -4,7 +4,7 @@
 
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketType, RemainingLength,
+    PacketType,
 };
 
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
@@ -121,7 +121,7 @@ impl ConnectAckPacket {
 impl DecodePacket for ConnectAckPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        assert_eq!(fixed_header.packet_type, PacketType::ConnectAck);
+        assert_eq!(fixed_header.packet_type(), PacketType::ConnectAck);
 
         let ack_flags = ba.read_byte()?;
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
@@ -137,10 +137,7 @@ impl DecodePacket for ConnectAckPacket {
 impl EncodePacket for ConnectAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::ConnectAck,
-            remaining_length: RemainingLength(2),
-        };
+        let fixed_header = FixedHeader::new(PacketType::ConnectAck, 2);
         fixed_header.encode(buf)?;
 
         let ack_flags = if self.session_present { 0b0000_0001 } else { 0 };

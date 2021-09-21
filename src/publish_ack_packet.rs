@@ -6,7 +6,7 @@ use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType, RemainingLength,
+    PacketType,
 };
 
 /// Acknowledge packet for Publish message in QoS 1.
@@ -43,10 +43,7 @@ impl EncodePacket for PublishAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::PublishAck,
-            remaining_length: RemainingLength(2),
-        };
+        let fixed_header = FixedHeader::new(PacketType::PublishAck, 2);
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)
@@ -62,9 +59,9 @@ impl Packet for PublishAckPacket {
 impl DecodePacket for PublishAckPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        if fixed_header.packet_type != PacketType::PublishAck {
+        if fixed_header.packet_type() != PacketType::PublishAck {
             Err(DecodeError::InvalidPacketType)
-        } else if fixed_header.remaining_length.0 != 2 {
+        } else if fixed_header.remaining_length() != 2 {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             let packet_id = BigEndian::read_u16(ba.read_bytes(2)?) as PacketId;

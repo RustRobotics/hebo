@@ -10,7 +10,7 @@ use super::topic;
 use super::utils::{self, StringError};
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketType, QoS, RemainingLength,
+    PacketType, QoS,
 };
 
 const PROTOCOL_NAME: &str = "MQTT";
@@ -473,10 +473,7 @@ impl EncodePacket for ConnectPacket {
             remaining_length += 2 + self.password.len();
         }
 
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Connect,
-            remaining_length: RemainingLength(remaining_length as u32),
-        };
+        let fixed_header = FixedHeader::new(PacketType::Connect, remaining_length);
         // Write fixed header
         fixed_header.encode(v)?;
 
@@ -519,7 +516,7 @@ impl Packet for ConnectPacket {
 impl DecodePacket for ConnectPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        if fixed_header.packet_type != PacketType::Connect {
+        if fixed_header.packet_type() != PacketType::Connect {
             return Err(DecodeError::InvalidPacketType);
         }
 

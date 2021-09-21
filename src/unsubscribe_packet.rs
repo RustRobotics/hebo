@@ -9,7 +9,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType, RemainingLength,
+    PacketType,
 };
 
 /// The Client request to unsubscribe topics from the Server.
@@ -98,7 +98,7 @@ impl UnsubscribePacket {
 impl DecodePacket for UnsubscribePacket {
     fn decode(ba: &mut ByteArray) -> Result<UnsubscribePacket, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        if fixed_header.packet_type != PacketType::Unsubscribe {
+        if fixed_header.packet_type() != PacketType::Unsubscribe {
             return Err(DecodeError::InvalidPacketType);
         }
 
@@ -106,11 +106,11 @@ impl DecodePacket for UnsubscribePacket {
 
         let mut remaining_length = 2;
         let mut topics = Vec::new();
-        while remaining_length < fixed_header.remaining_length.0 {
+        while remaining_length < fixed_header.remaining_length() {
             let topic_len = ba.read_u16()? as usize;
             remaining_length += 2;
             let topic = ba.read_string(topic_len)?;
-            remaining_length += topic_len as u32;
+            remaining_length += topic_len;
             topics.push(topic);
         }
 
@@ -127,10 +127,7 @@ impl EncodePacket for UnsubscribePacket {
                 + topic.len(); // topic
         }
 
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Unsubscribe,
-            remaining_length: RemainingLength(remaining_length as u32),
-        };
+        let fixed_header = FixedHeader::new(PacketType::Unsubscribe, remaining_length);
         fixed_header.encode(v)?;
 
         v.write_u16::<BigEndian>(self.packet_id)?;

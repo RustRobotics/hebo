@@ -9,7 +9,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
     topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketId, PacketType, QoS, RemainingLength,
+    PacketId, PacketType, QoS,
 };
 
 /// Topic/QoS pair.
@@ -122,7 +122,7 @@ impl SubscribePacket {
 impl DecodePacket for SubscribePacket {
     fn decode(ba: &mut ByteArray) -> Result<SubscribePacket, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        if fixed_header.packet_type != PacketType::Subscribe {
+        if fixed_header.packet_type() != PacketType::Subscribe {
             return Err(DecodeError::InvalidPacketType);
         }
 
@@ -132,13 +132,13 @@ impl DecodePacket for SubscribePacket {
         let mut remaining_length = 2;
 
         // Parse topic/qos list.
-        while remaining_length < fixed_header.remaining_length.0 {
+        while remaining_length < fixed_header.remaining_length() {
             let topic_len = ba.read_u16()? as usize;
             remaining_length += 2;
 
             let topic = ba.read_string(topic_len)?;
             topic::validate_sub_topic(&topic)?;
-            remaining_length += topic_len as u32;
+            remaining_length += topic_len;
 
             let qos_flag = ba.read_byte()?;
             remaining_length += 1;
@@ -167,10 +167,7 @@ impl EncodePacket for SubscribePacket {
                 + 1; // Requested QoS
         }
 
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Subscribe,
-            remaining_length: RemainingLength(remaining_length as u32),
-        };
+        let fixed_header = FixedHeader::new(PacketType::Subscribe, remaining_length);
         fixed_header.encode(buf)?;
 
         // Variable header

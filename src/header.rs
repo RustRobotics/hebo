@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 
 use super::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
 
-pub const MAX_PACKET_LEN: u32 = 0x7F_FF_FF_FF;
+pub const MAX_PACKET_LEN: usize = 0x7F_FF_FF_FF;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PacketType {
@@ -153,10 +153,18 @@ impl Default for PacketType {
 /// of bytes in the `Remaining Length` field is 4 bytes. The maximum value is
 /// `0xFF 0xFF 0xFF 0x7F`, `256MB`.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct RemainingLength(pub u32);
+pub struct RemainingLength(usize);
 
 impl RemainingLength {
+    pub fn new(len: usize) -> Self {
+        Self(len)
+    }
+
     pub fn len(&self) -> usize {
+        self.0
+    }
+
+    pub fn bytes(&self) -> usize {
         if self.0 > 0x7F_FF_FF {
             4
         } else if self.0 > 0x7F_FF {
@@ -175,15 +183,15 @@ impl RemainingLength {
 
 impl DecodePacket for RemainingLength {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let mut byte: u32;
-        let mut remaining_bytes: u32 = 0;
+        let mut byte: usize;
+        let mut remaining_length: usize = 0;
         let mut multiplier = 1;
 
         // TODO(Shaohua): Simplify
         // Read variant length
         loop {
-            byte = ba.read_byte()? as u32;
-            remaining_bytes += (byte & 127) * multiplier;
+            byte = ba.read_byte()? as usize;
+            remaining_length += (byte & 127) * multiplier;
             multiplier *= 128;
 
             // TODO(Shaohua): Add comments about magic number
@@ -198,10 +206,10 @@ impl DecodePacket for RemainingLength {
 
         // Sometimes we only receive header part of packet and decide
         // whether to prevent from sending more bytes.
-        if ba.remaining_bytes() < remaining_bytes as usize {
+        if ba.remaining_bytes() < remaining_length as usize {
             Err(DecodeError::InvalidRemainingLength)
         } else {
-            Ok(RemainingLength(remaining_bytes))
+            Ok(RemainingLength(remaining_length))
         }
     }
 }
@@ -241,8 +249,29 @@ impl EncodePacket for RemainingLength {
 /// +-------+-------+
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct FixedHeader {
-    pub packet_type: PacketType,
-    pub remaining_length: RemainingLength,
+    packet_type: PacketType,
+    remaining_length: RemainingLength,
+}
+
+impl FixedHeader {
+    pub fn new(packet_type: PacketType, remaining_length: usize) -> Self {
+        Self {
+            packet_type,
+            remaining_length: RemainingLength::new(remaining_length),
+        }
+    }
+
+    pub fn packet_type(&self) -> PacketType {
+        self.packet_type
+    }
+
+    pub fn remaining_length(&self) -> usize {
+        self.remaining_length.len()
+    }
+
+    pub fn remaining_bytes(&self) -> usize {
+        self.remaining_length.bytes()
+    }
 }
 
 impl DecodePacket for FixedHeader {

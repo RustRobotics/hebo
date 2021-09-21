@@ -8,7 +8,7 @@ use std::io::Write;
 
 use super::{
     topic, utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
-    Packet, PacketId, PacketType, QoS, RemainingLength,
+    Packet, PacketId, PacketType, QoS,
 };
 
 /// PublishPacket is used to transport application messages from the Client to the Server,
@@ -165,7 +165,7 @@ impl DecodePacket for PublishPacket {
         let fixed_header = FixedHeader::decode(ba)?;
 
         let (dup, qos, retain) =
-            if let PacketType::Publish { dup, qos, retain } = fixed_header.packet_type {
+            if let PacketType::Publish { dup, qos, retain } = fixed_header.packet_type() {
                 (dup, qos, retain)
             } else {
                 return Err(DecodeError::InvalidPacketType);
@@ -185,14 +185,16 @@ impl DecodePacket for PublishPacket {
         // The Topic Name in the PUBLISH Packet MUST NOT contain wildcard characters [MQTT-3.3.2-2].
         topic::validate_pub_topic(&topic)?;
 
-        // Parse packet id
+        // Parse packet id.
+        // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
         let packet_id = if qos != QoS::AtMostOnce {
             ba.read_u16()?
         } else {
             0
         };
 
-        let mut msg_len = fixed_header.remaining_length.0 as usize
+        // It is valid for a PUBLISH Packet to contain a zero length payload.
+        let mut msg_len = fixed_header.remaining_length()
             - 2 // topic length bytes
             - topic_len; // topic
         if qos != QoS::AtMostOnce {
@@ -224,14 +226,14 @@ impl EncodePacket for PublishPacket {
             remaining_length += 2;
         }
 
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::Publish {
+        let fixed_header = FixedHeader::new(
+            PacketType::Publish {
                 dup: self.dup,
                 retain: self.retain,
                 qos: self.qos,
             },
-            remaining_length: RemainingLength(remaining_length as u32),
-        };
+            remaining_length,
+        );
         fixed_header.encode(v)?;
 
         // Write variable header

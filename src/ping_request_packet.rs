@@ -4,7 +4,7 @@
 
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketType, RemainingLength,
+    PacketType,
 };
 
 /// The PingRequest packet is sent to the Server from a Client. It is used to:
@@ -24,10 +24,8 @@ impl PingRequestPacket {
 
 impl EncodePacket for PingRequestPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::PingRequest,
-            remaining_length: RemainingLength(0), // Payload is empty
-        };
+        // Payload is empty
+        let fixed_header = FixedHeader::new(PacketType::PingRequest, 0);
         fixed_header.encode(v)
     }
 }
@@ -41,9 +39,9 @@ impl Packet for PingRequestPacket {
 impl DecodePacket for PingRequestPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        if fixed_header.packet_type != PacketType::PingRequest {
+        if fixed_header.packet_type() != PacketType::PingRequest {
             Err(DecodeError::InvalidPacketType)
-        } else if fixed_header.remaining_length.0 != 0 {
+        } else if fixed_header.remaining_length() != 0 {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             Ok(PingRequestPacket())

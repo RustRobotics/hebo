@@ -6,7 +6,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType, QoS, RemainingLength,
+    PacketType, QoS,
 };
 
 /// Reply to each subscribed topic.
@@ -92,7 +92,7 @@ impl SubscribeAckPacket {
 impl DecodePacket for SubscribeAckPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        if fixed_header.packet_type != PacketType::SubscribeAck {
+        if fixed_header.packet_type() != PacketType::SubscribeAck {
             return Err(DecodeError::InvalidPacketType);
         }
 
@@ -101,7 +101,7 @@ impl DecodePacket for SubscribeAckPacket {
         let mut acknowledgements = Vec::new();
         let mut remaining_length = 2;
 
-        while remaining_length < fixed_header.remaining_length.0 {
+        while remaining_length < fixed_header.remaining_length() {
             let payload = ba.read_byte()?;
             remaining_length += 1;
             match payload & 0b1000_0011 {
@@ -124,10 +124,7 @@ impl DecodePacket for SubscribeAckPacket {
 impl EncodePacket for SubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let fixed_header = FixedHeader {
-            packet_type: PacketType::SubscribeAck,
-            remaining_length: RemainingLength(3),
-        };
+        let fixed_header = FixedHeader::new(PacketType::SubscribeAck, 3);
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
 
