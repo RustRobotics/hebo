@@ -129,7 +129,7 @@ pub fn validate_sub_topic(topic: &str) -> Result<(), TopicError> {
     Ok(())
 }
 
-/// Check whether topic name contains wildchard characters.
+/// Check whether topic name contains wildchard characters or not.
 /// ```
 /// use codec::Topic;
 /// let name = "sport/tennis/player/#";

@@ -178,6 +178,11 @@ impl DecodePacket for PublishPacket {
 
         let topic_len = ba.read_u16()? as usize;
         let topic = ba.read_string(topic_len)?;
+        // The Topic Name MUST be present as the first field in the PUBLISH Packet Variable header.
+        // It MUST be a UTF-8 encoded string [MQTT-3.3.2-1] as defined in section 1.5.3.
+        utils::validate_utf8_string(&topic)?;
+
+        // The Topic Name in the PUBLISH Packet MUST NOT contain wildcard characters [MQTT-3.3.2-2].
         topic::validate_pub_topic(&topic)?;
 
         // Parse packet id
