@@ -2,11 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, WriteBytesExt};
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType, QoS,
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketId, PacketType, QoS,
 };
 
 /// Reply to each subscribed topic.
@@ -96,14 +96,14 @@ impl DecodePacket for SubscribeAckPacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let packet_id = ba.read_u16()? as PacketId;
+        let packet_id = BigEndian::read_u16(ba.read_bytes(consts::PACKET_ID_BYTES)?) as PacketId;
 
         let mut acknowledgements = Vec::new();
-        let mut remaining_length = 2;
+        let mut remaining_length = consts::PACKET_ID_BYTES;
 
         while remaining_length < fixed_header.remaining_length() {
             let payload = ba.read_byte()?;
-            remaining_length += 1;
+            remaining_length += consts::QOS_BYTES;
             match payload & 0b1000_0011 {
                 0b1000_0000 => acknowledgements.push(SubscribeAck::Failed),
                 0b0000_0010 => acknowledgements.push(SubscribeAck::QoS(QoS::ExactOnce)),
@@ -124,7 +124,9 @@ impl DecodePacket for SubscribeAckPacket {
 impl EncodePacket for SubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let fixed_header = FixedHeader::new(PacketType::SubscribeAck, 3);
+        let remaining_length =
+            consts::PACKET_ID_BYTES + consts::QOS_BYTES * self.acknowledgements.len();
+        let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length);
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
 
