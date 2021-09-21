@@ -5,7 +5,7 @@
 use std::convert::TryFrom;
 use std::io::Write;
 
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
     consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
@@ -126,7 +126,7 @@ impl DecodePacket for SubscribePacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let packet_id = BigEndian::read_u16(ba.read_bytes(consts::PACKET_ID_BYTES)?) as PacketId;
+        let packet_id = ba.read_u16()? as PacketId;
 
         let mut topics = Vec::new();
         let mut remaining_length = consts::PACKET_ID_BYTES;

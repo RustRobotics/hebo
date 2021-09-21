@@ -2,7 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
+use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
     consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
@@ -96,7 +96,7 @@ impl DecodePacket for SubscribeAckPacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let packet_id = BigEndian::read_u16(ba.read_bytes(consts::PACKET_ID_BYTES)?) as PacketId;
+        let packet_id = ba.read_u16()? as PacketId;
 
         let mut acknowledgements = Vec::new();
         let mut remaining_length = consts::PACKET_ID_BYTES;
