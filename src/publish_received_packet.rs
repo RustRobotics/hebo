@@ -5,8 +5,8 @@
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType,
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketId, PacketType,
 };
 
 /// Response to a Publish packet with QoS 2. It is the second packet of the QoS 2 protocol
@@ -44,7 +44,7 @@ impl EncodePacket for PublishReceivedPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let fixed_header = FixedHeader::new(PacketType::PublishReceived, 2);
+        let fixed_header = FixedHeader::new(PacketType::PublishReceived, consts::PACKET_ID_BYTES);
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)
@@ -62,10 +62,11 @@ impl DecodePacket for PublishReceivedPacket {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::PublishReceived {
             Err(DecodeError::InvalidPacketType)
-        } else if fixed_header.remaining_length() != 2 {
+        } else if fixed_header.remaining_length() != consts::PACKET_ID_BYTES {
             Err(DecodeError::InvalidRemainingLength)
         } else {
-            let packet_id = BigEndian::read_u16(ba.read_bytes(2)?) as PacketId;
+            let packet_id =
+                BigEndian::read_u16(ba.read_bytes(consts::PACKET_ID_BYTES)?) as PacketId;
             Ok(PublishReceivedPacket { packet_id })
         }
     }

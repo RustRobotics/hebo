@@ -5,8 +5,8 @@
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType,
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketId, PacketType,
 };
 
 /// UnsubscribeAck packet is sent by the Server to the Client to confirm receipt of an
@@ -46,7 +46,7 @@ impl DecodePacket for UnsubscribeAckPacket {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::UnsubscribeAck {
             Err(DecodeError::InvalidPacketType)
-        } else if fixed_header.remaining_length() != 2 {
+        } else if fixed_header.remaining_length() != consts::PACKET_ID_BYTES {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             let packet_id = ba.read_u16()? as PacketId;
@@ -59,7 +59,7 @@ impl EncodePacket for UnsubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let fixed_header = FixedHeader::new(PacketType::UnsubscribeAck, 2);
+        let fixed_header = FixedHeader::new(PacketType::UnsubscribeAck, consts::PACKET_ID_BYTES);
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)

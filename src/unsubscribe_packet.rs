@@ -8,8 +8,8 @@ use std::io::Write;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType,
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketId, PacketType,
 };
 
 /// The Client request to unsubscribe topics from the Server.
@@ -104,11 +104,11 @@ impl DecodePacket for UnsubscribePacket {
 
         let packet_id = ba.read_u16()? as PacketId;
 
-        let mut remaining_length = 2;
+        let mut remaining_length = consts::PACKET_ID_BYTES;
         let mut topics = Vec::new();
         while remaining_length < fixed_header.remaining_length() {
             let topic_len = ba.read_u16()? as usize;
-            remaining_length += 2;
+            remaining_length += consts::TOPIC_LENGTH_BYTES;
             let topic = ba.read_string(topic_len)?;
             remaining_length += topic_len;
             topics.push(topic);
@@ -121,9 +121,9 @@ impl DecodePacket for UnsubscribePacket {
 impl EncodePacket for UnsubscribePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
-        let mut remaining_length: usize = 2; // packet id
+        let mut remaining_length: usize = consts::PACKET_ID_BYTES; // packet id
         for topic in &self.topics {
-            remaining_length += 2 // topic length bytes
+            remaining_length += consts::TOPIC_LENGTH_BYTES // topic length bytes
                 + topic.len(); // topic
         }
 

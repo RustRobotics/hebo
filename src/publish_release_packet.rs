@@ -2,11 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, WriteBytesExt};
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType,
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketId, PacketType,
 };
 
 /// Response to a Publish packet with QoS 2. It is the third packet of the QoS 2 protocol
@@ -45,10 +45,11 @@ impl DecodePacket for PublishReleasePacket {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::PublishRelease {
             Err(DecodeError::InvalidPacketType)
-        } else if fixed_header.remaining_length() != 2 {
+        } else if fixed_header.remaining_length() != consts::PACKET_ID_BYTES {
             Err(DecodeError::InvalidRemainingLength)
         } else {
-            let packet_id = ba.read_u16()? as PacketId;
+            let packet_id =
+                BigEndian::read_u16(ba.read_bytes(consts::PACKET_ID_BYTES)?) as PacketId;
             Ok(PublishReleasePacket { packet_id })
         }
     }
@@ -58,7 +59,7 @@ impl EncodePacket for PublishReleasePacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let fixed_header = FixedHeader::new(PacketType::PublishRelease, 2);
+        let fixed_header = FixedHeader::new(PacketType::PublishRelease, consts::PACKET_ID_BYTES);
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)

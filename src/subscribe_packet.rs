@@ -8,8 +8,8 @@ use std::io::Write;
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{
-    topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketId, PacketType, QoS,
+    consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
+    Packet, PacketId, PacketType, QoS,
 };
 
 /// Topic/QoS pair.
@@ -129,19 +129,19 @@ impl DecodePacket for SubscribePacket {
         let packet_id = ba.read_u16()?;
 
         let mut topics = Vec::new();
-        let mut remaining_length = 2;
+        let mut remaining_length = consts::PACKET_ID_BYTES;
 
         // Parse topic/qos list.
         while remaining_length < fixed_header.remaining_length() {
             let topic_len = ba.read_u16()? as usize;
-            remaining_length += 2;
+            remaining_length += consts::TOPIC_LENGTH_BYTES;
 
             let topic = ba.read_string(topic_len)?;
             topic::validate_sub_topic(&topic)?;
             remaining_length += topic_len;
 
             let qos_flag = ba.read_byte()?;
-            remaining_length += 1;
+            remaining_length += consts::QOS_LENGTH_BYTES;
             let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
 
             let topic = SubscribeTopic::new(topic, qos);
@@ -160,11 +160,11 @@ impl EncodePacket for SubscribePacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let mut remaining_length = 2; // Variable length
+        let mut remaining_length = consts::PACKET_ID_BYTES; // Variable length
         for topic in &self.topics {
-            remaining_length += 2 // Topic length bytes
+            remaining_length += consts::TOPIC_LENGTH_BYTES // Topic length bytes
                 + topic.topic().len() // Topic
-                + 1; // Requested QoS
+                + consts::QOS_LENGTH_BYTES; // Requested QoS
         }
 
         let fixed_header = FixedHeader::new(PacketType::Subscribe, remaining_length);

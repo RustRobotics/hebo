@@ -7,3 +7,6 @@ pub const PACKET_ID_BYTES: usize = 2;
 
 // u16
 pub const TOPIC_LENGTH_BYTES: usize = 2;
+
+// u8
+pub const QOS_LENGTH_BYTES: usize = 1;
