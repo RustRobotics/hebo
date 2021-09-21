@@ -5,7 +5,7 @@
 use std::convert::TryFrom;
 use std::io::Write;
 
-use byteorder::{BigEndian, WriteBytesExt};
+use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
 use super::{
     consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
@@ -126,7 +126,7 @@ impl DecodePacket for SubscribePacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let packet_id = ba.read_u16()?;
+        let packet_id = BigEndian::read_u16(ba.read_bytes(consts::PACKET_ID_BYTES)?) as PacketId;
 
         let mut topics = Vec::new();
         let mut remaining_length = consts::PACKET_ID_BYTES;
@@ -141,7 +141,7 @@ impl DecodePacket for SubscribePacket {
             remaining_length += topic_len;
 
             let qos_flag = ba.read_byte()?;
-            remaining_length += consts::QOS_LENGTH_BYTES;
+            remaining_length += consts::QOS_BYTES;
             let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
 
             let topic = SubscribeTopic::new(topic, qos);
@@ -164,7 +164,7 @@ impl EncodePacket for SubscribePacket {
         for topic in &self.topics {
             remaining_length += consts::TOPIC_LENGTH_BYTES // Topic length bytes
                 + topic.topic().len() // Topic
-                + consts::QOS_LENGTH_BYTES; // Requested QoS
+                + consts::QOS_BYTES; // Requested QoS
         }
 
         let fixed_header = FixedHeader::new(PacketType::Subscribe, remaining_length);
