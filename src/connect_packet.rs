@@ -9,11 +9,9 @@ use std::io::Write;
 use super::topic;
 use super::utils::{self, StringError};
 use super::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
     PacketType, QoS,
 };
-
-const PROTOCOL_NAME: &str = "MQTT";
 
 /// Current version of MQTT protocol can be:
 /// * 3.1
@@ -335,7 +333,7 @@ impl ConnectPacket {
     pub fn new(client_id: &str) -> ConnectPacket {
         // TODO(Shaohua): Validate client_id.
         ConnectPacket {
-            protocol_name: PROTOCOL_NAME.to_string(),
+            protocol_name: consts::PROTOCOL_NAME.to_string(),
             keep_alive: 60,
             client_id: client_id.to_string(),
             ..ConnectPacket::default()
@@ -453,12 +451,12 @@ impl EncodePacket for ConnectPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
-        let mut remaining_length = 2 // protocol_name_len
+        let mut remaining_length = consts::PROTOCOL_NAME_LENGTH // protocol_name_len
             + self.protocol_name.len() // b"MQTT" protocol name
             + 1 // protocol_level
             + 1 // connect_flags
             + 2 // keep_alive
-            + 2 // client_id_len
+            + consts::CLIENT_ID_LENGTH_BYTES // client_id_len
             + self.client_id.len();
 
         // Check username/password/topic/message.
@@ -522,7 +520,7 @@ impl DecodePacket for ConnectPacket {
 
         let protocol_name_len = ba.read_u16()? as usize;
         let protocol_name = ba.read_string(protocol_name_len)?;
-        if protocol_name != PROTOCOL_NAME {
+        if protocol_name != consts::PROTOCOL_NAME {
             return Err(DecodeError::InvalidProtocolName);
         }
 
