@@ -7,8 +7,8 @@ use bytes::BytesMut;
 use std::io::Write;
 
 use super::{
-    topic, utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
-    Packet, PacketId, PacketType, QoS,
+    consts, topic, utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
+    FixedHeader, Packet, PacketId, PacketType, QoS,
 };
 
 /// PublishPacket is used to transport application messages from the Client to the Server,
@@ -194,12 +194,19 @@ impl DecodePacket for PublishPacket {
         };
 
         // It is valid for a PUBLISH Packet to contain a zero length payload.
+        if fixed_header.remaining_length() < topic_len + consts::TOPIC_LENGTH_BYTES {
+            return Err(DecodeError::InvalidRemainingLength);
+        }
         let mut msg_len = fixed_header.remaining_length()
-            - 2 // topic length bytes
+            - consts::TOPIC_LENGTH_BYTES // topic length bytes
             - topic_len; // topic
         if qos != QoS::AtMostOnce {
-            // Packet identifier
-            msg_len -= 2;
+            if msg_len < consts::PACKET_ID_BYTES {
+                return Err(DecodeError::InvalidRemainingLength);
+            }
+
+            // Packet identifier is presesnt in QoS1/QoS2 packets.
+            msg_len -= consts::PACKET_ID_BYTES;
         }
 
         let msg = BytesMut::from(ba.read_bytes(msg_len)?);
@@ -218,12 +225,12 @@ impl EncodePacket for PublishPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
-        let mut remaining_length = 2 // Topic length bytes
+        let mut remaining_length = consts::TOPIC_LENGTH_BYTES // Topic length bytes
             + self.topic.len() // Topic length
             + self.msg.len(); // Message length
         if self.qos != QoS::AtMostOnce {
             // For `packet_id` field.
-            remaining_length += 2;
+            remaining_length += consts::PACKET_ID_BYTES;
         }
 
         let fixed_header = FixedHeader::new(
