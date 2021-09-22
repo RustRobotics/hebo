@@ -258,6 +258,8 @@ impl EncodePacket for PublishPacket {
         // Write variable header
         v.write_u16::<BigEndian>(self.topic.len() as u16)?;
         v.write_all(&self.topic.as_bytes())?;
+
+        // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
         if self.qos() != QoS::AtMostOnce {
             if let Some(packet_id) = self.packet_id {
                 v.write_u16::<BigEndian>(packet_id)?;
