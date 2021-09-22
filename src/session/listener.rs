@@ -4,7 +4,7 @@
 
 //! Handles commands from listener.
 
-use codec::{ConnectReturnCode, PublishPacket};
+use codec::{ConnectReturnCode, PacketId, PublishPacket, QoS};
 
 use super::{Session, Status};
 use crate::commands::ListenerToSessionCmd;
@@ -27,8 +27,8 @@ impl Session {
                 };
                 Ok(())
             }
-            ListenerToSessionCmd::PublishAck(packet, accepted) => {
-                self.on_listener_publish_ack(packet, accepted).await
+            ListenerToSessionCmd::PublishAck(packet_id, qos, accepted) => {
+                self.on_listener_publish_ack(packet_id, qos, accepted).await
             }
             ListenerToSessionCmd::Publish(packet) => self.send(packet).await,
             ListenerToSessionCmd::SubscribeAck(packet) => self.send(packet).await,
@@ -38,10 +38,11 @@ impl Session {
 
     async fn on_listener_publish_ack(
         &mut self,
-        _packet: PublishPacket,
-        _accepted: bool,
+        packet_id: PacketId,
+        qos: QoS,
+        accepted: bool,
     ) -> Result<(), Error> {
-        // TODO(Shaohua): send ack to client.
+        // Send ack to client.
         Ok(())
     }
 }

@@ -7,7 +7,7 @@
 use codec::PublishPacket;
 
 use super::Listener;
-use crate::commands::{AclToListenerCmd, ListenerToDispatcherCmd};
+use crate::commands::{AclToListenerCmd, ListenerToDispatcherCmd, ListenerToSessionCmd};
 use crate::error::Error;
 use crate::types::SessionId;
 
@@ -26,7 +26,21 @@ impl Listener {
         packet: PublishPacket,
         accepted: bool,
     ) -> Result<(), Error> {
-        // TODO(Shaohua): Send ack packet to session.
+        let cmd = ListenerToSessionCmd::PublishAck(packet.packet_id(), packet.qos(), accepted);
+        if let Some(session_sender) = self.session_senders.get(&session_id) {
+            if let Err(err) = session_sender.send(cmd).await {
+                log::error!(
+                    "listener: Failed to send publish ack to session: {:?}, err: {:?}",
+                    session_id,
+                    err
+                );
+            }
+        } else {
+            log::error!(
+                "listener: Failed to find session sender with id: {}",
+                session_id
+            );
+        }
 
         // If ACL passed, send publish packet to dispatcher layer.
         if accepted {

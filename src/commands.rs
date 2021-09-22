@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use codec::{
-    ConnectAckPacket, ConnectPacket, PublishPacket, SubscribeAckPacket, SubscribePacket,
-    UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, PacketId, PublishPacket, QoS, SubscribeAckPacket,
+    SubscribePacket, UnsubscribePacket,
 };
 use tokio::sync::oneshot;
 
@@ -42,8 +42,8 @@ pub enum ListenerToSessionCmd {
 
     /// Response to Publish packet.
     ///
-    /// (packet, accept) pair.
-    PublishAck(PublishPacket, bool),
+    /// (packet_id, qos, accept) pair.
+    PublishAck(PacketId, QoS, bool),
 
     Publish(PublishPacket),
 

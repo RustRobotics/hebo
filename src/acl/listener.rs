@@ -29,7 +29,7 @@ impl AclApp {
             let cmd = AclToListenerCmd::PublishAck(session_gid.session_id(), packet, accepted);
             if let Err(err) = listener_sender.send(cmd).await {
                 log::error!(
-                    "session: Failed to send publish ack to listener: {:?}, err: {:?}",
+                    "acl: Failed to send publish ack to listener: {:?}, err: {:?}",
                     session_gid,
                     err
                 );
