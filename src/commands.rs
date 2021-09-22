@@ -56,7 +56,7 @@ pub enum ListenerToSessionCmd {
 #[derive(Debug, Clone)]
 pub enum SessionToListenerCmd {
     Connect(SessionId, ConnectPacket),
-    Publish(PublishPacket),
+    Publish(SessionId, PublishPacket),
     Subscribe(SessionId, SubscribePacket),
     Unsubscribe(SessionId, UnsubscribePacket),
     Disconnect(SessionId),

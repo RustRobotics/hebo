@@ -9,8 +9,9 @@ use tokio::sync::{mpsc, oneshot};
 use tokio_tungstenite::tungstenite;
 
 use crate::commands::{
-    AuthToListenerCmd, DispatcherToMetricsCmd, ListenerToAuthCmd, ListenerToDispatcherCmd,
-    ListenerToSessionCmd, MetricsToDispatcherCmd, ServerContextToMetricsCmd, SessionToListenerCmd,
+    AuthToListenerCmd, DispatcherToMetricsCmd, ListenerToAclCmd, ListenerToAuthCmd,
+    ListenerToDispatcherCmd, ListenerToSessionCmd, MetricsToDispatcherCmd,
+    ServerContextToMetricsCmd, SessionToListenerCmd,
 };
 use crate::types::SessionId;
 
@@ -247,6 +248,7 @@ macro_rules! convert_send_error {
 
 convert_send_error!(AuthToListenerCmd);
 convert_send_error!(DispatcherToMetricsCmd);
+convert_send_error!(ListenerToAclCmd);
 convert_send_error!(ListenerToAuthCmd);
 convert_send_error!(ListenerToDispatcherCmd);
 convert_send_error!(ListenerToSessionCmd);

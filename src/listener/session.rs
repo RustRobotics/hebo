@@ -11,7 +11,8 @@ use codec::{
 
 use super::Listener;
 use crate::listener::{
-    ListenerToAuthCmd, ListenerToDispatcherCmd, ListenerToSessionCmd, SessionToListenerCmd,
+    ListenerToAclCmd, ListenerToAuthCmd, ListenerToDispatcherCmd, ListenerToSessionCmd,
+    SessionToListenerCmd,
 };
 use crate::types::{SessionGid, SessionId};
 use crate::Error;
@@ -31,7 +32,9 @@ impl Listener {
             SessionToListenerCmd::Connect(session_id, packet) => {
                 self.on_session_connect(session_id, packet).await
             }
-            SessionToListenerCmd::Publish(packet) => self.on_session_publish(packet).await,
+            SessionToListenerCmd::Publish(session_id, packet) => {
+                self.on_session_publish(session_id, packet).await
+            }
             SessionToListenerCmd::Subscribe(session_id, packet) => {
                 self.on_session_subscribe(session_id, packet).await
             }
@@ -146,11 +149,14 @@ impl Listener {
             .map_err(Into::into)
     }
 
-    async fn on_session_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
+    async fn on_session_publish(
+        &mut self,
+        session_id: SessionId,
+        packet: PublishPacket,
+    ) -> Result<(), Error> {
         // Check ACL.
-
-        let cmd = ListenerToDispatcherCmd::Publish(packet.clone());
-        self.dispatcher_sender.send(cmd).await.map_err(Into::into)
+        let cmd = ListenerToAclCmd::Publish(SessionGid::new(self.id, session_id), packet);
+        self.acl_sender.send(cmd).await.map_err(Into::into)
     }
 
     /// Send disconnect cmd to session.

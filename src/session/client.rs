@@ -175,6 +175,7 @@ impl Session {
         // according to the normal QoS rules, or close the Network Connection [MQTT-3.3.5-2].
 
         // Check qos and send publish ack packet to client.
+        /*
         if packet.qos() == QoS::AtLeastOnce {
             if let Some(packet_id) = packet.packet_id() {
                 let ack_packet = PublishAckPacket::new(packet_id);
@@ -194,10 +195,11 @@ impl Session {
                 log::error!("session: Invalid packet id in publish packet {:?}", packet);
             }
         }
+        */
 
         // Send the publish packet to listener.
         self.sender
-            .send(SessionToListenerCmd::Publish(packet))
+            .send(SessionToListenerCmd::Publish(self.id, packet))
             .await
             .map(drop)?;
         Ok(())
