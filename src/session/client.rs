@@ -2,241 +2,22 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+//! Handles client packets
+
 use codec::{
     utils::random_client_id, ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode,
-    DecodeError, DecodePacket, DisconnectPacket, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket, PublishCompletePacket,
-    PublishPacket, PublishReceivedPacket, PublishReleasePacket, QoS, SubscribeAck,
-    SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
+    DecodeError, DecodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket,
+    PublishAckPacket, PublishCompletePacket, PublishPacket, PublishReceivedPacket,
+    PublishReleasePacket, QoS, SubscribeAck, SubscribeAckPacket, SubscribePacket,
+    UnsubscribeAckPacket, UnsubscribePacket,
 };
-use std::collections::HashSet;
-use std::convert::Into;
-use std::time::Instant;
-use tokio::sync::mpsc::{Receiver, Sender};
 
-use crate::commands::{ListenerToSessionCmd, SessionToListenerCmd};
+use super::{Session, Status};
+use crate::commands::SessionToListenerCmd;
 use crate::error::Error;
-use crate::stream::Stream;
-use crate::types::SessionId;
-
-#[derive(Debug, PartialEq)]
-enum Status {
-    Invalid,
-    Connecting,
-    Connected,
-    Disconnecting,
-    Disconnected,
-}
-
-#[derive(Debug, Default, Clone)]
-pub struct SessionConfig {
-    keep_alive: u64,
-    connect_timeout: u64,
-    allow_empty_client_id: bool,
-}
-
-impl SessionConfig {
-    pub fn new(keep_alive: u64, connect_timeout: u64, allow_empty_client_id: bool) -> Self {
-        Self {
-            keep_alive,
-            connect_timeout,
-            allow_empty_client_id,
-        }
-    }
-
-    pub fn set_keep_alive(&mut self, keep_alive: u64) {
-        self.keep_alive = keep_alive;
-    }
-
-    #[inline]
-    pub fn keep_alive(&self) -> u64 {
-        self.keep_alive
-    }
-
-    #[inline]
-    pub fn connect_timeout(&self) -> u64 {
-        self.connect_timeout
-    }
-
-    #[inline]
-    fn allow_empty_client_id(&self) -> bool {
-        self.allow_empty_client_id
-    }
-}
-
-/// ConnectionContext represents a client connection.
-///
-/// All the status of this client is maintained in this struct.
-// TODO(Shaohua): Handle Will Message
-#[derive(Debug)]
-pub struct Session {
-    id: SessionId,
-    config: SessionConfig,
-    stream: Stream,
-
-    status: Status,
-    client_id: String,
-    // TODO(Shaohua): Add session flag
-    instant: Instant,
-    clean_session: bool,
-
-    pub_recv_packets: HashSet<PacketId>,
-
-    sender: Sender<SessionToListenerCmd>,
-    receiver: Receiver<ListenerToSessionCmd>,
-}
 
 impl Session {
-    pub fn new(
-        id: SessionId,
-        config: SessionConfig,
-        stream: Stream,
-        sender: Sender<SessionToListenerCmd>,
-        receiver: Receiver<ListenerToSessionCmd>,
-    ) -> Session {
-        Session {
-            id,
-            config,
-            stream,
-
-            status: Status::Invalid,
-            client_id: String::new(),
-            instant: Instant::now(),
-            clean_session: true,
-
-            pub_recv_packets: HashSet::new(),
-
-            sender,
-            receiver,
-        }
-    }
-
-    pub fn clean_session(&self) -> bool {
-        self.clean_session
-    }
-
-    pub async fn run_loop(mut self) {
-        // TODO(Shaohua): Set buffer cap based on settings
-        let mut buf = Vec::with_capacity(1024);
-
-        let connect_timeout = Instant::now();
-
-        loop {
-            // If the Server does not receive a CONNECT Packet within a reasonable amount of time after the
-            // Network Connection is established, the Server SHOULD close the connection.
-            if self.status == Status::Invalid
-                && self.config.connect_timeout() > 0
-                && connect_timeout.elapsed().as_secs() > self.config.connect_timeout()
-            {
-                break;
-            }
-
-            if self.status == Status::Disconnected {
-                break;
-            }
-
-            tokio::select! {
-                Ok(n_recv) = self.stream.read_buf(&mut buf) => {
-                    log::info!("n_recv: {}", n_recv);
-                    if n_recv > 0 {
-                        if let Err(err) = self.handle_client_packet(&buf).await {
-                            log::error!("handle_client_packet() failed: {:?}", err);
-                            break;
-                        }
-                        buf.clear();
-
-                    } else {
-                        log::info!("session: Empty packet received, disconnect client, {}", self.id);
-                        if let Err(err) = self.send_disconnect().await {
-                            log::error!("session: Failed to send disconnect packet: {:?}", err);
-                        }
-                        break;
-                    }
-                }
-                Some(cmd) = self.receiver.recv() => {
-                    if let Err(err) = self.handle_listener_packet(cmd).await {
-                        log::error!("Failed to handle server packet: {:?}", err);
-                    }
-                },
-            }
-
-            // From [MQTT-3.1.2-24]
-            //
-            // If the Keep Alive value is non-zero and the Server does not receive a Control Packet
-            // from the Client within one and a half times the Keep Alive time period,
-            // it MUST disconnect the Network Connection to the Client as if the network had
-            // failed.
-            //
-            // A Keep Alive value of zero (0) has the effect of turning off the keep alive mechanism.
-            // This means that, in this case, the Server is not required to disconnect the Client
-            // on the grounds of inactivity.
-            //
-            // Note that a Server is permitted to disconnect a Client that it determines to be inactive
-            // or non-responsive at any time, regardless of the Keep Alive value provided by that Client.
-            if self.config.keep_alive() > 0
-                && self.instant.elapsed().as_secs() > self.config.keep_alive()
-            {
-                log::warn!("sessoin: keep_alive time reached, disconnect client!");
-                if let Err(err) = self.send_disconnect().await {
-                    log::error!("session: Failed to send disconnect packet: {:?}", err);
-                }
-                break;
-            }
-        }
-
-        if let Err(err) = self
-            .sender
-            .send(SessionToListenerCmd::Disconnect(self.id))
-            .await
-        {
-            log::error!(
-                "Failed to send disconnect cmd to server, id: {}, err: {:?}",
-                self.id,
-                err
-            );
-        }
-    }
-
-    /// Reset instant if packet is send to or receive from client.
-    fn reset_instant(&mut self) {
-        self.instant = Instant::now();
-    }
-
-    async fn send<P: EncodePacket + Packet>(&mut self, packet: P) -> Result<(), Error> {
-        // The CONNACK Packet is the packet sent by the Server in response to a CONNECT Packet
-        // received from a Client. The first packet sent from the Server to the Client MUST be
-        // a CONNACK Packet [MQTT-3.2.0-1].
-        if self.status == Status::Connecting && packet.packet_type() != PacketType::ConnectAck {
-            log::error!(
-                "ConnectAck is not the first packet to send: {:?}",
-                packet.packet_type()
-            );
-        }
-
-        let mut buf = Vec::new();
-        packet.encode(&mut buf)?;
-        self.stream.write(&buf).await.map(drop)?;
-        self.reset_instant();
-        Ok(())
-    }
-
-    /// Send disconnect packet to client and update status.
-    async fn send_disconnect(&mut self) -> Result<(), Error> {
-        self.status = Status::Disconnecting;
-        let packet = DisconnectPacket::new();
-        if let Err(err) = self.send(packet).await.map(drop) {
-            log::error!(
-                "session: Failed to send disconnect packet, {}, err: {:?}",
-                self.id,
-                err
-            );
-            return Err(err);
-        }
-        self.status = Status::Disconnected;
-        Ok(())
-    }
-
-    async fn handle_client_packet(&mut self, buf: &[u8]) -> Result<(), Error> {
+    pub(super) async fn handle_client_packet(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let fixed_header = match FixedHeader::decode(&mut ba) {
             Ok(fixed_header) => fixed_header,
@@ -389,6 +170,11 @@ impl Session {
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
 
+        // TODO(Shaohua): Check ACL
+        // If a Server implementation does not authorize a PUBLISH to be performed by a Client;
+        // it has no way of informing that Client. It MUST either make a positive acknowledgement,
+        // according to the normal QoS rules, or close the Network Connection [MQTT-3.3.5-2].
+
         // Check qos and send publish ack packet to client.
         if packet.qos() == QoS::AtLeastOnce {
             if let Some(packet_id) = packet.packet_id() {
@@ -481,24 +267,5 @@ impl Session {
             log::warn!("Failed to send disconnect command to server: {:?}", err);
         }
         Ok(())
-    }
-
-    async fn handle_listener_packet(&mut self, cmd: ListenerToSessionCmd) -> Result<(), Error> {
-        match cmd {
-            ListenerToSessionCmd::ConnectAck(packet) => {
-                // Send connect ack first, then update status.
-                let return_code = packet.return_code();
-                self.send(packet).await?;
-
-                self.status = match return_code {
-                    ConnectReturnCode::Accepted => Status::Connected,
-                    _ => Status::Disconnected,
-                };
-                Ok(())
-            }
-            ListenerToSessionCmd::Publish(packet) => self.send(packet).await,
-            ListenerToSessionCmd::SubscribeAck(packet) => self.send(packet).await,
-            ListenerToSessionCmd::Disconnect => self.send_disconnect().await,
-        }
     }
 }
