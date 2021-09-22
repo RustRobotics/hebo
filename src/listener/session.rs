@@ -46,6 +46,8 @@ impl Listener {
 
     #[allow(dead_code)]
     async fn reject_client_id(&mut self, session_id: SessionId) -> Result<(), Error> {
+        // If a server sends a CONNACK packet containing a non-zero return code
+        // it MUST set Session Present to 0 [MQTT-3.2.2-4].
         let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
         let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
         if let Some(session_sender) = self.session_senders.get(&session_id) {
@@ -76,6 +78,9 @@ impl Listener {
             }
         }
 
+        // TODO(Shaohua): Check duplicated ConnectPacket.
+        self.connecting_sessions
+            .insert(session_id, packet.connect_flags().clean_session());
         self.session_ids
             .insert(session_id, packet.client_id().to_string());
 
@@ -118,7 +123,7 @@ impl Listener {
     ) -> Result<(), Error> {
         log::info!("Listener::on_session_subscribe()");
 
-        // TODO(Shaohua): Check acl.
+        // TODO(Shaohua): Check ACL.
 
         // Send notification to dispatcher.
         let id = SessionGid::new(self.id, session_id);

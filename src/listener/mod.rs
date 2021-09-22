@@ -35,6 +35,9 @@ pub struct Listener {
     session_ids: HashMap<SessionId, String>,
     client_ids: BTreeMap<String, SessionId>,
 
+    // session_id -> clean_session.
+    connecting_sessions: HashMap<SessionId, bool>,
+
     session_sender: Sender<SessionToListenerCmd>,
     session_receiver: Option<Receiver<SessionToListenerCmd>>,
 
