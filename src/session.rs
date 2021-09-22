@@ -5,9 +5,9 @@
 use codec::{
     utils::random_client_id, ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode,
     DecodeError, DecodePacket, DisconnectPacket, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket, PublishPacket,
-    PublishReceivedPacket, QoS, SubscribeAck, SubscribeAckPacket, SubscribePacket,
-    UnsubscribeAckPacket, UnsubscribePacket,
+    PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket, PublishCompletePacket,
+    PublishPacket, PublishReceivedPacket, PublishReleasePacket, QoS, SubscribeAck,
+    SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
 };
 use std::collections::HashSet;
 use std::convert::Into;
@@ -260,10 +260,7 @@ impl Session {
             PacketType::Connect => self.on_client_connect(&buf).await,
             PacketType::PingRequest => self.on_client_ping(&buf).await,
             PacketType::Publish { .. } => self.on_client_publish(&buf).await,
-            PacketType::PublishRelease { .. } => {
-                // Do nothing currently
-                Ok(())
-            }
+            PacketType::PublishRelease { .. } => self.on_client_publish_release(&buf).await,
             PacketType::Subscribe => self.on_client_subscribe(&buf).await,
             PacketType::Unsubscribe => self.on_client_unsubscribe(&buf).await,
             PacketType::Disconnect => self.on_client_disconnect(&buf).await,
@@ -418,6 +415,22 @@ impl Session {
             .send(SessionToListenerCmd::Publish(packet))
             .await
             .map(drop)?;
+        Ok(())
+    }
+
+    async fn on_client_publish_release(&mut self, buf: &[u8]) -> Result<(), Error> {
+        let mut ba = ByteArray::new(buf);
+        let packet = PublishReleasePacket::decode(&mut ba)?;
+        if !self.pub_recv_packets.contains(&packet.packet_id()) {
+            log::error!(
+                "session: Failed to remove {} from pub_recv_packets",
+                packet.packet_id()
+            );
+        } else {
+            let ack_packet = PublishCompletePacket::new(packet.packet_id());
+            self.send(ack_packet).await?;
+            self.pub_recv_packets.remove(&packet.packet_id());
+        }
         Ok(())
     }
 
