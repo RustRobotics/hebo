@@ -243,7 +243,7 @@ impl Session {
 
         self.reset_instant();
 
-        match fixed_header.packet_type {
+        match fixed_header.packet_type() {
             PacketType::Connect => self.on_client_connect(&buf).await,
             PacketType::PingRequest => self.on_client_ping(&buf).await,
             PacketType::Publish { .. } => self.on_client_publish(&buf).await,
