@@ -61,6 +61,10 @@ pub enum EncodeError {
 
     InvalidPacketType,
 
+    /// PacketId should be present but not set.
+    /// Or PacketId is none where it is required.
+    InvalidPacketId,
+
     /// Length of data exceeds its limitation
     TooManyData,
 
