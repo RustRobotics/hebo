@@ -80,7 +80,7 @@ pub struct PublishPacket {
     topic: String,
 
     /// `packet_id` field is useless if QoS is 0.
-    packet_id: Option<PacketId>,
+    packet_id: PacketId,
 
     /// Payload contains `msg` field.
     /// TODO(Shaohua): Replace with Bytes or Vec<u8>, BytewMut is useless.
@@ -98,7 +98,7 @@ impl PublishPacket {
             dup: false,
             retain: false,
             topic: topic.to_string(),
-            packet_id: None,
+            packet_id: 0,
             msg: BytesMut::from(msg),
         })
     }
@@ -131,7 +131,7 @@ impl PublishPacket {
 
     pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
         if qos == QoS::AtMostOnce {
-            self.packet_id = None;
+            self.packet_id = 0;
         }
         self.qos = qos;
         self
@@ -142,15 +142,12 @@ impl PublishPacket {
     }
 
     /// The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
-    pub fn set_packet_id(&mut self, packet_id: Option<PacketId>) -> Result<&mut Self, EncodeError> {
-        if self.qos == QoS::AtMostOnce && packet_id.is_some() {
-            return Err(EncodeError::InvalidPacketId);
-        }
+    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
-        Ok(self)
+        self
     }
 
-    pub fn packet_id(&self) -> Option<PacketId> {
+    pub fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
@@ -200,9 +197,9 @@ impl DecodePacket for PublishPacket {
         // Parse packet id.
         // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
         let packet_id = if qos != QoS::AtMostOnce {
-            Some(ba.read_u16()?)
+            ba.read_u16()?
         } else {
-            None
+            0
         };
 
         // It is valid for a PUBLISH Packet to contain a zero length payload.
@@ -261,11 +258,7 @@ impl EncodePacket for PublishPacket {
 
         // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
         if self.qos() != QoS::AtMostOnce {
-            if let Some(packet_id) = self.packet_id {
-                v.write_u16::<BigEndian>(packet_id)?;
-            } else {
-                return Err(EncodeError::InvalidPacketId);
-            }
+            v.write_u16::<BigEndian>(self.packet_id)?;
         }
 
         // Write payload
