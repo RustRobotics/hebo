@@ -4,10 +4,12 @@
 
 use codec::{
     utils::random_client_id, ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode,
-    DecodeError, DecodePacket, DisconnectPacket, EncodePacket, FixedHeader, Packet, PacketType,
-    PingRequestPacket, PingResponsePacket, PublishAckPacket, PublishPacket, SubscribeAck,
-    SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
+    DecodeError, DecodePacket, DisconnectPacket, EncodePacket, FixedHeader, Packet, PacketId,
+    PacketType, PingRequestPacket, PingResponsePacket, PublishAckPacket, PublishPacket,
+    PublishReceivedPacket, QoS, SubscribeAck, SubscribeAckPacket, SubscribePacket,
+    UnsubscribeAckPacket, UnsubscribePacket,
 };
+use std::collections::HashSet;
 use std::convert::Into;
 use std::time::Instant;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -78,6 +80,8 @@ pub struct Session {
     instant: Instant,
     clean_session: bool,
 
+    pub_recv_packets: HashSet<PacketId>,
+
     sender: Sender<SessionToListenerCmd>,
     receiver: Receiver<ListenerToSessionCmd>,
 }
@@ -99,6 +103,8 @@ impl Session {
             client_id: String::new(),
             instant: Instant::now(),
             clean_session: true,
+
+            pub_recv_packets: HashSet::new(),
 
             sender,
             receiver,
@@ -241,6 +247,13 @@ impl Session {
             }
         };
 
+        // The Keep Alive is a time interval measured in seconds. Expressed as a 16-bit word,
+        // it is the maximum time interval that is permitted to elapse between the point
+        // at which the Client finishes transmitting one Control Packet and the point
+        // it starts sending the next. It is the responsibility of the Client to ensure that
+        // the interval between Control Packets being sent does not exceed the Keep Alive value.
+        // In the absence of sending any other Control Packets, the Client MUST send
+        // a PINGREQ Packet [MQTT-3.1.2-23].
         self.reset_instant();
 
         match fixed_header.packet_type() {
@@ -379,9 +392,26 @@ impl Session {
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
 
-        // Send publish ack packet to client.
-        let ack_packet = PublishAckPacket::new(packet.packet_id());
-        self.send(ack_packet).await?;
+        // Check qos and send publish ack packet to client.
+        if packet.qos() == QoS::AtLeastOnce {
+            if let Some(packet_id) = packet.packet_id() {
+                let ack_packet = PublishAckPacket::new(packet_id);
+                // TODO(Shaohua): Catch errors
+                self.send(ack_packet).await?;
+            } else {
+                log::error!("session: Invalid packet id in publish packet {:?}", packet);
+            }
+        } else if packet.qos() == QoS::ExactOnce {
+            // Send PublishReceived.
+            if let Some(packet_id) = packet.packet_id() {
+                self.pub_recv_packets.insert(packet_id);
+                let ack_packet = PublishReceivedPacket::new(packet_id);
+                // TODO(Shaohua): Catch errors
+                self.send(ack_packet).await?;
+            } else {
+                log::error!("session: Invalid packet id in publish packet {:?}", packet);
+            }
+        }
 
         // Send the publish packet to listener.
         self.sender
