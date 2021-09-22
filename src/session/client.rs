@@ -170,7 +170,6 @@ impl Session {
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
 
-        // TODO(Shaohua): Check ACL
         // If a Server implementation does not authorize a PUBLISH to be performed by a Client;
         // it has no way of informing that Client. It MUST either make a positive acknowledgement,
         // according to the normal QoS rules, or close the Network Connection [MQTT-3.3.5-2].

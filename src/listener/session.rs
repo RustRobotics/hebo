@@ -147,6 +147,8 @@ impl Listener {
     }
 
     async fn on_session_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
+        // Check ACL.
+
         let cmd = ListenerToDispatcherCmd::Publish(packet.clone());
         self.dispatcher_sender.send(cmd).await.map_err(Into::into)
     }

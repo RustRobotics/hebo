@@ -12,6 +12,7 @@ use crate::types::{ListenerId, SessionGid, SessionId, SessionInfo, Uptime};
 
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
+    // TODO(Shaohua): Replace with session_gid
     /// listener-id, session-id, username, password
     RequestAuth(ListenerId, SessionId, String, Vec<u8>),
 }
@@ -23,15 +24,26 @@ pub enum AuthToListenerCmd {
 }
 
 #[derive(Debug, Clone)]
-pub enum AclToListenerCmd {}
+pub enum AclToListenerCmd {
+    /// (session_id, packet, accepted).
+    PublishAck(SessionId, PublishPacket, bool),
+}
 
 #[derive(Debug, Clone)]
-pub enum ListenerToAclCmd {}
+pub enum ListenerToAclCmd {
+    /// Check publish packet.
+    Publish(SessionGid, PublishPacket),
+}
 
 #[derive(Debug, Clone)]
 pub enum ListenerToSessionCmd {
     /// Accepted or not.
     ConnectAck(ConnectAckPacket),
+
+    /// Response to Publish packet.
+    ///
+    /// (packet, accept) pair.
+    PublishAck(PublishPacket, bool),
 
     Publish(PublishPacket),
 
