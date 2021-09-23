@@ -4,7 +4,7 @@
 
 //! Handles commands from listener.
 
-use codec::{ConnectReturnCode, PacketId, PublishPacket, QoS};
+use codec::{ConnectReturnCode, PacketId, PublishAckPacket, PublishReceivedPacket, QoS};
 
 use super::{Session, Status};
 use crate::commands::ListenerToSessionCmd;
@@ -36,13 +36,32 @@ impl Session {
         }
     }
 
+    /// Send ack to client.
     async fn on_listener_publish_ack(
         &mut self,
         packet_id: PacketId,
         qos: QoS,
         accepted: bool,
     ) -> Result<(), Error> {
-        // Send ack to client.
+        // If a Server implementation does not authorize a PUBLISH to be performed by a Client;
+        // it has no way of informing that Client. It MUST either make a positive acknowledgement,
+        // according to the normal QoS rules, or close the Network Connection [MQTT-3.3.5-2].
+        if !accepted {
+            return self.send_disconnect().await;
+        }
+
+        // Check qos and send publish ack packet to client.
+        if qos == QoS::AtLeastOnce {
+            let ack_packet = PublishAckPacket::new(packet_id);
+            // TODO(Shaohua): Catch errors
+            self.send(ack_packet).await?;
+        } else if qos == QoS::ExactOnce {
+            // Send PublishReceived.
+            self.pub_recv_packets.insert(packet_id);
+            let ack_packet = PublishReceivedPacket::new(packet_id);
+            // TODO(Shaohua): Catch errors
+            self.send(ack_packet).await?;
+        }
         Ok(())
     }
 }

@@ -26,8 +26,8 @@ impl Listener {
         packet: PublishPacket,
         accepted: bool,
     ) -> Result<(), Error> {
-        let cmd = ListenerToSessionCmd::PublishAck(packet.packet_id(), packet.qos(), accepted);
         if let Some(session_sender) = self.session_senders.get(&session_id) {
+            let cmd = ListenerToSessionCmd::PublishAck(packet.packet_id(), packet.qos(), accepted);
             if let Err(err) = session_sender.send(cmd).await {
                 log::error!(
                     "listener: Failed to send publish ack to session: {:?}, err: {:?}",

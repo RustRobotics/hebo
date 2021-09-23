@@ -7,9 +7,8 @@
 use codec::{
     utils::random_client_id, ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode,
     DecodeError, DecodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket,
-    PublishAckPacket, PublishCompletePacket, PublishPacket, PublishReceivedPacket,
-    PublishReleasePacket, QoS, SubscribeAck, SubscribeAckPacket, SubscribePacket,
-    UnsubscribeAckPacket, UnsubscribePacket,
+    PublishCompletePacket, PublishPacket, PublishReleasePacket, SubscribeAck, SubscribeAckPacket,
+    SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
 };
 
 use super::{Session, Status};
@@ -169,33 +168,6 @@ impl Session {
         log::info!("on_client_publish()");
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
-
-        // If a Server implementation does not authorize a PUBLISH to be performed by a Client;
-        // it has no way of informing that Client. It MUST either make a positive acknowledgement,
-        // according to the normal QoS rules, or close the Network Connection [MQTT-3.3.5-2].
-
-        // Check qos and send publish ack packet to client.
-        /*
-        if packet.qos() == QoS::AtLeastOnce {
-            if let Some(packet_id) = packet.packet_id() {
-                let ack_packet = PublishAckPacket::new(packet_id);
-                // TODO(Shaohua): Catch errors
-                self.send(ack_packet).await?;
-            } else {
-                log::error!("session: Invalid packet id in publish packet {:?}", packet);
-            }
-        } else if packet.qos() == QoS::ExactOnce {
-            // Send PublishReceived.
-            if let Some(packet_id) = packet.packet_id() {
-                self.pub_recv_packets.insert(packet_id);
-                let ack_packet = PublishReceivedPacket::new(packet_id);
-                // TODO(Shaohua): Catch errors
-                self.send(ack_packet).await?;
-            } else {
-                log::error!("session: Invalid packet id in publish packet {:?}", packet);
-            }
-        }
-        */
 
         // Send the publish packet to listener.
         self.sender
