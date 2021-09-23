@@ -26,6 +26,11 @@ pub enum DecodeError {
     /// QoS not 0, 1, 2
     InvalidQoS,
 
+    /// Invalid flag value in fixed header.
+    ///
+    /// Does not contain InvalidQoS.
+    InvalidFlags,
+
     /// Length of buffer - offset < remaining length.
     InvalidRemainingLength,
 

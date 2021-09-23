@@ -91,6 +91,9 @@ impl Into<u8> for PacketType {
                 let retain = if retain { 0b0000_0001 } else { 0b0000_0000 };
                 dup | qos | retain
             }
+            // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
+            // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
+            // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
             PacketType::PublishRelease => 0b0000_0010,
             PacketType::Subscribe => 0b0000_0010,
             PacketType::Unsubscribe => 0b0000_0010,
@@ -124,7 +127,17 @@ impl TryFrom<u8> for PacketType {
             }
             4 => Ok(PacketType::PublishAck),
             5 => Ok(PacketType::PublishReceived),
-            6 => Ok(PacketType::PublishRelease),
+            6 => {
+                // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
+                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
+                // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
+                let flag = v & 0b0000_1111;
+                if flag != 0b0000_0010 {
+                    Err(DecodeError::InvalidFlags)
+                } else {
+                    Ok(PacketType::PublishRelease)
+                }
+            }
             7 => Ok(PacketType::PublishComplete),
             8 => Ok(PacketType::Subscribe),
             9 => Ok(PacketType::SubscribeAck),
