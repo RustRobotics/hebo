@@ -138,6 +138,16 @@ pub struct Listener {
     /// Default is false.
     #[serde(default = "Listener::default_allow_empty_client_id")]
     allow_empty_client_id: bool,
+
+    /// The maximum number of QoS 1 and 2 messages currently inflight per
+    /// client.
+    ///
+    /// This includes messages that are partway through handshakes and
+    /// those that are being retried.
+    ///
+    /// Defaults to 20.
+    #[serde(default = "Listener::default_max_inflight_messages")]
+    max_inflight_messages: usize,
 }
 
 impl Listener {
@@ -189,6 +199,10 @@ impl Listener {
         false
     }
 
+    pub const fn default_max_inflight_messages() -> usize {
+        20
+    }
+
     pub fn bind_interface(&self) -> &str {
         &self.bind_interface
     }
@@ -232,6 +246,10 @@ impl Listener {
     pub fn allow_empty_client_id(&self) -> bool {
         self.allow_empty_client_id
     }
+
+    pub fn max_inflight_messages(&self) -> usize {
+        self.max_inflight_messages
+    }
 }
 
 impl Default for Listener {
@@ -248,6 +266,7 @@ impl Default for Listener {
             keep_alive: Self::default_keep_alive(),
             connect_timeout: Self::default_connect_timeout(),
             allow_empty_client_id: Self::default_allow_empty_client_id(),
+            max_inflight_messages: Self::default_max_inflight_messages(),
         }
     }
 }

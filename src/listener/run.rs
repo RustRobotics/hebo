@@ -66,6 +66,7 @@ impl Listener {
             self.config.keep_alive(),
             self.config.connect_timeout(),
             self.config.allow_empty_client_id(),
+            self.config.max_inflight_messages(),
         );
         let session = Session::new(
             session_id,

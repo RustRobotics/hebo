@@ -7,14 +7,21 @@ pub struct SessionConfig {
     keep_alive: u64,
     connect_timeout: u64,
     allow_empty_client_id: bool,
+    max_inflight_messages: usize,
 }
 
 impl SessionConfig {
-    pub fn new(keep_alive: u64, connect_timeout: u64, allow_empty_client_id: bool) -> Self {
+    pub fn new(
+        keep_alive: u64,
+        connect_timeout: u64,
+        allow_empty_client_id: bool,
+        max_inflight_messages: usize,
+    ) -> Self {
         Self {
             keep_alive,
             connect_timeout,
             allow_empty_client_id,
+            max_inflight_messages,
         }
     }
 
