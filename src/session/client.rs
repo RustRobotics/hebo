@@ -195,13 +195,13 @@ impl Session {
                 "session: Failed to remove {} from pub_recv_packets",
                 packet.packet_id()
             );
+            Ok(())
         } else {
-            let ack_packet = PublishCompletePacket::new(packet.packet_id());
-            self.send(ack_packet).await?;
-            // Finally remove packet_id from cache.
+            // Remove packet_id from cache then send complete packet.
             self.pub_recv_packets.remove(&packet.packet_id());
+            let ack_packet = PublishCompletePacket::new(packet.packet_id());
+            self.send(ack_packet).await
         }
-        Ok(())
     }
 
     async fn on_client_subscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
