@@ -90,8 +90,7 @@ impl Listener {
         // Send request to auth app.
         self.auth_sender
             .send(ListenerToAuthCmd::RequestAuth(
-                self.id,
-                session_id,
+                SessionGid::new(self.id, session_id),
                 packet.username().to_string(),
                 packet.password().to_vec(),
             ))

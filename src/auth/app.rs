@@ -8,7 +8,7 @@ use super::file_auth::FileAuth;
 use crate::commands::{AuthToListenerCmd, ListenerToAuthCmd, ServerContextToAuthCmd};
 use crate::config::Security;
 use crate::error::{Error, ErrorKind};
-use crate::types::{ListenerId, SessionId};
+use crate::types::{ListenerId, SessionGid};
 
 #[derive(Debug)]
 pub struct AuthApp {
@@ -71,8 +71,8 @@ impl AuthApp {
     async fn handle_listener_cmd(&mut self, cmd: ListenerToAuthCmd) -> Result<(), Error> {
         log::info!("AuthApp::handle_listener_cmd(), cmd: {:?}", cmd);
         match cmd {
-            ListenerToAuthCmd::RequestAuth(listener_id, session_id, username, password) => {
-                self.on_listener_request_auth(listener_id, session_id, username, password)
+            ListenerToAuthCmd::RequestAuth(session_gid, username, password) => {
+                self.on_listener_request_auth(session_gid, username, password)
                     .await
             }
         }
@@ -80,8 +80,7 @@ impl AuthApp {
 
     async fn on_listener_request_auth(
         &mut self,
-        listener_id: ListenerId,
-        session_id: SessionId,
+        session_gid: SessionGid,
         username: String,
         password: Vec<u8>,
     ) -> Result<(), Error> {
@@ -96,8 +95,8 @@ impl AuthApp {
             log::error!("AuthApp: Check auth failed, {}:{:?}", username, password);
         }
         for (sender_listener_id, sender) in &self.listener_senders {
-            if *sender_listener_id == listener_id {
-                let cmd = AuthToListenerCmd::ResponseAuth(session_id, access_granted);
+            if *sender_listener_id == session_gid.listener_id() {
+                let cmd = AuthToListenerCmd::ResponseAuth(session_gid.session_id(), access_granted);
                 sender.send(cmd).await?;
                 return Ok(());
             }
@@ -107,7 +106,7 @@ impl AuthApp {
             ErrorKind::ChannelError,
             format!(
                 "AuthApp: Failed to find listener_senders with id: {}",
-                listener_id
+                session_gid.listener_id()
             ),
         ))
     }

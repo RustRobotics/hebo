@@ -12,9 +12,8 @@ use crate::types::{ListenerId, SessionGid, SessionId, SessionInfo, Uptime};
 
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
-    // TODO(Shaohua): Replace with session_gid
-    /// listener-id, session-id, username, password
-    RequestAuth(ListenerId, SessionId, String, Vec<u8>),
+    /// session_gid, username, password
+    RequestAuth(SessionGid, String, Vec<u8>),
 }
 
 #[derive(Debug, Clone)]
