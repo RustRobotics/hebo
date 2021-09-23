@@ -48,7 +48,7 @@ pub enum DecodeError {
     TooManyData,
 
     /// No topic is speicified in Subscribe packet.
-    EmptyTopics,
+    EmptyTopicFilter,
 
     /// General errors
     OtherErrors,

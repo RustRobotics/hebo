@@ -148,8 +148,10 @@ impl DecodePacket for SubscribePacket {
             topics.push(topic);
         }
 
+        // The payload of a SUBSCRIBE packet MUST contain at least one Topic Filter / QoS pair.
+        // A SUBSCRIBE packet with no payload is a protocol violation [MQTT-3.8.3-3].
         if topics.is_empty() {
-            return Err(DecodeError::EmptyTopics);
+            return Err(DecodeError::EmptyTopicFilter);
         }
 
         Ok(SubscribePacket { packet_id, topics })
