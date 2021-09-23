@@ -206,7 +206,19 @@ impl Session {
 
     async fn on_client_subscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let packet = SubscribePacket::decode(&mut ba)?;
+        let packet = match SubscribePacket::decode(&mut ba) {
+            Ok(packet) => packet,
+            Err(err) => match err {
+                // Bits 3,2,1 and 0 of the fixed header of the SUBSCRIBE Control Packet are reserved
+                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
+                // any other value as malformed and close the Network Connection [MQTT-3.8.1-1].
+                DecodeError::InvalidPacketFlags => {
+                    log::error!("session: Invalid bit flags for subscribe packet, do disconnect!");
+                    return self.send_disconnect().await;
+                }
+                _ => return Err(err.into()),
+            },
+        };
 
         // Send subscribe packet to listener, which will check auth.
         if let Err(err) = self
