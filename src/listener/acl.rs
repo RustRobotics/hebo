@@ -4,7 +4,7 @@
 
 //! Acl cmd handler.
 
-use codec::{PublishPacket, SubscribePacket};
+use codec::{PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket};
 
 use super::Listener;
 use crate::commands::{AclToListenerCmd, ListenerToDispatcherCmd, ListenerToSessionCmd};
@@ -17,8 +17,8 @@ impl Listener {
             AclToListenerCmd::PublishAck(session_id, packet, accepted) => {
                 self.on_acl_publish_ack(session_id, packet, accepted).await
             }
-            AclToListenerCmd::SubscribeAck(session_id, packet, accepted) => {
-                self.on_acl_subscribe_ack(session_id, packet, accepted)
+            AclToListenerCmd::SubscribeAck(session_id, packet, acks, accepted) => {
+                self.on_acl_subscribe_ack(session_id, packet, acks, accepted)
                     .await
             }
         }
@@ -58,16 +58,22 @@ impl Listener {
         &mut self,
         session_id: SessionId,
         packet: SubscribePacket,
+        acks: Vec<SubscribeAck>,
         accepted: bool,
     ) -> Result<(), Error> {
         // If ACL passed, send publish packet to dispatcher layer.
         if accepted {
-            // Send notification to dispatcher.
+            // Can accept part of subscribe packet.
             let id = SessionGid::new(self.id, session_id);
             self.dispatcher_sender
                 .send(ListenerToDispatcherCmd::Subscribe(id, packet))
-                .await?;
+                .await
+                .map_err(Into::into)
+        } else {
+            // All of topic filters are rejected.
+            let ack_packet = SubscribeAckPacket::with_vec(packet.packet_id(), acks);
+            self.send_session_publish_ack(session_id, ack_packet).await;
+            Ok(())
         }
-        Ok(())
     }
 }
