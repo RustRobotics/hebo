@@ -189,7 +189,22 @@ impl Session {
 
     async fn on_client_publish_release(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let packet = PublishReleasePacket::decode(&mut ba)?;
+        let packet = match PublishReleasePacket::decode(&mut ba) {
+            Ok(packet) => packet,
+            Err(err) => match err {
+                DecodeError::InvalidPacketFlags => {
+                    // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
+                    // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
+                    // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
+                    log::error!(
+                        "session: Invalid bit flags for publish release packet, do disconnect!"
+                    );
+                    return self.send_disconnect().await;
+                }
+                _ => return Err(err.into()),
+            },
+        };
+
         if !self.pub_recv_packets.contains(&packet.packet_id()) {
             log::error!(
                 "session: Failed to remove {} from pub_recv_packets",
