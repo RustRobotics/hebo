@@ -13,7 +13,7 @@ use crate::auth::AuthApp;
 use crate::backends::BackendsApp;
 use crate::bridge::BridgeApp;
 use crate::commands::DispatcherToMetricsCmd;
-use crate::dashboard::app::DashboardApp;
+use crate::dashboard::DashboardApp;
 use crate::dispatcher::Dispatcher;
 use crate::error::Error;
 use crate::gateway::app::GatewayApp;
