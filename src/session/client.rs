@@ -241,7 +241,18 @@ impl Session {
                     log::error!("session: Empty topic filter in subscribe packet, do disconnect!");
                     return self.send_disconnect().await;
                 }
-                _ => return Err(err.into()),
+                DecodeError::InvalidQoS => {
+                    // The upper 6 bits of the Requested QoS byte are not used in the current version of the protocol.
+                    // They are reserved for future use. The Server MUST treat a SUBSCRIBE packet as malformed
+                    // and close the Network Connection if any of Reserved bits in the payload are non-zero,
+                    // or QoS is not 0,1 or 2 [MQTT-3-8.3-4].
+                    log::error!("session: Invalid QoS flag in subscribe packet, do disconnect!");
+                    return self.send_disconnect().await;
+                }
+                _ => {
+                    // TODO(Shaohua): Send disconnect when got error.
+                    return Err(err.into());
+                }
             },
         };
 
