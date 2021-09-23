@@ -16,7 +16,7 @@ use crate::commands::DispatcherToMetricsCmd;
 use crate::dashboard::DashboardApp;
 use crate::dispatcher::Dispatcher;
 use crate::error::Error;
-use crate::gateway::app::GatewayApp;
+use crate::gateway::GatewayApp;
 use crate::listener::Listener;
 use crate::metrics::Metrics;
 use crate::rule_engine::app::RuleEngineApp;
