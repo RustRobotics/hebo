@@ -56,6 +56,12 @@ impl Session {
             // TODO(Shaohua): Catch errors
             self.send(ack_packet).await?;
         } else if qos == QoS::ExactOnce {
+            // Check inflight messages overflow.
+            if self.pub_recv_packets.len() > self.config.max_inflight_messages() {
+                log::error!("session: Too many unacknowledged qos=2 messages, disconnect client!");
+                return self.send_disconnect().await;
+            }
+
             // Send PublishReceived.
             self.pub_recv_packets.insert(packet_id);
             let ack_packet = PublishReceivedPacket::new(packet_id);

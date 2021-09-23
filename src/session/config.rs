@@ -43,4 +43,9 @@ impl SessionConfig {
     pub fn allow_empty_client_id(&self) -> bool {
         self.allow_empty_client_id
     }
+
+    #[inline]
+    pub fn max_inflight_messages(&self) -> usize {
+        self.max_inflight_messages
+    }
 }
