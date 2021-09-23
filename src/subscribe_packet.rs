@@ -142,6 +142,13 @@ impl DecodePacket for SubscribePacket {
 
             let qos_flag = ba.read_byte()?;
             remaining_length += consts::QOS_BYTES;
+            // The upper 6 bits of the Requested QoS byte are not used in the current version of the protocol.
+            // They are reserved for future use. The Server MUST treat a SUBSCRIBE packet as malformed
+            // and close the Network Connection if any of Reserved bits in the payload are non-zero,
+            // or QoS is not 0,1 or 2 [MQTT-3-8.3-4].
+            if qos_flag & 0b1111_0000 != 0b0000_0000 {
+                return Err(DecodeError::InvalidQoS);
+            }
             let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
 
             let topic = SubscribeTopic::new(topic, qos);
