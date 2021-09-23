@@ -36,8 +36,15 @@ impl SubTrie {
                 self.map.get_mut(&session_gid).unwrap()
             }
         };
+
+        // If a Server receives a SUBSCRIBE packet that contains multiple Topic Filters
+        // it MUST handle that packet as if it had received a sequence of multiple SUBSCRIBE packets,
+        // except that it combines their responses into a single SUBACK response [MQTT-3.8.4-4].
         let mut ack_vec = vec![];
         for topic in packet.topics() {
+            // TODO(Shaohua): Send retained messages.
+            // TODO(Shaohua): Check topic filter has been subscribed.
+            // TODO(Shaohua): Update qos in SubscribeAck.
             match SubscribePattern::parse(topic.topic(), topic.qos()) {
                 Ok(pattern) => {
                     patterns.insert(pattern);

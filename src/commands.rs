@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use codec::{
-    ConnectAckPacket, ConnectPacket, PacketId, PublishPacket, QoS, SubscribeAckPacket,
-    SubscribePacket, UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, PacketId, PublishPacket, QoS, SubscribeAck,
+    SubscribeAckPacket, SubscribePacket, UnsubscribePacket,
 };
 use tokio::sync::oneshot;
 
@@ -28,7 +28,7 @@ pub enum AclToListenerCmd {
     /// (session_id, packet, accepted).
     PublishAck(SessionId, PublishPacket, bool),
 
-    SubscribeAck(SessionId, SubscribePacket, bool),
+    SubscribeAck(SessionId, SubscribePacket, Vec<SubscribeAck>, bool),
 }
 
 #[derive(Debug, Clone)]

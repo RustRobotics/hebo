@@ -80,6 +80,9 @@ impl Session {
     }
 
     async fn on_listener_subscribe_ack(&mut self, packet: SubscribeAckPacket) -> Result<(), Error> {
+        // When the Server receives a SUBSCRIBE Packet from a Client, the Server MUST respond with a
+        // SUBACK Packet [MQTT-3.8.4-1]. The SUBACK Packet MUST have the same Packet Identifier as the
+        // SUBSCRIBE Packet that it is acknowledging [MQTT-3.8.4-2].
         self.send(packet).await
     }
 

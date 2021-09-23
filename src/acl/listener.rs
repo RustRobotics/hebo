@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{PublishPacket, SubscribePacket};
+use codec::{PublishPacket, SubscribeAck, SubscribePacket};
 
 use super::AclApp;
 use crate::commands::{AclToListenerCmd, ListenerToAclCmd};
@@ -54,8 +54,15 @@ impl AclApp {
     ) -> Result<(), Error> {
         // TODO(Shaohua): Read acl list from config.
         let accepted = true;
+        let mut acks = Vec::with_capacity(packet.topics().len());
+        for topic in packet.topics() {
+            // TODO(Shaohua): Check topic patterns.
+            acks.push(SubscribeAck::QoS(topic.qos()));
+        }
+
         if let Some(listener_sender) = self.listener_senders.get(&session_gid.listener_id()) {
-            let cmd = AclToListenerCmd::SubscribeAck(session_gid.session_id(), packet, accepted);
+            let cmd =
+                AclToListenerCmd::SubscribeAck(session_gid.session_id(), packet, acks, accepted);
             if let Err(err) = listener_sender.send(cmd).await {
                 log::error!(
                     "acl: Failed to send subscribe ack to listener: {:?}, err: {:?}",
