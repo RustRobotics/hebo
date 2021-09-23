@@ -19,7 +19,7 @@ use crate::error::Error;
 use crate::gateway::GatewayApp;
 use crate::listener::Listener;
 use crate::metrics::Metrics;
-use crate::rule_engine::app::RuleEngineApp;
+use crate::rule_engine::RuleEngineApp;
 
 impl ServerContext {
     pub(crate) async fn init_modules(&mut self, runtime: &Runtime) -> Result<(), Error> {
