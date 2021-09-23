@@ -224,11 +224,21 @@ impl Session {
         let packet = match SubscribePacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => match err {
-                // Bits 3,2,1 and 0 of the fixed header of the SUBSCRIBE Control Packet are reserved
-                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
-                // any other value as malformed and close the Network Connection [MQTT-3.8.1-1].
                 DecodeError::InvalidPacketFlags => {
+                    // Bits 3,2,1 and 0 of the fixed header of the SUBSCRIBE Control Packet are reserved
+                    // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
+                    // any other value as malformed and close the Network Connection [MQTT-3.8.1-1].
                     log::error!("session: Invalid bit flags for subscribe packet, do disconnect!");
+                    return self.send_disconnect().await;
+                }
+                DecodeError::EmptyTopicFilter => {
+                    // The payload of a SUBSCRIBE packet MUST contain at least one Topic Filter / QoS pair.
+                    // A SUBSCRIBE packet with no payload is a protocol violation [MQTT-3.8.3-3].
+                    //
+                    // Unless stated otherwise, if either the Server or Client encounters a protocol violation,
+                    // it MUST close the Network Connection on which it received that Control Packet
+                    // which caused the protocol violation [MQTT-4.8.0-1].
+                    log::error!("session: Empty topic filter in subscribe packet, do disconnect!");
                     return self.send_disconnect().await;
                 }
                 _ => return Err(err.into()),
