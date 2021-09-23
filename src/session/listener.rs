@@ -4,7 +4,10 @@
 
 //! Handles commands from listener.
 
-use codec::{ConnectReturnCode, PacketId, PublishAckPacket, PublishReceivedPacket, QoS};
+use codec::{
+    ConnectReturnCode, PacketId, PublishAckPacket, PublishPacket, PublishReceivedPacket, QoS,
+    SubscribeAckPacket,
+};
 
 use super::{Session, Status};
 use crate::commands::ListenerToSessionCmd;
@@ -30,9 +33,11 @@ impl Session {
             ListenerToSessionCmd::PublishAck(packet_id, qos, accepted) => {
                 self.on_listener_publish_ack(packet_id, qos, accepted).await
             }
-            ListenerToSessionCmd::Publish(packet) => self.send(packet).await,
-            ListenerToSessionCmd::SubscribeAck(packet) => self.send(packet).await,
-            ListenerToSessionCmd::Disconnect => self.send_disconnect().await,
+            ListenerToSessionCmd::Publish(packet) => self.on_listener_publish(packet).await,
+            ListenerToSessionCmd::SubscribeAck(packet) => {
+                self.on_listener_subscribe_ack(packet).await
+            }
+            ListenerToSessionCmd::Disconnect => self.on_listener_disconnect().await,
         }
     }
 
@@ -69,5 +74,16 @@ impl Session {
             self.send(ack_packet).await?;
         }
         Ok(())
+    }
+    async fn on_listener_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
+        self.send(packet).await
+    }
+
+    async fn on_listener_subscribe_ack(&mut self, packet: SubscribeAckPacket) -> Result<(), Error> {
+        self.send(packet).await
+    }
+
+    async fn on_listener_disconnect(&mut self) -> Result<(), Error> {
+        self.send_disconnect().await
     }
 }

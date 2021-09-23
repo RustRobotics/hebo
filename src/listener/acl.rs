@@ -60,24 +60,6 @@ impl Listener {
         packet: SubscribePacket,
         accepted: bool,
     ) -> Result<(), Error> {
-        /*
-        if let Some(session_sender) = self.session_senders.get(&session_id) {
-            let cmd = ListenerToSessionCmd::Ack(packet.packet_id(), packet.qos(), accepted);
-            if let Err(err) = session_sender.send(cmd).await {
-                log::error!(
-                    "listener: Failed to send publish ack to session: {:?}, err: {:?}",
-                    session_id,
-                    err
-                );
-            }
-        } else {
-            log::error!(
-                "listener: Failed to find session sender with id: {}",
-                session_id
-            );
-        }
-        */
-
         // If ACL passed, send publish packet to dispatcher layer.
         if accepted {
             // Send notification to dispatcher.
