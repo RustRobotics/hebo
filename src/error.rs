@@ -29,7 +29,7 @@ pub enum DecodeError {
     /// Invalid flag value in fixed header.
     ///
     /// Does not contain InvalidQoS.
-    InvalidFlags,
+    InvalidPacketFlags,
 
     /// Length of buffer - offset < remaining length.
     InvalidRemainingLength,

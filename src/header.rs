@@ -133,7 +133,7 @@ impl TryFrom<u8> for PacketType {
                 // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
                 let flag = v & 0b0000_1111;
                 if flag != 0b0000_0010 {
-                    Err(DecodeError::InvalidFlags)
+                    Err(DecodeError::InvalidPacketFlags)
                 } else {
                     Ok(PacketType::PublishRelease)
                 }

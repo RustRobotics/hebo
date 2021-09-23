@@ -182,7 +182,14 @@ impl DecodePacket for PublishPacket {
 
         // The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
         if dup && qos == QoS::AtMostOnce {
-            return Err(DecodeError::InvalidPacketType);
+            return Err(DecodeError::InvalidPacketFlags);
+        }
+
+        // In the QoS 1 delivery protocol, the Sender MUST send a PUBLISH Packet
+        // containing this Packet Identifier with QoS=1, DUP=0.
+        // [MQTT-4.3.2-1].
+        if dup && qos == QoS::AtLeastOnce {
+            return Err(DecodeError::InvalidPacketFlags);
         }
 
         let topic_len = ba.read_u16()? as usize;
