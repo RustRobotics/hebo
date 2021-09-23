@@ -7,8 +7,8 @@
 use codec::{
     utils::random_client_id, ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode,
     DecodeError, DecodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket,
-    PublishCompletePacket, PublishPacket, PublishReleasePacket, SubscribeAck, SubscribeAckPacket,
-    SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
+    PublishCompletePacket, PublishPacket, PublishReceivedPacket, PublishReleasePacket, QoS,
+    SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
 };
 
 use super::{Session, Status};
@@ -169,6 +169,16 @@ impl Session {
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
 
+        // Check dup flag for QoS2.
+        if packet.qos() == QoS::ExactOnce && packet.dup() {
+            // If this packet_id is already handled, send PublishReceivedPacket again.
+            if self.pub_recv_packets.contains(&packet.packet_id()) {
+                let ack_packet = PublishReceivedPacket::new(packet.packet_id());
+                // TODO(Shaohua): Catch errors
+                return self.send(ack_packet).await;
+            }
+        }
+
         // Send the publish packet to listener.
         self.sender
             .send(SessionToListenerCmd::Publish(self.id, packet))
@@ -188,6 +198,7 @@ impl Session {
         } else {
             let ack_packet = PublishCompletePacket::new(packet.packet_id());
             self.send(ack_packet).await?;
+            // Finally remove packet_id from cache.
             self.pub_recv_packets.remove(&packet.packet_id());
         }
         Ok(())
