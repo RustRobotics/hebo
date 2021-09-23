@@ -124,16 +124,9 @@ impl Listener {
         session_id: SessionId,
         packet: SubscribePacket,
     ) -> Result<(), Error> {
-        log::info!("Listener::on_session_subscribe()");
-
-        // TODO(Shaohua): Check ACL.
-
-        // Send notification to dispatcher.
-        let id = SessionGid::new(self.id, session_id);
-        self.dispatcher_sender
-            .send(ListenerToDispatcherCmd::Subscribe(id, packet))
-            .await
-            .map_err(Into::into)
+        // Check ACL.
+        let cmd = ListenerToAclCmd::Subscribe(SessionGid::new(self.id, session_id), packet);
+        self.acl_sender.send(cmd).await.map_err(Into::into)
     }
 
     async fn on_session_unsubscribe(

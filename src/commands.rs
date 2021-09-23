@@ -27,12 +27,17 @@ pub enum AuthToListenerCmd {
 pub enum AclToListenerCmd {
     /// (session_id, packet, accepted).
     PublishAck(SessionId, PublishPacket, bool),
+
+    SubscribeAck(SessionId, SubscribePacket, bool),
 }
 
 #[derive(Debug, Clone)]
 pub enum ListenerToAclCmd {
     /// Check publish packet.
     Publish(SessionGid, PublishPacket),
+
+    /// Check subscribe packet.
+    Subscribe(SessionGid, SubscribePacket),
 }
 
 #[derive(Debug, Clone)]

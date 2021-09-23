@@ -256,17 +256,18 @@ impl Session {
             },
         };
 
-        // Send subscribe packet to listener, which will check auth.
+        // Send subscribe packet to listener, which will check ACL.
+        let packet_id = packet.packet_id();
         if let Err(err) = self
             .sender
-            .send(SessionToListenerCmd::Subscribe(self.id, packet.clone()))
+            .send(SessionToListenerCmd::Subscribe(self.id, packet))
             .await
         {
             // Send subscribe ack (failed) to client.
             log::error!("Failed to send subscribe command to server: {:?}", err);
             let ack = SubscribeAck::Failed;
 
-            let subscribe_ack_packet = SubscribeAckPacket::new(packet.packet_id(), ack);
+            let subscribe_ack_packet = SubscribeAckPacket::new(packet_id, ack);
             self.send(subscribe_ack_packet).await
         } else {
             Ok(())
