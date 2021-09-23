@@ -9,7 +9,7 @@ use tokio::sync::mpsc;
 
 use super::{ServerContext, CHANNEL_CAPACITY};
 use crate::acl::AclApp;
-use crate::auth::app::AuthApp;
+use crate::auth::AuthApp;
 use crate::backends::app::BackendsApp;
 use crate::bridge::app::BridgeApp;
 use crate::commands::DispatcherToMetricsCmd;
