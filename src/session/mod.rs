@@ -8,7 +8,7 @@ use std::time::Instant;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{ListenerToSessionCmd, SessionToListenerCmd};
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::stream::Stream;
 use crate::types::SessionId;
 
@@ -174,6 +174,19 @@ impl Session {
                 "ConnectAck is not the first packet to send: {:?}",
                 packet.packet_type()
             );
+        }
+
+        // After sending a DISCONNECT Packet the Client:
+        // - MUST close the Network Connection [MQTT-3.14.4-1].
+        // - MUST NOT send any more Control Packets on that Network Connection [MQTT-3.14.4-2].
+        if self.status == Status::Disconnected {
+            return Err(Error::from_string(
+                ErrorKind::SendError,
+                format!(
+                    "session: Cannot send packet when stream has been disconnected: {:?}",
+                    packet.packet_type()
+                ),
+            ));
         }
 
         let mut buf = Vec::new();
