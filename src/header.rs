@@ -151,7 +151,17 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             9 => Ok(PacketType::SubscribeAck),
-            10 => Ok(PacketType::Unsubscribe),
+            10 => {
+                // Bits 3,2,1 and 0 of the fixed header of the UNSUBSCRIBE Control Packet are reserved
+                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
+                // any other value as malformed and close the Network Connection [MQTT-3.10.1-1].
+                let flag = v & 0b0000_1111;
+                if flag != 0b0000_0010 {
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::Unsubscribe)
+                }
+            }
             11 => Ok(PacketType::UnsubscribeAck),
             12 => Ok(PacketType::PingRequest),
             13 => Ok(PacketType::PingResponse),
