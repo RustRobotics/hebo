@@ -113,6 +113,12 @@ impl DecodePacket for UnsubscribePacket {
             topics.push(topic);
         }
 
+        // The Payload of an UNSUBSCRIBE packet MUST contain at least one Topic Filter.
+        // An UNSUBSCRIBE packet with no payload is a protocol violation [MQTT-4.10.3-2].
+        if topics.is_empty() {
+            return Err(DecodeError::EmptyTopicFilter);
+        }
+
         Ok(UnsubscribePacket { packet_id, topics })
     }
 }
