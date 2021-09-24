@@ -276,16 +276,33 @@ impl Session {
 
     async fn on_client_unsubscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let packet = UnsubscribePacket::decode(&mut ba)?;
+        let packet = match UnsubscribePacket::decode(&mut ba) {
+            Ok(packet) => packet,
+            Err(err) => match err {
+                DecodeError::InvalidPacketFlags => {
+                    // The Server MUST validate that reserved bits are set to zero and disconnect the Client
+                    // if they are not zero [MQTT-3.14.1-1].
+                    log::error!(
+                        "session: Invalid bit flags for unsubscribe packet, do disconnect!"
+                    );
+                    return self.send_disconnect().await;
+                }
+                _ => {
+                    // TODO(Shaohua): Send disconnect when got error.
+                    return Err(err.into());
+                }
+            },
+        };
+        let packet_id = packet.packet_id();
         if let Err(err) = self
             .sender
-            .send(SessionToListenerCmd::Unsubscribe(self.id, packet.clone()))
+            .send(SessionToListenerCmd::Unsubscribe(self.id, packet))
             .await
         {
             log::warn!("Failed to send unsubscribe command to server: {:?}", err);
         }
 
-        let unsubscribe_ack_packet = UnsubscribeAckPacket::new(packet.packet_id());
+        let unsubscribe_ack_packet = UnsubscribeAckPacket::new(packet_id);
         self.send(unsubscribe_ack_packet).await
     }
 
