@@ -152,13 +152,16 @@ impl Listener {
 
     async fn on_session_unsubscribe(
         &mut self,
-        _session_id: SessionId,
-        _packet: UnsubscribePacket,
+        session_id: SessionId,
+        packet: UnsubscribePacket,
     ) -> Result<(), Error> {
         // Remove topic from sub tree.
         // Send subRemoved to dispatcher.
         self.dispatcher_sender
-            .send(ListenerToDispatcherCmd::SubscriptionsRemoved(self.id))
+            .send(ListenerToDispatcherCmd::Unsubscribe(
+                SessionGid::new(self.id, session_id),
+                packet,
+            ))
             .await
             .map_err(Into::into)
     }

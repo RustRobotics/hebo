@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{PublishPacket, SubscribePacket};
+use codec::{PublishPacket, SubscribePacket, UnsubscribePacket};
 
 use super::Dispatcher;
 use crate::commands::{DispatcherToListenerCmd, ListenerToDispatcherCmd};
@@ -18,6 +18,9 @@ impl Dispatcher {
             }
             ListenerToDispatcherCmd::Subscribe(session_gid, packet) => {
                 self.on_listener_subscribe(session_gid, packet).await;
+            }
+            ListenerToDispatcherCmd::Unsubscribe(session_gid, packet) => {
+                self.on_listener_unsubscribe(session_gid, packet).await;
             }
             ListenerToDispatcherCmd::SessionAdded(listener_id) => {
                 self.metrics_on_session_added(listener_id).await;
@@ -69,5 +72,13 @@ impl Dispatcher {
                 session_gid.listener_id()
             );
         }
+    }
+
+    async fn on_listener_unsubscribe(
+        &mut self,
+        session_gid: SessionGid,
+        packet: UnsubscribePacket,
+    ) {
+        self.sub_trie.unsubscribe(session_gid, packet);
     }
 }

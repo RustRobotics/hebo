@@ -4,7 +4,10 @@
 
 //! Manage subscription trie.
 
-use codec::{PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, SubscribePattern};
+use codec::{
+    PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, SubscribePattern,
+    UnsubscribePacket,
+};
 use std::collections::{BTreeSet, HashMap};
 
 use super::Dispatcher;
@@ -62,6 +65,11 @@ impl SubTrie {
         }
 
         SubscribeAckPacket::with_vec(packet.packet_id(), ack_vec)
+    }
+
+    pub fn unsubscribe(&mut self, _session_gid: SessionGid, _packet: UnsubscribePacket) {
+        // TODO(Shaohua):
+        unimplemented!()
     }
 
     pub fn match_packet(&mut self, packet: &PublishPacket) -> Vec<SessionGid> {

@@ -79,6 +79,8 @@ pub enum ListenerToDispatcherCmd {
 
     Subscribe(SessionGid, SubscribePacket),
 
+    Unsubscribe(SessionGid, UnsubscribePacket),
+
     SessionAdded(ListenerId),
     SessionRemoved(ListenerId),
 
