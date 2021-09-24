@@ -31,19 +31,6 @@ impl Dispatcher {
         }
     }
 
-    /*
-    pub(super) async fn publish_packet_to_listners(&mut self, packet: &PublishPacket) {
-        for (_listener_id, sender) in &self.listener_senders {
-            if let Err(err) = sender.send(cmd).await {
-                log::error!(
-                    "Dispatcher::publish_packet_to_listener() send failed: {:?}",
-                    err
-                );
-            }
-        }
-    }
-    */
-
     pub(super) async fn on_listener_publish(&mut self, packet: &PublishPacket) {
         self.publish_packet_to_sub_trie(packet).await;
     }

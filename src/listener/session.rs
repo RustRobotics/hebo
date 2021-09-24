@@ -4,10 +4,7 @@
 
 //! Session cmd handlers.
 
-use codec::{
-    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, SubscribeAckPacket,
-    SubscribePacket, UnsubscribePacket,
-};
+use codec::{ConnectPacket, PublishPacket, SubscribeAckPacket, SubscribePacket, UnsubscribePacket};
 
 use super::Listener;
 use crate::listener::{
@@ -44,19 +41,6 @@ impl Listener {
             SessionToListenerCmd::Disconnect(session_id) => {
                 self.on_session_disconnect(session_id).await
             }
-        }
-    }
-
-    #[allow(dead_code)]
-    async fn reject_client_id(&mut self, session_id: SessionId) -> Result<(), Error> {
-        // If a server sends a CONNACK packet containing a non-zero return code
-        // it MUST set Session Present to 0 [MQTT-3.2.2-4].
-        let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
-        let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
-        if let Some(session_sender) = self.session_senders.get(&session_id) {
-            session_sender.send(cmd).await.map_err(Into::into)
-        } else {
-            Err(Error::session_error(session_id))
         }
     }
 
