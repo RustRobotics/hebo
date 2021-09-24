@@ -67,9 +67,20 @@ impl SubTrie {
         SubscribeAckPacket::with_vec(packet.packet_id(), ack_vec)
     }
 
-    pub fn unsubscribe(&mut self, _session_gid: SessionGid, _packet: UnsubscribePacket) {
-        // TODO(Shaohua):
-        unimplemented!()
+    pub fn unsubscribe(&mut self, session_gid: SessionGid, packet: UnsubscribePacket) {
+        if let Some(set) = self.map.get_mut(&session_gid) {
+            // TODO(Shaohua): DO NOT clone topic patterns.
+            let to_be_removed: Vec<SubscribePattern> = set
+                .iter()
+                .filter(|p| packet.topics().contains(p.topic().topic()))
+                .map(|p| p.clone())
+                .collect();
+            for p in &to_be_removed {
+                set.remove(p);
+            }
+        } else {
+            log::error!("trie: No subscription for gid: {:?}", session_gid);
+        }
     }
 
     pub fn match_packet(&mut self, packet: &PublishPacket) -> Vec<SessionGid> {
