@@ -143,8 +143,7 @@ impl TryFrom<u8> for PacketType {
                 // Bits 3,2,1 and 0 of the fixed header of the SUBSCRIBE Control Packet are reserved
                 // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
                 // any other value as malformed and close the Network Connection [MQTT-3.8.1-1].
-                let flag = v & 0b0000_1111;
-                if flag != 0b0000_0010 {
+                if v != 0b0000_0010 {
                     Err(DecodeError::InvalidPacketFlags)
                 } else {
                     Ok(PacketType::Subscribe)
@@ -155,8 +154,7 @@ impl TryFrom<u8> for PacketType {
                 // Bits 3,2,1 and 0 of the fixed header of the UNSUBSCRIBE Control Packet are reserved
                 // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
                 // any other value as malformed and close the Network Connection [MQTT-3.10.1-1].
-                let flag = v & 0b0000_1111;
-                if flag != 0b0000_0010 {
+                if v != 0b0000_0010 {
                     Err(DecodeError::InvalidPacketFlags)
                 } else {
                     Ok(PacketType::Unsubscribe)
@@ -165,8 +163,15 @@ impl TryFrom<u8> for PacketType {
             11 => Ok(PacketType::UnsubscribeAck),
             12 => Ok(PacketType::PingRequest),
             13 => Ok(PacketType::PingResponse),
-            14 => Ok(PacketType::Disconnect),
-
+            14 => {
+                // The Server MUST validate that reserved bits are set to zero and disconnect the Client
+                // if they are not zero [MQTT-3.14.1-1].
+                if v != 0b0000_0000 {
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::Disconnect)
+                }
+            }
             t => {
                 log::error!("Invlaid type_bits: {}", t);
                 Err(DecodeError::InvalidPacketType)
