@@ -17,7 +17,6 @@ impl Dispatcher {
         }
     }
 
-    // TODO(Shaohua): publish packet
     #[allow(dead_code)]
     pub(super) async fn metrics_publish_packet_sent(
         &mut self,
@@ -67,10 +66,14 @@ impl Dispatcher {
         }
     }
 
-    pub(super) async fn metrics_on_subscription_added(&mut self, listener_id: ListenerId) {
+    pub(super) async fn metrics_on_subscription_added(
+        &mut self,
+        listener_id: ListenerId,
+        n: usize,
+    ) {
         if let Err(err) = self
             .metrics_sender
-            .send(DispatcherToMetricsCmd::SubscriptionsAdded(listener_id, 1))
+            .send(DispatcherToMetricsCmd::SubscriptionsAdded(listener_id, n))
             .await
         {
             log::error!(
@@ -80,10 +83,14 @@ impl Dispatcher {
         }
     }
 
-    pub(super) async fn metrics_on_subscription_removed(&mut self, listener_id: ListenerId) {
+    pub(super) async fn metrics_on_subscription_removed(
+        &mut self,
+        listener_id: ListenerId,
+        n: usize,
+    ) {
         if let Err(err) = self
             .metrics_sender
-            .send(DispatcherToMetricsCmd::SubscriptionsRemoved(listener_id, 1))
+            .send(DispatcherToMetricsCmd::SubscriptionsRemoved(listener_id, n))
             .await
         {
             log::error!(

@@ -49,7 +49,11 @@ impl Dispatcher {
     }
 
     async fn on_listener_subscribe(&mut self, session_gid: SessionGid, packet: SubscribePacket) {
-        let sub_ack_packet = self.sub_trie.subscribe(session_gid, packet);
+        let (sub_ack_packet, n_subscribed) = self.sub_trie.subscribe(session_gid, packet);
+
+        self.metrics_on_subscription_added(session_gid.listener_id(), n_subscribed)
+            .await;
+
         if let Some(listener_sender) = self.listener_senders.get(&session_gid.listener_id()) {
             let cmd =
                 DispatcherToListenerCmd::SubscribeAck(session_gid.session_id(), sub_ack_packet);
@@ -73,6 +77,8 @@ impl Dispatcher {
         session_gid: SessionGid,
         packet: UnsubscribePacket,
     ) {
-        self.sub_trie.unsubscribe(session_gid, packet);
+        let n_unsubscribed = self.sub_trie.unsubscribe(session_gid, packet);
+        self.metrics_on_subscription_removed(session_gid.listener_id(), n_unsubscribed)
+            .await;
     }
 }

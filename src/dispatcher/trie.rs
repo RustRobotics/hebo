@@ -30,7 +30,7 @@ impl SubTrie {
         &mut self,
         session_gid: SessionGid,
         packet: SubscribePacket,
-    ) -> SubscribeAckPacket {
+    ) -> (SubscribeAckPacket, usize) {
         let patterns = match self.map.get_mut(&session_gid) {
             Some(patterns) => patterns,
             None => {
@@ -44,6 +44,7 @@ impl SubTrie {
         // it MUST handle that packet as if it had received a sequence of multiple SUBSCRIBE packets,
         // except that it combines their responses into a single SUBACK response [MQTT-3.8.4-4].
         let mut ack_vec = vec![];
+        let mut pattern_added = 0;
         for topic in packet.topics() {
             // TODO(Shaohua): Send retained messages.
             // TODO(Shaohua): Check topic filter has been subscribed.
@@ -52,6 +53,7 @@ impl SubTrie {
                 Ok(pattern) => {
                     patterns.insert(pattern);
                     ack_vec.push(SubscribeAck::QoS(topic.qos()));
+                    pattern_added += 1;
                 }
                 Err(err) => {
                     log::error!(
@@ -64,10 +66,13 @@ impl SubTrie {
             }
         }
 
-        SubscribeAckPacket::with_vec(packet.packet_id(), ack_vec)
+        (
+            SubscribeAckPacket::with_vec(packet.packet_id(), ack_vec),
+            pattern_added,
+        )
     }
 
-    pub fn unsubscribe(&mut self, session_gid: SessionGid, packet: UnsubscribePacket) {
+    pub fn unsubscribe(&mut self, session_gid: SessionGid, packet: UnsubscribePacket) -> usize {
         if let Some(set) = self.map.get_mut(&session_gid) {
             // TODO(Shaohua): DO NOT clone topic patterns.
             let to_be_removed: Vec<SubscribePattern> = set
@@ -78,8 +83,11 @@ impl SubTrie {
             for p in &to_be_removed {
                 set.remove(p);
             }
+
+            to_be_removed.len()
         } else {
             log::error!("trie: No subscription for gid: {:?}", session_gid);
+            0
         }
     }
 
