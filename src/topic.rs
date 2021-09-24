@@ -64,7 +64,7 @@ impl Topic {
         true
     }
 
-    pub fn topic(&self) -> &str {
+    pub fn topic(&self) -> &String {
         &self.topic
     }
 
