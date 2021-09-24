@@ -83,10 +83,6 @@ pub enum ListenerToDispatcherCmd {
 
     SessionAdded(ListenerId),
     SessionRemoved(ListenerId),
-
-    // TODO(Shaohua): Remove these cmds
-    SubscriptionsAdded(ListenerId),
-    SubscriptionsRemoved(ListenerId),
 }
 
 #[derive(Debug, Clone)]

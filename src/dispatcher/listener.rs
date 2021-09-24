@@ -28,12 +28,6 @@ impl Dispatcher {
             ListenerToDispatcherCmd::SessionRemoved(listener_id) => {
                 self.metrics_on_session_removed(listener_id).await;
             }
-            ListenerToDispatcherCmd::SubscriptionsAdded(listener_id) => {
-                self.metrics_on_subscription_added(listener_id).await;
-            }
-            ListenerToDispatcherCmd::SubscriptionsRemoved(listener_id) => {
-                self.metrics_on_subscription_removed(listener_id).await;
-            }
         }
     }
 

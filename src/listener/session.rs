@@ -155,8 +155,8 @@ impl Listener {
         session_id: SessionId,
         packet: UnsubscribePacket,
     ) -> Result<(), Error> {
+        // No need to check ACL.
         // Remove topic from sub tree.
-        // Send subRemoved to dispatcher.
         self.dispatcher_sender
             .send(ListenerToDispatcherCmd::Unsubscribe(
                 SessionGid::new(self.id, session_id),
