@@ -61,6 +61,19 @@ pub fn validate_two_bytes_data(data: &[u8]) -> Result<(), StringError> {
 
 /// Check string characters and length.
 pub fn validate_utf8_string(s: &str) -> Result<(), StringError> {
+    // The character data in a UTF-8 encoded string MUST be well-formed UTF-8 as
+    // defined by the Unicode specification [Unicode] and restated in RFC 3629
+    // [RFC3629]. In particular this data MUST NOT include encodings of code points
+    // between U+D800 and U+DFFF. If a Server or Client receives a Control Packet
+    // containing ill-formed UTF-8 it MUST close the Network Connection. [MQTT-1.5.3-1]
+    //
+    // A UTF-8 encoded string MUST NOT include an encoding of the null character
+    // U+0000. If a receiver (Server or Client) receives a Control Packet containing
+    // U+0000 it MUST close the Network Connection. [MQTT-1.5.3-2]
+    //
+    // A UTF-8 encoded sequence 0xEF 0xBB 0xBF is always to be interpreted to
+    // mean U+FEFF ("ZERO WIDTH NO-BREAK SPACE") wherever it appears in a
+    // string and MUST NOT be skipped over or stripped off by a packet receiver. [MQTT-1.5.3-3]
     if s.len() > u16::MAX as usize {
         return Err(StringError::TooManyData);
     }

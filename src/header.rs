@@ -108,9 +108,25 @@ impl TryFrom<u8> for PacketType {
 
     fn try_from(v: u8) -> Result<PacketType, Self::Error> {
         let type_bits = (v & 0b1111_0000) >> 4;
+        // Where a flag bit is marked as “Reserved” in Table 2.2 - Flag Bits,
+        // it is reserved for future use and MUST be set to the value listed
+        // in that table [MQTT-2.2.2-1]. If invalid flags are received,
+        // the receiver MUST close the Network Connection [MQTT-2.2.2-2].
         match type_bits {
-            1 => Ok(PacketType::Connect),
-            2 => Ok(PacketType::ConnectAck),
+            1 => {
+                if v != 0b0000_0000 {
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::Connect)
+                }
+            }
+            2 => {
+                if v != 0b0000_0000 {
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::ConnectAck)
+                }
+            }
             3 => {
                 let flag = v & 0b0000_1111;
                 let dup = (flag & 0b0000_1000) == 0b0000_1000;
@@ -125,7 +141,13 @@ impl TryFrom<u8> for PacketType {
 
                 Ok(PacketType::Publish { dup, retain, qos })
             }
-            4 => Ok(PacketType::PublishAck),
+            4 => {
+                if v != 0b0000_0000 {
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::PublishAck)
+                }
+            }
             5 => Ok(PacketType::PublishReceived),
             6 => {
                 // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
@@ -149,7 +171,13 @@ impl TryFrom<u8> for PacketType {
                     Ok(PacketType::Subscribe)
                 }
             }
-            9 => Ok(PacketType::SubscribeAck),
+            9 => {
+                if v != 0b0000_0000 {
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::SubscribeAck)
+                }
+            }
             10 => {
                 // Bits 3,2,1 and 0 of the fixed header of the UNSUBSCRIBE Control Packet are reserved
                 // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
@@ -160,9 +188,27 @@ impl TryFrom<u8> for PacketType {
                     Ok(PacketType::Unsubscribe)
                 }
             }
-            11 => Ok(PacketType::UnsubscribeAck),
-            12 => Ok(PacketType::PingRequest),
-            13 => Ok(PacketType::PingResponse),
+            11 => {
+                if v != 0b0000_0000 {
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::UnsubscribeAck)
+                }
+            }
+            12 => {
+                if v != 0b0000_0000 {
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::PingRequest)
+                }
+            }
+            13 => {
+                if v != 0b0000_0000 {
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::PingResponse)
+                }
+            }
             14 => {
                 // The Server MUST validate that reserved bits are set to zero and disconnect the Client
                 // if they are not zero [MQTT-3.14.1-1].
