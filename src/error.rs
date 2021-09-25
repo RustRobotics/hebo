@@ -33,6 +33,9 @@ pub enum ErrorKind {
     /// Socket stream error.
     SocketError,
 
+    /// Invalid session/client status.
+    StatusError,
+
     /// Cert files error.
     CertError,
 

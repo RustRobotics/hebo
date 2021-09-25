@@ -13,7 +13,7 @@ use codec::{
 
 use super::{Session, Status};
 use crate::commands::SessionToListenerCmd;
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 impl Session {
     pub(super) async fn handle_client_packet(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -96,6 +96,19 @@ impl Session {
             },
         };
 
+        // Check connection status first.
+        // If this client is already connected, send disconnect packet.
+        //
+        // The Server MUST process a second CONNECT Packet sent from a Client as
+        // a protocol violation and disconnect the Client. [MQTT-3.1.0-2]
+        if self.status == Status::Connecting || self.status == Status::Connected {
+            self.send_disconnect().await?;
+            return Err(Error::new(
+                ErrorKind::StatusError,
+                "sesion: Invalid status, got a second CONNECT packet!",
+            ));
+        }
+
         // A Server MAY allow a Client to supply a ClientId that has a length of zero bytes,
         // however if it does so the Server MUST treat this as a special case and
         // assign a unique ClientId to that Client. It MUST then process the CONNECT packet
@@ -139,12 +152,6 @@ impl Session {
 
         self.clean_session = packet.connect_flags().clean_session();
         // TODO(Shaohua): Handle other connection flags.
-
-        // Check connection status first.
-        // If this client is already connected, send disconnect packet.
-        if self.status == Status::Connected || self.status == Status::Connecting {
-            return self.send_disconnect().await;
-        }
 
         // Send the connect packet to listener.
         self.status = Status::Connecting;
