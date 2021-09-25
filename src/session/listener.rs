@@ -5,8 +5,8 @@
 //! Handles commands from listener.
 
 use codec::{
-    ConnectReturnCode, PacketId, PublishAckPacket, PublishPacket, PublishReceivedPacket, QoS,
-    SubscribeAckPacket,
+    ConnectAckPacket, ConnectReturnCode, PacketId, PublishAckPacket, PublishPacket,
+    PublishReceivedPacket, QoS, SubscribeAckPacket,
 };
 
 use super::{Session, Status};
@@ -19,17 +19,7 @@ impl Session {
         cmd: ListenerToSessionCmd,
     ) -> Result<(), Error> {
         match cmd {
-            ListenerToSessionCmd::ConnectAck(packet) => {
-                // Send connect ack first, then update status.
-                let return_code = packet.return_code();
-                self.send(packet).await?;
-
-                self.status = match return_code {
-                    ConnectReturnCode::Accepted => Status::Connected,
-                    _ => Status::Disconnected,
-                };
-                Ok(())
-            }
+            ListenerToSessionCmd::ConnectAck(packet) => self.on_listener_connect_ack(packet).await,
             ListenerToSessionCmd::PublishAck(packet_id, qos, accepted) => {
                 self.on_listener_publish_ack(packet_id, qos, accepted).await
             }
@@ -39,6 +29,18 @@ impl Session {
             }
             ListenerToSessionCmd::Disconnect => self.on_listener_disconnect().await,
         }
+    }
+
+    async fn on_listener_connect_ack(&mut self, packet: ConnectAckPacket) -> Result<(), Error> {
+        // Send connect ack first, then update status.
+        let return_code = packet.return_code();
+        self.send(packet).await?;
+
+        self.status = match return_code {
+            ConnectReturnCode::Accepted => Status::Connected,
+            _ => Status::Disconnected,
+        };
+        Ok(())
     }
 
     /// Send ack to client.

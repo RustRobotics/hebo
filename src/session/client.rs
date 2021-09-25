@@ -56,7 +56,8 @@ impl Session {
         // it MUST set Session Present to 0 [MQTT-3.2.2-4].
         let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
         self.send(ack_packet).await?;
-        self.send_disconnect().await
+        self.status = Status::Disconnected;
+        Ok(())
     }
 
     async fn on_client_connect(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -76,7 +77,7 @@ impl Session {
                     let ack_packet =
                         ConnectAckPacket::new(false, ConnectReturnCode::UnacceptedProtocol);
                     self.send(ack_packet).await?;
-                    self.send_disconnect().await?;
+                    self.status = Status::Disconnected;
                     return Err(err.into());
                 }
                 DecodeError::InvalidClientId => {
@@ -102,7 +103,7 @@ impl Session {
         // The Server MUST process a second CONNECT Packet sent from a Client as
         // a protocol violation and disconnect the Client. [MQTT-3.1.0-2]
         if self.status == Status::Connecting || self.status == Status::Connected {
-            self.send_disconnect().await?;
+            self.status = Status::Disconnected;
             return Err(Error::new(
                 ErrorKind::StatusError,
                 "sesion: Invalid status, got a second CONNECT packet!",
