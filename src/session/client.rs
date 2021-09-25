@@ -73,6 +73,9 @@ impl Session {
                 //
                 // If a server sends a CONNACK packet containing a non-zero return code
                 // it MUST set Session Present to 0 [MQTT-3.2.2-4].
+                //
+                // If a server sends a CONNACK packet containing a non-zero return code it MUST
+                // then close the Network Connection. [MQTT-3.2.2-5]
                 DecodeError::InvalidProtocolName | DecodeError::InvalidProtocolLevel => {
                     let ack_packet =
                         ConnectAckPacket::new(false, ConnectReturnCode::UnacceptedProtocol);
@@ -102,6 +105,9 @@ impl Session {
         //
         // The Server MUST process a second CONNECT Packet sent from a Client as
         // a protocol violation and disconnect the Client. [MQTT-3.1.0-2]
+        //
+        // If the Server rejects the CONNECT, it MUST NOT process any data sent by the
+        // Client after the CONNECT Packet. [MQTT-3.1.4-5]
         if self.status == Status::Connecting || self.status == Status::Connected {
             self.status = Status::Disconnected;
             return Err(Error::new(
