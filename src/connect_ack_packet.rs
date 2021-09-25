@@ -92,7 +92,13 @@ pub struct ConnectAckPacket {
 }
 
 impl ConnectAckPacket {
-    pub fn new(session_present: bool, return_code: ConnectReturnCode) -> ConnectAckPacket {
+    pub fn new(mut session_present: bool, return_code: ConnectReturnCode) -> ConnectAckPacket {
+        // If a server sends a CONNACK packet containing a non-zero return code it MUST
+        // set Session Present to 0. [MQTT-3.2.2-4]
+        if return_code != ConnectReturnCode::Accepted {
+            log::error!("Invalid session_present value, expect false!");
+            session_present = false;
+        }
         ConnectAckPacket {
             session_present,
             return_code,
