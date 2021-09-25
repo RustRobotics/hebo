@@ -31,6 +31,10 @@ pub enum DecodeError {
     /// Does not contain InvalidQoS.
     InvalidPacketFlags,
 
+    /// PacketId should be present but not set.
+    /// Or PacketId is none where it is required.
+    InvalidPacketId,
+
     /// Length of buffer - offset < remaining length.
     InvalidRemainingLength,
 
