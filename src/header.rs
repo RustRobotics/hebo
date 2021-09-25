@@ -114,6 +114,8 @@ impl TryFrom<u8> for PacketType {
         // the receiver MUST close the Network Connection [MQTT-2.2.2-2].
         match type_bits {
             1 => {
+                // The Server MUST validate that the reserved flag in the CONNECT Control
+                // Packet is set to zero and disconnect the Client if it is not zero. [MQTT-3.1.2-3]
                 if v != 0b0000_0000 {
                     Err(DecodeError::InvalidPacketFlags)
                 } else {

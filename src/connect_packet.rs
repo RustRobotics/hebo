@@ -230,6 +230,11 @@ impl DecodePacket for ConnectFlags {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
+        // If the User Name Flag is set to 0, the Password Flag MUST be set to 0. [MQTT-3.1.2-22]
+        if !username && password {
+            return Err(DecodeError::InvalidConnectFlags);
+        }
+
         Ok(ConnectFlags {
             username,
             password,
