@@ -18,6 +18,9 @@ use crate::types::SessionId;
 /// Represent the types of errors.
 #[derive(Clone, Debug)]
 pub enum ErrorKind {
+    /// Got error while processing system calls.
+    KernelError,
+
     /// Error occurred while performing I/O.
     IoError,
 

@@ -19,7 +19,7 @@ fn bind_interface(socket_fd: RawFd, interface: &str) -> Result<(), Error> {
         )
         .map_err(|errno| {
             Error::from_string(
-                ErrorKind::ConfigError,
+                ErrorKind::KernelError,
                 format!(
                     "Failed to bind interface: {}, err: {}",
                     interface,
@@ -31,13 +31,45 @@ fn bind_interface(socket_fd: RawFd, interface: &str) -> Result<(), Error> {
     Ok(())
 }
 
+fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
+    // For Linux, value is the queue length of pending packets.
+    //
+    // TODO(Shaohua): Add a config option
+    #[cfg(target_os = "linux")]
+    let queue_len: i32 = 5;
+    // For the others, just a boolean value for enable and disable.
+    #[cfg(not(target_os = "linux"))]
+    let queue_len: i32 = 1;
+    let queue_len_ptr = &queue_len as *const i32 as usize;
+
+    // TODO(Shaohua): Replace with nc::TCP_FASTOPEN in new version.
+    const TCP_FASTOPEN: i32 = 23;
+
+    nc::setsockopt(
+        socket_fd,
+        nc::IPPROTO_TCP,
+        TCP_FASTOPEN,
+        queue_len_ptr,
+        std::mem::size_of_val(&queue_len) as u32,
+    )
+    .map_err(|errno| {
+        Error::from_string(
+            ErrorKind::KernelError,
+            format!(
+                "Failed to enable socket fast open, got err: {}",
+                nc::strerror(errno)
+            ),
+        )
+    })
+}
+
 pub async fn new_tcp_listener(address: &str, interface: &str) -> Result<TcpListener, Error> {
     let listener = TcpListener::bind(address).await?;
     let socket_fd: RawFd = listener.as_raw_fd();
 
     bind_interface(socket_fd, interface)?;
 
-    // TODO(Shaohua): Enable fast open
+    enable_fast_open(socket_fd)?;
 
     Ok(listener)
 }
