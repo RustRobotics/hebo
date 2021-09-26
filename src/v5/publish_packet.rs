@@ -33,6 +33,8 @@ use crate::{
 /// +-----------------------+
 /// | Msg payload ...       |
 /// +-----------------------+
+/// | Properties ...        |
+/// +-----------------------+
 /// ```
 ///
 /// Note that `packet_id` only appears in QoS 1 and QoS 2 packets.
