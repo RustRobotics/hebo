@@ -15,7 +15,7 @@ fn bind_device(socket_fd: RawFd, device: &str) -> Result<(), Error> {
             nc::SOL_SOCKET,
             nc::SO_BINDTODEVICE,
             device.as_ptr() as usize,
-            device.len() as u32,
+            device.len() as nc::socklen_t,
         )
         .map_err(|errno| {
             Error::from_string(

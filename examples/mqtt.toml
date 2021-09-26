@@ -2,6 +2,7 @@
 pid_file = "/tmp/hebo/mqtt-1883.pid"
 
 [[listeners]]
+bind_device = "lo"
 address = "0.0.0.0:1883"
 protocol = "mqtt"
 
