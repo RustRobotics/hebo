@@ -4,7 +4,7 @@
 
 use std::default::Default;
 
-use super::{
+use crate::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
     PacketType,
 };

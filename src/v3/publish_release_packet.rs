@@ -4,7 +4,7 @@
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use super::{
+use crate::{
     consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
     PacketId, PacketType,
 };

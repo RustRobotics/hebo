@@ -6,7 +6,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 use bytes::BytesMut;
 use std::io::Write;
 
-use super::{
+use crate::{
     consts, topic, utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
     FixedHeader, Packet, PacketId, PacketType, QoS,
 };

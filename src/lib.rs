@@ -16,4 +16,5 @@ pub use error::{DecodeError, EncodeError};
 pub use header::{FixedHeader, PacketType, RemainingLength};
 pub use topic::{SubscribePattern, Topic, TopicError, TopicPart};
 
-pub use v3;
+pub mod v3;
+pub mod v5;
