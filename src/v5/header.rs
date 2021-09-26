@@ -55,6 +55,9 @@ pub enum PacketType {
 
     /// Client is disconnecting
     Disconnect,
+
+    /// Authentication exchange
+    Auth,
 }
 
 impl PacketType {
@@ -81,6 +84,7 @@ impl Into<u8> for PacketType {
             PacketType::PingRequest => 12,
             PacketType::PingResponse => 13,
             PacketType::Disconnect => 14,
+            PacketType::Auth => 15,
         };
 
         let flags_bits = match self {
@@ -232,6 +236,15 @@ impl TryFrom<u8> for PacketType {
                     Err(DecodeError::InvalidPacketFlags)
                 } else {
                     Ok(PacketType::Disconnect)
+                }
+            }
+            15 => {
+                // TODO(Shaohua): Check bit flags
+                if flag != 0b0000_0000 {
+                    log::error!("header: Got packet flag in Auth: {:#b}", flag);
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::Auth)
                 }
             }
             t => {
