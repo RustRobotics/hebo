@@ -99,9 +99,6 @@ impl Into<u8> for PacketType {
                 let retain = if retain { 0b0000_0001 } else { 0b0000_0000 };
                 dup | qos | retain
             }
-            // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
-            // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
-            // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
             PacketType::PublishRelease => 0b0000_0010,
             PacketType::Subscribe => 0b0000_0010,
             PacketType::Unsubscribe => 0b0000_0010,
@@ -117,14 +114,10 @@ impl TryFrom<u8> for PacketType {
     fn try_from(v: u8) -> Result<PacketType, Self::Error> {
         let type_bits = (v & 0b1111_0000) >> 4;
         let flag = v & 0b0000_1111;
-        // Where a flag bit is marked as “Reserved” in Table 2.2 - Flag Bits,
-        // it is reserved for future use and MUST be set to the value listed
-        // in that table [MQTT-2.2.2-1]. If invalid flags are received,
-        // the receiver MUST close the Network Connection [MQTT-2.2.2-2].
+        // Where a flag bit is marked as “Reserved”, it is reserved for future use and MUST
+        // be set to the value listed [MQTT-2.1.3-1]
         match type_bits {
             1 => {
-                // The Server MUST validate that the reserved flag in the CONNECT Control
-                // Packet is set to zero and disconnect the Client if it is not zero. [MQTT-3.1.2-3]
                 if flag != 0b0000_0000 {
                     log::error!("header: Got packet flag in Connect: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
@@ -161,11 +154,15 @@ impl TryFrom<u8> for PacketType {
                     Ok(PacketType::PublishAck)
                 }
             }
-            5 => Ok(PacketType::PublishReceived),
+            5 => {
+                if flag != 0b0000_0000 {
+                    log::error!("header: Got packet flag in PublishReceived: {:#b}", flag);
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::PublishReceived)
+                }
+            }
             6 => {
-                // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
-                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
-                // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
                 if flag != 0b0000_0010 {
                     log::error!("header: Got packet flag in PublishRelease: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
@@ -173,11 +170,15 @@ impl TryFrom<u8> for PacketType {
                     Ok(PacketType::PublishRelease)
                 }
             }
-            7 => Ok(PacketType::PublishComplete),
+            7 => {
+                if flag != 0b0000_0000 {
+                    log::error!("header: Got packet flag in PublishComplete: {:#b}", flag);
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::PublishComplete)
+                }
+            }
             8 => {
-                // Bits 3,2,1 and 0 of the fixed header of the SUBSCRIBE Control Packet are reserved
-                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
-                // any other value as malformed and close the Network Connection [MQTT-3.8.1-1].
                 if flag != 0b0000_0010 {
                     log::error!("header: Got packet flag in Subscribe: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
@@ -194,9 +195,6 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             10 => {
-                // Bits 3,2,1 and 0 of the fixed header of the UNSUBSCRIBE Control Packet are reserved
-                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
-                // any other value as malformed and close the Network Connection [MQTT-3.10.1-1].
                 if flag != 0b0000_0010 {
                     log::error!("header: Got packet flag in Unsubscribe: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
@@ -229,8 +227,6 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             14 => {
-                // The Server MUST validate that reserved bits are set to zero and disconnect the Client
-                // if they are not zero [MQTT-3.14.1-1].
                 if flag != 0b0000_0000 {
                     log::error!("header: Got packet flag in Disconnect: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
@@ -239,7 +235,6 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             15 => {
-                // TODO(Shaohua): Check bit flags
                 if flag != 0b0000_0000 {
                     log::error!("header: Got packet flag in Auth: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
@@ -248,7 +243,7 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             t => {
-                log::error!("Invlaid type_bits: {}", t);
+                log::error!("Invlaid type_bits: {:#b}", t);
                 Err(DecodeError::InvalidPacketType)
             }
         }

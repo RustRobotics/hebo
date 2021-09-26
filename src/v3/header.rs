@@ -176,7 +176,14 @@ impl TryFrom<u8> for PacketType {
                     Ok(PacketType::PublishRelease)
                 }
             }
-            7 => Ok(PacketType::PublishComplete),
+            7 => {
+                if flag != 0b0000_0000 {
+                    log::error!("header: Got packet flag in PublishComplete: {:#b}", flag);
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::PublishComplete)
+                }
+            }
             8 => {
                 // Bits 3,2,1 and 0 of the fixed header of the SUBSCRIBE Control Packet are reserved
                 // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
@@ -242,7 +249,7 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             t => {
-                log::error!("Invlaid type_bits: {}", t);
+                log::error!("Invlaid type_bits: {:#b}", t);
                 Err(DecodeError::InvalidPacketType)
             }
         }
