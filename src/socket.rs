@@ -8,11 +8,7 @@ use tokio::net::TcpListener;
 
 use crate::error::{Error, ErrorKind};
 
-pub async fn new_tcp_listener(address: &str, interface: &str) -> Result<TcpListener, Error> {
-    let listener = TcpListener::bind(address).await?;
-    let socket_fd: RawFd = listener.as_raw_fd();
-
-    // Bind interface
+fn bind_interface(socket_fd: RawFd, interface: &str) -> Result<(), Error> {
     if !interface.is_empty() {
         nc::setsockopt(
             socket_fd,
@@ -32,6 +28,14 @@ pub async fn new_tcp_listener(address: &str, interface: &str) -> Result<TcpListe
             )
         })?;
     }
+    Ok(())
+}
+
+pub async fn new_tcp_listener(address: &str, interface: &str) -> Result<TcpListener, Error> {
+    let listener = TcpListener::bind(address).await?;
+    let socket_fd: RawFd = listener.as_raw_fd();
+
+    bind_interface(socket_fd, interface)?;
 
     // TODO(Shaohua): Enable fast open
 
@@ -39,5 +43,10 @@ pub async fn new_tcp_listener(address: &str, interface: &str) -> Result<TcpListe
 }
 
 pub fn new_udp_socket(address: &str, interface: &str) -> Result<UdpSocket, Error> {
-    unimplemented!()
+    let socket = UdpSocket::bind(address)?;
+    let socket_fd: RawFd = socket.as_raw_fd();
+
+    bind_interface(socket_fd, interface)?;
+
+    Ok(socket)
 }
