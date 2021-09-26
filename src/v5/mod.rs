@@ -5,7 +5,9 @@
 mod header;
 mod property_type;
 mod publish_packet;
+mod reason_code;
 
 pub use header::{FixedHeader, Packet, PacketType, RemainingLength};
 pub use property_type::PropertyType;
 pub use publish_packet::PublishPacket;
+pub use reason_code::ReasonCode;
