@@ -157,7 +157,14 @@ impl TryFrom<u8> for PacketType {
                     Ok(PacketType::PublishAck)
                 }
             }
-            5 => Ok(PacketType::PublishReceived),
+            5 => {
+                if flag != 0b0000_0000 {
+                    log::error!("header: Got packet flag in PublishReceived: {:#b}", flag);
+                    Err(DecodeError::InvalidPacketFlags)
+                } else {
+                    Ok(PacketType::PublishReceived)
+                }
+            }
             6 => {
                 // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
                 // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
