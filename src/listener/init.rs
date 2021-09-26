@@ -132,7 +132,7 @@ impl Listener {
         acl_sender: Sender<ListenerToAclCmd>,
         acl_receiver: Receiver<AclToListenerCmd>,
     ) -> Result<Listener, Error> {
-        let interface = listener_config.bind_interface();
+        let device = listener_config.bind_device();
         let address = listener_config.address();
 
         let new_listener = |protocol| {
@@ -151,26 +151,26 @@ impl Listener {
         match listener_config.protocol() {
             config::Protocol::Mqtt => {
                 log::info!("bind mqtt://{}", address);
-                let listener = new_tcp_listener(address, interface).await?;
+                let listener = new_tcp_listener(address, device).await?;
                 return new_listener(Protocol::Mqtt(listener));
             }
             config::Protocol::Mqtts => {
                 log::info!("bind mqtts://{}", address);
                 let config = Listener::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-                let listener = new_tcp_listener(address, interface).await?;
+                let listener = new_tcp_listener(address, device).await?;
                 return new_listener(Protocol::Mqtts(listener, acceptor));
             }
             config::Protocol::Ws => {
                 log::info!("bind ws://{}", address);
-                let listener = new_tcp_listener(address, interface).await?;
+                let listener = new_tcp_listener(address, device).await?;
                 return new_listener(Protocol::Ws(listener));
             }
             config::Protocol::Wss => {
                 log::info!("bind wss://{}", address);
                 let config = Listener::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-                let listener = new_tcp_listener(address, interface).await?;
+                let listener = new_tcp_listener(address, device).await?;
                 return new_listener(Protocol::Wss(listener, acceptor));
             }
 
@@ -228,7 +228,7 @@ impl Listener {
                 let mut endpoint_builder = quinn::Endpoint::builder();
                 endpoint_builder.listen(config_builder.build());
                 // Bind this endpoint to a UDP socket on the given server address.
-                let udp_socket = new_udp_socket(address, interface)?;
+                let udp_socket = new_udp_socket(address, device)?;
                 let (endpoint, incoming) = endpoint_builder.with_socket(udp_socket)?;
                 return new_listener(Protocol::Quic(endpoint, incoming));
             }

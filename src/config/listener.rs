@@ -36,16 +36,16 @@ pub enum Protocol {
 /// Listener represent an unique ip/port combination and mqtt connection protocol.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Listener {
-    /// Bind the listener to a specific interface.
+    /// Bind the listener to a specific device interface.
     ///
-    /// This is useful when an interface has multiple addresses or the address may change.
+    /// This is useful when an device has multiple addresses or the address may change.
     /// If used with the [ip address/host name] part of the address definition, then the
-    /// bind_interface option will take priority.
-    /// Example: bind_interface eth0
+    /// bind_device option will take priority.
+    /// Example: bind_device eth0
     ///
     /// Default is empty.
-    #[serde(default = "Listener::default_bind_interface")]
-    bind_interface: String,
+    #[serde(default = "Listener::default_bind_device")]
+    bind_device: String,
 
     /// The maximum number of client connections to this listener allowed.
     ///
@@ -155,7 +155,7 @@ impl Listener {
         vec![Self::default()]
     }
 
-    pub fn default_bind_interface() -> String {
+    pub fn default_bind_device() -> String {
         "".to_string()
     }
 
@@ -203,8 +203,8 @@ impl Listener {
         20
     }
 
-    pub fn bind_interface(&self) -> &str {
-        &self.bind_interface
+    pub fn bind_device(&self) -> &str {
+        &self.bind_device
     }
 
     pub fn max_connections(&self) -> usize {
@@ -255,7 +255,7 @@ impl Listener {
 impl Default for Listener {
     fn default() -> Self {
         Self {
-            bind_interface: Self::default_bind_interface(),
+            bind_device: Self::default_bind_device(),
             max_connections: Self::default_max_connections(),
             protocol: Self::default_protocol(),
             address: Self::default_address(),
