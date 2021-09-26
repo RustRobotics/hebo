@@ -3,8 +3,9 @@
 // in the LICENSE file.
 
 mod header;
-mod property;
+mod property_type;
 mod publish_packet;
 
 pub use header::{FixedHeader, Packet, PacketType, RemainingLength};
+pub use property_type::PropertyType;
 pub use publish_packet::PublishPacket;
