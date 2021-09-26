@@ -6,11 +6,9 @@ use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
 use std::io::Write;
 
+use super::{FixedHeader, Packet, PacketType};
 use crate::utils::{self, StringError};
-use crate::{
-    consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
-    Packet, PacketType, QoS,
-};
+use crate::{consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
 
 /// Current version of MQTT protocol can be:
 /// * 3.1

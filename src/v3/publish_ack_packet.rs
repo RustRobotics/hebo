@@ -4,10 +4,8 @@
 
 use byteorder::{BigEndian, WriteBytesExt};
 
-use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType,
-};
+use super::{FixedHeader, Packet, PacketType};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// Acknowledge packet for Publish message in QoS 1.
 ///

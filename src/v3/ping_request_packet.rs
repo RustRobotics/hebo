@@ -2,10 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketType,
-};
+use super::{FixedHeader, Packet, PacketType};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// The PingRequest packet is sent to the Server from a Client. It is used to:
 /// 1. Notify the Server that this Client is still alive.

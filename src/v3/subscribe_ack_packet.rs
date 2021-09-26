@@ -4,9 +4,9 @@
 
 use byteorder::{BigEndian, WriteBytesExt};
 
+use super::{FixedHeader, Packet, PacketType};
 use crate::{
-    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketId, PacketType, QoS,
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS,
 };
 
 /// Reply to each subscribed topic.

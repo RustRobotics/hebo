@@ -4,10 +4,8 @@
 
 use byteorder::{BigEndian, WriteBytesExt};
 
-use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
-    PacketType,
-};
+use super::{FixedHeader, Packet, PacketType};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// Response to a Publish packet with QoS 2. It is the fourth and final packet of
 /// the QoS 2 protocol exchange.

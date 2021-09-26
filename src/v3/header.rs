@@ -4,9 +4,13 @@
 
 use std::convert::TryFrom;
 
-use super::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
 
 pub const MAX_PACKET_LEN: usize = 0x7F_FF_FF_FF;
+
+pub trait Packet {
+    fn packet_type(&self) -> PacketType;
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PacketType {

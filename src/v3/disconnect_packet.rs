@@ -4,10 +4,8 @@
 
 use std::default::Default;
 
-use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketType,
-};
+use super::{FixedHeader, Packet, PacketType};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// The Disconnect packet is the final packet sent to the Server from a Client.
 ///

@@ -6,9 +6,10 @@ use byteorder::{BigEndian, WriteBytesExt};
 use bytes::BytesMut;
 use std::io::Write;
 
+use super::{FixedHeader, Packet, PacketType};
 use crate::{
     consts, topic, utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
-    FixedHeader, Packet, PacketId, PacketType, QoS,
+    PacketId, QoS,
 };
 
 /// PublishPacket is used to transport application messages from the Client to the Server,

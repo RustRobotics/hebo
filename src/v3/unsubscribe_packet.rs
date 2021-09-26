@@ -7,10 +7,8 @@ use std::io::Write;
 
 use byteorder::{BigEndian, WriteBytesExt};
 
-use crate::{
-    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketId, PacketType,
-};
+use super::{FixedHeader, Packet, PacketType};
+use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// The Client request to unsubscribe topics from the Server.
 /// When the Server receives this packet, no more Publish packet will be sent to the Client.

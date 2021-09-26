@@ -4,10 +4,8 @@
 
 use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
 
-use crate::{
-    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
-    PacketId, PacketType,
-};
+use super::{FixedHeader, Packet, PacketType};
+use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// UnsubscribeAck packet is sent by the Server to the Client to confirm receipt of an
 /// Unsubscribe packet.
