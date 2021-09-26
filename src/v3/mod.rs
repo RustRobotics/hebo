@@ -2,21 +2,21 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-pub mod connect_ack_packet;
-pub mod connect_packet;
-pub mod disconnect_packet;
-pub mod header;
-pub mod ping_request_packet;
-pub mod ping_response_packet;
-pub mod publish_ack_packet;
-pub mod publish_complete_packet;
-pub mod publish_packet;
-pub mod publish_received_packet;
-pub mod publish_release_packet;
-pub mod subscribe_ack_packet;
-pub mod subscribe_packet;
-pub mod unsubscribe_ack_packet;
-pub mod unsubscribe_packet;
+mod connect_ack_packet;
+mod connect_packet;
+mod disconnect_packet;
+mod header;
+mod ping_request_packet;
+mod ping_response_packet;
+mod publish_ack_packet;
+mod publish_complete_packet;
+mod publish_packet;
+mod publish_received_packet;
+mod publish_release_packet;
+mod subscribe_ack_packet;
+mod subscribe_packet;
+mod unsubscribe_ack_packet;
+mod unsubscribe_packet;
 
 pub use connect_ack_packet::{ConnectAckPacket, ConnectReturnCode};
 pub use connect_packet::ConnectPacket;
