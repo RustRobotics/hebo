@@ -26,6 +26,7 @@ use crate::commands::{
 };
 use crate::config;
 use crate::error::{Error, ErrorKind};
+use crate::socket::new_tcp_listener;
 use crate::stream::Stream;
 use crate::types::ListenerId;
 
@@ -132,7 +133,9 @@ impl Listener {
         acl_sender: Sender<ListenerToAclCmd>,
         acl_receiver: Receiver<AclToListenerCmd>,
     ) -> Result<Listener, Error> {
+        let interface = listener_config.bind_interface();
         let address = listener_config.address();
+
         let new_listener = |protocol| {
             Ok(Listener::new(
                 id,
@@ -149,26 +152,26 @@ impl Listener {
         match listener_config.protocol() {
             config::Protocol::Mqtt => {
                 log::info!("bind mqtt://{}", address);
-                let listener = TcpListener::bind(&address).await?;
+                let listener = new_tcp_listener(address, interface).await?;
                 return new_listener(Protocol::Mqtt(listener));
             }
             config::Protocol::Mqtts => {
                 log::info!("bind mqtts://{}", address);
                 let config = Listener::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-                let listener = TcpListener::bind(&address).await?;
+                let listener = new_tcp_listener(address, interface).await?;
                 return new_listener(Protocol::Mqtts(listener, acceptor));
             }
             config::Protocol::Ws => {
                 log::info!("bind ws://{}", address);
-                let listener = TcpListener::bind(&address).await?;
+                let listener = new_tcp_listener(address, interface).await?;
                 return new_listener(Protocol::Ws(listener));
             }
             config::Protocol::Wss => {
                 log::info!("bind wss://{}", address);
                 let config = Listener::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-                let listener = TcpListener::bind(&address).await?;
+                let listener = new_tcp_listener(address, interface).await?;
                 return new_listener(Protocol::Wss(listener, acceptor));
             }
 
