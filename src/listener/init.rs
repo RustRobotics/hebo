@@ -149,39 +149,27 @@ impl Listener {
         match listener_config.protocol() {
             config::Protocol::Mqtt => {
                 log::info!("bind mqtt://{}", address);
-                let addrs = address.to_socket_addrs()?;
-                for addr in addrs {
-                    let listener = TcpListener::bind(&addr).await?;
-                    return new_listener(Protocol::Mqtt(listener));
-                }
+                let listener = TcpListener::bind(&address).await?;
+                return new_listener(Protocol::Mqtt(listener));
             }
             config::Protocol::Mqtts => {
                 log::info!("bind mqtts://{}", address);
                 let config = Listener::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-                let addrs = address.to_socket_addrs()?;
-                for addr in addrs {
-                    let listener = TcpListener::bind(&addr).await?;
-                    return new_listener(Protocol::Mqtts(listener, acceptor));
-                }
+                let listener = TcpListener::bind(&address).await?;
+                return new_listener(Protocol::Mqtts(listener, acceptor));
             }
             config::Protocol::Ws => {
                 log::info!("bind ws://{}", address);
-                let addrs = address.to_socket_addrs()?;
-                for addr in addrs {
-                    let listener = TcpListener::bind(&addr).await?;
-                    return new_listener(Protocol::Ws(listener));
-                }
+                let listener = TcpListener::bind(&address).await?;
+                return new_listener(Protocol::Ws(listener));
             }
             config::Protocol::Wss => {
                 log::info!("bind wss://{}", address);
                 let config = Listener::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
-                let addrs = address.to_socket_addrs()?;
-                for addr in addrs {
-                    let listener = TcpListener::bind(&addr).await?;
-                    return new_listener(Protocol::Wss(listener, acceptor));
-                }
+                let listener = TcpListener::bind(&address).await?;
+                return new_listener(Protocol::Wss(listener, acceptor));
             }
 
             config::Protocol::Uds => {
