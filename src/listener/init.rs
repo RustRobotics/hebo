@@ -8,10 +8,9 @@ use futures_util::StreamExt;
 use std::collections::{BTreeMap, HashMap};
 use std::fs::{self, File};
 use std::io::BufReader;
-use std::net::ToSocketAddrs;
 use std::path::Path;
 use std::sync::Arc;
-use tokio::net::{TcpListener, UnixListener};
+use tokio::net::UnixListener;
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_rustls::rustls::internal::pemfile;
 use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
@@ -26,7 +25,7 @@ use crate::commands::{
 };
 use crate::config;
 use crate::error::{Error, ErrorKind};
-use crate::socket::new_tcp_listener;
+use crate::socket::{new_tcp_listener, new_udp_socket};
 use crate::stream::Stream;
 use crate::types::ListenerId;
 
@@ -228,21 +227,12 @@ impl Listener {
 
                 let mut endpoint_builder = quinn::Endpoint::builder();
                 endpoint_builder.listen(config_builder.build());
-                let addrs = listener_config.address().to_socket_addrs()?;
-                for addr in addrs {
-                    // Bind this endpoint to a UDP socket on the given server address.
-                    let (endpoint, incoming) = endpoint_builder.bind(&addr)?;
-                    return new_listener(Protocol::Quic(endpoint, incoming));
-                }
+                // Bind this endpoint to a UDP socket on the given server address.
+                let udp_socket = new_udp_socket(address, interface)?;
+                let (endpoint, incoming) = endpoint_builder.with_socket(udp_socket)?;
+                return new_listener(Protocol::Quic(endpoint, incoming));
             }
         }
-        Err(Error::from_string(
-            ErrorKind::SocketError,
-            format!(
-                "Failed to create server socket with config: {:?}",
-                &listener_config
-            ),
-        ))
     }
 
     pub(super) async fn accept(&mut self) -> Result<Stream, Error> {

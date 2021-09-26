@@ -2,6 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use std::net::UdpSocket;
 use std::os::unix::io::{AsRawFd, RawFd};
 use tokio::net::TcpListener;
 
@@ -35,4 +36,8 @@ pub async fn new_tcp_listener(address: &str, interface: &str) -> Result<TcpListe
     // TODO(Shaohua): Enable fast open
 
     Ok(listener)
+}
+
+pub fn new_udp_socket(address: &str, interface: &str) -> Result<UdpSocket, Error> {
+    unimplemented!()
 }
