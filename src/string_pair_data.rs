@@ -12,7 +12,23 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Str
 /// Both strings MUST comply with the requirements for UTF-8 Encoded Strings [MQTT-1.5.7-1].
 /// If a receiver (Client or Server) receives a string pair which does not meet
 /// these requirements it is a Malformed Packet.
-#[derive(Clone, Debug, Default, PartialEq)]
+///
+/// ```text
+/// +----------------------+
+/// | Key Length           |
+/// |                      |
+/// +----------------------+
+/// | Key characters       |
+/// |                      |
+/// +----------------------+
+/// | Value Length         |
+/// |                      |
+/// +----------------------+
+/// | Value characters     |
+/// |                      |
+/// +----------------------+
+/// ```
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct StringPairData(StringData, StringData);
 
 impl StringPairData {

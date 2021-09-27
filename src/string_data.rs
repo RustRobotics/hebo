@@ -16,7 +16,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 ///
 /// Thus, the length of String Data is limited to the range of 0 to 65,535 Bytes.
 ///
-/// ```txt
+/// ```text
 /// +-------------------+
 /// | String Length     |
 /// |                   |
@@ -50,7 +50,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 /// A UTF-8 encoded sequence 0xEF 0xBB 0xBF is always interpreted as U+FEFF ("ZERO WIDTH NO-BREAK SPACE")
 /// wherever it appears in a string and MUST NOT be skipped over or stripped off
 /// by a packet receiver [MQTT-1.5.4-3].
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct StringData(String);
 
 impl StringData {

@@ -4,7 +4,6 @@
 
 use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
-use std::io::Write;
 
 use crate::{
     BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, StringData,
@@ -447,15 +446,15 @@ impl DecodePacket for Property {
                 }
             }
             PropertyType::UserProperty => {
-                let pair = StringPairData::decode(buf)?;
+                let pair = StringPairData::decode(ba)?;
                 Ok(Self::UserProperty(pair))
             }
             PropertyType::AuthenticationMethod => {
-                let method = StringData::decode(buf)?;
+                let method = StringData::decode(ba)?;
                 Ok(Self::AuthenticationMethod(method))
             }
             PropertyType::AuthenticationData => {
-                let data = BinaryData::decode(buf)?;
+                let data = BinaryData::decode(ba)?;
                 Ok(Self::AuthenticationData(data))
             }
             _ => unimplemented!(),
