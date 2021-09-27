@@ -314,13 +314,15 @@ pub struct ConnectPacket {
 
     connect_flags: ConnectFlags,
 
-    /// Time interval between two packets in seconds.
-    /// Client must send PingRequest Packet before exceeding this interval.
-    /// If this value is not zero and time exceeds after last packet, the Server
-    /// will disconnect the network.
+    /// The Keep Alive is a Two Byte Integer which is a time interval measured in seconds.
     ///
-    /// If this value is zero, the Server is not required to disconnect the network.
-    pub keep_alive: u16,
+    /// It is the maximum time interval that is permitted to elapse between the point
+    /// at which the Client finishes transmitting one MQTT Control Packet and the point
+    /// it starts sending the next. It is the responsibility of the Client to ensure
+    /// that the interval between MQTT Control Packets being sent does not exceed the Keep Alive value.
+    /// If Keep Alive is non-zero and in the absence of sending any other MQTT Control Packets,
+    /// the Client MUST send a PINGREQ packet [MQTT-3.1.2-20].
+    keep_alive: u16,
 
     /// Payload is `client_id`.
     /// `client_id` is generated in client side. Normally it can be `device_id` or just
@@ -361,7 +363,7 @@ impl ConnectPacket {
         }
     }
 
-    pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> &Self {
+    pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> &mut Self {
         self.protocol_level = level;
         self
     }
@@ -370,13 +372,22 @@ impl ConnectPacket {
         self.protocol_level
     }
 
-    pub fn set_connect_flags(&mut self, flags: ConnectFlags) -> &Self {
+    pub fn set_connect_flags(&mut self, flags: ConnectFlags) -> &mut Self {
         self.connect_flags = flags;
         self
     }
 
     pub fn connect_flags(&self) -> &ConnectFlags {
         &self.connect_flags
+    }
+
+    pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
+        self.keep_alive = keep_alive;
+        self
+    }
+
+    pub fn keep_alive(&self) -> u16 {
+        self.keep_alive
     }
 
     pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {

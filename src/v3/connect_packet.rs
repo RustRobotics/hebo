@@ -268,7 +268,7 @@ pub struct ConnectPacket {
     /// will disconnect the network.
     ///
     /// If this value is zero, the Server is not required to disconnect the network.
-    pub keep_alive: u16,
+    keep_alive: u16,
 
     /// Payload is `client_id`.
     /// `client_id` is generated in client side. Normally it can be `device_id` or just
@@ -325,6 +325,15 @@ impl ConnectPacket {
 
     pub fn connect_flags(&self) -> &ConnectFlags {
         &self.connect_flags
+    }
+
+    pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
+        self.keep_alive = keep_alive;
+        self
+    }
+
+    pub fn keep_alive(&self) -> u16 {
+        self.keep_alive
     }
 
     pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
