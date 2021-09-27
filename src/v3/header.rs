@@ -6,8 +6,6 @@ use std::convert::TryFrom;
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
 
-pub const MAX_PACKET_LEN: usize = 0x7F_FF_FF_FF;
-
 pub trait Packet {
     fn packet_type(&self) -> PacketType;
 }

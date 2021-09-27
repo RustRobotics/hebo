@@ -273,6 +273,11 @@ impl DecodePacket for ConnectFlags {
 /// | Keep alive                 |
 /// |                            |
 /// +----------------------------+
+/// | Properties Length          |
+/// +----------------------------+
+/// | Properties                 |
+/// |                            |
+/// +----------------------------+
 /// | Client id length           |
 /// |                            |
 /// +----------------------------+
@@ -322,8 +327,29 @@ pub struct ConnectPacket {
     /// that the interval between MQTT Control Packets being sent does not exceed the Keep Alive value.
     /// If Keep Alive is non-zero and in the absence of sending any other MQTT Control Packets,
     /// the Client MUST send a PINGREQ packet [MQTT-3.1.2-20].
+    ///
+    /// If the Server returns a Server Keep Alive on the CONNACK packet, the Client MUST
+    /// use that value instead of the value it sent as the Keep Alive [MQTT-3.1.2-21].
+    ///
+    /// The Client can send PINGREQ at any time, irrespective of the Keep Alive value,
+    /// and check for a corresponding PINGRESP to determine that the network and
+    /// the Server are available.
+    ///
+    /// If the Keep Alive value is non-zero and the Server does not receive an MQTT Control Packet
+    /// from the Client within one and a half times the Keep Alive time period,
+    /// it MUST close the Network Connection to the Client as if the network had failed [MQTT-3.1.2-22].
+    ///
+    /// If a Client does not receive a PINGRESP packet within a reasonable amount of time
+    /// after it has sent a PINGREQ, it SHOULD close the Network Connection to the Server.
+    ///
+    /// A Keep Alive value of 0 has the effect of turning off the Keep Alive mechanism.
+    /// If Keep Alive is 0 the Client is not obliged to send MQTT Control Packets
+    /// on any particular schedule.
     keep_alive: u16,
 
+    // TODO(Shaohua): Add properites header
+
+    // <-- variable body begins -->
     /// Payload is `client_id`.
     /// `client_id` is generated in client side. Normally it can be `device_id` or just
     /// randomly generated string.

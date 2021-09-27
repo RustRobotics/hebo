@@ -18,3 +18,5 @@ pub const CLIENT_ID_LENGTH_BYTES: usize = 2;
 pub const PROTOCOL_NAME_LENGTH: usize = 2;
 
 pub const PROTOCOL_NAME: &'static str = "MQTT";
+
+pub const MAX_PACKET_LEN: usize = 0x7f_ff_ff_ff;

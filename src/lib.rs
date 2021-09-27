@@ -9,12 +9,14 @@ pub mod error;
 mod protocol_level;
 pub mod topic;
 pub mod utils;
+mod var_int;
 
 pub use base::{DecodePacket, EncodePacket, PacketId, QoS};
 pub use byte_array::ByteArray;
 pub use error::{DecodeError, EncodeError};
 pub use protocol_level::ProtocolLevel;
 pub use topic::{SubscribePattern, Topic, TopicError, TopicPart};
+pub use var_int::VarInt;
 
 pub mod v3;
 pub mod v5;

@@ -35,6 +35,9 @@ pub enum DecodeError {
     /// Or PacketId is none where it is required.
     InvalidPacketId,
 
+    /// Failed to parse variable byte integer.
+    InvalidVarInt,
+
     /// Length of buffer - offset < remaining length.
     InvalidRemainingLength,
 
