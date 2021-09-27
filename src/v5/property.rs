@@ -250,7 +250,20 @@ pub enum Property {
     ///
     /// Two Byte Integer.
     /// Used in CONNECT, CONNACK.
-    TopicAliasMaximum,
+    ///
+    /// Followed by the Two Byte Integer representing the Topic Alias Maximum value.
+    /// It is a Protocol Error to include the Topic Alias Maximum value more than once.
+    /// If the Topic Alias Maximum property is absent, the default value is 0.
+    ///
+    /// This value indicates the highest value that the Client will accept as a Topic Alias
+    /// sent by the Server. The Client uses this value to limit the number of Topic Aliases
+    /// that it is willing to hold on this Connection. The Server MUST NOT send a Topic Alias
+    /// in a PUBLISH packet to the Client greater than Topic Alias Maximum [MQTT-3.1.2-26].
+    ///
+    /// A value of 0 indicates that the Client does not accept any Topic Aliases
+    /// on this connection. If Topic Alias Maximum is absent or zero, the Server
+    /// MUST NOT send any Topic Aliases to the Client [MQTT-3.1.2-27].
+    TopicAliasMaximum(u16),
 
     /// Topic Alias.
     ///
@@ -281,7 +294,32 @@ pub enum Property {
     ///
     /// Four Byte Integer.
     /// Used in CONNECT, CONNACK.
-    MaximumPacketSize,
+    ///
+    /// Followed by a Four Byte Integer representing the Maximum Packet Size the Client
+    /// is willing to accept. If the Maximum Packet Size is not present, no limit
+    /// on the packet size is imposed beyond the limitations in the protocol
+    /// as a result of the remaining length encoding and the protocol header sizes.
+    ///
+    /// It is a Protocol Error to include the Maximum Packet Size more than once,
+    /// or for the value to be set to zero.
+    ///
+    /// The packet size is the total number of bytes in an MQTT Control Packet.
+    /// The Client uses the Maximum Packet Size to inform the Server that it will
+    /// not process packets exceeding this limit.
+    ///
+    /// The Server MUST NOT send packets exceeding Maximum Packet Size to the Client [MQTT-3.1.2-24].
+    ///
+    /// If a Client receives a packet whose size exceeds this limit, this is a Protocol Error,
+    /// the Client uses DISCONNECT with Reason Code 0x95 (Packet too large).
+    ///
+    /// Where a Packet is too large to send, the Server MUST discard it without sending it
+    /// and then behave as if it had completed sending that Application Message [MQTT-3.1.2-25].
+    ///
+    /// In the case of a Shared Subscription where the message is too large to send to
+    /// one or more of the Clients but other Clients can receive it, the Server
+    /// can choose either discard the message without sending the message to any of the Clients,
+    /// or to send the message to one of the Clients that can receive it.
+    MaximumPacketSize(u32),
 
     /// Wildcard Subscription Available
     ///
@@ -302,6 +340,18 @@ pub enum Property {
     SharedSubscriptionAvailable,
 }
 
+impl Property {
+    /// The Client uses this value to limit the number of QoS 1 and QoS 2 publications that
+    /// it is willing to process concurrently. There is no mechanism to limit
+    /// the QoS 0 publications that the Server might try to send.
+    pub fn default_receive_maximum() -> Self {
+        Self::ReceiveMaximum(u16::MAX)
+    }
+    pub fn default_topic_alias_maximum() -> Self {
+        Self::TopicAliasMaximum(0)
+    }
+}
+
 impl DecodePacket for Property {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let property_type_byte = ba.read_byte()?;
@@ -314,6 +364,10 @@ impl DecodePacket for Property {
             PropertyType::ReceiveMaximum => {
                 let max = ba.read_u16()?;
                 Ok(Self::ReceiveMaximum(max))
+            }
+            PropertyType::MaximumPacketSize => {
+                let max = ba.read_u32()?;
+                Ok(Self::MaximumPacketSize(max))
             }
             _ => unimplemented!(),
         }
@@ -330,6 +384,10 @@ impl EncodePacket for Property {
             Self::ReceiveMaximum(max) => {
                 v.write_u16::<BigEndian>(*max)?;
                 Ok(2)
+            }
+            Self::MaximumPacketSize(max) => {
+                v.write_u32::<BigEndian>(*max)?;
+                Ok(4)
             }
             _ => unimplemented!(),
         }

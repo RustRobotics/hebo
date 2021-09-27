@@ -3,7 +3,6 @@
 // in the LICENSE file.
 
 mod connect_packet;
-pub mod consts;
 mod header;
 mod property;
 mod publish_packet;
