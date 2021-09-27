@@ -457,8 +457,8 @@ impl DecodePacket for Property {
             }
             PropertyType::AuthenticationData => {
                 let len = 42;
-                let data = ba.read_string(len)?;
-                Ok(Self::AuthenticationData(data))
+                let data = ba.read_bytes(len)?;
+                Ok(Self::AuthenticationData(data.to_vec()))
             }
             _ => unimplemented!(),
         }

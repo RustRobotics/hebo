@@ -15,8 +15,27 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 pub struct BinaryData(Vec<u8>);
 
 impl BinaryData {
-    pub fn new(data: &[u8]) -> Self {
-        Self(data.to_vec())
+    pub fn new(data: &[u8]) -> Result<Self, EncodeError> {
+        if data.len() > BinaryData::max() {
+            return Err(EncodeError::TooManyData);
+        }
+        Ok(Self(data.to_vec()))
+    }
+
+    pub fn max() -> usize {
+        u16::MAX as usize
+    }
+}
+
+impl AsRef<[u8]> for BinaryData {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+impl AsMut<Vec<u8>> for BinaryData {
+    fn as_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.0
     }
 }
 

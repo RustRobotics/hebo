@@ -39,6 +39,7 @@ pub enum DecodeError {
     InvalidVarInt,
 
     /// Length of buffer - offset < remaining length.
+    // TODO(Shaohua): Replace with InvalidVarInt
     InvalidRemainingLength,
 
     /// Invalid UTF-8 string.
