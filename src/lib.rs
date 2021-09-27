@@ -9,6 +9,7 @@ pub mod consts;
 pub mod error;
 mod protocol_level;
 mod string_data;
+mod string_pair_data;
 pub mod topic;
 pub mod utils;
 mod var_int;
@@ -19,6 +20,7 @@ pub use byte_array::ByteArray;
 pub use error::{DecodeError, EncodeError};
 pub use protocol_level::ProtocolLevel;
 pub use string_data::StringData;
+pub use string_pair_data::StringPairData;
 pub use topic::{SubscribePattern, Topic, TopicError, TopicPart};
 pub use var_int::VarInt;
 
