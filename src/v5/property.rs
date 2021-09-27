@@ -3,10 +3,9 @@
 // in the LICENSE file.
 
 use byteorder::{BigEndian, WriteBytesExt};
-use bytes::BytesMut;
 use std::convert::TryFrom;
 
-use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -234,7 +233,18 @@ pub enum Property {
     ///
     /// Two Byte Integer.
     /// Used in CONNECT, CONNACK.
-    ReceiveMaximum,
+    ///
+    /// Followed by the Two Byte Integer representing the Receive Maximum value.
+    /// It is a Protocol Error to include the Receive Maximum value more than once
+    /// or for it to have the value 0.
+    ///
+    /// The Client uses this value to limit the number of QoS 1 and QoS 2 publications
+    /// that it is willing to process concurrently. There is no mechanism to limit
+    /// the QoS 0 publications that the Server might try to send.
+    ///
+    /// The value of Receive Maximum applies only to the current Network Connection.
+    /// If the Receive Maximum value is absent then its value defaults to 65,535.
+    ReceiveMaximum(u16),
 
     /// Topic Alias Maximum
     ///
@@ -295,8 +305,18 @@ pub enum Property {
 impl DecodePacket for Property {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let property_type_byte = ba.read_byte()?;
-        let property_type = PropertyType::try_from(property_type_byte);
-        unimplemented!()
+        let property_type = PropertyType::try_from(property_type_byte)?;
+        match property_type {
+            PropertyType::SessionExpiryInterval => {
+                let interval = ba.read_u32()?;
+                Ok(Self::SessionExpiryInterval(interval))
+            }
+            PropertyType::ReceiveMaximum => {
+                let max = ba.read_u16()?;
+                Ok(Self::ReceiveMaximum(max))
+            }
+            _ => unimplemented!(),
+        }
     }
 }
 
@@ -306,6 +326,10 @@ impl EncodePacket for Property {
             Self::SessionExpiryInterval(interval) => {
                 v.write_u32::<BigEndian>(*interval)?;
                 Ok(4)
+            }
+            Self::ReceiveMaximum(max) => {
+                v.write_u16::<BigEndian>(*max)?;
+                Ok(2)
             }
             _ => unimplemented!(),
         }

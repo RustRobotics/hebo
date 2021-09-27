@@ -50,6 +50,10 @@ impl<'a> ByteArray<'a> {
         Ok(BigEndian::read_u16(self.read_bytes(2)?))
     }
 
+    pub fn read_u32(&mut self) -> Result<u32, ByteArrayError> {
+        Ok(BigEndian::read_u32(self.read_bytes(4)?))
+    }
+
     pub fn read_string(&mut self, len: usize) -> Result<String, ByteArrayError> {
         let bytes = self.read_bytes(len)?;
         utils::to_utf8_string(bytes).map_err(ByteArrayError::from)
