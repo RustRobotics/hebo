@@ -96,3 +96,61 @@ impl EncodePacket for VarInt {
         Ok(count)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_var_int_encode() {
+        let mut buf = Vec::with_capacity(4);
+
+        let remaining_len = VarInt(126);
+        let _ = remaining_len.encode(&mut buf);
+        assert_eq!(&buf, &[0x7e]);
+        buf.clear();
+
+        let remaining_len = VarInt(146);
+        let _ = remaining_len.encode(&mut buf);
+        assert_eq!(&buf, &[0x92, 0x01]);
+        buf.clear();
+
+        let remaining_len = VarInt(16_385);
+        let _ret = remaining_len.encode(&mut buf);
+        assert_eq!(&buf, &[0x81, 0x80, 0x01]);
+        buf.clear();
+
+        let remaining_len = VarInt(2_097_152);
+        let _ret = remaining_len.encode(&mut buf);
+        assert_eq!(&buf, &[0x80, 0x80, 0x80, 0x01]);
+        buf.clear();
+    }
+
+    #[test]
+    fn test_var_int_decode() {
+        let buf = [0x7e];
+        let mut ba = ByteArray::new(&buf);
+        let ret = VarInt::decode(&mut ba);
+        assert_eq!(ret.unwrap().0, 126);
+
+        let buf = [0x92, 0x01];
+        let mut ba = ByteArray::new(&buf);
+        let ret = VarInt::decode(&mut ba);
+        assert_eq!(ret.unwrap().0, 146);
+
+        let buf = [0x81, 0x80, 0x01];
+        let mut ba = ByteArray::new(&buf);
+        let ret = VarInt::decode(&mut ba);
+        assert_eq!(ret.unwrap().0, 16_385);
+
+        let buf = [0x81, 0x80, 0x80, 0x01];
+        let mut ba = ByteArray::new(&buf);
+        let ret = VarInt::decode(&mut ba);
+        assert_eq!(ret.unwrap().0, 2_097_153);
+
+        let buf = [0xff, 0xff, 0xff, 0x7f];
+        let mut ba = ByteArray::new(&buf);
+        let ret = VarInt::decode(&mut ba);
+        assert_eq!(ret.unwrap().0, 268_435_455);
+    }
+}
