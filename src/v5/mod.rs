@@ -9,7 +9,7 @@ mod publish_packet;
 mod reason_code;
 
 pub use connect_packet::ConnectPacket;
-pub use header::{FixedHeader, Packet, PacketType, RemainingLength};
+pub use header::{FixedHeader, Packet, PacketType};
 pub use property_type::PropertyType;
 pub use publish_packet::PublishPacket;
 pub use reason_code::ReasonCode;
