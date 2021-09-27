@@ -22,45 +22,91 @@ use crate::{
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct ConnectFlags {
-    /// `username` field specifies whether `username` shall be presented in the Payload.
+    /// Position: bit 7 of the Connect Flags.
+    ///
+    /// If the User Name Flag is set to 0, a User Name MUST NOT be present in the Payload [MQTT-3.1.2-16].
+    ///
+    /// If the User Name Flag is set to 1, a User Name MUST be present in the Payload [MQTT-3.1.2-17].
     username: bool,
 
-    /// `password` field specifies whether `password` shall be presented in the Payload.
-    /// If `username` field is false, then this field shall be false too.
+    /// Position: bit 6 of the Connect Flags.
+    ///
+    /// If the Password Flag is set to 0, a Password MUST NOT be present in the Payload [MQTT-3.1.2-18].
+    ///
+    /// If the Password Flag is set to 1, a Password MUST be present in the Payload [MQTT-3.1.2-19].
     password: bool,
 
-    /// `retain` field specifies if the Will Message is to be Retained when it is published.
-    /// If the `will` field is false, then the `retain` field msut be false.
+    /// Position: bit 5 of the Connect Flags.
+    ///
+    /// This bit specifies if the Will Message is to be retained when it is published.
+    ///
+    /// If the Will Flag is set to 0, then Will Retain MUST be set to 0 [MQTT-3.1.2-13].
+    ///
+    /// If the Will Flag is set to 1 and Will Retain is set to 0, the Server MUST publish
+    /// the Will Message as a non-retained message [MQTT-3.1.2-14].
+    ///
+    /// If the Will Flag is set to 1 and Will Retain is set to 1, the Server MUST publish
+    /// the Will Message as a retained message [MQTT-3.1.2-15].
     will_retain: bool,
 
-    /// QoS level to be used in the Will Message.
+    /// Position: bits 4 and 3 of the Connect Flags.
+    ///
+    /// These two bits specify the QoS level to be used when publishing the Will Message.
+    ///
+    /// If the Will Flag is set to 0, then the Will QoS MUST be set to 0 (0x00) [MQTT-3.1.2-11].
+    ///
+    /// If the Will Flag is set to 1, the value of Will QoS can be 0 (0x00), 1 (0x01), or 2 (0x02) [MQTT-3.1.2-12].
+    /// A value of 3 (0x03) is a Malformed Packet.
     will_qos: QoS,
 
-    /// If this field is set to true, a Will Message will be stored on the Server side when
-    /// Client connected, and this message must be sent back when Client connection
-    /// is closed abnormally unless it is deleted by the Server on receipt of a Disconnect Packet.
+    /// Position: bit 2 of the Connect Flags.
     ///
-    /// This Will Message is used mainly to handle errors:
-    /// * I/O error or network error
-    /// * Keep alive timeout
-    /// * network disconnected without Disconnect Packet
-    /// * protocol error
+    /// If the Will Flag is set to 1 this indicates that a Will Message MUST be stored
+    /// on the Server and associated with the Session [MQTT-3.1.2-7].
+    ///
+    /// The Will Message consists of the Will Properties, Will Topic, and Will
+    /// Payload fields in the CONNECT Payload. The Will Message MUST be published
+    /// after the Network Connection is subsequently closed and either the Will Delay Interval
+    /// has elapsed or the Session ends, unless the Will Message has been deleted
+    /// by the Server on receipt of a DISCONNECT packet with Reason Code 0x00 (Normal disconnection)
+    /// or a new Network Connection for the ClientID is opened before the Will Delay Interval
+    /// has elapsed [MQTT-3.1.2-8].
+    ///
+    /// Situations in which the Will Message is published include, but are not limited to:
+    /// - An I/O error or network failure detected by the Server.
+    /// - The Client fails to communicate within the Keep Alive time.
+    /// - The Client closes the Network Connection without first sending a DISCONNECT packet with
+    ///   a Reason Code 0x00 (Normal disconnection).
+    /// - The Server closes the Network Connection without first receiving a DISCONNECT packet with
+    ///   a Reason Code 0x00 (Normal disconnection).
+    ///
+    /// If the Will Flag is set to 1, the Will Properties, Will Topic, and Will Payload fields
+    /// MUST be present in the Payload [MQTT-3.1.2-9].
+    ///
+    /// The Will Message MUST be removed from the stored Session State in the Server
+    /// once it has been published or the Server has received a DISCONNECT packet with a Reason
+    /// Code of 0x00 (Normal disconnection) from the Client [MQTT-3.1.2-10].
+    ///
+    /// The Server SHOULD publish Will Messages promptly after the Network Connection is closed
+    /// and the Will Delay Interval has passed, or when the Session ends, whichever occurs first.
+    /// In the case of a Server shutdown or failure, the Server MAY defer publication of Will Messages
+    /// until a subsequent restart. If this happens, there might be a delay between the time
+    /// the Server experienced failure and when the Will Message is published.
     will: bool,
 
+    /// Position: bit 1 of the Connect Flags.
     /// To control how to handle Session State.
-    /// If `clean_sessions` is true, the Client and Server must discard any previous Session State
-    /// and start a new once until end of Disconnect. So that State data cannot be reused in subsequent
-    /// connections.
     ///
-    /// Client side of Session State consists of:
-    /// * QoS 1 and QoS 2 messages which have been sent to server but not be acknowledged yet.
-    /// * QoS 2 messages which have been received from server but have not been fully acknowledged yet.
+    /// If a CONNECT packet is received with Clean Start is set to 1, the Client
+    /// and Server MUST discard any existing Session and start a new Session [MQTT-3.1.2-4].
+    /// Consequently, the Session Present flag in CONNACK is always set to 0 if Clean Start is set to 1.
     ///
-    /// Server side of Session State consists of:
-    /// * Client subscriptions
-    /// * QoS 1 and QoS 2 messages which have been sent to subscribed Clients, but have not been acknowledged yet.
-    /// * QoS 1 and QoS 2 messages pending transmission to the Client.
-    /// * QoS 2 messages which have been received from the Clients, but have not been fully acknowledged yet.
+    /// If a CONNECT packet is received with Clean Start set to 0 and there is
+    /// a Session associated with the Client Identifier, the Server MUST resume communications
+    /// with the Client based on state from the existing Session [MQTT-3.1.2-5].
+    ///
+    /// If a CONNECT packet is received with Clean Start set to 0 and there is no Session
+    /// associated with the Client Identifier, the Server MUST create a new Session [MQTT-3.1.2-6].
     clean_session: bool,
 }
 
@@ -184,6 +230,8 @@ impl DecodePacket for ConnectFlags {
         let will = flags & 0b0000_0100 == 0b0000_0100;
         let clean_session = flags & 0b0000_0010 == 0b0000_0010;
 
+        // The Server MUST validate that the reserved flag in the CONNECT packet
+        // is set to 0 [MQTT-3.1.2-3]. If the reserved flag is not 0 it is a Malformed Packet.
         let reserved_is_zero = flags & 0b0000_0001 == 0b0000_0000;
         if !reserved_is_zero {
             return Err(DecodeError::InvalidConnectFlags);
@@ -498,6 +546,12 @@ impl DecodePacket for ConnectPacket {
             return Err(DecodeError::InvalidProtocolName);
         }
 
+        // A Server which supports multiple versions of the MQTT protocol
+        // uses the Protocol Version to determine which version of MQTT
+        // the Client is using. If the Protocol Version is not 5 and the Server does not want
+        // to accept the CONNECT packet, the Server MAY send a CONNACK packet
+        // with Reason Code 0x84 (Unsupported Protocol Version) and then
+        // MUST close the Network Connection [MQTT-3.1.2-2].
         let protocol_level = ProtocolLevel::try_from(ba.read_byte()?)?;
 
         let connect_flags = ConnectFlags::decode(ba)?;
