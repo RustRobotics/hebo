@@ -51,6 +51,9 @@ pub enum DecodeError {
     /// Unknown property type bit.
     InvalidPropertyType,
 
+    /// Failed to parse property value.
+    InvalidPropertyValue,
+
     /// Byte array index ouf of range.
     OutOfRangeError,
 

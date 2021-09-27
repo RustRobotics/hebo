@@ -208,7 +208,17 @@ pub enum Property {
     ///
     /// Byte.
     /// Used in CONNECT.
-    RequestResponseInformation,
+    ///
+    /// Followed by a Byte with a value of either 0 or 1. It is Protocol Error
+    /// to include the Request Response Information more than once, or to have a value
+    /// other than 0 or 1. If the Request Response Information is absent, the value of 0 is used.
+    ///
+    /// The Client uses this value to request the Server to return Response Information
+    /// in the CONNACK. A value of 0 indicates that the Server MUST NOT return
+    /// Response Information [MQTT-3.1.2-28].
+    ///
+    /// If the value is 1 the Server MAY return Response Information in the CONNACK packet.
+    RequestResponseInformation(bool),
 
     /// Response Information
     ///
@@ -344,11 +354,16 @@ impl Property {
     /// The Client uses this value to limit the number of QoS 1 and QoS 2 publications that
     /// it is willing to process concurrently. There is no mechanism to limit
     /// the QoS 0 publications that the Server might try to send.
-    pub fn default_receive_maximum() -> Self {
-        Self::ReceiveMaximum(u16::MAX)
+    pub fn default_receive_maximum() -> u16 {
+        u16::MAX
     }
-    pub fn default_topic_alias_maximum() -> Self {
-        Self::TopicAliasMaximum(0)
+
+    pub fn default_topic_alias_maximum() -> u16 {
+        0
+    }
+
+    pub fn default_request_respones_information() -> bool {
+        false
     }
 }
 
@@ -369,6 +384,14 @@ impl DecodePacket for Property {
                 let max = ba.read_u32()?;
                 Ok(Self::MaximumPacketSize(max))
             }
+            PropertyType::RequestResponseInformation => {
+                let byte = ba.read_byte()?;
+                match byte {
+                    0x00 => Ok(Self::RequestResponseInformation(false)),
+                    0x01 => Ok(Self::RequestResponseInformation(true)),
+                    _ => Err(DecodeError::InvalidPropertyValue),
+                }
+            }
             _ => unimplemented!(),
         }
     }
@@ -388,6 +411,11 @@ impl EncodePacket for Property {
             Self::MaximumPacketSize(max) => {
                 v.write_u32::<BigEndian>(*max)?;
                 Ok(4)
+            }
+            Self::RequestResponseInformation(on) => {
+                let byte = if *on { 0x01 } else { 0x00 };
+                v.push(byte);
+                Ok(1)
             }
             _ => unimplemented!(),
         }
