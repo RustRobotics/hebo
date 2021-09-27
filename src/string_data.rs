@@ -5,7 +5,7 @@
 use byteorder::{BigEndian, WriteBytesExt};
 use std::io::Write;
 
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// Text fields within the MQTT Control Packets described later are encoded as UTF-8 strings.
 /// UTF-8 [RFC3629] is an efficient encoding of Unicode [Unicode] characters that
@@ -55,14 +55,8 @@ pub struct StringData(String);
 
 impl StringData {
     pub fn new(data: &str) -> Result<Self, EncodeError> {
-        if data.len() > StringData::max() {
-            return Err(EncodeError::TooManyData);
-        }
+        utils::validate_utf8_string(data)?;
         Ok(Self(data.to_string()))
-    }
-
-    pub fn max() -> usize {
-        u16::MAX as usize
     }
 }
 

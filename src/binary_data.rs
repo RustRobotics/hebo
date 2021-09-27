@@ -5,7 +5,7 @@
 use byteorder::{BigEndian, WriteBytesExt};
 use std::io::Write;
 
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// Binary Data is represented by a Two Byte Integer length which indicates
 /// the number of data bytes, followed by that number of bytes.
@@ -25,14 +25,8 @@ pub struct BinaryData(Vec<u8>);
 
 impl BinaryData {
     pub fn new(data: &[u8]) -> Result<Self, EncodeError> {
-        if data.len() > BinaryData::max() {
-            return Err(EncodeError::TooManyData);
-        }
+        utils::validate_two_bytes_data(data)?;
         Ok(Self(data.to_vec()))
-    }
-
-    pub fn max() -> usize {
-        u16::MAX as usize
     }
 }
 
