@@ -25,6 +25,31 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 /// |                   |
 /// +-------------------+
 /// ```
+///
+/// The character data in a UTF-8 Encoded String MUST be well-formed UTF-8 as defined
+/// by the Unicode specification [Unicode] and restated in RFC 3629 [RFC3629].
+/// In particular, the character data MUST NOT include encodings of code points
+/// between U+D800 and U+DFFF [MQTT-1.5.4-1].
+///
+/// If the Client or Server receives an MQTT Control Packet containing ill-formed UTF-8
+/// it is a Malformed Packet.
+///
+/// A UTF-8 Encoded String MUST NOT include an encoding of the null character U+0000. [MQTT-1.5.4-2].
+///
+/// If a receiver (Server or Client) receives an MQTT Control Packet containing U+0000
+/// it is a Malformed Packet.
+///
+/// The data SHOULD NOT include encodings of the Unicode [Unicode] code points listed below.
+/// If a receiver (Server or Client) receives an MQTT Control Packet containing any of them
+/// it MAY treat it as a Malformed Packet. These are the Disallowed Unicode code points.
+///
+/// - U+0001..U+001F control characters
+/// - U+007F..U+009F control characters
+/// - Code points defined in the Unicode specification [Unicode] to be non-characters (for example U+0FFFF)
+///
+/// A UTF-8 encoded sequence 0xEF 0xBB 0xBF is always interpreted as U+FEFF ("ZERO WIDTH NO-BREAK SPACE")
+/// wherever it appears in a string and MUST NOT be skipped over or stripped off
+/// by a packet receiver [MQTT-1.5.4-3].
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct StringData(String);
 
