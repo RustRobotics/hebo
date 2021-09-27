@@ -6,7 +6,10 @@ use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
 use std::io::Write;
 
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{
+    BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, StringData,
+    StringPairData,
+};
 
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -195,7 +198,7 @@ pub enum Property {
     /// If a Client sets an Authentication Method in the CONNECT, the Client MUST NOT
     /// send any packets other than AUTH or DISCONNECT packets until it has received
     /// a CONNACK packet [MQTT-3.1.2-30].
-    AuthenticationMethod(String),
+    AuthenticationMethod(StringData),
 
     /// Authentication Data
     ///
@@ -207,7 +210,7 @@ pub enum Property {
     /// It is a Protocol Error to include Authentication Data more than once.
     ///
     /// The contents of this data are defined by the authentication method.
-    AuthenticationData(Vec<u8>),
+    AuthenticationData(BinaryData),
 
     /// Request Problem Information
     ///
@@ -337,7 +340,7 @@ pub enum Property {
     ///
     /// The User Property is allowed to appear multiple times to represent multiple name,
     /// value pairs. The same name is allowed to appear more than once.
-    UserProperty(String),
+    UserProperty(StringPairData),
 
     /// Maximum Packet Size
     ///
@@ -444,21 +447,16 @@ impl DecodePacket for Property {
                 }
             }
             PropertyType::UserProperty => {
-                // FIXME(Shaohua): Read utf8 string length first.
-                let pair_len = 42;
-                let pair = ba.read_string(pair_len)?;
+                let pair = StringPairData::decode(buf)?;
                 Ok(Self::UserProperty(pair))
             }
             PropertyType::AuthenticationMethod => {
-                // FIXME(Shaohua): Read utf8 string length first.
-                let len = 42;
-                let method = ba.read_string(len)?;
+                let method = StringData::decode(buf)?;
                 Ok(Self::AuthenticationMethod(method))
             }
             PropertyType::AuthenticationData => {
-                let len = 42;
-                let data = ba.read_bytes(len)?;
-                Ok(Self::AuthenticationData(data.to_vec()))
+                let data = BinaryData::decode(buf)?;
+                Ok(Self::AuthenticationData(data))
             }
             _ => unimplemented!(),
         }
@@ -490,18 +488,9 @@ impl EncodePacket for Property {
                 buf.push(byte);
                 Ok(1)
             }
-            Self::UserProperty(pair) => {
-                buf.write_all(&pair.as_bytes())?;
-                Ok(pair.len())
-            }
-            Self::AuthenticationMethod(method) => {
-                buf.write_all(&method.as_bytes())?;
-                Ok(method.len())
-            }
-            Self::AuthenticationData(data) => {
-                buf.write_all(&data)?;
-                Ok(data.len())
-            }
+            Self::UserProperty(pair) => pair.encode(buf),
+            Self::AuthenticationMethod(method) => method.encode(buf),
+            Self::AuthenticationData(data) => data.encode(buf),
             _ => unimplemented!(),
         }
     }
