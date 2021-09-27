@@ -11,6 +11,15 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 /// the number of data bytes, followed by that number of bytes.
 ///
 /// Thus, the length of Binary Data is limited to the range of 0 to 65,535 Bytes.
+/// ```txt
+/// +-------------------+
+/// | Binary Length     |
+/// |                   |
+/// +-------------------+
+/// | Bytes             |
+/// |                   |
+/// +-------------------+
+/// ```
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct BinaryData(Vec<u8>);
 
