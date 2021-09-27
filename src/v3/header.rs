@@ -4,7 +4,7 @@
 
 use std::convert::TryFrom;
 
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS, VarInt};
 
 pub trait Packet {
     fn packet_type(&self) -> PacketType;
@@ -260,98 +260,6 @@ impl Default for PacketType {
     }
 }
 
-/// `Remaining Length` uses variable length encoding method. The 7th bit
-/// in a byte is used to indicate are bytes are available. And the maximum number
-/// of bytes in the `Remaining Length` field is 4 bytes. The maximum value is
-/// `0xFF 0xFF 0xFF 0x7F`, `256MB`.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct RemainingLength(usize);
-
-impl RemainingLength {
-    pub fn new(len: usize) -> Self {
-        Self(len)
-    }
-
-    pub fn len(&self) -> usize {
-        self.0
-    }
-
-    pub fn bytes(&self) -> usize {
-        if self.0 > 0x7F_FF_FF {
-            4
-        } else if self.0 > 0x7F_FF {
-            3
-        } else if self.0 > 0x7f {
-            2
-        } else {
-            1
-        }
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.0 == 0
-    }
-}
-
-impl DecodePacket for RemainingLength {
-    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let mut byte: usize;
-        let mut remaining_length: usize = 0;
-        let mut multiplier = 1;
-
-        // TODO(Shaohua): Simplify
-        // Read variant length
-        loop {
-            byte = ba.read_byte()? as usize;
-            remaining_length += (byte & 127) * multiplier;
-            multiplier *= 128;
-
-            // TODO(Shaohua): Add comments about magic number
-            if multiplier > 128 * 128 * 128 * 128 {
-                return Err(DecodeError::InvalidRemainingLength);
-            }
-
-            if (byte & 128) == 0 {
-                break;
-            }
-        }
-
-        // Sometimes we only receive header part of packet and decide
-        // whether to prevent from sending more bytes.
-        if ba.remaining_bytes() < remaining_length as usize {
-            Err(DecodeError::InvalidRemainingLength)
-        } else {
-            Ok(RemainingLength(remaining_length))
-        }
-    }
-}
-
-impl EncodePacket for RemainingLength {
-    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        if self.0 > MAX_PACKET_LEN {
-            return Err(EncodeError::TooManyData);
-        }
-        if self.0 == 0 {
-            buf.push(0);
-            return Ok(1);
-        }
-
-        let mut n = self.0;
-        let mut count = 0;
-        // TODO(Shaohua): Simplify
-        while n > 0 {
-            let mut m = n % 128;
-            count += 1;
-            n /= 128;
-            if n > 0 {
-                m |= 128;
-            }
-            buf.push(m as u8);
-        }
-        Ok(count)
-    }
-}
-
 /// Fixed header part of a mqtt control packet. It consists of as least two bytes.
 ///  7 6 5 4 3 2 1 0
 /// +-------+-------+
@@ -362,15 +270,16 @@ impl EncodePacket for RemainingLength {
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct FixedHeader {
     packet_type: PacketType,
-    remaining_length: RemainingLength,
+    remaining_length: VarInt,
 }
 
 impl FixedHeader {
-    pub fn new(packet_type: PacketType, remaining_length: usize) -> Self {
-        Self {
+    pub fn new(packet_type: PacketType, remaining_length: usize) -> Result<Self, EncodeError> {
+        let remaining_length = VarInt::new(remaining_length)?;
+        Ok(Self {
             packet_type,
-            remaining_length: RemainingLength::new(remaining_length),
-        }
+            remaining_length,
+        })
     }
 
     pub fn packet_type(&self) -> PacketType {
@@ -391,7 +300,7 @@ impl DecodePacket for FixedHeader {
         let flag = ba.read_byte()?;
 
         let packet_type = PacketType::try_from(flag)?;
-        let remaining_length = RemainingLength::decode(ba)?;
+        let remaining_length = VarInt::decode(ba)?;
 
         Ok(FixedHeader {
             packet_type,
