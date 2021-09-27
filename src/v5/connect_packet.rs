@@ -8,7 +8,10 @@ use std::io::Write;
 
 use super::{FixedHeader, Packet, PacketType};
 use crate::utils::{self, StringError};
-use crate::{consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
+use crate::{
+    consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
+    QoS,
+};
 
 /// Structure of `ConnectFlags` is:
 /// ```txt
@@ -181,8 +184,6 @@ impl DecodePacket for ConnectFlags {
         let will = flags & 0b0000_0100 == 0b0000_0100;
         let clean_session = flags & 0b0000_0010 == 0b0000_0010;
 
-        // The Server MUST validate that the reserved flag in the CONNECT Control Packet
-        // is set to zero and disconnect the Client if it is not zero [MQTT-3.1.2-3].
         let reserved_is_zero = flags & 0b0000_0001 == 0b0000_0000;
         if !reserved_is_zero {
             return Err(DecodeError::InvalidConnectFlags);
@@ -250,6 +251,12 @@ impl DecodePacket for ConnectFlags {
 /// | Password bytes ...         |
 /// +----------------------------+
 /// ```
+/// After a Network Connection is established by a Client to a Server, the first packet
+/// sent from the Client to the Server MUST be a CONNECT packet [MQTT-3.1.0-1].
+///
+/// A Client can only send the CONNECT packet once over a Network Connection. The Server MUST
+/// process a second CONNECT packet sent from a Client as a Protocol Error and close the Network
+/// Connection [MQTT-3.1.0-2].
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
@@ -392,12 +399,7 @@ pub fn validate_keep_alive(keep_alive: u16) -> Result<(), DecodeError> {
 }
 
 /// ClientId is based on rules below:
-///
-/// - The ClientId MUST be a UTF-8 encoded string as defined in Section 1.5.3 [MQTT-3.1.3-4].
-///
-/// - The Server MUST allow ClientIds which are between 1 and 23 UTF-8 encoded bytes in length, and that
-///   contain only the characters
-///   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" [MQTT-3.1.3-5].
+/// TODO(Shaohua): Add more spec rules
 pub fn validate_client_id(id: &str) -> Result<(), StringError> {
     if id.is_empty() || id.len() > 23 {
         return Err(StringError::InvalidLength);
@@ -484,6 +486,12 @@ impl DecodePacket for ConnectPacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
+        // A Server which support multiple protocols uses the Protocol Name to determine
+        // whether the data is MQTT. The protocol name MUST be the UTF-8 String "MQTT".
+        // If the Server does not want to accept the CONNECT, and wishes to reveal that
+        // it is an MQTT Server it MAY send a CONNACK packet with
+        // Reason Code of 0x84 (Unsupported Protocol Version), and then
+        // it MUST close the Network Connection [MQTT-3.1.2-1].
         let protocol_name_len = ba.read_u16()? as usize;
         let protocol_name = ba.read_string(protocol_name_len)?;
         if protocol_name != consts::PROTOCOL_NAME {
@@ -493,14 +501,6 @@ impl DecodePacket for ConnectPacket {
         let protocol_level = ProtocolLevel::try_from(ba.read_byte()?)?;
 
         let connect_flags = ConnectFlags::decode(ba)?;
-        // If the Will Flag is set to 0 the Will QoS and Will Retain fields in the
-        // Connect Flags MUST be set to zero and the Will Topic and Will Message fields
-        // MUST NOT be present in the payload [MQTT-3.1.2-11].
-        //
-        // If the Will Flag is set to 0, then the Will QoS MUST be set to 0 (0x00) [MQTT-3.1.2-13].
-        //
-        // If the Will Flag is set to 1, the value of Will QoS can be 0 (0x00), 1 (0x01), or 2 (0x02).
-        // It MUST NOT be 3 (0x03) [MQTT-3.1.2-14].
         if !connect_flags.will()
             && (connect_flags.will_qos() != QoS::AtMostOnce || connect_flags.will_retain())
         {
@@ -516,10 +516,6 @@ impl DecodePacket for ConnectPacket {
         validate_keep_alive(keep_alive)?;
 
         let client_id_len = ba.read_u16()? as usize;
-        // A Server MAY allow a Client to supply a ClientId that has a length of zero bytes,
-        // however if it does so the Server MUST treat this as a special case and assign
-        // a unique ClientId to that Client. It MUST then process the CONNECT packet
-        // as if the Client had provided that unique ClientId [MQTT-3.1.3-6].
         let client_id = if client_id_len > 0 {
             let client_id = ba
                 .read_string(client_id_len)
@@ -527,12 +523,6 @@ impl DecodePacket for ConnectPacket {
             validate_client_id(&client_id).map_err(|_err| DecodeError::InvalidClientId)?;
             client_id
         } else {
-            // If the Client supplies a zero-byte ClientId, the Client MUST also set CleanSession
-            // to 1 [MQTT-3.1.3-7].
-            //
-            // If the Client supplies a zero-byte ClientId with CleanSession set to 0, the Server
-            // MUST respond to the CONNECT Packet with a CONNACK return code 0x02 (Identifier rejected)
-            // and then close the Network Connection [MQTT-3.1.3-8].
             if !connect_flags.clean_session() {
                 return Err(DecodeError::InvalidClientId);
             }
