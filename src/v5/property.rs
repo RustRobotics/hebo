@@ -201,7 +201,13 @@ pub enum Property {
     ///
     /// Binary Data.
     /// Used in CONNECT, CONNACK, AUTH.
-    AuthenticationData,
+    ///
+    /// Followed by Binary Data containing authentication data. It is a Protocol Error
+    /// to include Authentication Data if there is no Authentication Method.
+    /// It is a Protocol Error to include Authentication Data more than once.
+    ///
+    /// The contents of this data are defined by the authentication method.
+    AuthenticationData(Vec<u8>),
 
     /// Request Problem Information
     ///
@@ -449,6 +455,11 @@ impl DecodePacket for Property {
                 let method = ba.read_string(len)?;
                 Ok(Self::AuthenticationMethod(method))
             }
+            PropertyType::AuthenticationData => {
+                let len = 42;
+                let data = ba.read_string(len)?;
+                Ok(Self::AuthenticationData(data))
+            }
             _ => unimplemented!(),
         }
     }
@@ -486,6 +497,10 @@ impl EncodePacket for Property {
             Self::AuthenticationMethod(method) => {
                 buf.write_all(&method.as_bytes())?;
                 Ok(method.len())
+            }
+            Self::AuthenticationData(data) => {
+                buf.write_all(&data)?;
+                Ok(data.len())
             }
             _ => unimplemented!(),
         }
