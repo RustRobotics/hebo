@@ -4,6 +4,7 @@
 
 use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
+use std::io::Write;
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
@@ -184,7 +185,17 @@ pub enum Property {
     ///
     /// UTF-8 Encoded String.
     /// Used in CONNECT, CONNACK, AUTH.
-    AuthenticationMethod,
+    ///
+    /// Followed by a UTF-8 Encoded String containing the name of the authentication method
+    /// used for extended authentication .It is a Protocol Error to include Authentication Method
+    /// more than once.
+    ///
+    /// If Authentication Method is absent, extended authentication is not performed.
+    ///
+    /// If a Client sets an Authentication Method in the CONNECT, the Client MUST NOT
+    /// send any packets other than AUTH or DISCONNECT packets until it has received
+    /// a CONNACK packet [MQTT-3.1.2-30].
+    AuthenticationMethod(String),
 
     /// Authentication Data
     ///
@@ -196,7 +207,24 @@ pub enum Property {
     ///
     /// Byte.
     /// Used in CONNECT.
-    RequestProblemInformation,
+    /// Followed by a Byte with a value of either 0 or 1. It is a Protocol Error
+    /// to include Request Problem Information more than once, or to have a value
+    /// other than 0 or 1. If the Request Problem Information is absent, the value of 1 is used.
+    ///
+    /// The Client uses this value to indicate whether the Reason String or User Properties
+    /// are sent in the case of failures.
+    ///
+    /// If the value of Request Problem Information is 0, the Server MAY return a Reason String
+    /// or User Properties on a CONNACK or DISCONNECT packet, but MUST NOT send a Reason String
+    /// or User Properties on any packet other than PUBLISH, CONNACK, or DISCONNECT [MQTT-3.1.2-29].
+    ///
+    /// If the value is 0 and the Client receives a Reason String or User Properties in a packet
+    /// other than PUBLISH, CONNACK, or DISCONNECT, it uses a DISCONNECT packet
+    /// with Reason Code 0x82 (Protocol Error).
+    ///
+    /// If this value is 1, the Server MAY return a Reason String or User Properties
+    /// on any packet where it is allowed.
+    RequestProblemInformation(bool),
 
     /// Will Delay Interval
     ///
@@ -298,7 +326,12 @@ pub enum Property {
     /// UTF-8 String Pair.
     /// Used in CONNECT, CONNACK, PUBLISH, Will Properties, PUBACK, PUBREC,
     /// PUBREL, PUBCOMP, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, DISCONNECT, AUTH.
-    UserProperty,
+    ///
+    /// Followed by a UTF-8 String Pair.
+    ///
+    /// The User Property is allowed to appear multiple times to represent multiple name,
+    /// value pairs. The same name is allowed to appear more than once.
+    UserProperty(String),
 
     /// Maximum Packet Size
     ///
@@ -365,6 +398,10 @@ impl Property {
     pub fn default_request_respones_information() -> bool {
         false
     }
+
+    pub fn default_request_problem_information() -> bool {
+        true
+    }
 }
 
 impl DecodePacket for Property {
@@ -392,30 +429,63 @@ impl DecodePacket for Property {
                     _ => Err(DecodeError::InvalidPropertyValue),
                 }
             }
+            PropertyType::RequestProblemInformation => {
+                let byte = ba.read_byte()?;
+                match byte {
+                    0x00 => Ok(Self::RequestProblemInformation(false)),
+                    0x01 => Ok(Self::RequestProblemInformation(true)),
+                    _ => Err(DecodeError::InvalidPropertyValue),
+                }
+            }
+            PropertyType::UserProperty => {
+                // FIXME(Shaohua): Read utf8 string length first.
+                let pair_len = 42;
+                let pair = ba.read_string(pair_len)?;
+                Ok(Self::UserProperty(pair))
+            }
+            PropertyType::AuthenticationMethod => {
+                // FIXME(Shaohua): Read utf8 string length first.
+                let len = 42;
+                let method = ba.read_string(len)?;
+                Ok(Self::AuthenticationMethod(method))
+            }
             _ => unimplemented!(),
         }
     }
 }
 
 impl EncodePacket for Property {
-    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         match self {
             Self::SessionExpiryInterval(interval) => {
-                v.write_u32::<BigEndian>(*interval)?;
+                buf.write_u32::<BigEndian>(*interval)?;
                 Ok(4)
             }
             Self::ReceiveMaximum(max) => {
-                v.write_u16::<BigEndian>(*max)?;
+                buf.write_u16::<BigEndian>(*max)?;
                 Ok(2)
             }
             Self::MaximumPacketSize(max) => {
-                v.write_u32::<BigEndian>(*max)?;
+                buf.write_u32::<BigEndian>(*max)?;
                 Ok(4)
             }
             Self::RequestResponseInformation(on) => {
                 let byte = if *on { 0x01 } else { 0x00 };
-                v.push(byte);
+                buf.push(byte);
                 Ok(1)
+            }
+            Self::RequestProblemInformation(on) => {
+                let byte = if *on { 0x01 } else { 0x00 };
+                buf.push(byte);
+                Ok(1)
+            }
+            Self::UserProperty(pair) => {
+                buf.write_all(&pair.as_bytes())?;
+                Ok(pair.len())
+            }
+            Self::AuthenticationMethod(method) => {
+                buf.write_all(&method.as_bytes())?;
+                Ok(method.len())
             }
             _ => unimplemented!(),
         }
