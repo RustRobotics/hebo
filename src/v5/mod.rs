@@ -4,12 +4,12 @@
 
 mod connect_packet;
 mod header;
-mod property_type;
+mod property;
 mod publish_packet;
 mod reason_code;
 
 pub use connect_packet::ConnectPacket;
 pub use header::{FixedHeader, Packet, PacketType};
-pub use property_type::PropertyType;
+pub use property::Property;
 pub use publish_packet::PublishPacket;
 pub use reason_code::ReasonCode;

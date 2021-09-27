@@ -48,6 +48,9 @@ pub enum DecodeError {
     /// Topic name might contain wildcard characters.
     InvalidTopic(TopicError),
 
+    /// Unknown property type bit.
+    InvalidPropertyType,
+
     /// Byte array index ouf of range.
     OutOfRangeError,
 
