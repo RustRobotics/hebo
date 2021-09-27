@@ -141,7 +141,7 @@ impl DecodePacket for ConnectAckPacket {
 impl EncodePacket for ConnectAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let fixed_header = FixedHeader::new(PacketType::ConnectAck, 2);
+        let fixed_header = FixedHeader::new(PacketType::ConnectAck, 2)?;
         fixed_header.encode(buf)?;
 
         let ack_flags = if self.session_present { 0b0000_0001 } else { 0 };

@@ -22,7 +22,7 @@ impl PingResponsePacket {
 impl EncodePacket for PingResponsePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         // Payload is empty
-        let fixed_header = FixedHeader::new(PacketType::PingResponse, 0);
+        let fixed_header = FixedHeader::new(PacketType::PingResponse, 0)?;
         fixed_header.encode(v)
     }
 }

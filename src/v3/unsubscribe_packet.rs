@@ -136,7 +136,7 @@ impl EncodePacket for UnsubscribePacket {
                 + topic.len(); // topic
         }
 
-        let fixed_header = FixedHeader::new(PacketType::Unsubscribe, remaining_length);
+        let fixed_header = FixedHeader::new(PacketType::Unsubscribe, remaining_length)?;
         fixed_header.encode(v)?;
 
         v.write_u16::<BigEndian>(self.packet_id)?;

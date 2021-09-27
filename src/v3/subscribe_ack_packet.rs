@@ -126,7 +126,7 @@ impl EncodePacket for SubscribeAckPacket {
         let old_len = buf.len();
         let remaining_length =
             consts::PACKET_ID_BYTES + consts::QOS_BYTES * self.acknowledgements.len();
-        let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length);
+        let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
 

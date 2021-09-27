@@ -5,7 +5,7 @@
 use byteorder::{BigEndian, WriteBytesExt};
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// Response to a Publish packet with QoS 2. It is the fourth and final packet of
 /// the QoS 2 protocol exchange.
@@ -43,7 +43,7 @@ impl DecodePacket for PublishCompletePacket {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::PublishComplete {
             Err(DecodeError::InvalidPacketType)
-        } else if fixed_header.remaining_length() != 2 {
+        } else if fixed_header.remaining_length() != consts::PACKET_ID_BYTES {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             let packet_id = ba.read_u16()? as PacketId;
@@ -56,7 +56,7 @@ impl EncodePacket for PublishCompletePacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let fixed_header = FixedHeader::new(PacketType::PublishComplete, 2);
+        let fixed_header = FixedHeader::new(PacketType::PublishComplete, consts::PACKET_ID_BYTES)?;
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)

@@ -42,7 +42,7 @@ impl EncodePacket for PublishReceivedPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let fixed_header = FixedHeader::new(PacketType::PublishReceived, consts::PACKET_ID_BYTES);
+        let fixed_header = FixedHeader::new(PacketType::PublishReceived, consts::PACKET_ID_BYTES)?;
         fixed_header.encode(buf)?;
         buf.write_u16::<BigEndian>(self.packet_id)?;
         Ok(buf.len() - old_len)

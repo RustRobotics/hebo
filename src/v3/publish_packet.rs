@@ -256,14 +256,12 @@ impl EncodePacket for PublishPacket {
             remaining_length += consts::PACKET_ID_BYTES;
         }
 
-        let fixed_header = FixedHeader::new(
-            PacketType::Publish {
-                dup: self.dup,
-                retain: self.retain,
-                qos: self.qos,
-            },
-            remaining_length,
-        );
+        let packet_type = PacketType::Publish {
+            dup: self.dup,
+            retain: self.retain,
+            qos: self.qos,
+        };
+        let fixed_header = FixedHeader::new(packet_type, remaining_length)?;
         fixed_header.encode(v)?;
 
         // Write variable header

@@ -181,7 +181,7 @@ impl EncodePacket for SubscribePacket {
                 + consts::QOS_BYTES; // Requested QoS
         }
 
-        let fixed_header = FixedHeader::new(PacketType::Subscribe, remaining_length);
+        let fixed_header = FixedHeader::new(PacketType::Subscribe, remaining_length)?;
         fixed_header.encode(buf)?;
 
         // Variable header

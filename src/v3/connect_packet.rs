@@ -449,7 +449,7 @@ impl EncodePacket for ConnectPacket {
             remaining_length += 2 + self.password.len();
         }
 
-        let fixed_header = FixedHeader::new(PacketType::Connect, remaining_length);
+        let fixed_header = FixedHeader::new(PacketType::Connect, remaining_length)?;
         // Write fixed header
         fixed_header.encode(v)?;
 

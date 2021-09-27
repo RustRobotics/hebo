@@ -26,7 +26,7 @@ impl DisconnectPacket {
 impl EncodePacket for DisconnectPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         // No payload
-        let fixed_header = FixedHeader::new(PacketType::Disconnect, 0);
+        let fixed_header = FixedHeader::new(PacketType::Disconnect, 0)?;
         fixed_header.encode(v)
     }
 }
