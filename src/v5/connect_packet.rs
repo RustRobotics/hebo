@@ -8,10 +8,7 @@ use std::io::Write;
 
 use super::{FixedHeader, Packet, PacketType};
 use crate::utils::{self, StringError};
-use crate::{
-    consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
-    QoS,
-};
+use crate::{consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS};
 
 /// Structure of `ConnectFlags` is:
 /// ```txt
