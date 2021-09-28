@@ -238,7 +238,17 @@ pub enum Property {
     ///
     /// Four Byte Integer.
     /// Will Properties.
-    WillDelayInterval,
+    ///
+    /// Followed by the Four Byte Integer representing the Will Delay Interval in seconds.
+    /// It is a Protocol Error to include the Will Delay Interval more than once.
+    /// If the Will Delay Interval is absent, the default value is 0 and there is
+    /// no delay before the Will Message is published.
+    ///
+    /// The Server delays publishing the Client’s Will Message until the Will Delay Interval
+    /// has passed or the Session ends, whichever happens first. If a new Network Connection
+    /// to this Session is made before the Will Delay Interval has passed, the Serverx
+    /// MUST NOT send the Will Message [MQTT-3.1.3-9].
+    WillDelayInterval(u32),
 
     /// Request Response Information
     ///
@@ -391,26 +401,28 @@ pub enum Property {
     SharedSubscriptionAvailable,
 }
 
-pub type Properties = Vec<Property>;
-
 impl Property {
     /// The Client uses this value to limit the number of QoS 1 and QoS 2 publications that
     /// it is willing to process concurrently. There is no mechanism to limit
     /// the QoS 0 publications that the Server might try to send.
-    pub fn default_receive_maximum() -> u16 {
+    pub const fn default_receive_maximum() -> u16 {
         u16::MAX
     }
 
-    pub fn default_topic_alias_maximum() -> u16 {
+    pub const fn default_topic_alias_maximum() -> u16 {
         0
     }
 
-    pub fn default_request_respones_information() -> bool {
+    pub const fn default_request_respones_information() -> bool {
         false
     }
 
-    pub fn default_request_problem_information() -> bool {
+    pub const fn default_request_problem_information() -> bool {
         true
+    }
+
+    pub const fn default_will_delay_interval() -> u32 {
+        0
     }
 }
 
@@ -459,6 +471,10 @@ impl DecodePacket for Property {
                 let data = BinaryData::decode(ba)?;
                 Ok(Self::AuthenticationData(data))
             }
+            PropertyType::WillDelayInterval => {
+                let interval = ba.read_u32()?;
+                Ok(Self::WillDelayInterval(interval))
+            }
             _ => unimplemented!(),
         }
     }
@@ -492,7 +508,25 @@ impl EncodePacket for Property {
             Self::UserProperty(pair) => pair.encode(buf),
             Self::AuthenticationMethod(method) => method.encode(buf),
             Self::AuthenticationData(data) => data.encode(buf),
+            Self::WillDelayInterval(interval) => {
+                buf.write_u32::<BigEndian>(*interval)?;
+                Ok(4)
+            }
             _ => unimplemented!(),
         }
+    }
+}
+
+pub type Properties = Vec<Property>;
+
+impl DecodePacket for Properties {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        unimplemented!()
+    }
+}
+
+impl EncodePacket for Properties {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        unimplemented!()
     }
 }
