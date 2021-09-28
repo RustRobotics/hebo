@@ -6,7 +6,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
 use std::io::Write;
 
-use super::{FixedHeader, Packet, PacketType};
+use super::{FixedHeader, Packet, PacketType, Properties};
 use crate::utils::{self, StringError};
 use crate::{
     consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
@@ -148,6 +148,10 @@ impl ConnectFlags {
     }
 
     pub fn set_will(&mut self, will: bool) -> &mut Self {
+        if !will {
+            self.will_qos = QoS::AtMostOnce;
+            self.will_retain = false;
+        }
         self.will = will;
         self
     }
@@ -310,6 +314,11 @@ impl DecodePacket for ConnectFlags {
 /// A Client can only send the CONNECT packet once over a Network Connection. The Server MUST
 /// process a second CONNECT packet sent from a Client as a Protocol Error and close the Network
 /// Connection [MQTT-3.1.0-2].
+///
+/// The Payload of the CONNECT packet contains one or more length-prefixed fields,
+/// whose presence is determined by the flags in the Variable Header. These fields,
+/// if present, MUST appear in the order Client Identifier, Will Properties, Will Topic,
+/// Will Payload, User Name, Password [MQTT-3.1.3-1].
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
@@ -358,7 +367,40 @@ pub struct ConnectPacket {
     /// It can only contain the characters: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     /// If `client_id` is invalid, the Server will reply ConnectAck Packet with return code
     /// 0x02(Identifier rejected).
+    ///
+    /// The Client Identifier (ClientID) identifies the Client to the Server. Each Client
+    /// connecting to the Server has a unique ClientID. The ClientID MUST be used by Clients
+    /// and by Servers to identify state that they hold relating to this MQTT Session
+    /// between the Client and the Server [MQTT-3.1.3-2].
+    ///
+    /// The ClientID MUST be present and is the first field in the CONNECT packet Payload [MQTT-3.1.3-3].
+    ///
+    /// The ClientID MUST be a UTF-8 Encoded String [MQTT-3.1.3-4].
+    ///
+    /// The Server MUST allow ClientID’s which are between 1 and 23 UTF-8 encoded bytes
+    /// in length, and that contain only the characters
+    /// "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" [MQTT-3.1.3-5].
+    ///
+    /// A Server MAY allow a Client to supply a ClientID that has a length of zero bytes,
+    /// however if it does so the Server MUST treat this as a special case and
+    /// assign a unique ClientID to that Client [MQTT-3.1.3-6].
+    ///
+    /// It MUST then process the CONNECT packet as if the Client had provided
+    /// that unique ClientID, and MUST return the Assigned Client Identifier
+    /// in the CONNACK packet [MQTT-3.1.3-7]
+    ///
+    /// If the Server rejects the ClientID it MAY respond to the CONNECT packet
+    /// with a CONNACK using Reason Code 0x85 (Client Identifier not valid),
+    /// and then it MUST close the Network Connection [MQTT-3.1.3-8].
     client_id: String,
+
+    /// If the Will Flag is set to 1, the Will Properties is the next field in the Payload.
+    ///
+    /// The Will Properties field defines the Application Message properties to be sent
+    /// with the Will Message when it is published, and properties which define
+    /// when to publish the Will Message. The Will Properties consists of
+    /// a Property Length and the Properties.
+    will_properties: Option<Properties>,
 
     /// If the `will` flag is true in `connect_flags`, then `will_topic` field must be set.
     /// It will be used as the topic of Will Message.
@@ -443,6 +485,7 @@ impl ConnectPacket {
     }
 
     pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, DecodeError> {
+        // TODO(Shaohua): Replace with BinaryData.
         utils::validate_two_bytes_data(password)?;
         self.password = password.to_vec();
         Ok(self)
@@ -450,6 +493,18 @@ impl ConnectPacket {
 
     pub fn password(&self) -> &[u8] {
         &self.password
+    }
+
+    pub fn set_will_properties(&mut self, properties: Option<Properties>) -> &mut Self {
+        if properties.is_none() {
+            self.connect_flags.set_will(false);
+        }
+        self.will_properties = properties;
+        self
+    }
+
+    pub fn will_properties(&self) -> &Option<Properties> {
+        &self.will_properties
     }
 
     pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, DecodeError> {
@@ -650,6 +705,8 @@ impl DecodePacket for ConnectPacket {
             Vec::new()
         };
 
+        let will_properties = None;
+
         Ok(ConnectPacket {
             protocol_name,
             protocol_level,
@@ -657,6 +714,7 @@ impl DecodePacket for ConnectPacket {
             connect_flags,
             client_id,
             will_topic,
+            will_properties,
             will_message,
             username,
             password,

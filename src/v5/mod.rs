@@ -10,6 +10,6 @@ mod reason_code;
 
 pub use connect_packet::ConnectPacket;
 pub use header::{FixedHeader, Packet, PacketType};
-pub use property::Property;
+pub use property::{Properties, Property};
 pub use publish_packet::PublishPacket;
 pub use reason_code::ReasonCode;

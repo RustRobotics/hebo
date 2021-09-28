@@ -102,6 +102,7 @@ impl ConnectFlags {
     }
 
     pub fn set_will(&mut self, will: bool) -> &mut Self {
+        // TODO(Shaohua): Update will_retain and will_qos flags
         self.will = will;
         self
     }

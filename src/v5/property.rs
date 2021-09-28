@@ -391,6 +391,8 @@ pub enum Property {
     SharedSubscriptionAvailable,
 }
 
+pub type Properties = Vec<Property>;
+
 impl Property {
     /// The Client uses this value to limit the number of QoS 1 and QoS 2 publications that
     /// it is willing to process concurrently. There is no mechanism to limit
