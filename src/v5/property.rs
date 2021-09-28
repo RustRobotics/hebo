@@ -2,12 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
 
 use crate::{
     BinaryData, BoolData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
-    PubTopic, StringData, StringPairData, U16Data, U32Data,
+    PubTopic, StringData, StringPairData, U16Data, U32Data, VarInt,
 };
 
 pub fn check_property_type_list<'a>(
@@ -604,12 +603,27 @@ pub type Properties = Vec<Property>;
 
 impl DecodePacket for Properties {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        unimplemented!()
+        let property_length = VarInt::decode(ba)?;
+
+        let mut result = Vec::with_capacity(property_length.len());
+        for _i in 0..property_length.len() {
+            let property = Property::decode(ba)?;
+            result.push(property);
+        }
+
+        Ok(result)
     }
 }
 
 impl EncodePacket for Properties {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        unimplemented!()
+        let property_length = VarInt::new(self.len())?;
+
+        let mut bytes_written = property_length.bytes();
+        for property in self {
+            bytes_written += property.encode(buf)?;
+        }
+
+        Ok(bytes_written)
     }
 }
