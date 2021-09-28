@@ -6,8 +6,8 @@ use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
 
 use crate::{
-    BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, StringData,
-    StringPairData,
+    BinaryData, BoolData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
+    StringData, StringPairData, U16Data, U32Data,
 };
 
 #[repr(u8)]
@@ -130,7 +130,7 @@ pub enum Property {
     /// It is a Protocol Error to include the Payload Format Indicator more than once.
     /// The Server MAY validate that the Will Message is of the format indicated,
     /// and if it is not send a CONNACK with the Reason Code of 0x99 (Payload format invalid).
-    PayloadFormatIndicator(bool),
+    PayloadFormatIndicator(BoolData),
 
     /// Message Expiry Interval
     ///
@@ -180,7 +180,7 @@ pub enum Property {
     /// is closed if the Session Expiry Interval is greater than 0 [MQTT-3.1.2-23].
     ///
     /// When the Session expires the Client and Server need not process the deletion of state atomically.
-    SessionExpiryInterval(u32),
+    SessionExpiryInterval(U32Data),
 
     /// Assigned Client Identifier
     ///
@@ -243,7 +243,7 @@ pub enum Property {
     ///
     /// If this value is 1, the Server MAY return a Reason String or User Properties
     /// on any packet where it is allowed.
-    RequestProblemInformation(bool),
+    RequestProblemInformation(BoolData),
 
     /// Will Delay Interval
     ///
@@ -259,7 +259,7 @@ pub enum Property {
     /// has passed or the Session ends, whichever happens first. If a new Network Connection
     /// to this Session is made before the Will Delay Interval has passed, the Serverx
     /// MUST NOT send the Will Message [MQTT-3.1.3-9].
-    WillDelayInterval(u32),
+    WillDelayInterval(U32Data),
 
     /// Request Response Information
     ///
@@ -275,7 +275,7 @@ pub enum Property {
     /// Response Information [MQTT-3.1.2-28].
     ///
     /// If the value is 1 the Server MAY return Response Information in the CONNACK packet.
-    RequestResponseInformation(bool),
+    RequestResponseInformation(BoolData),
 
     /// Response Information
     ///
@@ -311,7 +311,7 @@ pub enum Property {
     ///
     /// The value of Receive Maximum applies only to the current Network Connection.
     /// If the Receive Maximum value is absent then its value defaults to 65,535.
-    ReceiveMaximum(u16),
+    ReceiveMaximum(U16Data),
 
     /// Topic Alias Maximum
     ///
@@ -330,7 +330,7 @@ pub enum Property {
     /// A value of 0 indicates that the Client does not accept any Topic Aliases
     /// on this connection. If Topic Alias Maximum is absent or zero, the Server
     /// MUST NOT send any Topic Aliases to the Client [MQTT-3.1.2-27].
-    TopicAliasMaximum(u16),
+    TopicAliasMaximum(U16Data),
 
     /// Topic Alias.
     ///
@@ -391,7 +391,7 @@ pub enum Property {
     /// one or more of the Clients but other Clients can receive it, the Server
     /// can choose either discard the message without sending the message to any of the Clients,
     /// or to send the message to one of the Clients that can receive it.
-    MaximumPacketSize(u32),
+    MaximumPacketSize(U32Data),
 
     /// Wildcard Subscription Available
     ///
@@ -443,32 +443,24 @@ impl DecodePacket for Property {
         let property_type = PropertyType::try_from(property_type_byte)?;
         match property_type {
             PropertyType::SessionExpiryInterval => {
-                let interval = ba.read_u32()?;
+                let interval = U32Data::decode(ba)?;
                 Ok(Self::SessionExpiryInterval(interval))
             }
             PropertyType::ReceiveMaximum => {
-                let max = ba.read_u16()?;
+                let max = U16Data::decode(ba)?;
                 Ok(Self::ReceiveMaximum(max))
             }
             PropertyType::MaximumPacketSize => {
-                let max = ba.read_u32()?;
+                let max = U32Data::decode(ba)?;
                 Ok(Self::MaximumPacketSize(max))
             }
             PropertyType::RequestResponseInformation => {
-                let byte = ba.read_byte()?;
-                match byte {
-                    0x00 => Ok(Self::RequestResponseInformation(false)),
-                    0x01 => Ok(Self::RequestResponseInformation(true)),
-                    _ => Err(DecodeError::InvalidPropertyValue),
-                }
+                let on = BoolData::decode(ba)?;
+                Ok(Self::RequestResponseInformation(on))
             }
             PropertyType::RequestProblemInformation => {
-                let byte = ba.read_byte()?;
-                match byte {
-                    0x00 => Ok(Self::RequestProblemInformation(false)),
-                    0x01 => Ok(Self::RequestProblemInformation(true)),
-                    _ => Err(DecodeError::InvalidPropertyValue),
-                }
+                let on = BoolData::decode(ba)?;
+                Ok(Self::RequestProblemInformation(on))
             }
             PropertyType::UserProperty => {
                 let pair = StringPairData::decode(ba)?;
@@ -483,16 +475,12 @@ impl DecodePacket for Property {
                 Ok(Self::AuthenticationData(data))
             }
             PropertyType::WillDelayInterval => {
-                let interval = ba.read_u32()?;
+                let interval = U32Data::decode(ba)?;
                 Ok(Self::WillDelayInterval(interval))
             }
             PropertyType::PayloadFormatIndicator => {
-                let byte = ba.read_byte()?;
-                match byte {
-                    0x00 => Ok(Self::PayloadFormatIndicator(false)),
-                    0x01 => Ok(Self::PayloadFormatIndicator(true)),
-                    _ => Err(DecodeError::InvalidPropertyValue),
-                }
+                let on = BoolData::decode(ba)?;
+                Ok(Self::PayloadFormatIndicator(on))
             }
             _ => unimplemented!(),
         }
@@ -502,40 +490,16 @@ impl DecodePacket for Property {
 impl EncodePacket for Property {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         match self {
-            Self::SessionExpiryInterval(interval) => {
-                buf.write_u32::<BigEndian>(*interval)?;
-                Ok(4)
-            }
-            Self::ReceiveMaximum(max) => {
-                buf.write_u16::<BigEndian>(*max)?;
-                Ok(2)
-            }
-            Self::MaximumPacketSize(max) => {
-                buf.write_u32::<BigEndian>(*max)?;
-                Ok(4)
-            }
-            Self::RequestResponseInformation(on) => {
-                let byte = if *on { 0x01 } else { 0x00 };
-                buf.push(byte);
-                Ok(1)
-            }
-            Self::RequestProblemInformation(on) => {
-                let byte = if *on { 0x01 } else { 0x00 };
-                buf.push(byte);
-                Ok(1)
-            }
+            Self::SessionExpiryInterval(interval) => interval.encode(buf),
+            Self::ReceiveMaximum(max) => max.encode(buf),
+            Self::MaximumPacketSize(max) => max.encode(buf),
+            Self::RequestResponseInformation(on) => on.encode(buf),
+            Self::RequestProblemInformation(on) => on.encode(buf),
             Self::UserProperty(pair) => pair.encode(buf),
             Self::AuthenticationMethod(method) => method.encode(buf),
             Self::AuthenticationData(data) => data.encode(buf),
-            Self::WillDelayInterval(interval) => {
-                buf.write_u32::<BigEndian>(*interval)?;
-                Ok(4)
-            }
-            Self::PayloadFormatIndicator(on) => {
-                let byte = if *on { 0x01 } else { 0x00 };
-                buf.push(byte);
-                Ok(1)
-            }
+            Self::WillDelayInterval(interval) => interval.encode(buf),
+            Self::PayloadFormatIndicator(on) => on.encode(buf),
             _ => unimplemented!(),
         }
     }
