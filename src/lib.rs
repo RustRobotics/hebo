@@ -12,6 +12,7 @@ mod protocol_level;
 mod string_data;
 mod string_pair_data;
 pub mod topic;
+mod u16_data;
 mod u32_data;
 pub mod utils;
 mod var_int;
@@ -25,6 +26,7 @@ pub use protocol_level::ProtocolLevel;
 pub use string_data::StringData;
 pub use string_pair_data::StringPairData;
 pub use topic::{SubscribePattern, Topic, TopicError, TopicPart};
+pub use u16_data::U16Data;
 pub use u32_data::U32Data;
 pub use var_int::VarInt;
 

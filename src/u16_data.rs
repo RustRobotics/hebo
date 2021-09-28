@@ -6,40 +6,40 @@ use byteorder::{BigEndian, WriteBytesExt};
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
-/// U32Data represents a four bytes integer.
+/// U16Data represents a two bytes integer.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct U32Data(u32);
+pub struct U16Data(u16);
 
-impl U32Data {
-    pub fn new(value: u32) -> Self {
-        U32Data(value)
+impl U16Data {
+    pub fn new(value: u16) -> Self {
+        U16Data(value)
     }
 }
 
-impl std::ops::Deref for U32Data {
-    type Target = u32;
+impl std::ops::Deref for U16Data {
+    type Target = u16;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl std::ops::DerefMut for U32Data {
+impl std::ops::DerefMut for U16Data {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl DecodePacket for U32Data {
+impl DecodePacket for U16Data {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let value = ba.read_u32()?;
+        let value = ba.read_u16()?;
         Ok(Self(value))
     }
 }
 
-impl EncodePacket for U32Data {
+impl EncodePacket for U16Data {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        buf.write_u32::<BigEndian>(self.0)?;
+        buf.write_u16::<BigEndian>(self.0)?;
         Ok(4)
     }
 }
