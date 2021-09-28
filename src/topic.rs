@@ -291,6 +291,23 @@ impl AsRef<str> for SubTopic {
     }
 }
 
+impl DecodePacket for SubTopic {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let len = ba.read_u16()?;
+        let s = ba.read_string(len as usize)?;
+        validate_sub_topic(&s);
+        Ok(Self(s))
+    }
+}
+
+impl EncodePacket for SubTopic {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        buf.write_u16::<BigEndian>(self.0.len() as u16)?;
+        buf.write_all(self.0.as_bytes())?;
+        Ok(2 + self.0.len())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
