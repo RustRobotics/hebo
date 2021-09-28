@@ -5,7 +5,10 @@
 use byteorder::{BigEndian, WriteBytesExt};
 use std::io::Write;
 
-use crate::{utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{
+    utils::validate_utf8_string, utils::StringError, ByteArray, DecodeError, DecodePacket,
+    EncodeError, EncodePacket,
+};
 
 /// Text fields within the MQTT Control Packets described later are encoded as UTF-8 strings.
 /// UTF-8 [RFC3629] is an efficient encoding of Unicode [Unicode] characters that
@@ -54,22 +57,21 @@ use crate::{utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePack
 pub struct StringData(String);
 
 impl StringData {
-    pub fn new(data: &str) -> Result<Self, EncodeError> {
-        utils::validate_utf8_string(data)?;
+    pub fn new(data: &str) -> Result<Self, StringError> {
+        validate_utf8_string(data)?;
         Ok(Self(data.to_string()))
+    }
+
+    pub fn set_data(&mut self, data: &str) -> Result<(), StringError> {
+        validate_utf8_string(data)?;
+        self.0 = data.to_string();
+        Ok(())
     }
 }
 
 impl AsRef<str> for StringData {
     fn as_ref(&self) -> &str {
         &self.0
-    }
-}
-
-// TODO(Shaohua): Remove and replace with a new method.
-impl AsMut<String> for StringData {
-    fn as_mut(&mut self) -> &mut String {
-        &mut self.0
     }
 }
 
