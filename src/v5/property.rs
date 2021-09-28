@@ -12,7 +12,7 @@ use crate::{
 
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum PropertyType {
+pub enum PropertyType {
     PayloadFormatIndicator,
     MessageExpiryInterval,
     ContentType,
@@ -382,9 +382,11 @@ pub enum Property {
     /// PUBREL, PUBCOMP, SUBSCRIBE, SUBACK, UNSUBSCRIBE, UNSUBACK, DISCONNECT, AUTH.
     ///
     /// Followed by a UTF-8 String Pair.
-    ///
     /// The User Property is allowed to appear multiple times to represent multiple name,
     /// value pairs. The same name is allowed to appear more than once.
+    ///
+    /// The Server MUST maintain the order of User Properties when publishing
+    /// the Will Message [MQTT-3.1.3-10].
     UserProperty(StringPairData),
 
     /// Maximum Packet Size

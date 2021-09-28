@@ -6,7 +6,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
 use std::io::Write;
 
-use super::{FixedHeader, Packet, PacketType, Properties};
+use super::{FixedHeader, Packet, PacketType, Properties, Property, PropertyType};
 use crate::utils::{self, StringError};
 use crate::{
     consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
@@ -356,7 +356,7 @@ pub struct ConnectPacket {
     /// on any particular schedule.
     keep_alive: u16,
 
-    // TODO(Shaohua): Add properites header
+    properties: Properties,
 
     // <-- variable body begins -->
     /// Payload is `client_id`.
@@ -400,7 +400,7 @@ pub struct ConnectPacket {
     /// with the Will Message when it is published, and properties which define
     /// when to publish the Will Message. The Will Properties consists of
     /// a Property Length and the Properties.
-    will_properties: Option<Properties>,
+    will_properties: Properties,
 
     /// If the `will` flag is true in `connect_flags`, then `will_topic` field must be set.
     /// It will be used as the topic of Will Message.
@@ -419,6 +419,27 @@ pub struct ConnectPacket {
     /// It consists of 0 to 64k bytes of binary data.
     password: Vec<u8>,
 }
+
+pub const CONNECT_PROPERTIES: &[PropertyType] = &[
+    PropertyType::SessionExpiryInterval,
+    PropertyType::ReceiveMaximum,
+    PropertyType::MaximumPacketSize,
+    PropertyType::TopicAliasMaximum,
+    PropertyType::RequestProblemInformation,
+    PropertyType::UserProperty,
+    PropertyType::AuthenticationMethod,
+    PropertyType::AuthenticationData,
+];
+
+pub const CONNECT_WILL_PROPERTIES: &[PropertyType] = &[
+    PropertyType::WillDelayInterval,
+    PropertyType::PayloadFormatIndicator,
+    PropertyType::MessageExpiryInterval,
+    PropertyType::ContentType,
+    PropertyType::ResponseTopic,
+    PropertyType::CorrelationData,
+    PropertyType::UserProperty,
+];
 
 impl ConnectPacket {
     pub fn new(client_id: &str) -> ConnectPacket {
@@ -443,6 +464,10 @@ impl ConnectPacket {
     pub fn set_connect_flags(&mut self, flags: ConnectFlags) -> &mut Self {
         self.connect_flags = flags;
         self
+    }
+
+    pub fn connect_flags_mut(&mut self) -> &mut ConnectFlags {
+        &mut self.connect_flags
     }
 
     pub fn connect_flags(&self) -> &ConnectFlags {
@@ -495,15 +520,12 @@ impl ConnectPacket {
         &self.password
     }
 
-    pub fn set_will_properties(&mut self, properties: Option<Properties>) -> &mut Self {
-        if properties.is_none() {
-            self.connect_flags.set_will(false);
-        }
-        self.will_properties = properties;
+    pub fn set_will_properties(&mut self, properties: &[Property]) -> &mut Self {
+        self.will_properties = properties.to_vec();
         self
     }
 
-    pub fn will_properties(&self) -> &Option<Properties> {
+    pub fn will_properties(&self) -> &Properties {
         &self.will_properties
     }
 
@@ -539,6 +561,7 @@ pub fn validate_keep_alive(keep_alive: u16) -> Result<(), DecodeError> {
 }
 
 /// ClientId is based on rules below:
+/// TODO(Shaohua): Move to utils
 /// TODO(Shaohua): Add more spec rules
 pub fn validate_client_id(id: &str) -> Result<(), StringError> {
     if id.is_empty() || id.len() > 23 {
@@ -553,6 +576,12 @@ pub fn validate_client_id(id: &str) -> Result<(), StringError> {
         }
     }
     Ok(())
+}
+
+impl Packet for ConnectPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Connect
+    }
 }
 
 impl EncodePacket for ConnectPacket {
@@ -610,12 +639,6 @@ impl EncodePacket for ConnectPacket {
         }
 
         Ok(v.len() - old_len)
-    }
-}
-
-impl Packet for ConnectPacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::Connect
     }
 }
 
@@ -705,13 +728,15 @@ impl DecodePacket for ConnectPacket {
             Vec::new()
         };
 
-        let will_properties = None;
+        let properties = Vec::new();
+        let will_properties = Vec::new();
 
         Ok(ConnectPacket {
             protocol_name,
             protocol_level,
             keep_alive,
             connect_flags,
+            properties,
             client_id,
             will_topic,
             will_properties,
