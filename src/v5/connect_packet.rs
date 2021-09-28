@@ -6,7 +6,10 @@ use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
 use std::io::Write;
 
-use super::{FixedHeader, Packet, PacketType, Properties, Property, PropertyType};
+use super::{
+    property::check_property_type_list, FixedHeader, Packet, PacketType, Properties, Property,
+    PropertyType,
+};
 use crate::utils::{self, StringError};
 use crate::{
     consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
@@ -737,8 +740,23 @@ impl DecodePacket for ConnectPacket {
             Vec::new()
         };
 
-        let properties = Vec::new();
-        let will_properties = Vec::new();
+        let properties = Properties::decode(ba)?;
+        if let Err(property) = check_property_type_list(&properties, CONNECT_PROPERTIES) {
+            log::error!(
+                "v5/ConnectPacket: property type {:?} cannot be used in properties!",
+                property.property_type()
+            );
+            return Err(DecodeError::InvalidPropertyType);
+        }
+
+        let will_properties = Properties::decode(ba)?;
+        if let Err(property) = check_property_type_list(&will_properties, CONNECT_WILL_PROPERTIES) {
+            log::error!(
+                "v5/ConnectPacket: property type {:?} cannot be used in will properties!",
+                property.property_type()
+            );
+            return Err(DecodeError::InvalidPropertyType);
+        }
 
         Ok(ConnectPacket {
             protocol_name,
