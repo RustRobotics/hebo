@@ -160,7 +160,11 @@ pub enum Property {
     ///
     /// UTF-8 Encoded String.
     /// Used in PUBLISH, Will Properties.
-    ResponseTopic,
+    ///
+    /// Followed by a UTF-8 Encoded String which is used as the Topic Name for a response message.
+    /// It is a Protocol Error to include the Response Topic more than once. The presence
+    /// of a Response Topic identifies the Will Message as a Request.
+    ResponseTopic(StringData),
 
     /// Correlation Data
     ///
@@ -502,6 +506,10 @@ impl DecodePacket for Property {
                 let content_type = StringData::decode(ba)?;
                 Ok(Self::ContentType(content_type))
             }
+            PropertyType::ResponseTopic => {
+                let topic = StringData::decode(ba)?;
+                Ok(Self::ResponseTopic(topic))
+            }
             _ => unimplemented!(),
         }
     }
@@ -522,6 +530,7 @@ impl EncodePacket for Property {
             Self::PayloadFormatIndicator(on) => on.encode(buf),
             Self::MessageExpiryInterval(interval) => interval.encode(buf),
             Self::ContentType(content_type) => content_type.encode(buf),
+            Self::ResponseTopic(topic) => topic.encode(buf),
             _ => unimplemented!(),
         }
     }

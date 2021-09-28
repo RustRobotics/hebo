@@ -4,6 +4,8 @@
 
 use crate::QoS;
 
+// TODO(Shaohua): Simplify topic structs.
+
 #[derive(Debug, Default, Clone, Eq, PartialOrd, Ord, Hash)]
 pub struct Topic {
     topic: String,
@@ -233,6 +235,38 @@ impl SubscribePattern {
 
     pub fn qos(&self) -> QoS {
         self.qos
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PubTopic(String);
+
+impl PubTopic {
+    pub fn new(topic: &str) -> Result<Self, TopicError> {
+        validate_pub_topic(topic)?;
+        Ok(Self(topic.to_string()))
+    }
+}
+
+impl AsRef<str> for PubTopic {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SubTopic(String);
+
+impl SubTopic {
+    pub fn new(topic: &str) -> Result<Self, TopicError> {
+        validate_sub_topic(topic)?;
+        Ok(Self(topic.to_string()))
+    }
+}
+
+impl AsRef<str> for SubTopic {
+    fn as_ref(&self) -> &str {
+        &self.0
     }
 }
 
