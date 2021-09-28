@@ -66,6 +66,7 @@ impl AsRef<str> for StringData {
     }
 }
 
+// TODO(Shaohua): Remove and replace with a new method.
 impl AsMut<String> for StringData {
     fn as_mut(&mut self) -> &mut String {
         &mut self.0

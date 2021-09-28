@@ -7,7 +7,7 @@ use std::convert::TryFrom;
 
 use crate::{
     BinaryData, BoolData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
-    StringData, StringPairData, U16Data, U32Data,
+    PubTopic, StringData, StringPairData, U16Data, U32Data,
 };
 
 #[repr(u8)]
@@ -164,7 +164,7 @@ pub enum Property {
     /// Followed by a UTF-8 Encoded String which is used as the Topic Name for a response message.
     /// It is a Protocol Error to include the Response Topic more than once. The presence
     /// of a Response Topic identifies the Will Message as a Request.
-    ResponseTopic(StringData),
+    ResponseTopic(PubTopic),
 
     /// Correlation Data
     ///
@@ -507,7 +507,7 @@ impl DecodePacket for Property {
                 Ok(Self::ContentType(content_type))
             }
             PropertyType::ResponseTopic => {
-                let topic = StringData::decode(ba)?;
+                let topic = PubTopic::decode(ba)?;
                 Ok(Self::ResponseTopic(topic))
             }
             _ => unimplemented!(),
