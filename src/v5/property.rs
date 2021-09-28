@@ -150,7 +150,11 @@ pub enum Property {
     ///
     /// UTF-8 Encoded String.
     /// Used in PUBLISH, Will Properties.
-    ContentType,
+    ///
+    /// Followed by a UTF-8 Encoded String describing the content of the Will Message.
+    /// It is a Protocol Error to include the Content Type more than once.
+    /// The value of the Content Type is defined by the sending and receiving application.
+    ContentType(StringData),
 
     /// Response Topic
     ///
@@ -494,6 +498,10 @@ impl DecodePacket for Property {
                 let interval = U32Data::decode(ba)?;
                 Ok(Self::MessageExpiryInterval(interval))
             }
+            PropertyType::ContentType => {
+                let content_type = StringData::decode(ba)?;
+                Ok(Self::ContentType(content_type))
+            }
             _ => unimplemented!(),
         }
     }
@@ -513,6 +521,7 @@ impl EncodePacket for Property {
             Self::WillDelayInterval(interval) => interval.encode(buf),
             Self::PayloadFormatIndicator(on) => on.encode(buf),
             Self::MessageExpiryInterval(interval) => interval.encode(buf),
+            Self::ContentType(content_type) => content_type.encode(buf),
             _ => unimplemented!(),
         }
     }
