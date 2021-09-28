@@ -10,6 +10,18 @@ use crate::{
     PubTopic, StringData, StringPairData, U16Data, U32Data,
 };
 
+pub fn check_property_type_list<'a>(
+    properties: &'a [Property],
+    types: &[PropertyType],
+) -> Result<(), &'a Property> {
+    for property in properties {
+        if !types.contains(&property.property_type()) {
+            return Err(property);
+        }
+    }
+    Ok(())
+}
+
 #[repr(u8)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PropertyType {
@@ -186,7 +198,7 @@ pub enum Property {
     /// Variable Byte Integer.
     ///
     /// Used in PUBLISH, SUBSCRIBE.
-    SubscriptionIdentifier,
+    SubscriptionIdentifier(BinaryData),
 
     /// Session Expiry Interval
     ///
@@ -211,13 +223,13 @@ pub enum Property {
     ///
     /// UTF-8 Encoded String.
     /// Used in CONNACK.
-    AssignedClientIdentifier,
+    AssignedClientIdentifier(StringData),
 
     /// Server Keep Alive
     ///
     /// Two Byte Integer.
     /// Used in CONNACK.
-    ServerKeepAlive,
+    ServerKeepAlive(U16Data),
 
     /// Authentication Method
     ///
@@ -306,20 +318,20 @@ pub enum Property {
     ///
     /// UTF-8 Encoded String.
     /// Used in CONNACK.
-    ResponseInformation,
+    ResponseInformation(StringData),
 
     /// Server Reference
     ///
     /// UTF-8 Encoded String.
     /// Used in CONNACK, DISCONNECT.
-    ServerReference,
+    ServerReference(StringData),
 
     /// Reason String
     ///
     /// UTF-8 Encoded String.
     /// Used in CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK,
     /// UNSUBACK, DISCONNECT, AUTH.
-    ReasonString,
+    ReasonString(StringData),
 
     /// Receive Maximum
     ///
@@ -361,19 +373,19 @@ pub enum Property {
     ///
     /// Two Byte Integer.
     /// Used in PUBLISH.
-    TopicAlias,
+    TopicAlias(U16Data),
 
     /// Maximum QoS
     ///
     /// Byte.
     /// Used in CONNACK.
-    MaximumQoS,
+    MaximumQoS(u8),
 
     /// Retain Available
     ///
     /// Byte.
     /// Used in CONNACK.
-    RetainAvailable,
+    RetainAvailable(BoolData),
 
     /// User Property
     ///
@@ -424,19 +436,55 @@ pub enum Property {
     ///
     /// Byte.
     /// Used in CONNACK.
-    WildcardSubscriptionAvailable,
+    WildcardSubscriptionAvailable(BoolData),
 
     /// Subscription Identifier Available
     ///
     /// Byte.
     /// Used in CONNACK.
-    SubscriptionIdentifierAvailable,
+    SubscriptionIdentifierAvailable(BoolData),
 
     /// Shared Subscription Available
     ///
     /// Byte.
     /// Used in CONNACK.
-    SharedSubscriptionAvailable,
+    SharedSubscriptionAvailable(BoolData),
+}
+
+impl Property {
+    pub fn property_type(&self) -> PropertyType {
+        match self {
+            Self::PayloadFormatIndicator(_) => PropertyType::PayloadFormatIndicator,
+            Self::MessageExpiryInterval(_) => PropertyType::MessageExpiryInterval,
+            Self::ContentType(_) => PropertyType::ContentType,
+            Self::ResponseTopic(_) => PropertyType::ResponseTopic,
+            Self::CorrelationData(_) => PropertyType::CorrelationData,
+            Self::SubscriptionIdentifier(_) => PropertyType::SubscriptionIdentifier,
+            Self::SessionExpiryInterval(_) => PropertyType::SessionExpiryInterval,
+            Self::AssignedClientIdentifier(_) => PropertyType::AssignedClientIdentifier,
+            Self::ServerKeepAlive(_) => PropertyType::ServerKeepAlive,
+            Self::AuthenticationMethod(_) => PropertyType::AuthenticationMethod,
+            Self::AuthenticationData(_) => PropertyType::AuthenticationData,
+            Self::RequestProblemInformation(_) => PropertyType::RequestProblemInformation,
+            Self::WillDelayInterval(_) => PropertyType::WillDelayInterval,
+            Self::RequestResponseInformation(_) => PropertyType::RequestResponseInformation,
+            Self::ResponseInformation(_) => PropertyType::ResponseInformation,
+            Self::ServerReference(_) => PropertyType::ServerReference,
+            Self::ReasonString(_) => PropertyType::ReasonString,
+            Self::ReceiveMaximum(_) => PropertyType::ReceiveMaximum,
+            Self::TopicAliasMaximum(_) => PropertyType::TopicAliasMaximum,
+            Self::TopicAlias(_) => PropertyType::TopicAlias,
+            Self::MaximumQoS(_) => PropertyType::MaximumQoS,
+            Self::RetainAvailable(_) => PropertyType::RetainAvailable,
+            Self::UserProperty(_) => PropertyType::UserProperty,
+            Self::MaximumPacketSize(_) => PropertyType::MaximumPacketSize,
+            Self::WildcardSubscriptionAvailable(_) => PropertyType::WildcardSubscriptionAvailable,
+            Self::SubscriptionIdentifierAvailable(_) => {
+                PropertyType::SubscriptionIdentifierAvailable
+            }
+            Self::SharedSubscriptionAvailable(_) => PropertyType::SharedSubscriptionAvailable,
+        }
+    }
 }
 
 impl Property {

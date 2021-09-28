@@ -483,6 +483,15 @@ impl ConnectPacket {
         self.keep_alive
     }
 
+    pub fn set_properties(&mut self, properties: &[Property]) -> &mut Self {
+        self.properties = properties.to_vec();
+        self
+    }
+
+    pub fn properties(&self) -> &Properties {
+        &self.properties
+    }
+
     pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
         validate_client_id(id)?;
         self.client_id.clear();
