@@ -38,6 +38,8 @@ pub enum DecodeError {
     /// Failed to parse variable byte integer.
     InvalidVarInt,
 
+    InvalidBoolData,
+
     /// Length of buffer - offset < remaining length.
     // TODO(Shaohua): Replace with InvalidVarInt
     InvalidRemainingLength,

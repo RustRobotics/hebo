@@ -4,6 +4,7 @@
 
 pub mod base;
 mod binary_data;
+mod bool_data;
 pub mod byte_array;
 pub mod consts;
 pub mod error;
@@ -16,6 +17,7 @@ mod var_int;
 
 pub use base::{DecodePacket, EncodePacket, PacketId, QoS};
 pub use binary_data::BinaryData;
+pub use bool_data::BoolData;
 pub use byte_array::ByteArray;
 pub use error::{DecodeError, EncodeError};
 pub use protocol_level::ProtocolLevel;
