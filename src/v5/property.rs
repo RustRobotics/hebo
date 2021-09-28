@@ -170,7 +170,16 @@ pub enum Property {
     ///
     /// Binary Data.
     /// Used in PUBLISH, Will Properties.
-    CorrelationData,
+    ///
+    /// Followed by Binary Data. The Correlation Data is used by the sender of
+    /// the Request Message to identify which request the Response Message is for
+    /// when it is received. It is a Protocol Error to include Correlation Data
+    /// more than once. If the Correlation Data is not present, the Requester
+    /// does not require any correlation data.
+    ///
+    /// The value of the Correlation Data only has meaning to the sender of
+    /// the Request Message and receiver of the Response Message
+    CorrelationData(BinaryData),
 
     /// Subscription Identifier
     ///
@@ -510,6 +519,10 @@ impl DecodePacket for Property {
                 let topic = PubTopic::decode(ba)?;
                 Ok(Self::ResponseTopic(topic))
             }
+            PropertyType::CorrelationData => {
+                let data = BinaryData::decode(ba)?;
+                Ok(Self::CorrelationData(data))
+            }
             _ => unimplemented!(),
         }
     }
@@ -531,6 +544,7 @@ impl EncodePacket for Property {
             Self::MessageExpiryInterval(interval) => interval.encode(buf),
             Self::ContentType(content_type) => content_type.encode(buf),
             Self::ResponseTopic(topic) => topic.encode(buf),
+            Self::CorrelationData(data) => data.encode(buf),
             _ => unimplemented!(),
         }
     }
