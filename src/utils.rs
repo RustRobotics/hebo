@@ -104,3 +104,25 @@ pub fn to_utf8_string(buf: &[u8]) -> Result<String, StringError> {
     validate_utf8_string(&s)?;
     Ok(s)
 }
+
+/// ClientId is based on rules below:
+///
+/// - The ClientId MUST be a UTF-8 encoded string as defined in Section 1.5.3 [MQTT-3.1.3-4].
+///
+/// - The Server MUST allow ClientIds which are between 1 and 23 UTF-8 encoded bytes in length, and that
+///   contain only the characters
+///   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" [MQTT-3.1.3-5].
+pub fn validate_client_id(id: &str) -> Result<(), StringError> {
+    if id.is_empty() || id.len() > 23 {
+        return Err(StringError::InvalidLength);
+    }
+    for byte in id.bytes() {
+        if !((b'0'..=b'9').contains(&byte)
+            || (b'a'..=b'z').contains(&byte)
+            || (b'A'..=b'Z').contains(&byte))
+        {
+            return Err(StringError::InvalidChar);
+        }
+    }
+    Ok(())
+}

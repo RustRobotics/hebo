@@ -10,7 +10,7 @@ use super::{
     property::check_property_type_list, FixedHeader, Packet, PacketType, Properties, Property,
     PropertyType,
 };
-use crate::utils::{self, StringError};
+use crate::utils::{validate_client_id, validate_two_bytes_data, validate_utf8_string};
 use crate::{
     consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
     QoS,
@@ -512,7 +512,7 @@ impl ConnectPacket {
     }
 
     pub fn set_username(&mut self, username: &str) -> Result<&mut Self, DecodeError> {
-        utils::validate_utf8_string(username)?;
+        validate_utf8_string(username)?;
         self.username = username.to_string();
         Ok(self)
     }
@@ -523,7 +523,7 @@ impl ConnectPacket {
 
     pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, DecodeError> {
         // TODO(Shaohua): Replace with BinaryData.
-        utils::validate_two_bytes_data(password)?;
+        validate_two_bytes_data(password)?;
         self.password = password.to_vec();
         Ok(self)
     }
@@ -542,7 +542,7 @@ impl ConnectPacket {
     }
 
     pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, DecodeError> {
-        utils::validate_utf8_string(topic)?;
+        validate_utf8_string(topic)?;
         topic::validate_pub_topic(topic)?;
         self.will_topic = topic.to_string();
         Ok(self)
@@ -553,7 +553,7 @@ impl ConnectPacket {
     }
 
     pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, DecodeError> {
-        utils::validate_two_bytes_data(message)?;
+        validate_two_bytes_data(message)?;
         self.will_message = message.to_vec();
         Ok(self)
     }
@@ -570,24 +570,6 @@ pub fn validate_keep_alive(keep_alive: u16) -> Result<(), DecodeError> {
     } else {
         Ok(())
     }
-}
-
-/// ClientId is based on rules below:
-/// TODO(Shaohua): Move to utils
-/// TODO(Shaohua): Add more spec rules
-pub fn validate_client_id(id: &str) -> Result<(), StringError> {
-    if id.is_empty() || id.len() > 23 {
-        return Err(StringError::InvalidLength);
-    }
-    for byte in id.bytes() {
-        if !((b'0'..=b'9').contains(&byte)
-            || (b'a'..=b'z').contains(&byte)
-            || (b'A'..=b'Z').contains(&byte))
-        {
-            return Err(StringError::InvalidChar);
-        }
-    }
-    Ok(())
 }
 
 impl Packet for ConnectPacket {
@@ -713,7 +695,7 @@ impl DecodePacket for ConnectPacket {
         let will_topic = if connect_flags.will {
             let will_topic_len = ba.read_u16()? as usize;
             let will_topic = ba.read_string(will_topic_len)?;
-            utils::validate_utf8_string(&will_topic)?;
+            validate_utf8_string(&will_topic)?;
             topic::validate_pub_topic(&will_topic)?;
             will_topic
         } else {
