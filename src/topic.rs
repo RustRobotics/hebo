@@ -262,7 +262,7 @@ impl DecodePacket for PubTopic {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let len = ba.read_u16()?;
         let s = ba.read_string(len as usize)?;
-        validate_pub_topic(&s);
+        validate_pub_topic(&s)?;
         Ok(Self(s))
     }
 }
@@ -295,7 +295,7 @@ impl DecodePacket for SubTopic {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let len = ba.read_u16()?;
         let s = ba.read_string(len as usize)?;
-        validate_sub_topic(&s);
+        validate_sub_topic(&s)?;
         Ok(Self(s))
     }
 }

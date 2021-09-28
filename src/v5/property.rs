@@ -9,20 +9,32 @@ use crate::{
     PubTopic, StringData, StringPairData, U16Data, U32Data, VarInt,
 };
 
-pub fn check_property_type_list<'a>(
-    properties: &'a [Property],
+pub fn check_property_type_list(
+    properties: &[Property],
     types: &[PropertyType],
-) -> Result<(), &'a Property> {
+) -> Result<(), PropertyType> {
     for property in properties {
         if !types.contains(&property.property_type()) {
-            return Err(property);
+            return Err(property.property_type());
         }
     }
+
+    for property_type in types {
+        let count = properties
+            .iter()
+            .filter(|p| p.property_type() == *property_type)
+            .count();
+        // Only UserProperty is allowed to present in property list more than once.
+        if count > 1 && *property_type != PropertyType::UserProperty {
+            return Err(*property_type);
+        }
+    }
+
     Ok(())
 }
 
 #[repr(u8)]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PropertyType {
     PayloadFormatIndicator,
     MessageExpiryInterval,
