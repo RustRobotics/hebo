@@ -136,7 +136,15 @@ pub enum Property {
     ///
     /// Four Byte Integer.
     /// Used in PUBLISH, Will Properties.
-    MessageExpiryInterval,
+    ///
+    /// Followed by the Four Byte Integer representing the Message Expiry Interval.
+    /// It is a Protocol Error to include the Message Expiry Interval more than once.
+    ///
+    /// If present, the Four Byte value is the lifetime of the Will Message in seconds
+    /// and is sent as the Publication Expiry Interval when the Server publishes the Will Message.
+    ///
+    /// If absent, no Message Expiry Interval is sent when the Server publishes the Will Message.
+    MessageExpiryInterval(U32Data),
 
     /// Content Type
     ///
@@ -482,6 +490,10 @@ impl DecodePacket for Property {
                 let on = BoolData::decode(ba)?;
                 Ok(Self::PayloadFormatIndicator(on))
             }
+            PropertyType::MessageExpiryInterval => {
+                let interval = U32Data::decode(ba)?;
+                Ok(Self::MessageExpiryInterval(interval))
+            }
             _ => unimplemented!(),
         }
     }
@@ -500,6 +512,7 @@ impl EncodePacket for Property {
             Self::AuthenticationData(data) => data.encode(buf),
             Self::WillDelayInterval(interval) => interval.encode(buf),
             Self::PayloadFormatIndicator(on) => on.encode(buf),
+            Self::MessageExpiryInterval(interval) => interval.encode(buf),
             _ => unimplemented!(),
         }
     }
