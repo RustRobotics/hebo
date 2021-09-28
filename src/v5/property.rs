@@ -119,7 +119,18 @@ pub enum Property {
     ///
     /// Byte.
     /// Used in PUBLISH, Will Properties.
-    PayloadFormatIndicator,
+    ///
+    /// Followed by the value of the Payload Format Indicator, either of:
+    /// - 0 (0x00) Byte Indicates that the Will Message is unspecified bytes,
+    ///   which is equivalent to not sending a Payload Format Indicator.
+    /// - 1 (0x01) Byte Indicates that the Will Message is UTF-8 Encoded Character Data.
+    ///   The UTF-8 data in the Payload MUST be well-formed UTF-8 as defined
+    ///   by the Unicode specification [Unicode] and restated in RFC 3629 [RFC3629].
+    ///
+    /// It is a Protocol Error to include the Payload Format Indicator more than once.
+    /// The Server MAY validate that the Will Message is of the format indicated,
+    /// and if it is not send a CONNACK with the Reason Code of 0x99 (Payload format invalid).
+    PayloadFormatIndicator(bool),
 
     /// Message Expiry Interval
     ///
@@ -475,6 +486,14 @@ impl DecodePacket for Property {
                 let interval = ba.read_u32()?;
                 Ok(Self::WillDelayInterval(interval))
             }
+            PropertyType::PayloadFormatIndicator => {
+                let byte = ba.read_byte()?;
+                match byte {
+                    0x00 => Ok(Self::PayloadFormatIndicator(false)),
+                    0x01 => Ok(Self::PayloadFormatIndicator(true)),
+                    _ => Err(DecodeError::InvalidPropertyValue),
+                }
+            }
             _ => unimplemented!(),
         }
     }
@@ -511,6 +530,11 @@ impl EncodePacket for Property {
             Self::WillDelayInterval(interval) => {
                 buf.write_u32::<BigEndian>(*interval)?;
                 Ok(4)
+            }
+            Self::PayloadFormatIndicator(on) => {
+                let byte = if *on { 0x01 } else { 0x00 };
+                buf.push(byte);
+                Ok(1)
             }
             _ => unimplemented!(),
         }
