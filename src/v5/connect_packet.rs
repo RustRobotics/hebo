@@ -112,6 +112,10 @@ pub struct ConnectFlags {
 }
 
 impl ConnectFlags {
+    pub fn bytes(&self) -> usize {
+        1
+    }
+
     pub fn set_will(&mut self, will: bool) -> &mut Self {
         if !will {
             self.will_qos = QoS::AtMostOnce;
@@ -591,9 +595,9 @@ impl EncodePacket for ConnectPacket {
         let old_len = v.len();
 
         let mut remaining_length = self.protocol_name.bytes()
-            + 1 // protocol_level
-            + 1 // connect_flags
-            + self.keep_alive.bytes() // keep_alive
+            + self.protocol_level.bytes()
+            + self.connect_flags.bytes()
+            + self.keep_alive.bytes()
             + self.client_id.bytes();
 
         // Check username/password/topic/message.

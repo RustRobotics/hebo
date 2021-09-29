@@ -18,6 +18,12 @@ pub enum ProtocolLevel {
     V5 = 5,
 }
 
+impl ProtocolLevel {
+    pub fn bytes(&self) -> usize {
+        1
+    }
+}
+
 impl Default for ProtocolLevel {
     fn default() -> Self {
         ProtocolLevel::V311
