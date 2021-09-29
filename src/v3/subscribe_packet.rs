@@ -2,10 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
-use std::io::Write;
-
 use byteorder::{BigEndian, WriteBytesExt};
+use std::convert::TryFrom;
 
 use super::{FixedHeader, Packet, PacketType};
 use crate::{
@@ -29,10 +27,6 @@ impl SubscribeTopic {
         Ok(Self { topic, qos })
     }
 
-    pub fn from_topic(topic: SubTopic, qos: QoS) -> Self {
-        Self { topic, qos }
-    }
-
     pub fn topic(&self) -> &str {
         self.topic.as_ref()
     }
@@ -43,6 +37,34 @@ impl SubscribeTopic {
 
     pub fn bytes(&self) -> usize {
         self.qos.bytes() + self.topic.bytes()
+    }
+}
+
+impl EncodePacket for SubscribeTopic {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        self.topic.encode(buf)?;
+        let qos: u8 = 0b0000_0011 & (self.qos as u8);
+        buf.push(qos);
+
+        Ok(self.bytes())
+    }
+}
+
+impl DecodePacket for SubscribeTopic {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let topic = SubTopic::decode(ba)?;
+
+        let qos_flag = ba.read_byte()?;
+        // The upper 6 bits of the Requested QoS byte are not used in the current version of the protocol.
+        // They are reserved for future use. The Server MUST treat a SUBSCRIBE packet as malformed
+        // and close the Network Connection if any of Reserved bits in the payload are non-zero,
+        // or QoS is not 0,1 or 2 [MQTT-3-8.3-4].
+        if qos_flag & 0b1111_0000 != 0b0000_0000 {
+            return Err(DecodeError::InvalidQoS);
+        }
+        let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
+
+        Ok(Self { topic, qos })
     }
 }
 
@@ -146,21 +168,8 @@ impl DecodePacket for SubscribePacket {
 
         // Parse topic/qos list.
         while remaining_length < fixed_header.remaining_length() {
-            let topic = SubTopic::decode(ba)?;
+            let topic = SubscribeTopic::decode(ba)?;
             remaining_length += topic.bytes();
-
-            let qos_flag = ba.read_byte()?;
-            remaining_length += consts::QOS_BYTES;
-            // The upper 6 bits of the Requested QoS byte are not used in the current version of the protocol.
-            // They are reserved for future use. The Server MUST treat a SUBSCRIBE packet as malformed
-            // and close the Network Connection if any of Reserved bits in the payload are non-zero,
-            // or QoS is not 0,1 or 2 [MQTT-3-8.3-4].
-            if qos_flag & 0b1111_0000 != 0b0000_0000 {
-                return Err(DecodeError::InvalidQoS);
-            }
-            let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
-
-            let topic = SubscribeTopic::from_topic(topic, qos);
             topics.push(topic);
         }
 
@@ -191,10 +200,7 @@ impl EncodePacket for SubscribePacket {
 
         // Payload
         for topic in &self.topics {
-            buf.write_u16::<BigEndian>(topic.topic().len() as u16)?;
-            buf.write_all(&topic.topic().as_bytes())?;
-            let qos: u8 = 0b0000_0011 & (topic.qos() as u8);
-            buf.push(qos);
+            topic.encode(buf)?;
         }
 
         Ok(buf.len() - old_len)
