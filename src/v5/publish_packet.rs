@@ -2,14 +2,13 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, WriteBytesExt};
 use bytes::BytesMut;
 use std::io::Write;
 
 use super::{FixedHeader, Packet, PacketType};
 use crate::{
-    consts, topic, utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
-    PacketId, QoS,
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic,
+    QoS,
 };
 
 /// PublishPacket is used to transport application messages from the Client to the Server,
@@ -80,7 +79,7 @@ pub struct PublishPacket {
     retain: bool,
 
     /// `topic` name must not contain wildcard characters.
-    topic: String,
+    topic: PubTopic,
 
     /// `packet_id` field is useless if QoS is 0.
     packet_id: PacketId,
@@ -91,16 +90,13 @@ pub struct PublishPacket {
 }
 
 impl PublishPacket {
-    // TODO(Shaohua): No need to copy topic and msg
     pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> Result<PublishPacket, EncodeError> {
-        utils::validate_utf8_string(topic)?;
-        topic::validate_pub_topic(topic)?;
-
+        let topic = PubTopic::new(topic)?;
         Ok(PublishPacket {
             qos,
             dup: false,
             retain: false,
-            topic: topic.to_string(),
+            topic,
             packet_id: PacketId::new(0),
             msg: BytesMut::from(msg),
         })
@@ -155,14 +151,12 @@ impl PublishPacket {
     }
 
     pub fn set_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
-        utils::validate_utf8_string(topic)?;
-        topic::validate_pub_topic(topic)?;
-        self.topic = topic.to_string();
+        self.topic = PubTopic::new(topic)?;
         Ok(self)
     }
 
     pub fn topic(&self) -> &str {
-        &self.topic
+        self.topic.as_ref()
     }
 
     pub fn message(&self) -> &[u8] {
@@ -195,14 +189,7 @@ impl DecodePacket for PublishPacket {
             return Err(DecodeError::InvalidPacketFlags);
         }
 
-        let topic_len = ba.read_u16()? as usize;
-        let topic = ba.read_string(topic_len)?;
-        // The Topic Name MUST be present as the first field in the PUBLISH Packet Variable header.
-        // It MUST be a UTF-8 encoded string [MQTT-3.3.2-1] as defined in section 1.5.3.
-        utils::validate_utf8_string(&topic)?;
-
-        // The Topic Name in the PUBLISH Packet MUST NOT contain wildcard characters [MQTT-3.3.2-2].
-        topic::validate_pub_topic(&topic)?;
+        let topic = PubTopic::decode(ba)?;
 
         // Parse packet id.
         //
@@ -222,12 +209,10 @@ impl DecodePacket for PublishPacket {
         };
 
         // It is valid for a PUBLISH Packet to contain a zero length payload.
-        if fixed_header.remaining_length() < topic_len + consts::TOPIC_LENGTH_BYTES {
+        if fixed_header.remaining_length() < topic.bytes() {
             return Err(DecodeError::InvalidRemainingLength);
         }
-        let mut msg_len = fixed_header.remaining_length()
-            - consts::TOPIC_LENGTH_BYTES // topic length bytes
-            - topic_len; // topic
+        let mut msg_len = fixed_header.remaining_length() - topic.bytes();
         if qos != QoS::AtMostOnce {
             if msg_len < consts::PACKET_ID_BYTES {
                 return Err(DecodeError::InvalidRemainingLength);
@@ -253,9 +238,7 @@ impl EncodePacket for PublishPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
-        let mut remaining_length = consts::TOPIC_LENGTH_BYTES // Topic length bytes
-            + self.topic.len() // Topic length
-            + self.msg.len(); // Message length
+        let mut remaining_length = self.topic.bytes() + self.msg.len();
         if self.qos != QoS::AtMostOnce {
             // For `packet_id` field.
             remaining_length += consts::PACKET_ID_BYTES;
@@ -270,8 +253,7 @@ impl EncodePacket for PublishPacket {
         fixed_header.encode(v)?;
 
         // Write variable header
-        v.write_u16::<BigEndian>(self.topic.len() as u16)?;
-        v.write_all(&self.topic.as_bytes())?;
+        self.topic.encode(v)?;
 
         // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
         if self.qos() != QoS::AtMostOnce {
