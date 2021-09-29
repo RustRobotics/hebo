@@ -13,7 +13,7 @@ use crate::utils::{
 };
 use crate::{
     consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
-    QoS, U16Data,
+    QoS, StringData, U16Data,
 };
 
 /// `ConnectPacket` consists of three parts:
@@ -65,7 +65,7 @@ use crate::{
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
-    protocol_name: String,
+    protocol_name: StringData,
 
     protocol_level: ProtocolLevel,
 
@@ -110,8 +110,9 @@ pub struct ConnectPacket {
 impl ConnectPacket {
     pub fn new(client_id: &str) -> Result<ConnectPacket, EncodeError> {
         validate_client_id(client_id)?;
+        let protocol_name = StringData::from_str(consts::PROTOCOL_NAME)?;
         Ok(ConnectPacket {
-            protocol_name: consts::PROTOCOL_NAME.to_string(),
+            protocol_name,
             keep_alive: U16Data::new(60),
             client_id: client_id.to_string(),
             ..ConnectPacket::default()
@@ -208,10 +209,9 @@ impl EncodePacket for ConnectPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
-        let mut remaining_length = consts::PROTOCOL_NAME_LENGTH // protocol_name_len
-            + self.protocol_name.len() // b"MQTT" protocol name
-            + 1 // protocol_level
-            + 1 // connect_flags
+        let mut remaining_length = self.protocol_name.bytes()
+            + self.protocol_level.bytes()
+            + self.connect_flags.bytes()
             + self.keep_alive.bytes()
             + consts::CLIENT_ID_LENGTH_BYTES // client_id_len
             + self.client_id.len();
@@ -233,8 +233,7 @@ impl EncodePacket for ConnectPacket {
         fixed_header.encode(v)?;
 
         // Write variable header
-        v.write_u16::<BigEndian>(self.protocol_name.len() as u16)?;
-        v.write_all(&self.protocol_name.as_bytes())?;
+        self.protocol_name.encode(v)?;
         self.protocol_level.encode(v)?;
         self.connect_flags.encode(v)?;
         self.keep_alive.encode(v)?;
@@ -275,9 +274,8 @@ impl DecodePacket for ConnectPacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let protocol_name_len = ba.read_u16()? as usize;
-        let protocol_name = ba.read_string(protocol_name_len)?;
-        if protocol_name != consts::PROTOCOL_NAME {
+        let protocol_name = StringData::decode(ba)?;
+        if protocol_name.as_ref() != consts::PROTOCOL_NAME {
             return Err(DecodeError::InvalidProtocolName);
         }
 
