@@ -415,10 +415,6 @@ impl ConnectPacket {
         self.protocol_level
     }
 
-    pub fn connect_flags(&self) -> &ConnectFlags {
-        &self.connect_flags
-    }
-
     pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
         self.keep_alive = U16Data::new(keep_alive);
         self
@@ -426,6 +422,33 @@ impl ConnectPacket {
 
     pub fn keep_alive(&self) -> u16 {
         self.keep_alive.value()
+    }
+
+    pub fn set_will_retain(&mut self, will_retain: bool) -> &mut Self {
+        self.connect_flags.will_retain = will_retain;
+        self
+    }
+
+    pub fn will_retain(&self) -> bool {
+        self.connect_flags.will_retain
+    }
+
+    pub fn set_will_qos(&mut self, qos: QoS) -> &mut Self {
+        self.connect_flags.will_qos = qos;
+        self
+    }
+
+    pub fn will_qos(&self) -> QoS {
+        self.connect_flags.will_qos
+    }
+
+    pub fn set_clean_session(&mut self, clean_session: bool) -> &mut Self {
+        self.connect_flags.clean_session = clean_session;
+        self
+    }
+
+    pub fn clean_session(&self) -> bool {
+        self.connect_flags.clean_session
     }
 
     pub fn set_properties(&mut self, properties: &[Property]) -> &mut Self {
