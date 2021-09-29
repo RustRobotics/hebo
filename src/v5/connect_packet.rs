@@ -276,7 +276,7 @@ impl DecodePacket for ConnectFlags {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
-    protocol_name: String,
+    protocol_name: StringData,
 
     protocol_level: ProtocolLevel,
 
@@ -398,9 +398,10 @@ pub const CONNECT_WILL_PROPERTIES: &[PropertyType] = &[
 impl ConnectPacket {
     pub fn new(client_id: &str) -> Result<ConnectPacket, EncodeError> {
         validate_client_id(client_id)?;
+        let protocol_name = StringData::from_str(consts::PROTOCOL_NAME)?;
         Ok(ConnectPacket {
-            protocol_name: consts::PROTOCOL_NAME.to_string(),
-            keep_alive: 60,
+            protocol_name,
+            keep_alive: U16Data::new(60),
             client_id: client_id.to_string(),
             ..ConnectPacket::default()
         })
@@ -420,12 +421,12 @@ impl ConnectPacket {
     }
 
     pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
-        self.keep_alive = keep_alive;
+        self.keep_alive = U16Data::new(keep_alive);
         self
     }
 
     pub fn keep_alive(&self) -> u16 {
-        self.keep_alive
+        self.keep_alive.value()
     }
 
     pub fn set_properties(&mut self, properties: &[Property]) -> &mut Self {
@@ -568,11 +569,10 @@ impl EncodePacket for ConnectPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
-        let mut remaining_length = consts::PROTOCOL_NAME_LENGTH // protocol_name_len
-            + self.protocol_name.len() // b"MQTT" protocol name
+        let mut remaining_length = self.protocol_name.bytes()
             + 1 // protocol_level
             + 1 // connect_flags
-            + 2 // keep_alive
+            + self.keep_alive.bytes() // keep_alive
             + consts::CLIENT_ID_LENGTH_BYTES // client_id_len
             + self.client_id.len();
 
@@ -596,8 +596,7 @@ impl EncodePacket for ConnectPacket {
         fixed_header.encode(v)?;
 
         // Write variable header
-        v.write_u16::<BigEndian>(self.protocol_name.len() as u16)?;
-        v.write_all(&self.protocol_name.as_bytes())?;
+        self.protocol_name.encode(v)?;
         self.protocol_level.encode(v)?;
         self.connect_flags.encode(v)?;
         self.keep_alive.encode(v)?;
@@ -637,9 +636,8 @@ impl DecodePacket for ConnectPacket {
         // it is an MQTT Server it MAY send a CONNACK packet with
         // Reason Code of 0x84 (Unsupported Protocol Version), and then
         // it MUST close the Network Connection [MQTT-3.1.2-1].
-        let protocol_name_len = ba.read_u16()? as usize;
-        let protocol_name = ba.read_string(protocol_name_len)?;
-        if protocol_name != consts::PROTOCOL_NAME {
+        let protocol_name = StringData::decode(ba)?;
+        if protocol_name.as_ref() != consts::PROTOCOL_NAME {
             return Err(DecodeError::InvalidProtocolName);
         }
 
@@ -664,7 +662,7 @@ impl DecodePacket for ConnectPacket {
         }
 
         let keep_alive = U16Data::decode(ba)?;
-        validate_keep_alive(keep_alive)?;
+        validate_keep_alive(keep_alive.value())?;
 
         let client_id_len = ba.read_u16()? as usize;
         let client_id = if client_id_len > 0 {
