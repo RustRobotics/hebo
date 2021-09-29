@@ -33,8 +33,8 @@ pub struct StringPairData(StringData, StringData);
 
 impl StringPairData {
     pub fn new(key: &str, value: &str) -> Result<Self, EncodeError> {
-        let key = StringData::new(key)?;
-        let value = StringData::new(value)?;
+        let key = StringData::from_str(key)?;
+        let value = StringData::from_str(value)?;
         Ok(Self(key, value))
     }
 

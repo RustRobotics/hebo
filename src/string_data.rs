@@ -57,15 +57,21 @@ use crate::{
 pub struct StringData(String);
 
 impl StringData {
-    pub fn new(data: &str) -> Result<Self, StringError> {
+    pub fn new() -> Self {
+        Self(String::new())
+    }
+
+    pub fn from_str(data: &str) -> Result<Self, StringError> {
         validate_utf8_string(data)?;
         Ok(Self(data.to_string()))
     }
 
-    pub fn set_data(&mut self, data: &str) -> Result<(), StringError> {
-        validate_utf8_string(data)?;
-        self.0 = data.to_string();
-        Ok(())
+    pub fn bytes(&self) -> usize {
+        2 + self.0.len()
+    }
+
+    pub fn clear(&mut self) {
+        self.0.clear();
     }
 }
 
