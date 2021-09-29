@@ -32,6 +32,12 @@ pub enum QoS {
     ExactOnce = 2,
 }
 
+impl QoS {
+    pub fn bytes(&self) -> usize {
+        1
+    }
+}
+
 impl Default for QoS {
     fn default() -> Self {
         QoS::AtMostOnce
