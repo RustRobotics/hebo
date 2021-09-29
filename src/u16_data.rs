@@ -7,7 +7,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// U16Data represents a two bytes integer.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct U16Data(u16);
 
 impl U16Data {

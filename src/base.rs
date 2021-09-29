@@ -7,9 +7,6 @@ use std::convert::TryFrom;
 
 use super::{ByteArray, DecodeError, EncodeError};
 
-/// Packet identifier
-pub type PacketId = u16;
-
 /// Convert native data types to network byte stream.
 pub trait EncodePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError>;

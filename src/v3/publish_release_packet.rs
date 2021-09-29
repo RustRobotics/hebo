@@ -2,8 +2,6 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, ByteOrder, WriteBytesExt};
-
 use super::{FixedHeader, Packet, PacketType};
 use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
@@ -46,8 +44,7 @@ impl DecodePacket for PublishReleasePacket {
         } else if fixed_header.remaining_length() != consts::PACKET_ID_BYTES {
             Err(DecodeError::InvalidRemainingLength)
         } else {
-            let packet_id =
-                BigEndian::read_u16(ba.read_bytes(consts::PACKET_ID_BYTES)?) as PacketId;
+            let packet_id = PacketId::decode(ba)?;
             Ok(PublishReleasePacket { packet_id })
         }
     }
@@ -59,7 +56,7 @@ impl EncodePacket for PublishReleasePacket {
 
         let fixed_header = FixedHeader::new(PacketType::PublishRelease, consts::PACKET_ID_BYTES)?;
         fixed_header.encode(buf)?;
-        buf.write_u16::<BigEndian>(self.packet_id)?;
+        self.packet_id.encode(buf)?;
         Ok(buf.len() - old_len)
     }
 }

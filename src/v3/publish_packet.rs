@@ -2,7 +2,6 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, WriteBytesExt};
 use bytes::BytesMut;
 use std::io::Write;
 
@@ -97,7 +96,7 @@ impl PublishPacket {
             dup: false,
             retain: false,
             topic,
-            packet_id: 0,
+            packet_id: PacketId::new(0),
             msg: BytesMut::from(msg),
         })
     }
@@ -130,7 +129,7 @@ impl PublishPacket {
 
     pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
         if qos == QoS::AtMostOnce {
-            self.packet_id = 0;
+            self.packet_id = PacketId::new(0);
         }
         self.qos = qos;
         self
@@ -194,15 +193,15 @@ impl DecodePacket for PublishPacket {
         // Parse packet id.
         // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
         let packet_id = if qos != QoS::AtMostOnce {
-            let packet_id = ba.read_u16()? as PacketId;
-            if packet_id == 0 {
+            let packet_id = PacketId::decode(ba)?;
+            if packet_id.value() == 0 {
                 // SUBSCRIBE, UNSUBSCRIBE, and PUBLISH (in cases where QoS > 0) Control Packets
                 // MUST contain a non-zero 16-bit Packet Identifier. [MQTT-2.3.1-1]
                 return Err(DecodeError::InvalidPacketId);
             }
             packet_id
         } else {
-            0
+            PacketId::new(0)
         };
 
         // It is valid for a PUBLISH Packet to contain a zero length payload.
@@ -254,7 +253,7 @@ impl EncodePacket for PublishPacket {
 
         // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
         if self.qos() != QoS::AtMostOnce {
-            v.write_u16::<BigEndian>(self.packet_id)?;
+            self.packet_id.encode(v)?;
         }
 
         // Write payload

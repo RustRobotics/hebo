@@ -7,7 +7,7 @@ use byteorder::{BigEndian, WriteBytesExt};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// U32Data represents a four bytes integer.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct U32Data(u32);
 
 impl U32Data {

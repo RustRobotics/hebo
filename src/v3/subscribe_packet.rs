@@ -2,7 +2,6 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
 
 use super::{FixedHeader, Packet, PacketType};
@@ -156,8 +155,8 @@ impl DecodePacket for SubscribePacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let packet_id = ba.read_u16()? as PacketId;
-        if packet_id == 0 {
+        let packet_id = PacketId::decode(ba)?;
+        if packet_id.value() == 0 {
             // SUBSCRIBE, UNSUBSCRIBE, and PUBLISH (in cases where QoS > 0) Control Packets
             // MUST contain a non-zero 16-bit Packet Identifier. [MQTT-2.3.1-1]
             return Err(DecodeError::InvalidPacketId);
@@ -196,7 +195,7 @@ impl EncodePacket for SubscribePacket {
         fixed_header.encode(buf)?;
 
         // Variable header
-        buf.write_u16::<BigEndian>(self.packet_id)?;
+        self.packet_id.encode(buf)?;
 
         // Payload
         for topic in &self.topics {

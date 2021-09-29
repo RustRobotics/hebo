@@ -2,8 +2,6 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, WriteBytesExt};
-
 use super::{FixedHeader, Packet, PacketType};
 use crate::{
     consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS,
@@ -96,7 +94,7 @@ impl DecodePacket for SubscribeAckPacket {
             return Err(DecodeError::InvalidPacketType);
         }
 
-        let packet_id = ba.read_u16()? as PacketId;
+        let packet_id = PacketId::decode(ba)?;
 
         let mut acknowledgements = Vec::new();
         let mut remaining_length = consts::PACKET_ID_BYTES;
@@ -128,7 +126,7 @@ impl EncodePacket for SubscribeAckPacket {
             consts::PACKET_ID_BYTES + consts::QOS_BYTES * self.acknowledgements.len();
         let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
-        buf.write_u16::<BigEndian>(self.packet_id)?;
+        self.packet_id.encode(buf)?;
 
         for ack in &self.acknowledgements {
             let flag = {

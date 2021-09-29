@@ -101,7 +101,7 @@ impl PublishPacket {
             dup: false,
             retain: false,
             topic: topic.to_string(),
-            packet_id: 0,
+            packet_id: PacketId::new(0),
             msg: BytesMut::from(msg),
         })
     }
@@ -134,7 +134,7 @@ impl PublishPacket {
 
     pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
         if qos == QoS::AtMostOnce {
-            self.packet_id = 0;
+            self.packet_id = PacketId::new(0);
         }
         self.qos = qos;
         self
@@ -209,16 +209,16 @@ impl DecodePacket for PublishPacket {
         // A PUBLISH packet MUST NOT contain a Packet Identifier if its QoS value is
         // set to 0 [MQTT-2.2.1-2].
         let packet_id = if qos != QoS::AtMostOnce {
-            let packet_id = ba.read_u16()? as PacketId;
+            let packet_id = PacketId::decode(ba)?;
             // Each time a Client sends a new SUBSCRIBE, UNSUBSCRIBE,or PUBLISH (where QoS > 0)
             // MQTT Control Packet it MUST assign it a non-zero Packet Identifier
             // that is currently unused [MQTT-2.2.1-3].
-            if packet_id == 0 {
+            if packet_id.value() == 0 {
                 return Err(DecodeError::InvalidPacketId);
             }
             packet_id
         } else {
-            0
+            PacketId::new(0)
         };
 
         // It is valid for a PUBLISH Packet to contain a zero length payload.
@@ -275,7 +275,7 @@ impl EncodePacket for PublishPacket {
 
         // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
         if self.qos() != QoS::AtMostOnce {
-            v.write_u16::<BigEndian>(self.packet_id)?;
+            self.packet_id.encode(v)?;
         }
 
         // Write payload

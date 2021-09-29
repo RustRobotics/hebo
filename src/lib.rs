@@ -18,7 +18,7 @@ mod u32_data;
 pub mod utils;
 mod var_int;
 
-pub use base::{DecodePacket, EncodePacket, PacketId, QoS};
+pub use base::{DecodePacket, EncodePacket, QoS};
 pub use binary_data::BinaryData;
 pub use bool_data::BoolData;
 pub use byte_array::ByteArray;
@@ -33,3 +33,6 @@ pub use var_int::VarInt;
 
 pub mod v3;
 pub mod v5;
+
+/// Packet identifier
+pub type PacketId = U16Data;
