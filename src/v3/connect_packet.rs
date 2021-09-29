@@ -2,13 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
-use std::io::Write;
 
 use super::{FixedHeader, Packet, PacketType};
 use crate::connect_flags::ConnectFlags;
-use crate::utils::{validate_client_id, validate_keep_alive, validate_two_bytes_data};
+use crate::utils::{validate_client_id, validate_keep_alive};
 use crate::{
     consts, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
     ProtocolLevel, PubTopic, QoS, StringData, U16Data,
@@ -102,7 +100,7 @@ pub struct ConnectPacket {
 
     /// If the `password` flag is true in `connect_flags`, then `password` field must be set.
     /// It consists of 0 to 64k bytes of binary data.
-    password: Vec<u8>,
+    password: BinaryData,
 }
 
 impl ConnectPacket {
@@ -169,17 +167,16 @@ impl ConnectPacket {
         self.username.as_ref()
     }
 
-    pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, DecodeError> {
-        validate_two_bytes_data(password)?;
-        self.password = password.to_vec();
+    pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, EncodeError> {
+        self.password = BinaryData::from_slice(password)?;
         Ok(self)
     }
 
     pub fn password(&self) -> &[u8] {
-        &self.password
+        self.password.as_ref()
     }
 
-    pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, DecodeError> {
+    pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
         if !topic.is_empty() {
             self.will_topic = Some(PubTopic::new(topic)?);
         } else {
@@ -226,7 +223,7 @@ impl EncodePacket for ConnectPacket {
             remaining_length += self.username.bytes();
         }
         if self.connect_flags.password() {
-            remaining_length += 2 + self.password.len();
+            remaining_length += self.password.bytes();
         }
 
         let fixed_header = FixedHeader::new(PacketType::Connect, remaining_length)?;
@@ -253,8 +250,7 @@ impl EncodePacket for ConnectPacket {
             self.username.encode(v)?;
         }
         if self.connect_flags.password() {
-            v.write_u16::<BigEndian>(self.password.len() as u16)?;
-            v.write_all(&self.password)?;
+            self.password.encode(v)?;
         }
 
         Ok(v.len() - old_len)
@@ -338,10 +334,9 @@ impl DecodePacket for ConnectPacket {
         };
 
         let password = if connect_flags.password() {
-            let password_len = ba.read_u16()? as usize;
-            ba.read_bytes(password_len)?.to_vec()
+            BinaryData::decode(ba)?
         } else {
-            Vec::new()
+            BinaryData::new()
         };
 
         Ok(ConnectPacket {
