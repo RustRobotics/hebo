@@ -2,9 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use byteorder::{BigEndian, WriteBytesExt};
 use std::convert::TryFrom;
-use std::io::Write;
 
 use super::{
     property::check_property_type_list, FixedHeader, Packet, PacketType, Properties, Property,
@@ -346,7 +344,7 @@ pub struct ConnectPacket {
     /// If the Server rejects the ClientID it MAY respond to the CONNECT packet
     /// with a CONNACK using Reason Code 0x85 (Client Identifier not valid),
     /// and then it MUST close the Network Connection [MQTT-3.1.3-8].
-    client_id: String,
+    client_id: StringData,
 
     /// If the Will Flag is set to 1, the Will Properties is the next field in the Payload.
     ///
@@ -397,12 +395,13 @@ pub const CONNECT_WILL_PROPERTIES: &[PropertyType] = &[
 
 impl ConnectPacket {
     pub fn new(client_id: &str) -> Result<ConnectPacket, EncodeError> {
-        validate_client_id(client_id)?;
         let protocol_name = StringData::from_str(consts::PROTOCOL_NAME)?;
+        validate_client_id(client_id)?;
+        let client_id = StringData::from_str(client_id)?;
         Ok(ConnectPacket {
             protocol_name,
             keep_alive: U16Data::new(60),
-            client_id: client_id.to_string(),
+            client_id,
             ..ConnectPacket::default()
         })
     }
@@ -440,13 +439,12 @@ impl ConnectPacket {
 
     pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
         validate_client_id(id)?;
-        self.client_id.clear();
-        self.client_id.push_str(id);
+        self.client_id = StringData::from_str(id)?;
         Ok(self)
     }
 
     pub fn client_id(&self) -> &str {
-        &self.client_id
+        self.client_id.as_ref()
     }
 
     pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
@@ -573,8 +571,7 @@ impl EncodePacket for ConnectPacket {
             + 1 // protocol_level
             + 1 // connect_flags
             + self.keep_alive.bytes() // keep_alive
-            + consts::CLIENT_ID_LENGTH_BYTES // client_id_len
-            + self.client_id.len();
+            + self.client_id.bytes();
 
         // Check username/password/topic/message.
         if self.connect_flags.will {
@@ -602,8 +599,8 @@ impl EncodePacket for ConnectPacket {
         self.keep_alive.encode(v)?;
 
         // Write payload
-        v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
-        v.write_all(&self.client_id.as_bytes())?;
+        self.client_id.encode(v)?;
+
         if self.connect_flags.will {
             assert!(self.will_topic.is_some());
             if let Some(will_topic) = &self.will_topic {
@@ -664,20 +661,11 @@ impl DecodePacket for ConnectPacket {
         let keep_alive = U16Data::decode(ba)?;
         validate_keep_alive(keep_alive.value())?;
 
-        let client_id_len = ba.read_u16()? as usize;
-        let client_id = if client_id_len > 0 {
-            let client_id = ba
-                .read_string(client_id_len)
-                .map_err(|_err| DecodeError::InvalidClientId)?;
-            validate_client_id(&client_id).map_err(|_err| DecodeError::InvalidClientId)?;
-            client_id
-        } else {
-            if !connect_flags.clean_session {
-                return Err(DecodeError::InvalidClientId);
-            }
-            // An empty client id is used.
-            "".to_string()
-        };
+        let client_id = StringData::decode(ba).map_err(|_err| DecodeError::InvalidClientId)?;
+        if client_id.is_empty() && !connect_flags.clean_session {
+            // If clean_session is false, a client_id is always required.
+            return Err(DecodeError::InvalidClientId);
+        }
 
         let will_topic = if connect_flags.will {
             Some(PubTopic::decode(ba)?)
