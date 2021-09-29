@@ -13,7 +13,7 @@ use crate::utils::{
 };
 use crate::{
     consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
-    QoS,
+    QoS, U16Data,
 };
 
 /// `ConnectPacket` consists of three parts:
@@ -77,7 +77,7 @@ pub struct ConnectPacket {
     /// will disconnect the network.
     ///
     /// If this value is zero, the Server is not required to disconnect the network.
-    keep_alive: u16,
+    keep_alive: U16Data,
 
     /// Payload is `client_id`.
     /// `client_id` is generated in client side. Normally it can be `device_id` or just
@@ -112,7 +112,7 @@ impl ConnectPacket {
         validate_client_id(client_id)?;
         Ok(ConnectPacket {
             protocol_name: consts::PROTOCOL_NAME.to_string(),
-            keep_alive: 60,
+            keep_alive: U16Data::new(60),
             client_id: client_id.to_string(),
             ..ConnectPacket::default()
         })
@@ -137,12 +137,12 @@ impl ConnectPacket {
     }
 
     pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
-        self.keep_alive = keep_alive;
+        self.keep_alive = U16Data::new(keep_alive);
         self
     }
 
     pub fn keep_alive(&self) -> u16 {
-        self.keep_alive
+        self.keep_alive.value()
     }
 
     pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
@@ -212,7 +212,7 @@ impl EncodePacket for ConnectPacket {
             + self.protocol_name.len() // b"MQTT" protocol name
             + 1 // protocol_level
             + 1 // connect_flags
-            + 2 // keep_alive
+            + self.keep_alive.bytes()
             + consts::CLIENT_ID_LENGTH_BYTES // client_id_len
             + self.client_id.len();
 
@@ -237,7 +237,7 @@ impl EncodePacket for ConnectPacket {
         v.write_all(&self.protocol_name.as_bytes())?;
         self.protocol_level.encode(v)?;
         self.connect_flags.encode(v)?;
-        v.write_u16::<BigEndian>(self.keep_alive)?;
+        self.keep_alive.encode(v)?;
 
         // Write payload
         v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
@@ -303,8 +303,8 @@ impl DecodePacket for ConnectPacket {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
-        let keep_alive = ba.read_u16()?;
-        validate_keep_alive(keep_alive)?;
+        let keep_alive = U16Data::decode(ba)?;
+        validate_keep_alive(keep_alive.value())?;
 
         let client_id_len = ba.read_u16()? as usize;
         // A Server MAY allow a Client to supply a ClientId that has a length of zero bytes,
