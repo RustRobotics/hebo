@@ -338,47 +338,26 @@ impl ConnectPacket {
         &self.will_properties
     }
 
-    pub fn set_will_topic(&mut self, topic: Option<&str>) -> Result<&mut Self, EncodeError> {
-        // TODO(Shaohua): Simplify, add set_will()
-        match topic {
-            Some(topic) if !topic.is_empty() => {
-                self.will_topic = Some(PubTopic::new(topic)?);
-                self.connect_flags.set_will(true);
-            }
-            _ => {
-                self.will_topic = None;
-                self.connect_flags.set_will(false);
-            }
+    pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
+        if !topic.is_empty() {
+            self.will_topic = Some(PubTopic::new(topic)?);
+        } else {
+            self.will_topic = None;
         }
         Ok(self)
     }
 
     pub fn will_topic(&self) -> Option<&str> {
-        if self.connect_flags.will() {
-            assert!(self.will_topic.is_some());
-            self.will_topic.as_ref().map(AsRef::as_ref)
-        } else {
-            None
-        }
+        self.will_topic.as_ref().map(AsRef::as_ref)
     }
 
-    pub fn set_will_message(&mut self, message: Option<&[u8]>) -> Result<&mut Self, EncodeError> {
-        if let Some(message) = message {
-            self.connect_flags.set_will(true);
-            self.will_message = BinaryData::from_slice(message)?;
-        } else {
-            self.connect_flags.set_will(false);
-            self.will_message = BinaryData::new();
-        }
+    pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, EncodeError> {
+        self.will_message = BinaryData::from_slice(message)?;
         Ok(self)
     }
 
-    pub fn will_message(&self) -> Option<&[u8]> {
-        if self.connect_flags.will() {
-            Some(self.will_message.as_ref())
-        } else {
-            None
-        }
+    pub fn will_message(&self) -> &[u8] {
+        self.will_message.as_ref()
     }
 }
 
