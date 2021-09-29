@@ -9,7 +9,7 @@ use super::{
     PropertyType,
 };
 use crate::connect_flags::ConnectFlags;
-use crate::utils::validate_client_id;
+use crate::utils::{validate_client_id, validate_keep_alive};
 use crate::{
     consts, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
     ProtocolLevel, PubTopic, QoS, StringData, U16Data,
@@ -358,15 +358,6 @@ impl ConnectPacket {
 
     pub fn will_message(&self) -> &[u8] {
         self.will_message.as_ref()
-    }
-}
-
-#[inline]
-pub fn validate_keep_alive(keep_alive: u16) -> Result<(), DecodeError> {
-    if keep_alive != 0 && keep_alive < 5 {
-        Err(DecodeError::OtherErrors)
-    } else {
-        Ok(())
     }
 }
 

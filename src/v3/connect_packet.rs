@@ -8,7 +8,9 @@ use std::io::Write;
 
 use super::{FixedHeader, Packet, PacketType};
 use crate::connect_flags::ConnectFlags;
-use crate::utils::{validate_client_id, validate_two_bytes_data, validate_utf8_string};
+use crate::utils::{
+    validate_client_id, validate_keep_alive, validate_two_bytes_data, validate_utf8_string,
+};
 use crate::{
     consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
     QoS,
@@ -196,17 +198,9 @@ impl ConnectPacket {
         Ok(self)
     }
 
+    // TODO(Shaohua): Add more getters/setters.
     pub fn will_message(&self) -> &[u8] {
         &self.will_message
-    }
-}
-
-#[inline]
-pub fn validate_keep_alive(keep_alive: u16) -> Result<(), DecodeError> {
-    if keep_alive != 0 && keep_alive < 5 {
-        Err(DecodeError::OtherErrors)
-    } else {
-        Ok(())
     }
 }
 

@@ -5,6 +5,8 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
+use crate::DecodeError;
+
 /// Generate random string.
 pub fn random_string(len: usize) -> Result<String, StringError> {
     String::from_utf8(
@@ -125,4 +127,12 @@ pub fn validate_client_id(id: &str) -> Result<(), StringError> {
         }
     }
     Ok(())
+}
+
+pub fn validate_keep_alive(keep_alive: u16) -> Result<(), DecodeError> {
+    if keep_alive != 0 && keep_alive < 5 {
+        Err(DecodeError::OtherErrors)
+    } else {
+        Ok(())
+    }
 }
