@@ -10,7 +10,7 @@ use super::{
     property::check_property_type_list, FixedHeader, Packet, PacketType, Properties, Property,
     PropertyType,
 };
-use crate::utils::{validate_client_id, validate_two_bytes_data};
+use crate::utils::validate_client_id;
 use crate::{
     consts, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
     ProtocolLevel, PubTopic, QoS, StringData,
@@ -363,7 +363,7 @@ pub struct ConnectPacket {
     /// If the `will` flag is true in `connect_flags`, then `will_message` field must be set.
     /// It will be used as the payload of Will Message.
     /// It consists of 0 to 64k bytes of binary data.
-    will_message: Vec<u8>,
+    will_message: BinaryData,
 
     /// If the `username` flag is true in `connect_flags`, then `username` field must be set.
     /// It is a valid UTF-8 string.
@@ -478,8 +478,8 @@ impl ConnectPacket {
     pub fn set_password(&mut self, password: Option<&[u8]>) -> Result<&mut Self, EncodeError> {
         match password {
             Some(password) => {
-                self.password = BinaryData::from_slice(password)?;
                 self.connect_flags.password = true;
+                self.password = BinaryData::from_slice(password)?;
             }
             None => {
                 self.connect_flags.password = false;
@@ -521,17 +521,31 @@ impl ConnectPacket {
     }
 
     pub fn will_topic(&self) -> Option<&str> {
-        self.will_topic.as_ref().map(AsRef::as_ref)
+        if self.connect_flags.will {
+            assert!(self.will_topic.is_some());
+            self.will_topic.as_ref().map(AsRef::as_ref)
+        } else {
+            None
+        }
     }
 
-    pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, DecodeError> {
-        validate_two_bytes_data(message)?;
-        self.will_message = message.to_vec();
+    pub fn set_will_message(&mut self, message: Option<&[u8]>) -> Result<&mut Self, EncodeError> {
+        if let Some(message) = message {
+            self.connect_flags.will = true;
+            self.will_message = BinaryData::from_slice(message)?;
+        } else {
+            self.connect_flags.will = false;
+            self.will_message = BinaryData::new();
+        }
         Ok(self)
     }
 
-    pub fn will_message(&self) -> &[u8] {
-        &self.will_message
+    pub fn will_message(&self) -> Option<&[u8]> {
+        if self.connect_flags.will {
+            Some(self.will_message.as_ref())
+        } else {
+            None
+        }
     }
 }
 
@@ -568,7 +582,7 @@ impl EncodePacket for ConnectPacket {
             if let Some(will_topic) = &self.will_topic {
                 remaining_length += will_topic.bytes();
             }
-            remaining_length += 2 + self.will_message.len();
+            remaining_length += self.will_message.bytes();
         }
         if self.connect_flags.username {
             remaining_length += self.username.bytes();
@@ -597,8 +611,7 @@ impl EncodePacket for ConnectPacket {
                 will_topic.encode(v)?;
             }
 
-            v.write_u16::<BigEndian>(self.will_message.len() as u16)?;
-            v.write_all(&self.will_message)?;
+            self.will_message.encode(v)?;
         }
         if self.connect_flags.username {
             self.username.encode(v)?;
@@ -674,10 +687,9 @@ impl DecodePacket for ConnectPacket {
             None
         };
         let will_message = if connect_flags.will {
-            let will_message_len = ba.read_u16()? as usize;
-            ba.read_bytes(will_message_len)?.to_vec()
+            BinaryData::decode(ba)?
         } else {
-            Vec::new()
+            BinaryData::new()
         };
 
         let username = if connect_flags.username {
