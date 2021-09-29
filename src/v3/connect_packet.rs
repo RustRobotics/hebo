@@ -12,8 +12,8 @@ use crate::utils::{
     validate_client_id, validate_keep_alive, validate_two_bytes_data, validate_utf8_string,
 };
 use crate::{
-    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
-    PubTopic, QoS, StringData, U16Data,
+    consts, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
+    ProtocolLevel, PubTopic, QoS, StringData, U16Data,
 };
 
 /// `ConnectPacket` consists of three parts:
@@ -96,7 +96,7 @@ pub struct ConnectPacket {
     /// If the `will` flag is true in `connect_flags`, then `will_message` field must be set.
     /// It will be used as the payload of Will Message.
     /// It consists of 0 to 64k bytes of binary data.
-    will_message: Vec<u8>,
+    will_message: BinaryData,
 
     /// If the `username` flag is true in `connect_flags`, then `username` field must be set.
     /// It is a valid UTF-8 string.
@@ -195,16 +195,16 @@ impl ConnectPacket {
         self.will_topic.as_ref().map(AsRef::as_ref)
     }
 
-    pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, DecodeError> {
-        validate_two_bytes_data(message)?;
-        self.will_message = message.to_vec();
+    pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, EncodeError> {
+        self.will_message = BinaryData::from_slice(message)?;
         Ok(self)
     }
 
-    // TODO(Shaohua): Add more getters/setters.
     pub fn will_message(&self) -> &[u8] {
-        &self.will_message
+        self.will_message.as_ref()
     }
+
+    // TODO(Shaohua): Add more getters/setters.
 }
 
 impl EncodePacket for ConnectPacket {
@@ -223,7 +223,7 @@ impl EncodePacket for ConnectPacket {
             if let Some(will_topic) = &self.will_topic {
                 remaining_length += will_topic.bytes();
             }
-            remaining_length += 2 + self.will_message.len();
+            remaining_length += self.will_message.bytes();
         }
         if self.connect_flags.username() {
             remaining_length += 2 + self.username.len();
@@ -250,8 +250,7 @@ impl EncodePacket for ConnectPacket {
                 will_topic.encode(v)?;
             }
 
-            v.write_u16::<BigEndian>(self.will_message.len() as u16)?;
-            v.write_all(&self.will_message)?;
+            self.will_message.encode(v)?;
         }
         if self.connect_flags.username() {
             v.write_u16::<BigEndian>(self.username.len() as u16)?;
@@ -331,10 +330,9 @@ impl DecodePacket for ConnectPacket {
             None
         };
         let will_message = if connect_flags.will() {
-            let will_message_len = ba.read_u16()? as usize;
-            ba.read_bytes(will_message_len)?.to_vec()
+            BinaryData::decode(ba)?
         } else {
-            Vec::new()
+            BinaryData::new()
         };
 
         let username = if connect_flags.username() {
