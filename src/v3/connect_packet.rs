@@ -102,7 +102,10 @@ impl ConnectFlags {
     }
 
     pub fn set_will(&mut self, will: bool) -> &mut Self {
-        // TODO(Shaohua): Update will_retain and will_qos flags
+        if !will {
+            self.will_qos = QoS::AtMostOnce;
+            self.will_retain = false;
+        }
         self.will = will;
         self
     }
