@@ -455,7 +455,7 @@ impl ConnectPacket {
 
     pub fn set_username(&mut self, username: Option<&str>) -> Result<&mut Self, DecodeError> {
         match username {
-            Some(username) if !username.is_empty() => {
+            Some(username) => {
                 self.username = Some(StringData::from_str(username)?);
                 self.connect_flags.username = true;
             }
@@ -496,17 +496,15 @@ impl ConnectPacket {
     }
 
     pub fn set_will_topic(&mut self, topic: Option<&str>) -> Result<&mut Self, EncodeError> {
-        if let Some(topic) = topic {
-            if topic.is_empty() {
-                self.will_topic = None;
-                self.connect_flags.will = false;
-            } else {
+        match topic {
+            Some(topic) if !topic.is_empty() => {
                 self.will_topic = Some(PubTopic::new(topic)?);
                 self.connect_flags.will = true;
             }
-        } else {
-            self.connect_flags.will = false;
-            self.will_topic = None;
+            _ => {
+                self.will_topic = None;
+                self.connect_flags.will = false;
+            }
         }
         Ok(self)
     }
