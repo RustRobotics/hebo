@@ -114,42 +114,6 @@ pub struct ConnectFlags {
 }
 
 impl ConnectFlags {
-    pub fn set_username(&mut self, username: bool) -> &mut Self {
-        self.username = username;
-        self
-    }
-
-    pub fn username(&self) -> bool {
-        self.username
-    }
-
-    pub fn set_password(&mut self, password: bool) -> &mut Self {
-        self.password = password;
-        self
-    }
-
-    pub fn password(&self) -> bool {
-        self.password
-    }
-
-    pub fn set_will_retain(&mut self, will_retain: bool) -> &mut Self {
-        self.will_retain = will_retain;
-        self
-    }
-
-    pub fn will_retain(&self) -> bool {
-        self.will_retain
-    }
-
-    pub fn set_will_qos(&mut self, qos: QoS) -> &mut Self {
-        self.will_qos = qos;
-        self
-    }
-
-    pub fn will_qos(&self) -> QoS {
-        self.will_qos
-    }
-
     pub fn set_will(&mut self, will: bool) -> &mut Self {
         if !will {
             self.will_qos = QoS::AtMostOnce;
@@ -157,19 +121,6 @@ impl ConnectFlags {
         }
         self.will = will;
         self
-    }
-
-    pub fn will(&self) -> bool {
-        self.will
-    }
-
-    pub fn set_clean_session(&mut self, clean_session: bool) -> &mut Self {
-        self.clean_session = clean_session;
-        self
-    }
-
-    pub fn clean_session(&self) -> bool {
-        self.clean_session
     }
 }
 
@@ -416,7 +367,7 @@ pub struct ConnectPacket {
 
     /// If the `username` flag is true in `connect_flags`, then `username` field must be set.
     /// It is a valid UTF-8 string.
-    username: StringData,
+    username: Option<StringData>,
 
     /// If the `password` flag is true in `connect_flags`, then `password` field must be set.
     /// It consists of 0 to 64k bytes of binary data.
@@ -502,25 +453,32 @@ impl ConnectPacket {
         self
     }
 
-    pub fn set_username(&mut self, username: &str) -> Result<&mut Self, DecodeError> {
-        if username.is_empty() {
-            self.connect_flags.username = false;
-            self.connect_flags.password = false;
-            self.username.clear();
-            self.password.clear();
-        } else {
-            self.username = StringData::from_str(username)?;
-            self.connect_flags.username = true;
+    pub fn set_username(&mut self, username: Option<&str>) -> Result<&mut Self, DecodeError> {
+        match username {
+            Some(username) if !username.is_empty() => {
+                self.username = Some(StringData::from_str(username)?);
+                self.connect_flags.username = true;
+            }
+            _ => {
+                self.connect_flags.username = false;
+                self.username = None;
+            }
         }
         Ok(self)
     }
 
-    pub fn username(&self) -> &str {
-        self.username.as_ref()
+    pub fn username(&self) -> Option<&str> {
+        self.username.as_ref().map(AsRef::as_ref)
     }
 
     pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, EncodeError> {
-        self.password = BinaryData::from_slice(password)?;
+        if password.is_empty() {
+            self.connect_flags.password = false;
+            self.password.clear();
+        } else {
+            self.password = BinaryData::from_slice(password)?;
+            self.connect_flags.password = true;
+        }
         Ok(self)
     }
 
@@ -554,7 +512,7 @@ impl ConnectPacket {
     }
 
     pub fn will_topic(&self) -> Option<&str> {
-        self.will_topic.as_ref().map(|s| s.as_ref())
+        self.will_topic.as_ref().map(AsRef::as_ref)
     }
 
     pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, DecodeError> {
@@ -604,7 +562,10 @@ impl EncodePacket for ConnectPacket {
             remaining_length += 2 + self.will_message.len();
         }
         if self.connect_flags.username {
-            remaining_length += self.username.bytes();
+            assert!(self.username.is_some());
+            if let Some(username) = &self.username {
+                remaining_length += username.bytes();
+            }
         }
         if self.connect_flags.password {
             remaining_length += self.password.bytes();
@@ -634,7 +595,10 @@ impl EncodePacket for ConnectPacket {
             v.write_all(&self.will_message)?;
         }
         if self.connect_flags.username {
-            self.username.encode(v)?;
+            assert!(self.username.is_some());
+            if let Some(username) = &self.username {
+                username.encode(v)?;
+            }
         }
         if self.connect_flags.password {
             self.password.encode(v)?;
@@ -672,14 +636,14 @@ impl DecodePacket for ConnectPacket {
         let protocol_level = ProtocolLevel::try_from(ba.read_byte()?)?;
 
         let connect_flags = ConnectFlags::decode(ba)?;
-        if !connect_flags.will()
-            && (connect_flags.will_qos() != QoS::AtMostOnce || connect_flags.will_retain())
+        if !connect_flags.will
+            && (connect_flags.will_qos != QoS::AtMostOnce || connect_flags.will_retain)
         {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
         // If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].
-        if !connect_flags.username() && connect_flags.password() {
+        if !connect_flags.username && connect_flags.password {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
@@ -694,7 +658,7 @@ impl DecodePacket for ConnectPacket {
             validate_client_id(&client_id).map_err(|_err| DecodeError::InvalidClientId)?;
             client_id
         } else {
-            if !connect_flags.clean_session() {
+            if !connect_flags.clean_session {
                 return Err(DecodeError::InvalidClientId);
             }
             // An empty client id is used.
@@ -714,9 +678,9 @@ impl DecodePacket for ConnectPacket {
         };
 
         let username = if connect_flags.username {
-            StringData::decode(ba)?
+            Some(StringData::decode(ba)?)
         } else {
-            StringData::new()
+            None
         };
 
         let password = if connect_flags.password {
