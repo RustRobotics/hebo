@@ -8,9 +8,7 @@ use std::io::Write;
 
 use super::{FixedHeader, Packet, PacketType};
 use crate::connect_flags::ConnectFlags;
-use crate::utils::{
-    validate_client_id, validate_keep_alive, validate_two_bytes_data, validate_utf8_string,
-};
+use crate::utils::{validate_client_id, validate_keep_alive, validate_two_bytes_data};
 use crate::{
     consts, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
     ProtocolLevel, PubTopic, QoS, StringData, U16Data,
@@ -100,7 +98,7 @@ pub struct ConnectPacket {
 
     /// If the `username` flag is true in `connect_flags`, then `username` field must be set.
     /// It is a valid UTF-8 string.
-    username: String,
+    username: StringData,
 
     /// If the `password` flag is true in `connect_flags`, then `password` field must be set.
     /// It consists of 0 to 64k bytes of binary data.
@@ -162,14 +160,13 @@ impl ConnectPacket {
         self
     }
 
-    pub fn set_username(&mut self, username: &str) -> Result<&mut Self, DecodeError> {
-        validate_utf8_string(username)?;
-        self.username = username.to_string();
+    pub fn set_username(&mut self, username: &str) -> Result<&mut Self, EncodeError> {
+        self.username = StringData::from_str(username)?;
         Ok(self)
     }
 
     pub fn username(&self) -> &str {
-        &self.username
+        self.username.as_ref()
     }
 
     pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, DecodeError> {
@@ -226,7 +223,7 @@ impl EncodePacket for ConnectPacket {
             remaining_length += self.will_message.bytes();
         }
         if self.connect_flags.username() {
-            remaining_length += 2 + self.username.len();
+            remaining_length += self.username.bytes();
         }
         if self.connect_flags.password() {
             remaining_length += 2 + self.password.len();
@@ -253,8 +250,7 @@ impl EncodePacket for ConnectPacket {
             self.will_message.encode(v)?;
         }
         if self.connect_flags.username() {
-            v.write_u16::<BigEndian>(self.username.len() as u16)?;
-            v.write_all(&self.username.as_bytes())?;
+            self.username.encode(v)?;
         }
         if self.connect_flags.password() {
             v.write_u16::<BigEndian>(self.password.len() as u16)?;
@@ -336,10 +332,9 @@ impl DecodePacket for ConnectPacket {
         };
 
         let username = if connect_flags.username() {
-            let username_len = ba.read_u16()? as usize;
-            ba.read_string(username_len)?
+            StringData::decode(ba)?
         } else {
-            String::new()
+            StringData::new()
         };
 
         let password = if connect_flags.password() {
