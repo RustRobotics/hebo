@@ -2,13 +2,10 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::default::Default;
-use std::io::Write;
-
-use byteorder::{BigEndian, WriteBytesExt};
-
 use super::{FixedHeader, Packet, PacketType};
-use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic,
+};
 
 /// The Client request to unsubscribe topics from the Server.
 /// When the Server receives this packet, no more Publish packet will be sent to the Client.
@@ -47,22 +44,28 @@ pub struct UnsubscribePacket {
     /// Topic filters to be unsubscribed.
     /// Note that these strings must exactly identical to the topic filters used in
     /// Subscribe packets.
-    topics: Vec<String>,
+    topics: Vec<SubTopic>,
 }
 
 impl UnsubscribePacket {
-    pub fn new(topic: &str, packet_id: PacketId) -> Self {
-        UnsubscribePacket {
+    pub fn new(topic: &str, packet_id: PacketId) -> Result<Self, EncodeError> {
+        let topic = SubTopic::new(topic)?;
+        Ok(UnsubscribePacket {
             packet_id,
-            topics: vec![topic.to_string()],
-        }
+            topics: vec![topic],
+        })
     }
 
-    pub fn with_topics(topics: &[&str], packet_id: PacketId) -> Self {
-        UnsubscribePacket {
-            packet_id,
-            topics: topics.iter().map(|t| t.to_string()).collect(),
+    pub fn with_topics(topics: &[&str], packet_id: PacketId) -> Result<Self, EncodeError> {
+        let mut topics_result = Vec::with_capacity(topics.len());
+        for topic in topics {
+            let topic = SubTopic::new(topic)?;
+            topics_result.push(topic);
         }
+        Ok(UnsubscribePacket {
+            packet_id,
+            topics: topics_result,
+        })
     }
 
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
@@ -74,21 +77,26 @@ impl UnsubscribePacket {
         self.packet_id
     }
 
-    pub fn add_topic(&mut self, topic: &str) -> &mut Self {
-        self.topics.push(topic.to_string());
-        self
+    pub fn add_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
+        let topic = SubTopic::new(topic)?;
+        self.topics.push(topic);
+        Ok(self)
     }
 
-    pub fn set_topics(&mut self, topics: &[&str]) -> &mut Self {
-        self.topics = topics.iter().map(|t| t.to_string()).collect();
-        self
+    pub fn set_topics(&mut self, topics: &[&str]) -> Result<&mut Self, EncodeError> {
+        self.topics.clear();
+        for topic in topics {
+            let topic = SubTopic::new(topic)?;
+            self.topics.push(topic);
+        }
+        Ok(self)
     }
 
-    pub fn topics(&self) -> &[String] {
+    pub fn topics(&self) -> &[SubTopic] {
         &self.topics
     }
 
-    pub fn mut_topics(&mut self) -> &mut Vec<String> {
+    pub fn mut_topics(&mut self) -> &mut Vec<SubTopic> {
         &mut self.topics
     }
 }
@@ -110,10 +118,8 @@ impl DecodePacket for UnsubscribePacket {
         let mut remaining_length = consts::PACKET_ID_BYTES;
         let mut topics = Vec::new();
         while remaining_length < fixed_header.remaining_length() {
-            let topic_len = ba.read_u16()? as usize;
-            remaining_length += consts::TOPIC_LENGTH_BYTES;
-            let topic = ba.read_string(topic_len)?;
-            remaining_length += topic_len;
+            let topic = SubTopic::decode(ba)?;
+            remaining_length += topic.bytes();
             topics.push(topic);
         }
 
@@ -132,8 +138,7 @@ impl EncodePacket for UnsubscribePacket {
         let old_len = v.len();
         let mut remaining_length: usize = consts::PACKET_ID_BYTES; // packet id
         for topic in &self.topics {
-            remaining_length += consts::TOPIC_LENGTH_BYTES // topic length bytes
-                + topic.len(); // topic
+            remaining_length += topic.bytes();
         }
 
         let fixed_header = FixedHeader::new(PacketType::Unsubscribe, remaining_length)?;
@@ -142,8 +147,7 @@ impl EncodePacket for UnsubscribePacket {
         self.packet_id.encode(v)?;
 
         for topic in &self.topics {
-            v.write_u16::<BigEndian>(topic.len() as u16)?;
-            v.write_all(&topic.as_bytes())?;
+            topic.encode(v)?;
         }
 
         Ok(v.len() - old_len)
