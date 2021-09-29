@@ -24,9 +24,21 @@ use crate::{utils, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePack
 pub struct BinaryData(Vec<u8>);
 
 impl BinaryData {
-    pub fn new(data: &[u8]) -> Result<Self, EncodeError> {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn from_slice(data: &[u8]) -> Result<Self, EncodeError> {
         utils::validate_two_bytes_data(data)?;
         Ok(Self(data.to_vec()))
+    }
+
+    pub fn bytes(&self) -> usize {
+        2 + self.0.len()
+    }
+
+    pub fn clear(&mut self) {
+        self.0.clear();
     }
 }
 
@@ -54,6 +66,6 @@ impl EncodePacket for BinaryData {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         buf.write_u16::<BigEndian>(self.0.len() as u16)?;
         buf.write_all(&self.0)?;
-        Ok(2 + self.0.len())
+        Ok(self.bytes())
     }
 }

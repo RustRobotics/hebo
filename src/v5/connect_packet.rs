@@ -12,8 +12,8 @@ use super::{
 };
 use crate::utils::{validate_client_id, validate_two_bytes_data, validate_utf8_string};
 use crate::{
-    consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
-    QoS, StringData,
+    consts, topic, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
+    ProtocolLevel, QoS, StringData,
 };
 
 /// Structure of `ConnectFlags` is:
@@ -420,7 +420,7 @@ pub struct ConnectPacket {
 
     /// If the `password` flag is true in `connect_flags`, then `password` field must be set.
     /// It consists of 0 to 64k bytes of binary data.
-    password: Vec<u8>,
+    password: BinaryData,
 }
 
 pub const CONNECT_PROPERTIES: &[PropertyType] = &[
@@ -516,7 +516,7 @@ impl ConnectPacket {
             self.connect_flags.username = false;
             self.connect_flags.password = false;
             self.username.clear();
-            self.password = vec![];
+            self.password.clear();
         } else {
             self.username = StringData::from_str(username)?;
             self.connect_flags.username = true;
@@ -528,15 +528,13 @@ impl ConnectPacket {
         self.username.as_ref()
     }
 
-    pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, DecodeError> {
-        // TODO(Shaohua): Replace with BinaryData.
-        validate_two_bytes_data(password)?;
-        self.password = password.to_vec();
+    pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, EncodeError> {
+        self.password = BinaryData::from_slice(password)?;
         Ok(self)
     }
 
     pub fn password(&self) -> &[u8] {
-        &self.password
+        self.password.as_ref()
     }
 
     pub fn set_will_properties(&mut self, properties: &[Property]) -> &mut Self {
@@ -548,7 +546,7 @@ impl ConnectPacket {
         &self.will_properties
     }
 
-    pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, DecodeError> {
+    pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
         validate_utf8_string(topic)?;
         topic::validate_pub_topic(topic)?;
         self.will_topic = topic.to_string();
@@ -606,7 +604,7 @@ impl EncodePacket for ConnectPacket {
             remaining_length += self.username.bytes();
         }
         if self.connect_flags.password {
-            remaining_length += 2 + self.password.len();
+            remaining_length += self.password.bytes();
         }
 
         let fixed_header = FixedHeader::new(PacketType::Connect, remaining_length)?;
@@ -634,8 +632,7 @@ impl EncodePacket for ConnectPacket {
             self.username.encode(v)?;
         }
         if self.connect_flags.password {
-            v.write_u16::<BigEndian>(self.password.len() as u16)?;
-            v.write_all(&self.password)?;
+            self.password.encode(v)?;
         }
 
         Ok(v.len() - old_len)
@@ -722,10 +719,9 @@ impl DecodePacket for ConnectPacket {
         };
 
         let password = if connect_flags.password {
-            let password_len = ba.read_u16()? as usize;
-            ba.read_bytes(password_len)?.to_vec()
+            BinaryData::decode(ba)?
         } else {
-            Vec::new()
+            BinaryData::new()
         };
 
         let properties = Properties::decode(ba)?;

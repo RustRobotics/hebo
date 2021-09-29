@@ -93,6 +93,6 @@ impl EncodePacket for StringData {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         buf.write_u16::<BigEndian>(self.0.len() as u16)?;
         buf.write_all(self.0.as_bytes())?;
-        Ok(2 + self.0.len())
+        Ok(self.bytes())
     }
 }
