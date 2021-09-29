@@ -464,16 +464,6 @@ impl ConnectPacket {
         self.protocol_level
     }
 
-    // TODO(Shaohua): Remove these methods
-    pub fn set_connect_flags(&mut self, flags: ConnectFlags) -> &mut Self {
-        self.connect_flags = flags;
-        self
-    }
-
-    pub fn connect_flags_mut(&mut self) -> &mut ConnectFlags {
-        &mut self.connect_flags
-    }
-
     pub fn connect_flags(&self) -> &ConnectFlags {
         &self.connect_flags
     }
