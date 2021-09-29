@@ -87,7 +87,7 @@ pub struct ConnectPacket {
     /// It can only contain the characters: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     /// If `client_id` is invalid, the Server will reply ConnectAck Packet with return code
     /// 0x02(Identifier rejected).
-    client_id: String,
+    client_id: StringData,
 
     /// If the `will` flag is true in `connect_flags`, then `will_topic` field must be set.
     /// It will be used as the topic of Will Message.
@@ -109,12 +109,13 @@ pub struct ConnectPacket {
 
 impl ConnectPacket {
     pub fn new(client_id: &str) -> Result<ConnectPacket, EncodeError> {
-        validate_client_id(client_id)?;
         let protocol_name = StringData::from_str(consts::PROTOCOL_NAME)?;
+        validate_client_id(client_id)?;
+        let client_id = StringData::from_str(client_id)?;
         Ok(ConnectPacket {
             protocol_name,
             keep_alive: U16Data::new(60),
-            client_id: client_id.to_string(),
+            client_id,
             ..ConnectPacket::default()
         })
     }
@@ -148,13 +149,12 @@ impl ConnectPacket {
 
     pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
         validate_client_id(id)?;
-        self.client_id.clear();
-        self.client_id.push_str(id);
+        self.client_id = StringData::from_str(id)?;
         Ok(self)
     }
 
     pub fn client_id(&self) -> &str {
-        &self.client_id
+        self.client_id.as_ref()
     }
 
     pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
@@ -213,8 +213,7 @@ impl EncodePacket for ConnectPacket {
             + self.protocol_level.bytes()
             + self.connect_flags.bytes()
             + self.keep_alive.bytes()
-            + consts::CLIENT_ID_LENGTH_BYTES // client_id_len
-            + self.client_id.len();
+            + self.client_id.bytes();
 
         // Check username/password/topic/message.
         if self.connect_flags.will() {
@@ -239,8 +238,7 @@ impl EncodePacket for ConnectPacket {
         self.keep_alive.encode(v)?;
 
         // Write payload
-        v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
-        v.write_all(&self.client_id.as_bytes())?;
+        self.client_id.encode(v)?;
         if self.connect_flags.will() {
             v.write_u16::<BigEndian>(self.will_topic.len() as u16)?;
             v.write_all(&self.will_topic.as_bytes())?;
@@ -304,29 +302,21 @@ impl DecodePacket for ConnectPacket {
         let keep_alive = U16Data::decode(ba)?;
         validate_keep_alive(keep_alive.value())?;
 
-        let client_id_len = ba.read_u16()? as usize;
         // A Server MAY allow a Client to supply a ClientId that has a length of zero bytes,
         // however if it does so the Server MUST treat this as a special case and assign
         // a unique ClientId to that Client. It MUST then process the CONNECT packet
         // as if the Client had provided that unique ClientId [MQTT-3.1.3-6].
-        let client_id = if client_id_len > 0 {
-            let client_id = ba
-                .read_string(client_id_len)
-                .map_err(|_err| DecodeError::InvalidClientId)?;
-            validate_client_id(&client_id).map_err(|_err| DecodeError::InvalidClientId)?;
-            client_id
-        } else {
-            // If the Client supplies a zero-byte ClientId, the Client MUST also set CleanSession
-            // to 1 [MQTT-3.1.3-7].
-            //
-            // If the Client supplies a zero-byte ClientId with CleanSession set to 0, the Server
-            // MUST respond to the CONNECT Packet with a CONNACK return code 0x02 (Identifier rejected)
-            // and then close the Network Connection [MQTT-3.1.3-8].
-            if !connect_flags.clean_session() {
-                return Err(DecodeError::InvalidClientId);
-            }
-            "".to_string()
-        };
+        let client_id = StringData::decode(ba).map_err(|_err| DecodeError::InvalidClientId)?;
+
+        // If the Client supplies a zero-byte ClientId, the Client MUST also set CleanSession
+        // to 1 [MQTT-3.1.3-7].
+        //
+        // If the Client supplies a zero-byte ClientId with CleanSession set to 0, the Server
+        // MUST respond to the CONNECT Packet with a CONNACK return code 0x02 (Identifier rejected)
+        // and then close the Network Connection [MQTT-3.1.3-8].
+        if client_id.is_empty() && !connect_flags.clean_session() {
+            return Err(DecodeError::InvalidClientId);
+        }
 
         let will_topic = if connect_flags.will() {
             let will_topic_len = ba.read_u16()? as usize;
