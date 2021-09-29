@@ -367,7 +367,7 @@ pub struct ConnectPacket {
 
     /// If the `username` flag is true in `connect_flags`, then `username` field must be set.
     /// It is a valid UTF-8 string.
-    username: Option<StringData>,
+    username: StringData,
 
     /// If the `password` flag is true in `connect_flags`, then `password` field must be set.
     /// It consists of 0 to 64k bytes of binary data.
@@ -456,34 +456,45 @@ impl ConnectPacket {
     pub fn set_username(&mut self, username: Option<&str>) -> Result<&mut Self, DecodeError> {
         match username {
             Some(username) => {
-                self.username = Some(StringData::from_str(username)?);
+                self.username = StringData::from_str(username)?;
                 self.connect_flags.username = true;
             }
             _ => {
                 self.connect_flags.username = false;
-                self.username = None;
+                self.username = StringData::new();
             }
         }
         Ok(self)
     }
 
     pub fn username(&self) -> Option<&str> {
-        self.username.as_ref().map(AsRef::as_ref)
+        if self.connect_flags.username {
+            Some(self.username.as_ref())
+        } else {
+            None
+        }
     }
 
-    pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, EncodeError> {
-        if password.is_empty() {
-            self.connect_flags.password = false;
-            self.password.clear();
-        } else {
-            self.password = BinaryData::from_slice(password)?;
-            self.connect_flags.password = true;
+    pub fn set_password(&mut self, password: Option<&[u8]>) -> Result<&mut Self, EncodeError> {
+        match password {
+            Some(password) => {
+                self.password = BinaryData::from_slice(password)?;
+                self.connect_flags.password = true;
+            }
+            None => {
+                self.connect_flags.password = false;
+                self.password.clear();
+            }
         }
         Ok(self)
     }
 
-    pub fn password(&self) -> &[u8] {
-        self.password.as_ref()
+    pub fn password(&self) -> Option<&[u8]> {
+        if self.connect_flags.password {
+            Some(self.password.as_ref())
+        } else {
+            None
+        }
     }
 
     pub fn set_will_properties(&mut self, properties: &[Property]) -> &mut Self {
@@ -560,10 +571,7 @@ impl EncodePacket for ConnectPacket {
             remaining_length += 2 + self.will_message.len();
         }
         if self.connect_flags.username {
-            assert!(self.username.is_some());
-            if let Some(username) = &self.username {
-                remaining_length += username.bytes();
-            }
+            remaining_length += self.username.bytes();
         }
         if self.connect_flags.password {
             remaining_length += self.password.bytes();
@@ -593,10 +601,7 @@ impl EncodePacket for ConnectPacket {
             v.write_all(&self.will_message)?;
         }
         if self.connect_flags.username {
-            assert!(self.username.is_some());
-            if let Some(username) = &self.username {
-                username.encode(v)?;
-            }
+            self.username.encode(v)?;
         }
         if self.connect_flags.password {
             self.password.encode(v)?;
@@ -676,9 +681,9 @@ impl DecodePacket for ConnectPacket {
         };
 
         let username = if connect_flags.username {
-            Some(StringData::decode(ba)?)
+            StringData::decode(ba)?
         } else {
-            None
+            StringData::new()
         };
 
         let password = if connect_flags.password {
