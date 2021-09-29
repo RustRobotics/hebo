@@ -13,7 +13,7 @@ use super::{
 use crate::utils::validate_client_id;
 use crate::{
     consts, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
-    ProtocolLevel, PubTopic, QoS, StringData,
+    ProtocolLevel, PubTopic, QoS, StringData, U16Data,
 };
 
 /// Structure of `ConnectFlags` is:
@@ -308,7 +308,7 @@ pub struct ConnectPacket {
     /// A Keep Alive value of 0 has the effect of turning off the Keep Alive mechanism.
     /// If Keep Alive is 0 the Client is not obliged to send MQTT Control Packets
     /// on any particular schedule.
-    keep_alive: u16,
+    keep_alive: U16Data,
 
     properties: Properties,
 
@@ -600,7 +600,7 @@ impl EncodePacket for ConnectPacket {
         v.write_all(&self.protocol_name.as_bytes())?;
         self.protocol_level.encode(v)?;
         self.connect_flags.encode(v)?;
-        v.write_u16::<BigEndian>(self.keep_alive)?;
+        self.keep_alive.encode(v)?;
 
         // Write payload
         v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
@@ -663,7 +663,7 @@ impl DecodePacket for ConnectPacket {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
-        let keep_alive = ba.read_u16()?;
+        let keep_alive = U16Data::decode(ba)?;
         validate_keep_alive(keep_alive)?;
 
         let client_id_len = ba.read_u16()? as usize;
