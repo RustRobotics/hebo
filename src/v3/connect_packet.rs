@@ -300,14 +300,14 @@ pub struct ConnectPacket {
 }
 
 impl ConnectPacket {
-    pub fn new(client_id: &str) -> ConnectPacket {
-        // TODO(Shaohua): Validate client_id.
-        ConnectPacket {
+    pub fn new(client_id: &str) -> Result<ConnectPacket, EncodeError> {
+        validate_client_id(client_id)?;
+        Ok(ConnectPacket {
             protocol_name: consts::PROTOCOL_NAME.to_string(),
             keep_alive: 60,
             client_id: client_id.to_string(),
             ..ConnectPacket::default()
-        }
+        })
     }
 
     pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> &Self {
