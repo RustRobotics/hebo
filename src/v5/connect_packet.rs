@@ -10,10 +10,10 @@ use super::{
     property::check_property_type_list, FixedHeader, Packet, PacketType, Properties, Property,
     PropertyType,
 };
-use crate::utils::{validate_client_id, validate_two_bytes_data, validate_utf8_string};
+use crate::utils::{validate_client_id, validate_two_bytes_data};
 use crate::{
-    consts, topic, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
-    ProtocolLevel, QoS, StringData,
+    consts, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
+    ProtocolLevel, PubTopic, QoS, StringData,
 };
 
 /// Structure of `ConnectFlags` is:
@@ -407,7 +407,7 @@ pub struct ConnectPacket {
 
     /// If the `will` flag is true in `connect_flags`, then `will_topic` field must be set.
     /// It will be used as the topic of Will Message.
-    will_topic: String,
+    will_topic: Option<PubTopic>,
 
     /// If the `will` flag is true in `connect_flags`, then `will_message` field must be set.
     /// It will be used as the payload of Will Message.
@@ -464,6 +464,7 @@ impl ConnectPacket {
         self.protocol_level
     }
 
+    // TODO(Shaohua): Remove these methods
     pub fn set_connect_flags(&mut self, flags: ConnectFlags) -> &mut Self {
         self.connect_flags = flags;
         self
@@ -546,15 +547,24 @@ impl ConnectPacket {
         &self.will_properties
     }
 
-    pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
-        validate_utf8_string(topic)?;
-        topic::validate_pub_topic(topic)?;
-        self.will_topic = topic.to_string();
+    pub fn set_will_topic(&mut self, topic: Option<&str>) -> Result<&mut Self, EncodeError> {
+        if let Some(topic) = topic {
+            if topic.is_empty() {
+                self.will_topic = None;
+                self.connect_flags.will = false;
+            } else {
+                self.will_topic = Some(PubTopic::new(topic)?);
+                self.connect_flags.will = true;
+            }
+        } else {
+            self.connect_flags.will = false;
+            self.will_topic = None;
+        }
         Ok(self)
     }
 
-    pub fn will_topic(&self) -> &str {
-        &self.will_topic
+    pub fn will_topic(&self) -> Option<&str> {
+        self.will_topic.as_ref().map(|s| s.as_ref())
     }
 
     pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, DecodeError> {
@@ -597,7 +607,10 @@ impl EncodePacket for ConnectPacket {
 
         // Check username/password/topic/message.
         if self.connect_flags.will {
-            remaining_length += 2 + self.will_topic.len();
+            assert!(self.will_topic.is_some());
+            if let Some(will_topic) = &self.will_topic {
+                remaining_length += will_topic.bytes();
+            }
             remaining_length += 2 + self.will_message.len();
         }
         if self.connect_flags.username {
@@ -622,8 +635,10 @@ impl EncodePacket for ConnectPacket {
         v.write_u16::<BigEndian>(self.client_id.len() as u16)?;
         v.write_all(&self.client_id.as_bytes())?;
         if self.connect_flags.will {
-            v.write_u16::<BigEndian>(self.will_topic.len() as u16)?;
-            v.write_all(&self.will_topic.as_bytes())?;
+            assert!(self.will_topic.is_some());
+            if let Some(will_topic) = &self.will_topic {
+                will_topic.encode(v)?;
+            }
 
             v.write_u16::<BigEndian>(self.will_message.len() as u16)?;
             v.write_all(&self.will_message)?;
@@ -697,13 +712,9 @@ impl DecodePacket for ConnectPacket {
         };
 
         let will_topic = if connect_flags.will {
-            let will_topic_len = ba.read_u16()? as usize;
-            let will_topic = ba.read_string(will_topic_len)?;
-            validate_utf8_string(&will_topic)?;
-            topic::validate_pub_topic(&will_topic)?;
-            will_topic
+            Some(PubTopic::decode(ba)?)
         } else {
-            String::new()
+            None
         };
         let will_message = if connect_flags.will {
             let will_message_len = ba.read_u16()? as usize;
