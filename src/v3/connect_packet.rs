@@ -12,8 +12,8 @@ use crate::utils::{
     validate_client_id, validate_keep_alive, validate_two_bytes_data, validate_utf8_string,
 };
 use crate::{
-    consts, topic, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
-    QoS, StringData, U16Data,
+    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
+    PubTopic, QoS, StringData, U16Data,
 };
 
 /// `ConnectPacket` consists of three parts:
@@ -91,7 +91,7 @@ pub struct ConnectPacket {
 
     /// If the `will` flag is true in `connect_flags`, then `will_topic` field must be set.
     /// It will be used as the topic of Will Message.
-    will_topic: String,
+    will_topic: Option<PubTopic>,
 
     /// If the `will` flag is true in `connect_flags`, then `will_message` field must be set.
     /// It will be used as the payload of Will Message.
@@ -183,14 +183,16 @@ impl ConnectPacket {
     }
 
     pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, DecodeError> {
-        validate_utf8_string(topic)?;
-        topic::validate_pub_topic(topic)?;
-        self.will_topic = topic.to_string();
+        if !topic.is_empty() {
+            self.will_topic = Some(PubTopic::new(topic)?);
+        } else {
+            self.will_topic = None;
+        }
         Ok(self)
     }
 
-    pub fn will_topic(&self) -> &str {
-        &self.will_topic
+    pub fn will_topic(&self) -> Option<&str> {
+        self.will_topic.as_ref().map(AsRef::as_ref)
     }
 
     pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, DecodeError> {
@@ -217,7 +219,10 @@ impl EncodePacket for ConnectPacket {
 
         // Check username/password/topic/message.
         if self.connect_flags.will() {
-            remaining_length += 2 + self.will_topic.len();
+            assert!(self.will_topic.is_some());
+            if let Some(will_topic) = &self.will_topic {
+                remaining_length += will_topic.bytes();
+            }
             remaining_length += 2 + self.will_message.len();
         }
         if self.connect_flags.username() {
@@ -240,8 +245,10 @@ impl EncodePacket for ConnectPacket {
         // Write payload
         self.client_id.encode(v)?;
         if self.connect_flags.will() {
-            v.write_u16::<BigEndian>(self.will_topic.len() as u16)?;
-            v.write_all(&self.will_topic.as_bytes())?;
+            assert!(self.will_topic.is_some());
+            if let Some(will_topic) = &self.will_topic {
+                will_topic.encode(v)?;
+            }
 
             v.write_u16::<BigEndian>(self.will_message.len() as u16)?;
             v.write_all(&self.will_message)?;
@@ -319,13 +326,9 @@ impl DecodePacket for ConnectPacket {
         }
 
         let will_topic = if connect_flags.will() {
-            let will_topic_len = ba.read_u16()? as usize;
-            let will_topic = ba.read_string(will_topic_len)?;
-            validate_utf8_string(&will_topic)?;
-            topic::validate_pub_topic(&will_topic)?;
-            will_topic
+            Some(PubTopic::decode(ba)?)
         } else {
-            String::new()
+            None
         };
         let will_message = if connect_flags.will() {
             let will_message_len = ba.read_u16()? as usize;
