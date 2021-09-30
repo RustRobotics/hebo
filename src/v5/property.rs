@@ -396,6 +396,50 @@ pub enum Property {
     ///
     /// Two Byte Integer.
     /// Used in PUBLISH.
+    ///
+    /// Followed by the Two Byte integer representing the Topic Alias value. It is
+    /// a Protocol Error to include the Topic Alias value more than once.
+    ///
+    /// A Topic Alias is an integer value that is used to identify the Topic instead of
+    /// using the Topic Name. This reduces the size of the PUBLISH packet, and is useful
+    /// when the Topic Names are long and the same Topic Names are used repetitively
+    /// within a Network Connection.
+    ///
+    /// The sender decides whether to use a Topic Alias and chooses the value. It sets a Topic Alias
+    /// mapping by including a non-zero length Topic Name and a Topic Alias in the PUBLISH packet.
+    /// The receiver processes the PUBLISH as normal but also sets the specified Topic Alias
+    /// mapping to this Topic Name.
+    ///
+    /// If a Topic Alias mapping has been set at the receiver, a sender can send a PUBLISH packet
+    /// that contains that Topic Alias and a zero length Topic Name. The receiver then treats
+    /// the incoming PUBLISH as if it had contained the Topic Name of the Topic Alias.
+    ///
+    /// A sender can modify the Topic Alias mapping by sending another PUBLISH in the same
+    /// Network Connection with the same Topic Alias value and a different non-zero length Topic Name.
+    ///
+    /// Topic Alias mappings exist only within a Network Connection and last only for the lifetime
+    /// of that Network Connection. A receiver MUST NOT carry forward any Topic Alias mappings
+    /// from one Network Connection to another [MQTT-3.3.2-7].
+    ///
+    /// A Topic Alias of 0 is not permitted. A sender MUST NOT send a PUBLISH packet
+    /// containing a Topic Alias which has the value 0 [MQTT-3.3.2-8].
+    ///
+    /// A Client MUST NOT send a PUBLISH packet with a Topic Alias greater than
+    /// the Topic Alias Maximum value returned by the Server in the CONNACK packet [MQTT-3.3.2-9].
+    ///
+    /// A Client MUST accept all Topic Alias values greater than 0 and less than or equal to
+    /// the Topic Alias Maximum value that it sent in the CONNECT packet [MQTT-3.3.2-10].
+    ///
+    /// A Server MUST NOT send a PUBLISH packet with a Topic Alias greater than
+    /// the Topic Alias Maximum value sent by the Client in the CONNECT packet [MQTT-3.3.2-11].
+    ///
+    /// A Server MUST accept all Topic Alias values greater than 0 and less than or equal to
+    /// the Topic Alias Maximum value that it returned in the CONNACK packet [MQTT-3.3.2-12].
+    ///
+    /// The Topic Alias mappings used by the Client and Server are independent from each other.
+    /// Thus, when a Client sends a PUBLISH containing a Topic Alias value of 1 to a Server
+    /// and the Server sends a PUBLISH with a Topic Alias value of 1 to that Client
+    /// they will in general be referring to different Topics.
     TopicAlias(U16Data),
 
     /// Maximum QoS
@@ -709,6 +753,10 @@ impl DecodePacket for Property {
                 let reference = StringData::decode(ba)?;
                 Ok(Self::ServerReference(reference))
             }
+            PropertyType::TopicAlias => {
+                let alias = U16Data::decode(ba)?;
+                Ok(Self::TopicAlias(alias))
+            }
             _ => unimplemented!(),
         }
     }
@@ -742,6 +790,7 @@ impl EncodePacket for Property {
             Self::ServerKeepAlive(keep_alive) => keep_alive.encode(buf),
             Self::ResponseInformation(info) => info.encode(buf),
             Self::ServerReference(reference) => reference.encode(buf),
+            Self::TopicAlias(alias) => alias.encode(buf),
             _ => unimplemented!(),
         }
     }
