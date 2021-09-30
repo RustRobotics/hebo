@@ -4,10 +4,8 @@
 
 use std::convert::TryFrom;
 
-use super::{
-    property::check_property_type_list, FixedHeader, Packet, PacketType, Properties, Property,
-    PropertyType,
-};
+use super::property::check_property_type_list;
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::connect_flags::ConnectFlags;
 use crate::utils::{validate_client_id, validate_keep_alive};
 use crate::{
@@ -266,9 +264,8 @@ impl ConnectPacket {
         self.connect_flags.clean_session()
     }
 
-    pub fn set_properties(&mut self, properties: &[Property]) -> &mut Self {
-        self.properties = properties.to_vec();
-        self
+    pub fn properties_mut(&mut self) -> &mut Properties {
+        &mut self.properties
     }
 
     pub fn properties(&self) -> &Properties {
@@ -329,9 +326,8 @@ impl ConnectPacket {
         }
     }
 
-    pub fn set_will_properties(&mut self, properties: &[Property]) -> &mut Self {
-        self.will_properties = properties.to_vec();
-        self
+    pub fn will_properties_mut(&mut self) -> &mut Properties {
+        &mut self.will_properties
     }
 
     pub fn will_properties(&self) -> &Properties {

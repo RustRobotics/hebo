@@ -4,9 +4,8 @@
 
 use std::convert::TryFrom;
 
-use super::{
-    property::check_property_type_list, FixedHeader, Packet, PacketType, Properties, PropertyType,
-};
+use super::property::check_property_type_list;
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
@@ -223,6 +222,14 @@ impl ConnectAckPacket {
 
     pub fn session_present(&self) -> bool {
         self.session_present
+    }
+
+    pub fn properties_mut(&mut self) -> &mut Properties {
+        &mut self.properties
+    }
+
+    pub fn properties(&self) -> &Properties {
+        &self.properties
     }
 }
 
