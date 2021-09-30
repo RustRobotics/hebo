@@ -557,7 +557,8 @@ impl DecodePacket for Property {
 
 impl EncodePacket for Property {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        // FIXME(Shaohua): Fix property name mising
+        let property_type_byte = self.property_type() as u8;
+        buf.push(property_type_byte);
         match self {
             Self::SessionExpiryInterval(interval) => interval.encode(buf),
             Self::ReceiveMaximum(max) => max.encode(buf),
