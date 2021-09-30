@@ -217,6 +217,16 @@ pub enum Property {
     ///
     /// Two Byte Integer.
     /// Used in CONNACK.
+    ///
+    /// Followed by a Two Byte Integer with the Keep Alive time assigned by the Server.
+    /// If the Server sends a Server Keep Alive on the CONNACK packet, the Client
+    /// MUST use this value instead of the Keep Alive value the Client sent
+    /// on CONNECT [MQTT-3.2.2-21].
+    ///
+    /// If the Server does not send the Server Keep Alive, the Server MUST use
+    /// the Keep Alive value set by the Client on CONNECT [MQTT-3.2.2-22].
+    ///
+    /// It is a Protocol Error to include the Server Keep Alive more than once.
     ServerKeepAlive(U16Data),
 
     /// Authentication Method
@@ -673,6 +683,10 @@ impl DecodePacket for Property {
                 let available = BoolData::decode(ba)?;
                 Ok(Self::SharedSubscriptionAvailable(available))
             }
+            PropertyType::ServerKeepAlive => {
+                let keep_alive = U16Data::decode(ba)?;
+                Ok(Self::ServerKeepAlive(keep_alive))
+            }
             _ => unimplemented!(),
         }
     }
@@ -703,6 +717,7 @@ impl EncodePacket for Property {
             Self::WildcardSubscriptionAvailable(available) => available.encode(buf),
             Self::SubscriptionIdentifierAvailable(available) => available.encode(buf),
             Self::SharedSubscriptionAvailable(available) => available.encode(buf),
+            Self::ServerKeepAlive(keep_alive) => keep_alive.encode(buf),
             _ => unimplemented!(),
         }
     }
