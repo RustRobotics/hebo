@@ -4,7 +4,9 @@
 
 use std::convert::TryFrom;
 
-use super::{FixedHeader, Packet, PacketType};
+use super::{
+    property::check_property_type_list, FixedHeader, Packet, PacketType, Properties, PropertyType,
+};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
@@ -66,7 +68,7 @@ pub enum ConnectReasonCode {
     PayloadFormatInvalid = 0x99,
 
     /// The Server does not support the QoS set in Will QoS.
-    QosNotSupported = 0x9b,
+    QoSNotSupported = 0x9b,
 
     /// The Client should temporarily use another server.
     UseAnotherServer = 0x9c,
@@ -105,7 +107,7 @@ impl TryFrom<u8> for ConnectReasonCode {
             0x95 => Ok(ConnectReasonCode::PacketTooLarge),
             0x97 => Ok(ConnectReasonCode::QuotaExceeded),
             0x99 => Ok(ConnectReasonCode::PayloadFormatInvalid),
-            0x9b => Ok(ConnectReasonCode::QosNotSupported),
+            0x9b => Ok(ConnectReasonCode::QoSNotSupported),
             0x9c => Ok(ConnectReasonCode::UseAnotherServer),
             0x9d => Ok(ConnectReasonCode::ServerMoved),
             0x9f => Ok(ConnectReasonCode::ConnectionRateExceeded),
@@ -164,7 +166,16 @@ pub struct ConnectAckPacket {
 
     /// Byte 2 in the connection return code.
     reason_code: ConnectReasonCode,
+
+    properties: Properties,
 }
+
+pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
+    PropertyType::SessionExpiryInterval,
+    PropertyType::ReceiveMaximum,
+    PropertyType::MaximumQoS,
+    PropertyType::RetainAvailable,
+];
 
 impl ConnectAckPacket {
     pub fn new(mut session_present: bool, reason_code: ConnectReasonCode) -> ConnectAckPacket {
@@ -176,6 +187,7 @@ impl ConnectAckPacket {
         ConnectAckPacket {
             session_present,
             reason_code,
+            properties: Vec::new(),
         }
     }
 
@@ -210,10 +222,20 @@ impl DecodePacket for ConnectAckPacket {
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
         let reason_code_byte = ba.read_byte()?;
         let reason_code = ConnectReasonCode::try_from(reason_code_byte)?;
+        let properties = Properties::decode(ba)?;
+
+        if let Err(property_type) = check_property_type_list(&properties, CONNECT_ACK_PROPERTIES) {
+            log::error!(
+                "v5/ConnectAckPacket: property type {:?} cannot be used in properties!",
+                property_type
+            );
+            return Err(DecodeError::InvalidPropertyType);
+        }
 
         Ok(ConnectAckPacket {
             session_present,
             reason_code,
+            properties,
         })
     }
 }
