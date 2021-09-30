@@ -2,6 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use std::convert::TryFrom;
+
 use super::{FixedHeader, Packet, PacketType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
@@ -11,25 +13,69 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ConnectReasonCode {
     /// Connection accepted.
-    Accepted = 0,
+    Accepted = 0x00,
 
-    /// The server do not support the level of the MQTT protocol requested by the Client.
-    UnacceptedProtocol = 1,
+    /// The Server does not wish to reveal the reason for the failure, or
+    /// none of the other Reason Codes apply.
+    UnspecifiedError = 0x80,
 
-    /// The Client identifier is correct UTF-8 but not allowed by the Server.
-    IdentifierRejected = 2,
+    /// Data within the CONNECT packet could not be correctly parsed.
+    MalformedPacket = 0x81,
 
-    /// The Network Connection has been made but the MQTT service is unavailable.
-    ServerUnavailable = 3,
+    /// Data in the CONNECT packet does not conform to this specification.
+    ProtocolError = 0x82,
 
-    /// The data in the username or password is malformed.
-    MalformedUsernamePassword = 4,
+    /// The CONNECT is valid but is not accepted by this Server.
+    ImplementationSpecificError = 0x83,
+
+    /// The Server does not support the version of the MQTT protocol requested by the Client.
+    UnsupportedProtocolVersion = 0x84,
+
+    /// The Client Identifier is a valid string but is not allowed by the Server.
+    ClientIdentifierNotValid = 0x85,
+
+    /// The Server does not accept the User Name or Password specified by the Client
+    BadUserNameOrPassword = 0x86,
 
     /// The Client is not authorized to connect.
-    Unauthorized = 5,
+    NotAuthorized = 0x87,
 
-    /// 6-255 are reserved.
-    Reserved = 6,
+    /// The MQTT Server is not available.
+    ServerUnavailable = 0x88,
+
+    /// The Server is busy. Try again later.
+    ServerBusy = 0x89,
+
+    /// This Client has been banned by administrative action. Contact the server administrator.
+    Banned = 0x8a,
+
+    /// The authentication method is not supported or does not match the authentication method
+    /// currently in use.
+    BadAuthenticationMethod = 0x8c,
+
+    /// The Will Topic Name is not malformed, but is not accepted by this Server.
+    TopicNameInvalid = 0x90,
+
+    /// The CONNECT packet exceeded the maximum permissible size.
+    PacketTooLarge = 0x95,
+
+    /// An implementation or administrative imposed limit has been exceeded.
+    QuotaExceeded = 0x97,
+
+    /// The Will Payload does not match the specified Payload Format Indicator.
+    PayloadFormatInvalid = 0x99,
+
+    /// The Server does not support the QoS set in Will QoS.
+    QosNotSupported = 0x9b,
+
+    /// The Client should temporarily use another server.
+    UseAnotherServer = 0x9c,
+
+    /// The Client should permanently use another server.
+    ServerMoved = 0x9d,
+
+    /// The connection rate limit has been exceeded.
+    ConnectionRateExceeded = 0x9f,
 }
 
 impl Default for ConnectReasonCode {
@@ -38,16 +84,32 @@ impl Default for ConnectReasonCode {
     }
 }
 
-impl From<u8> for ConnectReasonCode {
-    fn from(v: u8) -> ConnectReasonCode {
+impl TryFrom<u8> for ConnectReasonCode {
+    type Error = DecodeError;
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
-            0 => ConnectReasonCode::Accepted,
-            1 => ConnectReasonCode::UnacceptedProtocol,
-            2 => ConnectReasonCode::IdentifierRejected,
-            3 => ConnectReasonCode::ServerUnavailable,
-            4 => ConnectReasonCode::MalformedUsernamePassword,
-            5 => ConnectReasonCode::Unauthorized,
-            _ => ConnectReasonCode::Reserved,
+            0x00 => Ok(ConnectReasonCode::Accepted),
+            0x80 => Ok(ConnectReasonCode::UnspecifiedError),
+            0x81 => Ok(ConnectReasonCode::MalformedPacket),
+            0x82 => Ok(ConnectReasonCode::ProtocolError),
+            0x83 => Ok(ConnectReasonCode::ImplementationSpecificError),
+            0x84 => Ok(ConnectReasonCode::UnsupportedProtocolVersion),
+            0x85 => Ok(ConnectReasonCode::ClientIdentifierNotValid),
+            0x86 => Ok(ConnectReasonCode::BadUserNameOrPassword),
+            0x87 => Ok(ConnectReasonCode::NotAuthorized),
+            0x88 => Ok(ConnectReasonCode::ServerUnavailable),
+            0x89 => Ok(ConnectReasonCode::ServerBusy),
+            0x8a => Ok(ConnectReasonCode::Banned),
+            0x8c => Ok(ConnectReasonCode::BadAuthenticationMethod),
+            0x90 => Ok(ConnectReasonCode::TopicNameInvalid),
+            0x95 => Ok(ConnectReasonCode::PacketTooLarge),
+            0x97 => Ok(ConnectReasonCode::QuotaExceeded),
+            0x99 => Ok(ConnectReasonCode::PayloadFormatInvalid),
+            0x9b => Ok(ConnectReasonCode::QosNotSupported),
+            0x9c => Ok(ConnectReasonCode::UseAnotherServer),
+            0x9d => Ok(ConnectReasonCode::ServerMoved),
+            0x9f => Ok(ConnectReasonCode::ConnectionRateExceeded),
+            _ => Err(DecodeError::OtherErrors),
         }
     }
 }
@@ -146,7 +208,8 @@ impl DecodePacket for ConnectAckPacket {
 
         let ack_flags = ba.read_byte()?;
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
-        let reason_code = ConnectReasonCode::from(ba.read_byte()?);
+        let reason_code_byte = ba.read_byte()?;
+        let reason_code = ConnectReasonCode::try_from(reason_code_byte)?;
 
         Ok(ConnectAckPacket {
             session_present,
