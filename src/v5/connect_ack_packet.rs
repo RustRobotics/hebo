@@ -181,6 +181,7 @@ pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
     PropertyType::ReasonString,
     PropertyType::UserProperty,
     PropertyType::WildcardSubscriptionAvailable,
+    PropertyType::SubscriptionIdentifierAvailable,
 ];
 
 impl ConnectAckPacket {

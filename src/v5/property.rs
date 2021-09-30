@@ -470,12 +470,27 @@ pub enum Property {
     /// If not present, then Wildcard Subscriptions are supported. It is a Protocol Error
     /// to include the Wildcard Subscription Available more than once or to send
     /// a value other than 0 or 1.
+    ///
+    /// If the Server receives a SUBSCRIBE packet containing a Wildcard Subscription
+    /// and it does not support Wildcard Subscriptions, this is a Protocol Error.
+    /// The Server uses DISCONNECT with Reason Code 0xA2 (Wildcard Subscriptions not supported).
+    ///
+    /// If a Server supports Wildcard Subscriptions, it can still reject a particular
+    /// subscribe request containing a Wildcard Subscription. In this case the Server MAY
+    /// send a SUBACK Control Packet with a Reason Code 0xA2 (Wildcard Subscriptions not supported).
     WildcardSubscriptionAvailable(BoolData),
 
     /// Subscription Identifier Available
     ///
     /// Byte.
     /// Used in CONNACK.
+    ///
+    /// Followed by a Byte field. If present, this byte declares whether the Server
+    /// supports Subscription Identifiers. A value is 0 means that Subscription Identifiers
+    /// are not supported. A value of 1 means Subscription Identifiers are supported.
+    /// If not present, then Subscription Identifiers are supported. It is a
+    /// Protocol Error to include the Subscription Identifier Available more than once,
+    /// or to send a value other than 0 or 1.
     SubscriptionIdentifierAvailable(BoolData),
 
     /// Shared Subscription Available
@@ -546,6 +561,10 @@ impl Property {
     }
 
     pub const fn default_wildcard_subscription_available() -> bool {
+        true
+    }
+
+    pub const fn default_subscription_identifier_available() -> bool {
         true
     }
 }
@@ -631,6 +650,10 @@ impl DecodePacket for Property {
                 let available = BoolData::decode(ba)?;
                 Ok(Self::WildcardSubscriptionAvailable(available))
             }
+            PropertyType::SubscriptionIdentifierAvailable => {
+                let available = BoolData::decode(ba)?;
+                Ok(Self::SubscriptionIdentifierAvailable(available))
+            }
             _ => unimplemented!(),
         }
     }
@@ -659,6 +682,7 @@ impl EncodePacket for Property {
             Self::RetainAvailable(available) => available.encode(buf),
             Self::AssignedClientIdentifier(client_id) => client_id.encode(buf),
             Self::WildcardSubscriptionAvailable(available) => available.encode(buf),
+            Self::SubscriptionIdentifierAvailable(available) => available.encode(buf),
             _ => unimplemented!(),
         }
     }
