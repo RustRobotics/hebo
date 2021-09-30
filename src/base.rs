@@ -44,12 +44,38 @@ impl Default for QoS {
 impl TryFrom<u8> for QoS {
     type Error = DecodeError;
 
-    fn try_from(v: u8) -> Result<QoS, Self::Error> {
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
-            0 => Ok(QoS::AtMostOnce),
-            1 => Ok(QoS::AtLeastOnce),
-            2 => Ok(QoS::ExactOnce),
+            0 => Ok(Self::AtMostOnce),
+            1 => Ok(Self::AtLeastOnce),
+            2 => Ok(Self::ExactOnce),
             _ => Err(DecodeError::InvalidQoS),
         }
+    }
+}
+
+impl Into<u8> for QoS {
+    fn into(self) -> u8 {
+        match self {
+            Self::AtMostOnce => 0,
+            Self::AtLeastOnce => 1,
+            Self::ExactOnce => 2,
+        }
+    }
+}
+
+impl EncodePacket for QoS {
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        let byte: u8 = (*self).into();
+        v.push(byte);
+        Ok(self.bytes())
+    }
+}
+
+impl DecodePacket for QoS {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let byte = ba.read_byte()?;
+        let qos = Self::try_from(byte)?;
+        Ok(qos)
     }
 }
