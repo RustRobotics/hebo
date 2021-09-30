@@ -36,67 +36,33 @@ pub fn check_property_type_list(
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PropertyType {
-    PayloadFormatIndicator,
-    MessageExpiryInterval,
-    ContentType,
-    ResponseTopic,
-    CorrelationData,
-    SubscriptionIdentifier,
-    SessionExpiryInterval,
-    AssignedClientIdentifier,
-    ServerKeepAlive,
-    AuthenticationMethod,
-    AuthenticationData,
-    RequestProblemInformation,
-    WillDelayInterval,
-    RequestResponseInformation,
-    ResponseInformation,
-    ServerReference,
-    ReasonString,
-    ReceiveMaximum,
-    TopicAliasMaximum,
-    TopicAlias,
-    MaximumQoS,
-    RetainAvailable,
-    UserProperty,
-    MaximumPacketSize,
-    WildcardSubscriptionAvailable,
-    SubscriptionIdentifierAvailable,
-    SharedSubscriptionAvailable,
-}
-
-impl Into<u8> for PropertyType {
-    fn into(self) -> u8 {
-        match self {
-            Self::PayloadFormatIndicator => 0x01,
-            Self::MessageExpiryInterval => 0x02,
-            Self::ContentType => 0x03,
-            Self::ResponseTopic => 0x08,
-            Self::CorrelationData => 0x09,
-            Self::SubscriptionIdentifier => 0x0b,
-            Self::SessionExpiryInterval => 0x11,
-            Self::AssignedClientIdentifier => 0x12,
-            Self::ServerKeepAlive => 0x13,
-            Self::AuthenticationMethod => 0x15,
-            Self::AuthenticationData => 0x16,
-            Self::RequestProblemInformation => 0x17,
-            Self::WillDelayInterval => 0x18,
-            Self::RequestResponseInformation => 0x19,
-            Self::ResponseInformation => 0x1a,
-            Self::ServerReference => 0x1c,
-            Self::ReasonString => 0x1f,
-            Self::ReceiveMaximum => 0x21,
-            Self::TopicAliasMaximum => 0x22,
-            Self::TopicAlias => 0x23,
-            Self::MaximumQoS => 0x24,
-            Self::RetainAvailable => 0x25,
-            Self::UserProperty => 0x26,
-            Self::MaximumPacketSize => 0x27,
-            Self::WildcardSubscriptionAvailable => 0x28,
-            Self::SubscriptionIdentifierAvailable => 0x29,
-            Self::SharedSubscriptionAvailable => 0x2a,
-        }
-    }
+    PayloadFormatIndicator = 0x01,
+    MessageExpiryInterval = 0x02,
+    ContentType = 0x03,
+    ResponseTopic = 0x08,
+    CorrelationData = 0x09,
+    SubscriptionIdentifier = 0x0b,
+    SessionExpiryInterval = 0x11,
+    AssignedClientIdentifier = 0x12,
+    ServerKeepAlive = 0x13,
+    AuthenticationMethod = 0x15,
+    AuthenticationData = 0x16,
+    RequestProblemInformation = 0x17,
+    WillDelayInterval = 0x18,
+    RequestResponseInformation = 0x19,
+    ResponseInformation = 0x1a,
+    ServerReference = 0x1c,
+    ReasonString = 0x1f,
+    ReceiveMaximum = 0x21,
+    TopicAliasMaximum = 0x22,
+    TopicAlias = 0x23,
+    MaximumQoS = 0x24,
+    RetainAvailable = 0x25,
+    UserProperty = 0x26,
+    MaximumPacketSize = 0x27,
+    WildcardSubscriptionAvailable = 0x28,
+    SubscriptionIdentifierAvailable = 0x29,
+    SharedSubscriptionAvailable = 0x2a,
 }
 
 impl TryFrom<u8> for PropertyType {
@@ -591,6 +557,7 @@ impl DecodePacket for Property {
 
 impl EncodePacket for Property {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        // FIXME(Shaohua): Fix property name mising
         match self {
             Self::SessionExpiryInterval(interval) => interval.encode(buf),
             Self::ReceiveMaximum(max) => max.encode(buf),

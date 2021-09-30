@@ -106,6 +106,8 @@ pub struct ConnectAckPacket {
 
 impl ConnectAckPacket {
     pub fn new(mut session_present: bool, reason_code: ConnectReasonCode) -> ConnectAckPacket {
+        // If a Server sends a CONNACK packet containing a non-zero Reason Code
+        // it MUST set Session Present to 0 [MQTT-3.2.2-6].
         if reason_code != ConnectReasonCode::Accepted {
             session_present = false;
         }
