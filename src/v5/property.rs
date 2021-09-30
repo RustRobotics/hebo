@@ -330,6 +330,12 @@ pub enum Property {
     ///
     /// UTF-8 Encoded String.
     /// Used in CONNACK, DISCONNECT.
+    ///
+    /// Followed by a UTF-8 Encoded String which can be used by the Client to identify another
+    /// Server to use. It is a Protocol Error to include the Server Reference more than once.
+    ///
+    /// The Server uses a Server Reference in either a CONNACK or DISCONNECT packet
+    /// with Reason code of 0x9C (Use another server) or Reason Code 0x9D (Server moved).
     ServerReference(StringData),
 
     /// Reason String
@@ -699,6 +705,10 @@ impl DecodePacket for Property {
                 let info = StringData::decode(ba)?;
                 Ok(Self::ResponseInformation(info))
             }
+            PropertyType::ServerReference => {
+                let reference = StringData::decode(ba)?;
+                Ok(Self::ServerReference(reference))
+            }
             _ => unimplemented!(),
         }
     }
@@ -731,6 +741,7 @@ impl EncodePacket for Property {
             Self::SharedSubscriptionAvailable(available) => available.encode(buf),
             Self::ServerKeepAlive(keep_alive) => keep_alive.encode(buf),
             Self::ResponseInformation(info) => info.encode(buf),
+            Self::ServerReference(reference) => reference.encode(buf),
             _ => unimplemented!(),
         }
     }
