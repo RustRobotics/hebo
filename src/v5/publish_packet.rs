@@ -5,7 +5,8 @@
 use bytes::BytesMut;
 use std::io::Write;
 
-use super::{FixedHeader, Packet, PacketType};
+use super::property::check_property_type_list;
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{
     consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic,
     QoS,
@@ -84,10 +85,31 @@ pub struct PublishPacket {
     /// `packet_id` field is useless if QoS is 0.
     packet_id: PacketId,
 
+    properties: Properties,
+
     /// Payload contains `msg` field.
     /// TODO(Shaohua): Replace with Bytes or Vec<u8>, BytewMut is useless.
     msg: BytesMut,
 }
+
+pub const PUBLISH_PROPERTIES: &[PropertyType] = &[
+    // A Server MUST send the Payload Format Indicator unaltered to all subscribers
+    // receiving the Application Message [MQTT-3.3.2-4].
+    PropertyType::PayloadFormatIndicator,
+    // If present, the Four Byte value is the lifetime of the Application Message in seconds.
+    //
+    // If the Message Expiry Interval has passed and the Server has not managed to
+    // start onward delivery to a matching subscriber, then it MUST delete the copy
+    // of the message for that subscriber [MQTT-3.3.2-5].
+    //
+    // If absent, the Application Message does not expire.
+    //
+    // The PUBLISH packet sent to a Client by the Server MUST contain a Message Expiry Interval
+    // set to the received value minus the time that the Application Message has been waiting
+    // in the Server [MQTT-3.3.2-6].
+    PropertyType::MessageExpiryInterval,
+    PropertyType::TopicAlias,
+];
 
 impl PublishPacket {
     pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> Result<PublishPacket, EncodeError> {
@@ -98,6 +120,7 @@ impl PublishPacket {
             retain: false,
             topic,
             packet_id: PacketId::new(0),
+            properties: Vec::new(),
             msg: BytesMut::from(msg),
         })
     }
@@ -159,11 +182,17 @@ impl PublishPacket {
         self.topic.as_ref()
     }
 
+    pub fn properties_mut(&mut self) -> &mut Properties {
+        &mut self.properties
+    }
+
+    pub fn properties(&self) -> &Properties {
+        &self.properties
+    }
+
     pub fn message(&self) -> &[u8] {
         &self.msg
     }
-
-    // TODO(Shaohua): Add message related operations.
 }
 
 impl DecodePacket for PublishPacket {
@@ -208,6 +237,15 @@ impl DecodePacket for PublishPacket {
             PacketId::new(0)
         };
 
+        let properties = Properties::decode(ba)?;
+        if let Err(property_type) = check_property_type_list(&properties, PUBLISH_PROPERTIES) {
+            log::error!(
+                "v5/PublishPacket: property type {:?} cannot be used in properties!",
+                property_type
+            );
+            return Err(DecodeError::InvalidPropertyType);
+        }
+
         // It is valid for a PUBLISH Packet to contain a zero length payload.
         if fixed_header.remaining_length() < topic.bytes() {
             return Err(DecodeError::InvalidRemainingLength);
@@ -229,6 +267,7 @@ impl DecodePacket for PublishPacket {
             dup,
             topic,
             packet_id,
+            properties,
             msg,
         })
     }
@@ -238,7 +277,9 @@ impl EncodePacket for PublishPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
-        let mut remaining_length = self.topic.bytes() + self.msg.len();
+        let mut remaining_length = self.topic.bytes()
+            //+ self.properties.bytes()
+            + self.msg.len();
         if self.qos != QoS::AtMostOnce {
             // For `packet_id` field.
             remaining_length += consts::PACKET_ID_BYTES;
@@ -259,6 +300,8 @@ impl EncodePacket for PublishPacket {
         if self.qos() != QoS::AtMostOnce {
             self.packet_id.encode(v)?;
         }
+
+        self.properties.encode(v)?;
 
         // Write payload
         v.write_all(&self.msg)?;
