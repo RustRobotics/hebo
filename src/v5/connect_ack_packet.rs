@@ -175,6 +175,12 @@ pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
     PropertyType::ReceiveMaximum,
     PropertyType::MaximumQoS,
     PropertyType::RetainAvailable,
+    PropertyType::MaximumPacketSize,
+    PropertyType::AssignedClientIdentifier,
+    PropertyType::TopicAliasMaximum,
+    PropertyType::ReasonString,
+    PropertyType::UserProperty,
+    PropertyType::WildcardSubscriptionAvailable,
 ];
 
 impl ConnectAckPacket {

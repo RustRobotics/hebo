@@ -5,8 +5,8 @@
 use std::convert::TryFrom;
 
 use crate::{
-    BinaryData, BoolData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
-    PubTopic, StringData, StringPairData, U16Data, U32Data, VarInt,
+    utils::validate_client_id, BinaryData, BoolData, ByteArray, DecodeError, DecodePacket,
+    EncodeError, EncodePacket, PubTopic, QoS, StringData, StringPairData, U16Data, U32Data, VarInt,
 };
 
 pub fn check_property_type_list(
@@ -200,6 +200,17 @@ pub enum Property {
     ///
     /// UTF-8 Encoded String.
     /// Used in CONNACK.
+    ///
+    /// Followed by the UTF-8 string which is the Assigned Client Identifier. It is
+    /// a Protocol Error to include the Assigned Client Identifier more than once.
+    ///
+    /// The Client Identifier which was assigned by the Server because a zero length Client Identifier
+    /// was found in the CONNECT packet.
+    ///
+    /// If the Client connects using a zero length Client Identifier, the Server
+    /// MUST respond with a CONNACK containing an Assigned Client Identifier.
+    /// The Assigned Client Identifier MUST be a new Client Identifier not used
+    /// by any other Session currently in the Server [MQTT-3.2.2-16].
     AssignedClientIdentifier(StringData),
 
     /// Server Keep Alive
@@ -308,6 +319,17 @@ pub enum Property {
     /// UTF-8 Encoded String.
     /// Used in CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, SUBACK,
     /// UNSUBACK, DISCONNECT, AUTH.
+    ///
+    /// Followed by the UTF-8 Encoded String representing the reason associated with
+    /// this response. This Reason String is a human readable string designed
+    /// for diagnostics and SHOULD NOT be parsed by the Client.
+    ///
+    /// The Server uses this value to give additional information to the Client.
+    /// The Server MUST NOT send this property if it would increase the size
+    /// of the CONNACK packet beyond the Maximum Packet Size specified
+    /// by the Client [MQTT-3.2.2-19].
+    ///
+    /// It is a Protocol Error to include the Reason String more than once.
     ReasonString(StringData),
 
     /// Receive Maximum
@@ -356,12 +378,40 @@ pub enum Property {
     ///
     /// Byte.
     /// Used in CONNACK.
-    MaximumQoS(u8),
+    ///
+    /// Followed by a Byte with a value of either 0 or 1. It is a Protocol Error
+    /// to include Maximum QoS more than once, or to have a value other than 0 or 1.
+    /// If the Maximum QoS is absent, the Client uses a Maximum QoS of 2.
+    ///
+    /// If a Server does not support QoS 1 or QoS 2 PUBLISH packets it MUST send
+    /// a Maximum QoS in the CONNACK packet specifying the highest QoS it supports [MQTT-3.2.2-9].
+    ///
+    /// A Server that does not support QoS 1 or QoS 2 PUBLISH packets MUST still
+    /// accept SUBSCRIBE packets containing a Requested QoS of 0, 1 or 2 [MQTT-3.2.2-10].
+    ///
+    /// If a Client receives a Maximum QoS from a Server, it MUST NOT send PUBLISH packets
+    /// at a QoS level exceeding the Maximum QoS level specified [MQTT-3.2.2-11].
+    ///
+    /// It is a Protocol Error if the Server receives a PUBLISH packet with a QoS
+    /// greater than the Maximum QoS it specified. In this case use DISCONNECT
+    /// with Reason Code 0x9B (QoS not supported).
+    ///
+    /// If a Server receives a CONNECT packet containing a Will QoS that exceeds
+    /// its capabilities, it MUST reject the connection. It SHOULD use a CONNACK packet
+    /// with Reason Code 0x9B (QoS not supported) Handling errors, and MUST close
+    /// the Network Connection [MQTT-3.2.2-12].
+    MaximumQoS(QoS),
 
     /// Retain Available
     ///
     /// Byte.
     /// Used in CONNACK.
+    ///
+    /// Followed by a Byte field. If present, this byte declares whether the Server supports
+    /// retained messages. A value of 0 means that retained messages are not supported.
+    /// A value of 1 means retained messages are supported. If not present, then
+    /// retained messages are supported. It is a Protocol Error to include Retain Available
+    /// more than once or to use a value other than 0 or 1.
     RetainAvailable(BoolData),
 
     /// User Property
@@ -413,6 +463,13 @@ pub enum Property {
     ///
     /// Byte.
     /// Used in CONNACK.
+    ///
+    /// Followed by a Byte field. If present, this byte declares whether the Server
+    /// supports Wildcard Subscriptions. A value is 0 means that Wildcard Subscriptions
+    /// are not supported. A value of 1 means Wildcard Subscriptions are supported.
+    /// If not present, then Wildcard Subscriptions are supported. It is a Protocol Error
+    /// to include the Wildcard Subscription Available more than once or to send
+    /// a value other than 0 or 1.
     WildcardSubscriptionAvailable(BoolData),
 
     /// Subscription Identifier Available
@@ -487,6 +544,10 @@ impl Property {
     pub const fn default_will_delay_interval() -> u32 {
         0
     }
+
+    pub const fn default_wildcard_subscription_available() -> bool {
+        true
+    }
 }
 
 impl DecodePacket for Property {
@@ -550,6 +611,26 @@ impl DecodePacket for Property {
                 let data = BinaryData::decode(ba)?;
                 Ok(Self::CorrelationData(data))
             }
+            PropertyType::MaximumQoS => {
+                let qos = QoS::decode(ba)?;
+                if qos != QoS::AtLeastOnce && qos != QoS::AtMostOnce {
+                    return Err(DecodeError::InvalidPropertyValue);
+                }
+                Ok(Self::MaximumQoS(qos))
+            }
+            PropertyType::RetainAvailable => {
+                let available = BoolData::decode(ba)?;
+                Ok(Self::RetainAvailable(available))
+            }
+            PropertyType::AssignedClientIdentifier => {
+                let client_id = StringData::decode(ba)?;
+                validate_client_id(client_id.as_ref())?;
+                Ok(Self::AssignedClientIdentifier(client_id))
+            }
+            PropertyType::WildcardSubscriptionAvailable => {
+                let available = BoolData::decode(ba)?;
+                Ok(Self::WildcardSubscriptionAvailable(available))
+            }
             _ => unimplemented!(),
         }
     }
@@ -574,6 +655,10 @@ impl EncodePacket for Property {
             Self::ContentType(content_type) => content_type.encode(buf),
             Self::ResponseTopic(topic) => topic.encode(buf),
             Self::CorrelationData(data) => data.encode(buf),
+            Self::MaximumQoS(qos) => qos.encode(buf),
+            Self::RetainAvailable(available) => available.encode(buf),
+            Self::AssignedClientIdentifier(client_id) => client_id.encode(buf),
+            Self::WildcardSubscriptionAvailable(available) => available.encode(buf),
             _ => unimplemented!(),
         }
     }
