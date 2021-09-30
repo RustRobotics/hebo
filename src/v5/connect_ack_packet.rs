@@ -186,6 +186,8 @@ pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
     PropertyType::ServerKeepAlive,
     PropertyType::ResponseInformation,
     PropertyType::ServerReference,
+    PropertyType::AuthenticationMethod,
+    PropertyType::AuthenticationData,
 ];
 
 impl ConnectAckPacket {
