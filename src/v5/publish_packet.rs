@@ -109,6 +109,19 @@ pub const PUBLISH_PROPERTIES: &[PropertyType] = &[
     // in the Server [MQTT-3.3.2-6].
     PropertyType::MessageExpiryInterval,
     PropertyType::TopicAlias,
+    // The Server MUST send the Response Topic unaltered to all subscribers receiving
+    // the Application Message [MQTT-3.3.2-15].
+    PropertyType::ResponseTopic,
+    // The Server MUST send the Correlation Data unaltered to all subscribers receiving
+    // the Application Message [MQTT-3.3.2-16].
+    PropertyType::CorrelationData,
+    // The Server MUST send all User Properties unaltered in a PUBLISH packet
+    // when forwarding the Application Message to a Client [MQTT-3.3.2-17].
+    //
+    // The Server MUST maintain the order of User Properties when forwarding
+    // the Application Message [MQTT-3.3.2-18].
+    PropertyType::UserProperty,
+    PropertyType::SubscriptionIdentifier,
 ];
 
 impl PublishPacket {

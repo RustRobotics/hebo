@@ -9,6 +9,11 @@ use crate::{
     EncodeError, EncodePacket, PubTopic, QoS, StringData, StringPairData, U16Data, U32Data, VarInt,
 };
 
+pub const MULTIPLE_PROPERTIES: &[PropertyType] = &[
+    PropertyType::UserProperty,
+    PropertyType::SubscriptionIdentifier,
+];
+
 pub fn check_property_type_list(
     properties: &[Property],
     types: &[PropertyType],
@@ -24,8 +29,7 @@ pub fn check_property_type_list(
             .iter()
             .filter(|p| p.property_type() == *property_type)
             .count();
-        // Only UserProperty is allowed to present in property list more than once.
-        if count > 1 && *property_type != PropertyType::UserProperty {
+        if count > 1 && !MULTIPLE_PROPERTIES.contains(property_type) {
             return Err(*property_type);
         }
     }
@@ -102,7 +106,7 @@ impl TryFrom<u8> for PropertyType {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Property {
     /// Payload Format Indicator
     ///
@@ -175,7 +179,15 @@ pub enum Property {
     /// Variable Byte Integer.
     ///
     /// Used in PUBLISH, SUBSCRIBE.
-    SubscriptionIdentifier(BinaryData),
+    ///
+    /// Followed by a Variable Byte Integer representing the identifier of the subscription.
+    ///
+    /// The Subscription Identifier can have the value of 1 to 268,435,455.
+    /// It is a Protocol Error if the Subscription Identifier has a value of 0.
+    /// Multiple Subscription Identifiers will be included if the publication
+    /// is the result of a match to more than one subscription, in this case
+    /// their order is not significant.
+    SubscriptionIdentifier(VarInt),
 
     /// Session Expiry Interval
     ///
@@ -757,6 +769,13 @@ impl DecodePacket for Property {
                 let alias = U16Data::decode(ba)?;
                 Ok(Self::TopicAlias(alias))
             }
+            PropertyType::SubscriptionIdentifier => {
+                let id = VarInt::decode(ba)?;
+                if id.value() == 0 {
+                    return Err(DecodeError::InvalidPropertyValue);
+                }
+                Ok(Self::SubscriptionIdentifier(id))
+            }
             _ => unimplemented!(),
         }
     }
@@ -791,6 +810,7 @@ impl EncodePacket for Property {
             Self::ResponseInformation(info) => info.encode(buf),
             Self::ServerReference(reference) => reference.encode(buf),
             Self::TopicAlias(alias) => alias.encode(buf),
+            Self::SubscriptionIdentifier(id) => id.encode(buf),
             _ => unimplemented!(),
         }
     }

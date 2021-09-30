@@ -12,7 +12,7 @@ use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePac
 /// following in the representation. Thus, each byte encodes 128 values and a "continuation bit".
 /// The maximum number of bytes in the Variable Byte Integer field is four.  The encoded value
 /// MUST use the minimum number of bytes necessary to represent the value [MQTT-1.5.5-1].
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct VarInt(usize);
 
 impl VarInt {
@@ -24,6 +24,10 @@ impl VarInt {
     }
 
     pub fn len(&self) -> usize {
+        self.0
+    }
+
+    pub fn value(&self) -> usize {
         self.0
     }
 
