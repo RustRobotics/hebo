@@ -497,6 +497,17 @@ pub enum Property {
     ///
     /// Byte.
     /// Used in CONNACK.
+    ///
+    /// Followed by a Byte field. If present, this byte declares whether the Server
+    /// supports Shared Subscriptions. A value is 0 means that Shared Subscriptions
+    /// are not supported. A value of 1 means Shared Subscriptions are supported.
+    /// If not present, then Shared Subscriptions are supported. It is a Protocol Error
+    /// to include the Shared Subscription Available more than once or to send
+    /// a value other than 0 or 1.
+    ///
+    /// If the Server receives a SUBSCRIBE packet containing Shared Subscriptions
+    /// and it does not support Shared Subscriptions, this is a Protocol Error.
+    /// The Server uses DISCONNECT with Reason Code 0x9E (Shared Subscriptions not supported).
     SharedSubscriptionAvailable(BoolData),
 }
 
@@ -565,6 +576,10 @@ impl Property {
     }
 
     pub const fn default_subscription_identifier_available() -> bool {
+        true
+    }
+
+    pub const fn default_shared_subscription_available() -> bool {
         true
     }
 }
@@ -654,6 +669,10 @@ impl DecodePacket for Property {
                 let available = BoolData::decode(ba)?;
                 Ok(Self::SubscriptionIdentifierAvailable(available))
             }
+            PropertyType::SharedSubscriptionAvailable => {
+                let available = BoolData::decode(ba)?;
+                Ok(Self::SharedSubscriptionAvailable(available))
+            }
             _ => unimplemented!(),
         }
     }
@@ -683,6 +702,7 @@ impl EncodePacket for Property {
             Self::AssignedClientIdentifier(client_id) => client_id.encode(buf),
             Self::WildcardSubscriptionAvailable(available) => available.encode(buf),
             Self::SubscriptionIdentifierAvailable(available) => available.encode(buf),
+            Self::SharedSubscriptionAvailable(available) => available.encode(buf),
             _ => unimplemented!(),
         }
     }
