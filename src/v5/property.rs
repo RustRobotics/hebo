@@ -316,6 +316,14 @@ pub enum Property {
     ///
     /// UTF-8 Encoded String.
     /// Used in CONNACK.
+    ///
+    /// Followed by a UTF-8 Encoded String which is used as the basis for creating
+    /// a Response Topic. The way in which the Client creates a Response Topic
+    /// from the Response Information is not defined by this specification.
+    /// It is a Protocol Error to include the Response Information more than once.
+    ///
+    /// If the Client sends a Request Response Information with a value 1, it is
+    /// OPTIONAL for the Server to send the Response Information in the CONNACK.
     ResponseInformation(StringData),
 
     /// Server Reference
@@ -687,6 +695,10 @@ impl DecodePacket for Property {
                 let keep_alive = U16Data::decode(ba)?;
                 Ok(Self::ServerKeepAlive(keep_alive))
             }
+            PropertyType::ResponseInformation => {
+                let info = StringData::decode(ba)?;
+                Ok(Self::ResponseInformation(info))
+            }
             _ => unimplemented!(),
         }
     }
@@ -718,6 +730,7 @@ impl EncodePacket for Property {
             Self::SubscriptionIdentifierAvailable(available) => available.encode(buf),
             Self::SharedSubscriptionAvailable(available) => available.encode(buf),
             Self::ServerKeepAlive(keep_alive) => keep_alive.encode(buf),
+            Self::ResponseInformation(info) => info.encode(buf),
             _ => unimplemented!(),
         }
     }
