@@ -9,7 +9,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 /// close the network connection.
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum ConnectReturnCode {
+pub enum ConnectReasonCode {
     /// Connection accepted.
     Accepted = 0,
 
@@ -32,29 +32,33 @@ pub enum ConnectReturnCode {
     Reserved = 6,
 }
 
-impl Default for ConnectReturnCode {
-    fn default() -> ConnectReturnCode {
-        ConnectReturnCode::Accepted
+impl Default for ConnectReasonCode {
+    fn default() -> ConnectReasonCode {
+        ConnectReasonCode::Accepted
     }
 }
 
-impl From<u8> for ConnectReturnCode {
-    fn from(v: u8) -> ConnectReturnCode {
+impl From<u8> for ConnectReasonCode {
+    fn from(v: u8) -> ConnectReasonCode {
         match v {
-            0 => ConnectReturnCode::Accepted,
-            1 => ConnectReturnCode::UnacceptedProtocol,
-            2 => ConnectReturnCode::IdentifierRejected,
-            3 => ConnectReturnCode::ServerUnavailable,
-            4 => ConnectReturnCode::MalformedUsernamePassword,
-            5 => ConnectReturnCode::Unauthorized,
-            _ => ConnectReturnCode::Reserved,
+            0 => ConnectReasonCode::Accepted,
+            1 => ConnectReasonCode::UnacceptedProtocol,
+            2 => ConnectReasonCode::IdentifierRejected,
+            3 => ConnectReasonCode::ServerUnavailable,
+            4 => ConnectReasonCode::MalformedUsernamePassword,
+            5 => ConnectReasonCode::Unauthorized,
+            _ => ConnectReasonCode::Reserved,
         }
     }
 }
 
-/// The first packet sent to the Client from the Server must be ConnectAckPacket.
-/// If the Client does not receive ConnectAckPacket in a reasonable time, it MUST
-/// close the network connection.
+/// The CONNACK packet is the packet sent by the Server in response to a CONNECT packet
+/// received from a Client.
+///
+/// The Server MUST send a CONNACK with a 0x00 (Success) Reason Code before
+/// sending any Packet other than AUTH [MQTT-3.2.0-1].
+///
+/// The Server MUST NOT send more than one CONNACK in a Network Connection [MQTT-3.2.0-2].
 ///
 /// Basic packet structure:
 /// ```txt
@@ -65,9 +69,20 @@ impl From<u8> for ConnectReturnCode {
 /// +-------------------------+
 /// | Ack flags               |
 /// +-------------------------+
-/// | Return code             |
+/// | Reason code             |
+/// +-------------------------+
+/// | Properties              |
+/// |                         |
 /// +-------------------------+
 /// ```
+/// he Variable Header of the CONNACK Packet contains the following fields in the order:
+/// - Connect Acknowledge Flags
+/// - Connect Reason Code
+/// - Properties.
+///
+/// If the Client does not receive a CONNACK packet from the Server within a reasonable
+/// amount of time, the Client SHOULD close the Network Connection. A "reasonable"
+/// amount of time depends on the type of application and the communications infrastructure.
 ///
 /// This packet does not contain payload.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -86,29 +101,30 @@ pub struct ConnectAckPacket {
     session_present: bool,
 
     /// Byte 2 in the connection return code.
-    return_code: ConnectReturnCode,
+    reason_code: ConnectReasonCode,
 }
 
 impl ConnectAckPacket {
-    pub fn new(mut session_present: bool, return_code: ConnectReturnCode) -> ConnectAckPacket {
-        // If a server sends a CONNACK packet containing a non-zero return code it MUST
-        // set Session Present to 0. [MQTT-3.2.2-4]
-        if return_code != ConnectReturnCode::Accepted {
+    pub fn new(mut session_present: bool, reason_code: ConnectReasonCode) -> ConnectAckPacket {
+        if reason_code != ConnectReasonCode::Accepted {
             session_present = false;
         }
         ConnectAckPacket {
             session_present,
-            return_code,
+            reason_code,
         }
     }
 
-    pub fn set_return_code(&mut self, code: ConnectReturnCode) -> &mut Self {
-        self.return_code = code;
+    pub fn set_reason_code(&mut self, code: ConnectReasonCode) -> &mut Self {
+        if code != ConnectReasonCode::Accepted {
+            self.session_present = false;
+        }
+        self.reason_code = code;
         self
     }
 
-    pub fn return_code(&self) -> ConnectReturnCode {
-        self.return_code
+    pub fn reason_code(&self) -> ConnectReasonCode {
+        self.reason_code
     }
 
     pub fn set_session_present(&mut self, present: bool) -> &mut Self {
@@ -128,11 +144,11 @@ impl DecodePacket for ConnectAckPacket {
 
         let ack_flags = ba.read_byte()?;
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
-        let return_code = ConnectReturnCode::from(ba.read_byte()?);
+        let reason_code = ConnectReasonCode::from(ba.read_byte()?);
 
         Ok(ConnectAckPacket {
             session_present,
-            return_code,
+            reason_code,
         })
     }
 }
@@ -145,7 +161,7 @@ impl EncodePacket for ConnectAckPacket {
 
         let ack_flags = if self.session_present { 0b0000_0001 } else { 0 };
         buf.push(ack_flags);
-        buf.push(self.return_code as u8);
+        buf.push(self.reason_code as u8);
 
         Ok(buf.len() - old_len)
     }
