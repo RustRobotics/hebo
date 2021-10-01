@@ -45,6 +45,10 @@ impl StringPairData {
     pub fn value(&self) -> &StringData {
         &self.1
     }
+
+    pub fn bytes(&self) -> usize {
+        self.0.bytes() + self.1.bytes()
+    }
 }
 
 impl DecodePacket for StringPairData {

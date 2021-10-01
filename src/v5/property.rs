@@ -69,6 +69,12 @@ pub enum PropertyType {
     SharedSubscriptionAvailable = 0x2a,
 }
 
+impl PropertyType {
+    pub const fn const_bytes() -> usize {
+        1
+    }
+}
+
 impl TryFrom<u8> for PropertyType {
     type Error = DecodeError;
 
@@ -625,6 +631,40 @@ impl Property {
             Self::SharedSubscriptionAvailable(_) => PropertyType::SharedSubscriptionAvailable,
         }
     }
+
+    pub fn bytes(&self) -> usize {
+        let value_bytes = match self {
+            Self::PayloadFormatIndicator(value) => value.bytes(),
+            Self::MessageExpiryInterval(value) => value.bytes(),
+            Self::ContentType(value) => value.bytes(),
+            Self::ResponseTopic(value) => value.bytes(),
+            Self::CorrelationData(value) => value.bytes(),
+            Self::SubscriptionIdentifier(value) => value.bytes(),
+            Self::SessionExpiryInterval(value) => value.bytes(),
+            Self::AssignedClientIdentifier(value) => value.bytes(),
+            Self::ServerKeepAlive(value) => value.bytes(),
+            Self::AuthenticationMethod(value) => value.bytes(),
+            Self::AuthenticationData(value) => value.bytes(),
+            Self::RequestProblemInformation(value) => value.bytes(),
+            Self::WillDelayInterval(value) => value.bytes(),
+            Self::RequestResponseInformation(value) => value.bytes(),
+            Self::ResponseInformation(value) => value.bytes(),
+            Self::ServerReference(value) => value.bytes(),
+            Self::ReasonString(value) => value.bytes(),
+            Self::ReceiveMaximum(value) => value.bytes(),
+            Self::TopicAliasMaximum(value) => value.bytes(),
+            Self::TopicAlias(value) => value.bytes(),
+            Self::MaximumQoS(value) => value.bytes(),
+            Self::RetainAvailable(value) => value.bytes(),
+            Self::UserProperty(value) => value.bytes(),
+            Self::MaximumPacketSize(value) => value.bytes(),
+            Self::WildcardSubscriptionAvailable(value) => value.bytes(),
+            Self::SubscriptionIdentifierAvailable(value) => value.bytes(),
+            Self::SharedSubscriptionAvailable(value) => value.bytes(),
+        };
+
+        PropertyType::const_bytes() + value_bytes
+    }
 }
 
 impl Property {
@@ -785,6 +825,7 @@ impl EncodePacket for Property {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let property_type_byte = self.property_type() as u8;
         buf.push(property_type_byte);
+        // FIXME(Shaohua): missing type byte.
         match self {
             Self::SessionExpiryInterval(interval) => interval.encode(buf),
             Self::ReceiveMaximum(max) => max.encode(buf),
