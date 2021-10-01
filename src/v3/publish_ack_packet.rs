@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// Acknowledge packet for Publish message in QoS 1.
 ///
@@ -39,7 +39,7 @@ impl EncodePacket for PublishAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let fixed_header = FixedHeader::new(PacketType::PublishAck, consts::PACKET_ID_BYTES)?;
+        let fixed_header = FixedHeader::new(PacketType::PublishAck, self.packet_id.bytes())?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;
         Ok(buf.len() - old_len)
@@ -57,7 +57,7 @@ impl DecodePacket for PublishAckPacket {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::PublishAck {
             Err(DecodeError::InvalidPacketType)
-        } else if fixed_header.remaining_length() != consts::PACKET_ID_BYTES {
+        } else if fixed_header.remaining_length() != PacketId::const_bytes() {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             let packet_id = PacketId::decode(ba)?;

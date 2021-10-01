@@ -8,8 +8,7 @@ use std::io::Write;
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{
-    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic,
-    QoS,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic, QoS,
 };
 
 /// PublishPacket is used to transport application messages from the Client to the Server,
@@ -31,9 +30,9 @@ use crate::{
 /// | Packet Identifier     |
 /// |                       |
 /// +-----------------------+
-/// | Msg payload ...       |
-/// +-----------------------+
 /// | Properties ...        |
+/// +-----------------------+
+/// | Msg payload ...       |
 /// +-----------------------+
 /// ```
 ///
@@ -122,6 +121,9 @@ pub const PUBLISH_PROPERTIES: &[PropertyType] = &[
     // the Application Message [MQTT-3.3.2-18].
     PropertyType::UserProperty,
     PropertyType::SubscriptionIdentifier,
+    // A Server MUST send the Content Type unaltered to all subscribers receiving
+    // the Application Message [MQTT-3.3.2-20].
+    PropertyType::ContentType,
 ];
 
 impl PublishPacket {
@@ -265,12 +267,12 @@ impl DecodePacket for PublishPacket {
         }
         let mut msg_len = fixed_header.remaining_length() - topic.bytes();
         if qos != QoS::AtMostOnce {
-            if msg_len < consts::PACKET_ID_BYTES {
+            if msg_len < packet_id.bytes() {
                 return Err(DecodeError::InvalidRemainingLength);
             }
 
             // Packet identifier is presesnt in QoS1/QoS2 packets.
-            msg_len -= consts::PACKET_ID_BYTES;
+            msg_len -= packet_id.bytes();
         }
 
         let msg = BytesMut::from(ba.read_bytes(msg_len)?);
@@ -294,8 +296,7 @@ impl EncodePacket for PublishPacket {
             //+ self.properties.bytes()
             + self.msg.len();
         if self.qos != QoS::AtMostOnce {
-            // For `packet_id` field.
-            remaining_length += consts::PACKET_ID_BYTES;
+            remaining_length += self.packet_id.bytes();
         }
 
         let packet_type = PacketType::Publish {

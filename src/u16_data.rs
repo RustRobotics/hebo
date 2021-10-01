@@ -22,6 +22,10 @@ impl U16Data {
     pub fn bytes(&self) -> usize {
         2
     }
+
+    pub const fn const_bytes() -> usize {
+        2
+    }
 }
 
 impl DecodePacket for U16Data {

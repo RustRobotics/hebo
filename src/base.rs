@@ -33,6 +33,10 @@ impl QoS {
     pub fn bytes(&self) -> usize {
         1
     }
+
+    pub const fn const_bytes() -> usize {
+        1
+    }
 }
 
 impl Default for QoS {

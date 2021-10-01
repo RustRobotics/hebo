@@ -3,9 +3,7 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{
-    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic,
-};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic};
 
 /// The Client request to unsubscribe topics from the Server.
 /// When the Server receives this packet, no more Publish packet will be sent to the Client.
@@ -115,7 +113,7 @@ impl DecodePacket for UnsubscribePacket {
             return Err(DecodeError::InvalidPacketId);
         }
 
-        let mut remaining_length = consts::PACKET_ID_BYTES;
+        let mut remaining_length = packet_id.bytes();
         let mut topics = Vec::new();
         while remaining_length < fixed_header.remaining_length() {
             let topic = SubTopic::decode(ba)?;
@@ -136,7 +134,7 @@ impl DecodePacket for UnsubscribePacket {
 impl EncodePacket for UnsubscribePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
-        let mut remaining_length: usize = consts::PACKET_ID_BYTES; // packet id
+        let mut remaining_length: usize = self.packet_id.bytes();
         for topic in &self.topics {
             remaining_length += topic.bytes();
         }

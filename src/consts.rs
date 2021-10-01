@@ -2,21 +2,7 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-// u16
-pub const PACKET_ID_BYTES: usize = 2;
-
-// u16
-pub const TOPIC_LENGTH_BYTES: usize = 2;
-
-// u8
-pub const QOS_BYTES: usize = 1;
-
-// u16
-pub const CLIENT_ID_LENGTH_BYTES: usize = 2;
-
-// u16
-pub const PROTOCOL_NAME_LENGTH: usize = 2;
-
 pub const PROTOCOL_NAME: &'static str = "MQTT";
 
+/// 256MB
 pub const MAX_PACKET_LEN: usize = 0x7f_ff_ff_ff;

@@ -3,9 +3,7 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{
-    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS,
-};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS};
 
 /// Reply to each subscribed topic.
 #[repr(u8)]
@@ -97,11 +95,11 @@ impl DecodePacket for SubscribeAckPacket {
         let packet_id = PacketId::decode(ba)?;
 
         let mut acknowledgements = Vec::new();
-        let mut remaining_length = consts::PACKET_ID_BYTES;
+        let mut remaining_length = packet_id.bytes();
 
         while remaining_length < fixed_header.remaining_length() {
             let payload = ba.read_byte()?;
-            remaining_length += consts::QOS_BYTES;
+            remaining_length += QoS::const_bytes();
             match payload & 0b1000_0011 {
                 0b1000_0000 => acknowledgements.push(SubscribeAck::Failed),
                 0b0000_0010 => acknowledgements.push(SubscribeAck::QoS(QoS::ExactOnce)),
@@ -123,7 +121,7 @@ impl EncodePacket for SubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
         let remaining_length =
-            consts::PACKET_ID_BYTES + consts::QOS_BYTES * self.acknowledgements.len();
+            self.packet_id.bytes() + QoS::const_bytes() * self.acknowledgements.len();
         let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;

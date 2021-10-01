@@ -7,8 +7,7 @@ use std::io::Write;
 
 use super::{FixedHeader, Packet, PacketType};
 use crate::{
-    consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic,
-    QoS,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic, QoS,
 };
 
 /// PublishPacket is used to transport application messages from the Client to the Server,
@@ -210,12 +209,12 @@ impl DecodePacket for PublishPacket {
         }
         let mut msg_len = fixed_header.remaining_length() - topic.bytes();
         if qos != QoS::AtMostOnce {
-            if msg_len < consts::PACKET_ID_BYTES {
+            if msg_len < packet_id.bytes() {
                 return Err(DecodeError::InvalidRemainingLength);
             }
 
             // Packet identifier is presesnt in QoS1/QoS2 packets.
-            msg_len -= consts::PACKET_ID_BYTES;
+            msg_len -= packet_id.bytes();
         }
 
         let msg = BytesMut::from(ba.read_bytes(msg_len)?);
@@ -236,8 +235,7 @@ impl EncodePacket for PublishPacket {
 
         let mut remaining_length = self.topic.bytes() + self.msg.len();
         if self.qos != QoS::AtMostOnce {
-            // For `packet_id` field.
-            remaining_length += consts::PACKET_ID_BYTES;
+            remaining_length += self.packet_id.bytes();
         }
 
         let packet_type = PacketType::Publish {
