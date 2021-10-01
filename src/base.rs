@@ -7,6 +7,8 @@ use std::convert::TryFrom;
 
 use super::{ByteArray, DecodeError, EncodeError};
 
+pub const PROTOCOL_NAME: &'static str = "MQTT";
+
 /// Convert native data types to network byte stream.
 pub trait EncodePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError>;

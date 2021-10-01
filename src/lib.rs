@@ -7,7 +7,6 @@ mod binary_data;
 mod bool_data;
 pub mod byte_array;
 mod connect_flags;
-pub mod consts;
 pub mod error;
 mod protocol_level;
 mod string_data;

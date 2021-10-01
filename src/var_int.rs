@@ -2,7 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// The Variable Byte Integer is encoded using an encoding scheme which uses a single byte
 /// for values up to 127.
@@ -15,9 +15,12 @@ use crate::{consts, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePac
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct VarInt(usize);
 
+/// 256MB
+pub const MAX_PACKET_LEN: usize = 0x7f_ff_ff_ff;
+
 impl VarInt {
     pub fn new(len: usize) -> Result<Self, EncodeError> {
-        if len as usize > consts::MAX_PACKET_LEN {
+        if len as usize > MAX_PACKET_LEN {
             return Err(EncodeError::TooManyData);
         }
         Ok(Self(len))

@@ -6,11 +6,12 @@ use std::convert::TryFrom;
 
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use crate::base::PROTOCOL_NAME;
 use crate::connect_flags::ConnectFlags;
 use crate::utils::{validate_client_id, validate_keep_alive};
 use crate::{
-    consts, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket,
-    ProtocolLevel, PubTopic, QoS, StringData, U16Data,
+    BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
+    PubTopic, QoS, StringData, U16Data,
 };
 
 /// `ConnectPacket` consists of three parts:
@@ -199,7 +200,7 @@ pub const CONNECT_WILL_PROPERTIES: &[PropertyType] = &[
 
 impl ConnectPacket {
     pub fn new(client_id: &str) -> Result<ConnectPacket, EncodeError> {
-        let protocol_name = StringData::from_str(consts::PROTOCOL_NAME)?;
+        let protocol_name = StringData::from_str(PROTOCOL_NAME)?;
         validate_client_id(client_id)?;
         let client_id = StringData::from_str(client_id)?;
         Ok(ConnectPacket {
@@ -434,7 +435,7 @@ impl DecodePacket for ConnectPacket {
         // Reason Code of 0x84 (Unsupported Protocol Version), and then
         // it MUST close the Network Connection [MQTT-3.1.2-1].
         let protocol_name = StringData::decode(ba)?;
-        if protocol_name.as_ref() != consts::PROTOCOL_NAME {
+        if protocol_name.as_ref() != PROTOCOL_NAME {
             return Err(DecodeError::InvalidProtocolName);
         }
 
