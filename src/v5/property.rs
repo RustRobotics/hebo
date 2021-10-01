@@ -15,10 +15,10 @@ pub const MULTIPLE_PROPERTIES: &[PropertyType] = &[
 ];
 
 pub fn check_property_type_list(
-    properties: &[Property],
+    properties: &Properties,
     types: &[PropertyType],
 ) -> Result<(), PropertyType> {
-    for property in properties {
+    for property in properties.props() {
         if !types.contains(&property.property_type()) {
             return Err(property.property_type());
         }
@@ -26,6 +26,7 @@ pub fn check_property_type_list(
 
     for property_type in types {
         let count = properties
+            .props()
             .iter()
             .filter(|p| p.property_type() == *property_type)
             .count();
@@ -858,28 +859,48 @@ impl EncodePacket for Property {
     }
 }
 
-pub type Properties = Vec<Property>;
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct Properties {
+    len: VarInt,
+    props: Vec<Property>,
+}
+
+impl Properties {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn bytes(&self) -> usize {
+        self.len.bytes() + self.props.iter().map(|p| p.bytes()).sum::<usize>()
+    }
+
+    pub fn len(&self) -> usize {
+        self.len.value()
+    }
+
+    pub fn props(&self) -> &[Property] {
+        &self.props
+    }
+}
 
 impl DecodePacket for Properties {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let property_length = VarInt::decode(ba)?;
+        let len = VarInt::decode(ba)?;
 
-        let mut result = Vec::with_capacity(property_length.len());
-        for _i in 0..property_length.len() {
+        let mut props = Vec::with_capacity(len.value());
+        for _i in 0..len.value() {
             let property = Property::decode(ba)?;
-            result.push(property);
+            props.push(property);
         }
 
-        Ok(result)
+        Ok(Self { len, props })
     }
 }
 
 impl EncodePacket for Properties {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        let property_length = VarInt::new(self.len())?;
-
-        let mut bytes_written = property_length.bytes();
-        for property in self {
+        let mut bytes_written = self.len.bytes();
+        for property in &self.props {
             bytes_written += property.encode(buf)?;
         }
 

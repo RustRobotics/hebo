@@ -135,7 +135,7 @@ impl PublishPacket {
             retain: false,
             topic,
             packet_id: PacketId::new(0),
-            properties: Vec::new(),
+            properties: Properties::new(),
             msg: BytesMut::from(msg),
         })
     }

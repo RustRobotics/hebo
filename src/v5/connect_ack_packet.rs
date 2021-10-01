@@ -199,7 +199,7 @@ impl ConnectAckPacket {
         ConnectAckPacket {
             session_present,
             reason_code,
-            properties: Vec::new(),
+            properties: Properties::new(),
         }
     }
 
