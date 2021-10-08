@@ -114,6 +114,16 @@ pub struct PublishAckPacket {
     properties: Properties,
 }
 
+pub const PUBLISH_ACK_PROPERTIES: &[PropertyType] = &[
+    // The sender uses this value to give additional information to the receiver.
+    // The sender MUST NOT send this property if it would increase the size of the PUBACK packet
+    // beyond the Maximum Packet Size specified by the receiver [MQTT-3.4.2-2].
+    PropertyType::ReasonString,
+    // The sender MUST NOT send this property if it would increase the size of the PUBACK
+    // packet beyond the Maximum Packet Size specified by the receiver [MQTT-3.4.2-3].
+    PropertyType::UserProperty,
+];
+
 impl PublishAckPacket {
     pub fn new(packet_id: PacketId) -> Self {
         Self {
@@ -198,7 +208,17 @@ impl DecodePacket for PublishAckPacket {
             PublishAckReasonCode::default()
         };
         let properties = if remaining_length > PublishAckReasonCode::const_bytes() {
-            Properties::decode(ba)?
+            let properties = Properties::decode(ba)?;
+            if let Err(property_type) =
+                check_property_type_list(&properties, PUBLISH_ACK_PROPERTIES)
+            {
+                log::error!(
+                    "v5/PublishAckPacket: property type {:?} cannot be used in properties!",
+                    property_type
+                );
+                return Err(DecodeError::InvalidPropertyType);
+            }
+            properties
         } else {
             Properties::new()
         };
