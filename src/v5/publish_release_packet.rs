@@ -65,6 +65,8 @@ impl PublishReleaseReasonCode {
 /// +--------------------+
 /// | Reason Code        |
 /// +--------------------+
+/// | Property Length    |
+/// +--------------------+
 /// | Properties ...     |
 /// +--------------------+
 /// ```

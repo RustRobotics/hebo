@@ -5,7 +5,7 @@
 use std::convert::TryFrom;
 
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{FixedHeader, Packet, PacketType, PropertyType, ShortProperties};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// Byte 3 in the Variable Header is the PUBREC Reason Code. If the Remaining Length is 2,
@@ -95,6 +95,8 @@ impl PublishReceivedReasonCode {
 /// +-----------------------+
 /// | Reason Code           |
 /// +-----------------------+
+/// | Property Length       |
+/// +-----------------------+
 /// | Properties ...        |
 /// +-----------------------+
 /// ```
@@ -104,7 +106,7 @@ impl PublishReceivedReasonCode {
 pub struct PublishReceivedPacket {
     packet_id: PacketId,
     reason_code: PublishReceivedReasonCode,
-    properties: Properties,
+    properties: ShortProperties,
 }
 
 pub const PUBLISH_RECEIVED_PROPERTIES: &[PropertyType] = &[
@@ -142,11 +144,11 @@ impl PublishReceivedPacket {
         self.reason_code
     }
 
-    pub fn properties(&self) -> &Properties {
+    pub fn properties(&self) -> &ShortProperties {
         &self.properties
     }
 
-    pub fn mut_properties(&mut self) -> &mut Properties {
+    pub fn mut_properties(&mut self) -> &mut ShortProperties {
         &mut self.properties
     }
 }
@@ -199,7 +201,7 @@ impl DecodePacket for PublishReceivedPacket {
             PublishReceivedReasonCode::default()
         };
         let properties = if remaining_length > PublishReceivedReasonCode::const_bytes() {
-            let properties = Properties::decode(ba)?;
+            let properties = ShortProperties::decode(ba)?;
             if let Err(property_type) =
                 check_property_type_list(properties.props(), PUBLISH_RECEIVED_PROPERTIES)
             {
@@ -211,7 +213,7 @@ impl DecodePacket for PublishReceivedPacket {
             }
             properties
         } else {
-            Properties::new()
+            ShortProperties::new()
         };
         Ok(PublishReceivedPacket {
             packet_id,

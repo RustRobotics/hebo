@@ -5,7 +5,7 @@
 use std::convert::TryFrom;
 
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{FixedHeader, Packet, PacketType, PropertyType, ShortProperties};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// The Client or Server sending the PUBACK packet MUST use one of the PUBACK Reason Codes[MQTT-3.4.2-1].
@@ -95,6 +95,8 @@ impl PublishAckReasonCode {
 /// +--------------------+
 /// | Reason Code        |
 /// +--------------------+
+/// | Property Length    |
+/// +--------------------+
 /// | Properties ...     |
 /// +--------------------+
 /// ```
@@ -111,7 +113,7 @@ pub struct PublishAckPacket {
     /// The length of the Properties in the PUBACK packet Variable Header encoded
     /// as a Variable Byte Integer.  If the Remaining Length is less than 4
     /// there is no Property Length and the value of 0 is used.
-    properties: Properties,
+    properties: ShortProperties,
 }
 
 pub const PUBLISH_ACK_PROPERTIES: &[PropertyType] = &[
@@ -150,11 +152,11 @@ impl PublishAckPacket {
         self.reason_code
     }
 
-    pub fn properties(&self) -> &Properties {
+    pub fn properties(&self) -> &ShortProperties {
         &self.properties
     }
 
-    pub fn mut_properties(&mut self) -> &mut Properties {
+    pub fn mut_properties(&mut self) -> &mut ShortProperties {
         &mut self.properties
     }
 }
@@ -208,7 +210,7 @@ impl DecodePacket for PublishAckPacket {
             PublishAckReasonCode::default()
         };
         let properties = if remaining_length > PublishAckReasonCode::const_bytes() {
-            let properties = Properties::decode(ba)?;
+            let properties = ShortProperties::decode(ba)?;
             if let Err(property_type) =
                 check_property_type_list(properties.props(), PUBLISH_ACK_PROPERTIES)
             {
@@ -220,7 +222,7 @@ impl DecodePacket for PublishAckPacket {
             }
             properties
         } else {
-            Properties::new()
+            ShortProperties::new()
         };
         Ok(PublishAckPacket {
             packet_id,
