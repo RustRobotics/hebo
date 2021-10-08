@@ -878,8 +878,43 @@ impl Properties {
         self.len.value()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len.value() == 0
+    }
+
     pub fn props(&self) -> &[Property] {
         &self.props
+    }
+
+    pub fn clear(&mut self) {
+        self.props.clear();
+        self.len = VarInt::new();
+    }
+
+    pub fn pop(&mut self) -> Option<Property> {
+        if let Some(prop) = self.props.pop() {
+            self.len.unchecked_sub(1);
+            Some(prop)
+        } else {
+            None
+        }
+    }
+
+    pub fn push(&mut self, v: Property) -> Result<(), EncodeError> {
+        self.len.add(1)?;
+        self.props.push(v);
+        Ok(())
+    }
+
+    pub fn insert(&mut self, index: usize, prop: Property) -> Result<(), EncodeError> {
+        self.len.add(1)?;
+        self.props.insert(index, prop);
+        Ok(())
+    }
+
+    pub fn remove(&mut self, index: usize) -> Result<Property, EncodeError> {
+        self.len.sub(1)?;
+        Ok(self.props.remove(index))
     }
 }
 

@@ -275,7 +275,7 @@ pub struct FixedHeader {
 
 impl FixedHeader {
     pub fn new(packet_type: PacketType, remaining_length: usize) -> Result<Self, EncodeError> {
-        let remaining_length = VarInt::new(remaining_length)?;
+        let remaining_length = VarInt::from(remaining_length)?;
         Ok(Self {
             packet_type,
             remaining_length,

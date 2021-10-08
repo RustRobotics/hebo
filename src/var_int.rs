@@ -19,9 +19,13 @@ pub struct VarInt(usize);
 pub const MAX_PACKET_LEN: usize = 0x7f_ff_ff_ff;
 
 impl VarInt {
-    pub fn new(len: usize) -> Result<Self, EncodeError> {
+    pub fn new() -> Self {
+        Self(0)
+    }
+
+    pub fn from(len: usize) -> Result<Self, EncodeError> {
         if len as usize > MAX_PACKET_LEN {
-            return Err(EncodeError::TooManyData);
+            return Err(EncodeError::InvalidVarInt);
         }
         Ok(Self(len))
     }
@@ -32,6 +36,31 @@ impl VarInt {
 
     pub fn value(&self) -> usize {
         self.0
+    }
+
+    pub fn unchecked_add(&mut self, v: usize) {
+        self.0 += v
+    }
+
+    pub fn unchecked_sub(&mut self, v: usize) {
+        self.0 -= v
+    }
+
+    pub fn add(&mut self, v: usize) -> Result<(), EncodeError> {
+        let new_len = self.0 + v;
+        if new_len as usize > MAX_PACKET_LEN {
+            return Err(EncodeError::InvalidVarInt);
+        }
+        self.0 = new_len;
+        Ok(())
+    }
+
+    pub fn sub(&mut self, v: usize) -> Result<(), EncodeError> {
+        if self.0 < v {
+            return Err(EncodeError::InvalidVarInt);
+        }
+        self.0 -= v;
+        Ok(())
     }
 
     pub fn bytes(&self) -> usize {

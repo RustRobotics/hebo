@@ -95,6 +95,8 @@ pub enum EncodeError {
     /// No topic is speicified in Subscribe packet.
     /// Topic name might contain wildcard characters.
     InvalidTopic(TopicError),
+
+    InvalidVarInt,
 }
 
 impl From<std::io::Error> for EncodeError {
