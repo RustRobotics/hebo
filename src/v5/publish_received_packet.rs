@@ -107,6 +107,15 @@ pub struct PublishReceivedPacket {
     properties: Properties,
 }
 
+pub const PUBLISH_RECEIVED_PROPERTIES: &[PropertyType] = &[
+    // The sender MUST NOT send this property if it would increase the size of the PUBREC packet
+    // beyond the Maximum Packet Size specified by the receiver [MQTT-3.5.2-2].
+    PropertyType::ReasonString,
+    // The sender MUST NOT send this property if it would increase the size of the PUBREC packet
+    // beyond the Maximum Packet Size specified by the receiver [MQTT-3.5.2-3].
+    PropertyType::UserProperty,
+];
+
 impl PublishReceivedPacket {
     pub fn new(packet_id: PacketId) -> Self {
         Self {
@@ -190,7 +199,17 @@ impl DecodePacket for PublishReceivedPacket {
             PublishReceivedReasonCode::default()
         };
         let properties = if remaining_length > PublishReceivedReasonCode::const_bytes() {
-            Properties::decode(ba)?
+            let properties = Properties::decode(ba)?;
+            if let Err(property_type) =
+                check_property_type_list(&properties, PUBLISH_RECEIVED_PROPERTIES)
+            {
+                log::error!(
+                    "v5/PublishReceivedPacket: property type {:?} cannot be used in properties!",
+                    property_type
+                );
+                return Err(DecodeError::InvalidPropertyType);
+            }
+            properties
         } else {
             Properties::new()
         };
