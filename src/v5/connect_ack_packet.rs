@@ -11,7 +11,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
 /// close the network connection.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConnectReasonCode {
     /// Connection accepted.
     Accepted = 0x00,
@@ -89,27 +89,27 @@ impl TryFrom<u8> for ConnectReasonCode {
     type Error = DecodeError;
     fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
-            0x00 => Ok(ConnectReasonCode::Accepted),
-            0x80 => Ok(ConnectReasonCode::UnspecifiedError),
-            0x81 => Ok(ConnectReasonCode::MalformedPacket),
-            0x82 => Ok(ConnectReasonCode::ProtocolError),
-            0x83 => Ok(ConnectReasonCode::ImplementationSpecificError),
-            0x84 => Ok(ConnectReasonCode::UnsupportedProtocolVersion),
-            0x85 => Ok(ConnectReasonCode::ClientIdentifierNotValid),
-            0x86 => Ok(ConnectReasonCode::BadUserNameOrPassword),
-            0x87 => Ok(ConnectReasonCode::NotAuthorized),
-            0x88 => Ok(ConnectReasonCode::ServerUnavailable),
-            0x89 => Ok(ConnectReasonCode::ServerBusy),
-            0x8a => Ok(ConnectReasonCode::Banned),
-            0x8c => Ok(ConnectReasonCode::BadAuthenticationMethod),
-            0x90 => Ok(ConnectReasonCode::TopicNameInvalid),
-            0x95 => Ok(ConnectReasonCode::PacketTooLarge),
-            0x97 => Ok(ConnectReasonCode::QuotaExceeded),
-            0x99 => Ok(ConnectReasonCode::PayloadFormatInvalid),
-            0x9b => Ok(ConnectReasonCode::QoSNotSupported),
-            0x9c => Ok(ConnectReasonCode::UseAnotherServer),
-            0x9d => Ok(ConnectReasonCode::ServerMoved),
-            0x9f => Ok(ConnectReasonCode::ConnectionRateExceeded),
+            0x00 => Ok(Self::Accepted),
+            0x80 => Ok(Self::UnspecifiedError),
+            0x81 => Ok(Self::MalformedPacket),
+            0x82 => Ok(Self::ProtocolError),
+            0x83 => Ok(Self::ImplementationSpecificError),
+            0x84 => Ok(Self::UnsupportedProtocolVersion),
+            0x85 => Ok(Self::ClientIdentifierNotValid),
+            0x86 => Ok(Self::BadUserNameOrPassword),
+            0x87 => Ok(Self::NotAuthorized),
+            0x88 => Ok(Self::ServerUnavailable),
+            0x89 => Ok(Self::ServerBusy),
+            0x8a => Ok(Self::Banned),
+            0x8c => Ok(Self::BadAuthenticationMethod),
+            0x90 => Ok(Self::TopicNameInvalid),
+            0x95 => Ok(Self::PacketTooLarge),
+            0x97 => Ok(Self::QuotaExceeded),
+            0x99 => Ok(Self::PayloadFormatInvalid),
+            0x9b => Ok(Self::QoSNotSupported),
+            0x9c => Ok(Self::UseAnotherServer),
+            0x9d => Ok(Self::ServerMoved),
+            0x9f => Ok(Self::ConnectionRateExceeded),
             _ => Err(DecodeError::OtherErrors),
         }
     }

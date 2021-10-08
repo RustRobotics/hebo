@@ -6,6 +6,7 @@ mod connect_ack_packet;
 mod connect_packet;
 mod header;
 mod property;
+mod publish_ack_packet;
 mod publish_packet;
 mod reason_code;
 
@@ -13,5 +14,6 @@ pub use connect_ack_packet::{ConnectAckPacket, ConnectReasonCode};
 pub use connect_packet::ConnectPacket;
 pub use header::{FixedHeader, Packet, PacketType};
 pub use property::{Properties, Property, PropertyType};
+pub use publish_ack_packet::PublishAckPacket;
 pub use publish_packet::PublishPacket;
 pub use reason_code::ReasonCode;

@@ -179,6 +179,22 @@ pub const PUBLISH_PROPERTIES: &[PropertyType] = &[
     // The Server MUST maintain the order of User Properties when forwarding
     // the Application Message [MQTT-3.3.2-18].
     PropertyType::UserProperty,
+    // It is a Protocol Error for a PUBLISH packet to contain any Subscription Identifier
+    // other than those received in SUBSCRIBE packet which caused it to flow.
+    //
+    // A PUBLISH packet sent from a Client to a Server MUST NOT contain a Subscription Identifier [MQTT-3.3.4-6].
+    //
+    // If the Client specified a Subscription Identifier for any of the overlapping eubscriptions
+    // the Server MUST send those Subscription Identifiers in the message which
+    // is published as the result of the subscriptions [MQTT-3.3.4-3].
+    //
+    // If the Server sends a single copy of the message it MUST include in the PUBLISH packet
+    // the Subscription Identifiers for all matching subscriptions which have
+    // a Subscription Identifiers, their order is not significant [MQTT-3.3.4-4].
+    //
+    // If the Server sends multiple PUBLISH packets it MUST send, in each of them,
+    // the Subscription Identifier of the matching subscription if it has
+    // a Subscription Identifier [MQTT-3.3.4-5].
     PropertyType::SubscriptionIdentifier,
     // A Server MUST send the Content Type unaltered to all subscribers receiving
     // the Application Message [MQTT-3.3.2-20].
