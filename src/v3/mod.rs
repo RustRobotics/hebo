@@ -30,6 +30,6 @@ pub use publish_packet::PublishPacket;
 pub use publish_received_packet::PublishReceivedPacket;
 pub use publish_release_packet::PublishReleasePacket;
 pub use subscribe_ack_packet::{SubscribeAck, SubscribeAckPacket};
-pub use subscribe_packet::{SubscribePacket, SubscribeTopic};
+pub use subscribe_packet::SubscribePacket;
 pub use unsubscribe_ack_packet::UnsubscribeAckPacket;
 pub use unsubscribe_packet::UnsubscribePacket;

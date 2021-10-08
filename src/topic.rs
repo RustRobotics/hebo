@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use byteorder::{BigEndian, WriteBytesExt};
+use std::convert::TryFrom;
 use std::io::Write;
 
 use crate::QoS;
@@ -313,6 +314,63 @@ impl EncodePacket for SubTopic {
         buf.write_u16::<BigEndian>(self.0.len() as u16)?;
         buf.write_all(self.0.as_bytes())?;
         Ok(self.bytes())
+    }
+}
+
+/// Topic/QoS pair.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SubscribeTopic {
+    /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
+    topic: SubTopic,
+
+    /// Maximum level of QoS of packet the Server can send to the Client.
+    qos: QoS,
+}
+
+impl SubscribeTopic {
+    pub fn new(topic: &str, qos: QoS) -> Result<Self, EncodeError> {
+        let topic = SubTopic::new(topic)?;
+        Ok(Self { topic, qos })
+    }
+
+    pub fn topic(&self) -> &str {
+        self.topic.as_ref()
+    }
+
+    pub fn qos(&self) -> QoS {
+        self.qos
+    }
+
+    pub fn bytes(&self) -> usize {
+        self.qos.bytes() + self.topic.bytes()
+    }
+}
+
+impl EncodePacket for SubscribeTopic {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        self.topic.encode(buf)?;
+        let qos: u8 = 0b0000_0011 & (self.qos as u8);
+        buf.push(qos);
+
+        Ok(self.bytes())
+    }
+}
+
+impl DecodePacket for SubscribeTopic {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let topic = SubTopic::decode(ba)?;
+
+        let qos_flag = ba.read_byte()?;
+        // The upper 6 bits of the Requested QoS byte are not used in the current version of the protocol.
+        // They are reserved for future use. The Server MUST treat a SUBSCRIBE packet as malformed
+        // and close the Network Connection if any of Reserved bits in the payload are non-zero,
+        // or QoS is not 0,1 or 2 [MQTT-3-8.3-4].
+        if qos_flag & 0b1111_0000 != 0b0000_0000 {
+            return Err(DecodeError::InvalidQoS);
+        }
+        let qos = QoS::try_from(qos_flag & 0b0000_0011)?;
+
+        Ok(Self { topic, qos })
     }
 }
 
