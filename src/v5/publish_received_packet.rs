@@ -184,7 +184,7 @@ impl Packet for PublishReceivedPacket {
 impl DecodePacket for PublishReceivedPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-        if fixed_header.packet_type() != PacketType::PublishAck {
+        if fixed_header.packet_type() != PacketType::PublishReceived {
             return Err(DecodeError::InvalidPacketType);
         }
         if fixed_header.remaining_length() < PacketId::const_bytes() {
