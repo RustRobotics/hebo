@@ -935,6 +935,7 @@ impl DecodePacket for Properties {
 impl EncodePacket for Properties {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let mut bytes_written = self.len.bytes();
+        self.len.encode(buf)?;
         for property in &self.props {
             bytes_written += property.encode(buf)?;
         }
