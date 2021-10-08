@@ -2,7 +2,6 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use bytes::BytesMut;
 use std::io::Write;
 
 use super::property::check_property_type_list;
@@ -44,51 +43,111 @@ use crate::{
 /// * QoS 2, PublishRecPacket
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PublishPacket {
-    /// If dup field is false, it indicates that this is the first time to send this packet.
-    /// If it is true, then this packet might be re-delivery of an earlier attempt to send the
-    /// Packet.
+    /// If the DUP flag is set to 0, it indicates that this is the first occasion that
+    /// the Client or Server has attempted to send this PUBLISH packet.
+    /// If the DUP flag is set to 1, it indicates that this might be re-delivery of
+    /// an earlier attempt to send the packet.
     ///
-    /// It must be false if QoS is 0.
+    /// The DUP flag MUST be set to 1 by the Client or Server when it attempts to re-deliver
+    /// a PUBLISH packet [MQTT-3.3.1-1].
+    ///
+    /// The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
+    ///
+    /// The value of the DUP flag from an incoming PUBLISH packet is not propagated
+    /// when the PUBLISH packet is sent to subscribers by the Server. The DUP flag
+    /// in the outgoing PUBLISH packet is set independently to the incoming PUBLISH packet,
+    /// its value MUST be determined solely by whether the outgoing PUBLISH packet
+    /// is a retransmission [MQTT-3.3.1-3].
     dup: bool,
 
-    /// `qos` field indicates the level of assurance for delivery of packet.
+    /// This field indicates the level of assurance for delivery of an Application Message.
+    ///
+    /// If the Server included a Maximum QoS in its CONNACK response to a Client and
+    /// it receives a PUBLISH packet with a QoS greater than this, then it uses DISCONNECT
+    /// with Reason Code 0x9B (QoS not supported).
+    ///
+    /// A PUBLISH Packet MUST NOT have both QoS bits set to 1 [MQTT-3.3.1-4].
+    ///
+    /// If a Server or Client receives a PUBLISH packet which has both QoS bits set to 1
+    /// it is a Malformed Packet. Use DISCONNECT with Reason Code 0x81 (Malformed Packet).
     qos: QoS,
 
-    /// Usage of `retain` flag in PublishPacket is complex:
+    /// If the RETAIN flag is set to 1 in a PUBLISH packet sent by a Client to a Server,
+    /// the Server MUST replace any existing retained message for this topic and
+    /// store the Application Message [MQTT-3.3.1-5].
     ///
-    /// If `retain` flag is true in the packet the Client sent to the Server,
-    /// this packet is stored on the server so that it can be delivered to future
-    /// subscribers. When a new subscription is established, the last retained packet
-    /// will be sent to the subscriber. If the Server receives a QoS 0 message with
-    /// the `retain` flag set to true, it must discard any message previously retained
-    /// for the same topic. The Server should store the new QoS 0 message as the new
-    /// retained message for that topic, but may choose to discard it at any time.
+    /// So that it can be delivered to future subscribers whose subscriptions
+    /// match its Topic Name. If the Payload contains zero bytes it is processed normally
+    /// by the Server but any retained message with the same topic name MUST be removed
+    /// and any future subscribers for the topic will not receive a retained message [MQTT-3.3.1-6].
     ///
-    /// When sending a PublishPacket the Server must set the `retain` flag to true if
-    /// a message is sent as a result of a new subscription. The Server must set
-    /// `retain` flag to false when sending PublishPacket to already connected subscribers.
+    /// A retained message with a Payload containing zero bytes MUST NOT be stored
+    /// as a retained message on the Server [MQTT-3.3.1-7].
     ///
-    /// If a PublishPacket sent to the Server with `retain` flag on and payload contains
-    /// zero bytes, this packet is normally delivered to subscribers. And this packet is
-    /// used as notification to the Server to delete any retained messages on the same topic.
-    /// And any future subscribers for the same topic will not receive any retained messages
-    /// any more. So this means one-time shot.
+    /// If the RETAIN flag is 0 in a PUBLISH packet sent by a Client to a Server,
+    /// the Server MUST NOT store the message as a retained message and MUST NOT
+    /// remove or replace any existing retained message [MQTT-3.3.1-8].
     ///
-    /// If `retain` flag is false in PublishPacket sent to the Server, status of
-    /// the retained message of that topic is not removed or replaced.
+    /// If the Server included Retain Available in its CONNACK response to a Client
+    /// with its value set to 0 and it receives a PUBLISH packet with the RETAIN flag
+    /// is set to 1, then it uses the DISCONNECT Reason Code of 0x9A (Retain not supported).
+    ///
+    /// When a new Non-shared Subscription is made, the last retained message,
+    /// if any, on each matching topic name is sent to the Client as directed by
+    /// the Retain Handling Subscription Option. These messages are sent with
+    /// the RETAIN flag set to 1. Which retained messages are sent is controlled by
+    /// the Retain Handling Subscription Option. At the time of the Subscription:
+    ///
+    /// - If Retain Handling is set to 0 the Server MUST send the retained messages
+    ///   matching the Topic Filter of the subscription to the Client [MQTT-3.3.1-9].
+    /// - If Retain Handling is set to 1 then if the subscription did not already exist,
+    ///   the Server MUST send all retained message matching the Topic Filter
+    ///   of the subscription to the Client, and if the subscription did exist
+    ///   the Server MUST NOT send the retained messages. [MQTT-3.3.1-10].
+    /// - If Retain Handling is set to 2, the Server MUST NOT send the retained messages [MQTT-3.3.1-11].
+    ///
+    /// If the Server receives a PUBLISH packet with the RETAIN flag set to 1,
+    /// and QoS 0 it SHOULD store the new QoS 0 message as the new retained message
+    /// for that topic, but MAY choose to discard it at any time. If this happens
+    /// there will be no retained message for that topic.
+    ///
+    /// If the current retained message for a Topic expires, it is discarded and
+    /// there will be no retained message for that topic.
+    ///
+    /// The setting of the RETAIN flag in an Application Message forwarded by the Server
+    /// from an established connection is controlled by the Retain As Published subscription option.
+    ///
+    /// - If the value of Retain As Published subscription option is set to 0, the Server
+    ///   MUST set the RETAIN flag to 0 when forwarding an Application Message
+    ///   regardless of how the RETAIN flag was set in the received PUBLISH packet [MQTT-3.3.1-12].
+    /// - If the value of Retain As Published subscription option is set to 1, the Server
+    ///   MUST set the RETAIN flag equal to the RETAIN flag in the received PUBLISH packet [MQTT-3.3.1-13].
     retain: bool,
 
-    /// `topic` name must not contain wildcard characters.
+    /// The Topic Name identifies the information channel to which Payload data is published.
+    ///
+    /// The Topic Name MUST be present as the first field in the PUBLISH packet Variable Header.
+    /// It MUST be a UTF-8 Encoded String as defined in section 1.5.4 [MQTT-3.3.2-1].
+    ///
+    /// The Topic Name in the PUBLISH packet MUST NOT contain wildcard characters [MQTT-3.3.2-2].
+    ///
+    /// The Topic Name in a PUBLISH packet sent by a Server to a subscribing Client MUST match the
+    /// Subscription’s Topic Filter according to the matching process defined in section 4.7 [MQTT-3.3.2-3].
+    ///
+    /// However, as the Server is permitted to map the Topic Name to another name,
+    /// it might not be the same as the Topic Name in the original PUBLISH packet.
+    ///
+    /// To reduce the size of the PUBLISH packet the sender can use a Topic Alias.
+    /// It is a Protocol Error if the Topic Name is zero length and there is no Topic Alias.
     topic: PubTopic,
 
-    /// `packet_id` field is useless if QoS is 0.
+    /// The Packet Identifier field is only present in PUBLISH packets where the QoS level is 1 or 2.
     packet_id: PacketId,
 
     properties: Properties,
 
     /// Payload contains `msg` field.
-    /// TODO(Shaohua): Replace with Bytes or Vec<u8>, BytewMut is useless.
-    msg: BytesMut,
+    msg: Vec<u8>,
 }
 
 pub const PUBLISH_PROPERTIES: &[PropertyType] = &[
@@ -129,6 +188,7 @@ pub const PUBLISH_PROPERTIES: &[PropertyType] = &[
 impl PublishPacket {
     pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> Result<PublishPacket, EncodeError> {
         let topic = PubTopic::new(topic)?;
+        let msg = msg.to_vec();
         Ok(PublishPacket {
             qos,
             dup: false,
@@ -136,7 +196,7 @@ impl PublishPacket {
             topic,
             packet_id: PacketId::new(0),
             properties: Properties::new(),
-            msg: BytesMut::from(msg),
+            msg,
         })
     }
 
@@ -275,7 +335,8 @@ impl DecodePacket for PublishPacket {
             msg_len -= packet_id.bytes();
         }
 
-        let msg = BytesMut::from(ba.read_bytes(msg_len)?);
+        let msg = ba.read_bytes(msg_len)?;
+        let msg = msg.to_vec();
         Ok(PublishPacket {
             qos,
             retain,
