@@ -9,6 +9,7 @@ mod property;
 mod publish_ack_packet;
 mod publish_packet;
 mod publish_received_packet;
+mod publish_release_packet;
 mod reason_code;
 
 pub use connect_ack_packet::{ConnectAckPacket, ConnectReasonCode};
@@ -18,4 +19,5 @@ pub use property::{Properties, Property, PropertyType};
 pub use publish_ack_packet::PublishAckPacket;
 pub use publish_packet::PublishPacket;
 pub use publish_received_packet::PublishReceivedPacket;
+pub use publish_release_packet::PublishReleasePacket;
 pub use reason_code::ReasonCode;
