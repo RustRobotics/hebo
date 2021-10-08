@@ -106,7 +106,7 @@ pub struct PublishAckPacket {
 
     /// Byte 3 in the Variable Header is the PUBACK Reason Code. If the Remaining Length is 2,
     /// then there is no Reason Code and the value of 0x00 (Success) is used.
-    reason: PublishAckReasonCode,
+    reason_code: PublishAckReasonCode,
 
     /// The length of the Properties in the PUBACK packet Variable Header encoded
     /// as a Variable Byte Integer.  If the Remaining Length is less than 4
@@ -131,13 +131,13 @@ impl PublishAckPacket {
         self.packet_id
     }
 
-    pub fn set_reason(&mut self, reason: PublishAckReasonCode) -> &mut Self {
-        self.reason = reason;
+    pub fn set_reason_code(&mut self, reason_code: PublishAckReasonCode) -> &mut Self {
+        self.reason_code = reason_code;
         self
     }
 
-    pub fn reason(&self) -> PublishAckReasonCode {
-        self.reason
+    pub fn reason_code(&self) -> PublishAckReasonCode {
+        self.reason_code
     }
 
     pub fn properties(&self) -> &Properties {
@@ -154,8 +154,8 @@ impl EncodePacket for PublishAckPacket {
         let old_len = buf.len();
 
         let mut packet_bytes = self.packet_id.bytes();
-        if self.reason != PublishAckReasonCode::Success || !self.properties.is_empty() {
-            packet_bytes += self.reason.bytes();
+        if self.reason_code != PublishAckReasonCode::Success || !self.properties.is_empty() {
+            packet_bytes += self.reason_code.bytes();
         }
         if !self.properties.is_empty() {
             packet_bytes += self.properties.bytes();
@@ -163,8 +163,8 @@ impl EncodePacket for PublishAckPacket {
         let fixed_header = FixedHeader::new(PacketType::PublishAck, packet_bytes)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;
-        if self.reason != PublishAckReasonCode::Success || !self.properties.is_empty() {
-            buf.push(self.reason as u8);
+        if self.reason_code != PublishAckReasonCode::Success || !self.properties.is_empty() {
+            buf.push(self.reason_code as u8);
         }
         if !self.properties.is_empty() {
             self.properties.encode(buf)?;
@@ -191,10 +191,9 @@ impl DecodePacket for PublishAckPacket {
         }
         let packet_id = PacketId::decode(ba)?;
         let remaining_length = fixed_header.remaining_length() - packet_id.bytes();
-        let reason = if remaining_length >= PublishAckReasonCode::const_bytes() {
+        let reason_code = if remaining_length >= PublishAckReasonCode::const_bytes() {
             let reason_code_byte = ba.read_byte()?;
-            let reason_code = PublishAckReasonCode::try_from(reason_code_byte)?;
-            PublishAckReasonCode::default()
+            PublishAckReasonCode::try_from(reason_code_byte)?
         } else {
             PublishAckReasonCode::default()
         };
@@ -205,7 +204,7 @@ impl DecodePacket for PublishAckPacket {
         };
         Ok(PublishAckPacket {
             packet_id,
-            reason,
+            reason_code,
             properties,
         })
     }
