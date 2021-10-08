@@ -112,8 +112,14 @@ impl PublishReleasePacket {
     }
 }
 
-pub const PUBLISH_RELEASE_PROPERTIES: &[PropertyType] =
-    &[PropertyType::ReasonString, PropertyType::UserProperty];
+pub const PUBLISH_RELEASE_PROPERTIES: &[PropertyType] = &[
+    // The sender MUST NOT send this Property if it would increase the size of the PUBREL packet
+    // beyond the Maximum Packet Size specified by the receiver [MQTT-3.6.2-2]
+    PropertyType::ReasonString,
+    // The sender MUST NOT send this property if it would increase the size of the PUBREL packet
+    // beyond the Maximum Packet Size specified by the receiver [MQTT-3.6.2-3]
+    PropertyType::UserProperty,
+];
 
 impl EncodePacket for PublishReleasePacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {

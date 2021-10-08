@@ -942,3 +942,97 @@ impl EncodePacket for Properties {
         Ok(bytes_written)
     }
 }
+
+// ShortProperties can only hold 0xff properties.
+//
+// The property length is one byte.
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct ShortProperties {
+    props: Vec<Property>,
+}
+
+impl ShortProperties {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn bytes(&self) -> usize {
+        1 + self.props.iter().map(|p| p.bytes()).sum::<usize>()
+    }
+
+    pub fn len(&self) -> usize {
+        self.props.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.props.is_empty()
+    }
+
+    pub fn props(&self) -> &[Property] {
+        &self.props
+    }
+
+    pub fn clear(&mut self) {
+        self.props.clear();
+    }
+
+    pub fn pop(&mut self) -> Option<Property> {
+        if let Some(prop) = self.props.pop() {
+            Some(prop)
+        } else {
+            None
+        }
+    }
+
+    pub fn push(&mut self, v: Property) -> Result<(), EncodeError> {
+        if self.props.len() == 0xff {
+            // TODO(Shaohua): Use another error type
+            return Err(EncodeError::InvalidVarInt);
+        }
+        self.props.push(v);
+        Ok(())
+    }
+
+    pub fn insert(&mut self, index: usize, prop: Property) -> Result<(), EncodeError> {
+        if self.props.len() == 0xff {
+            // TODO(Shaohua): Use another error type
+            return Err(EncodeError::InvalidVarInt);
+        }
+        self.props.insert(index, prop);
+        Ok(())
+    }
+
+    pub fn remove(&mut self, index: usize) -> Result<Property, EncodeError> {
+        if self.props.len() <= index {
+            // TODO(Shaohua): Use another error type
+            return Err(EncodeError::InvalidVarInt);
+        }
+        Ok(self.props.remove(index))
+    }
+}
+
+impl DecodePacket for ShortProperties {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let len = ba.read_byte()?;
+
+        let mut props = Vec::with_capacity(len as usize);
+        for _i in 0..len {
+            let property = Property::decode(ba)?;
+            props.push(property);
+        }
+
+        Ok(Self { props })
+    }
+}
+
+impl EncodePacket for ShortProperties {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        let mut bytes_written = 1;
+        buf.push(self.props.len() as u8);
+        for property in &self.props {
+            bytes_written += property.encode(buf)?;
+        }
+
+        Ok(bytes_written)
+    }
+}
