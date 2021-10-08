@@ -210,7 +210,7 @@ impl DecodePacket for PublishAckPacket {
         let properties = if remaining_length > PublishAckReasonCode::const_bytes() {
             let properties = Properties::decode(ba)?;
             if let Err(property_type) =
-                check_property_type_list(&properties, PUBLISH_ACK_PROPERTIES)
+                check_property_type_list(properties.props(), PUBLISH_ACK_PROPERTIES)
             {
                 log::error!(
                     "v5/PublishAckPacket: property type {:?} cannot be used in properties!",

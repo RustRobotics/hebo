@@ -329,7 +329,8 @@ impl DecodePacket for PublishPacket {
         };
 
         let properties = Properties::decode(ba)?;
-        if let Err(property_type) = check_property_type_list(&properties, PUBLISH_PROPERTIES) {
+        if let Err(property_type) = check_property_type_list(properties.props(), PUBLISH_PROPERTIES)
+        {
             log::error!(
                 "v5/PublishPacket: property type {:?} cannot be used in properties!",
                 property_type

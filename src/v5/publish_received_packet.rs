@@ -201,7 +201,7 @@ impl DecodePacket for PublishReceivedPacket {
         let properties = if remaining_length > PublishReceivedReasonCode::const_bytes() {
             let properties = Properties::decode(ba)?;
             if let Err(property_type) =
-                check_property_type_list(&properties, PUBLISH_RECEIVED_PROPERTIES)
+                check_property_type_list(properties.props(), PUBLISH_RECEIVED_PROPERTIES)
             {
                 log::error!(
                     "v5/PublishReceivedPacket: property type {:?} cannot be used in properties!",

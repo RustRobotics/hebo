@@ -15,10 +15,10 @@ pub const MULTIPLE_PROPERTIES: &[PropertyType] = &[
 ];
 
 pub fn check_property_type_list(
-    properties: &Properties,
+    properties: &[Property],
     types: &[PropertyType],
 ) -> Result<(), PropertyType> {
-    for property in properties.props() {
+    for property in properties {
         if !types.contains(&property.property_type()) {
             return Err(property.property_type());
         }
@@ -26,7 +26,6 @@ pub fn check_property_type_list(
 
     for property_type in types {
         let count = properties
-            .props()
             .iter()
             .filter(|p| p.property_type() == *property_type)
             .count();

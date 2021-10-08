@@ -15,7 +15,7 @@ mod reason_code;
 pub use connect_ack_packet::{ConnectAckPacket, ConnectReasonCode};
 pub use connect_packet::ConnectPacket;
 pub use header::{FixedHeader, Packet, PacketType};
-pub use property::{Properties, Property, PropertyType};
+pub use property::{Properties, Property, PropertyType, ShortProperties};
 pub use publish_ack_packet::PublishAckPacket;
 pub use publish_packet::PublishPacket;
 pub use publish_received_packet::PublishReceivedPacket;

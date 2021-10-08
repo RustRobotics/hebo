@@ -492,7 +492,8 @@ impl DecodePacket for ConnectPacket {
         };
 
         let properties = Properties::decode(ba)?;
-        if let Err(property_type) = check_property_type_list(&properties, CONNECT_PROPERTIES) {
+        if let Err(property_type) = check_property_type_list(properties.props(), CONNECT_PROPERTIES)
+        {
             log::error!(
                 "v5/ConnectPacket: property type {:?} cannot be used in properties!",
                 property_type
@@ -502,7 +503,7 @@ impl DecodePacket for ConnectPacket {
 
         let will_properties = Properties::decode(ba)?;
         if let Err(property_type) =
-            check_property_type_list(&will_properties, CONNECT_WILL_PROPERTIES)
+            check_property_type_list(will_properties.props(), CONNECT_WILL_PROPERTIES)
         {
             log::error!(
                 "v5/ConnectPacket: property type {:?} cannot be used in will properties!",

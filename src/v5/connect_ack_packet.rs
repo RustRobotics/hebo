@@ -244,7 +244,9 @@ impl DecodePacket for ConnectAckPacket {
         let reason_code = ConnectReasonCode::try_from(reason_code_byte)?;
         let properties = Properties::decode(ba)?;
 
-        if let Err(property_type) = check_property_type_list(&properties, CONNECT_ACK_PROPERTIES) {
+        if let Err(property_type) =
+            check_property_type_list(properties.props(), CONNECT_ACK_PROPERTIES)
+        {
             log::error!(
                 "v5/ConnectAckPacket: property type {:?} cannot be used in properties!",
                 property_type
