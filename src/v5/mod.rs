@@ -14,6 +14,7 @@ mod publish_release_packet;
 mod reason_code;
 mod subscribe_ack_packet;
 mod subscribe_packet;
+mod unsubscribe_ack_packet;
 
 pub use connect_ack_packet::{ConnectAckPacket, ConnectReasonCode};
 pub use connect_packet::ConnectPacket;
@@ -27,3 +28,4 @@ pub use publish_release_packet::PublishReleasePacket;
 pub use reason_code::ReasonCode;
 pub use subscribe_ack_packet::SubscribeAckPacket;
 pub use subscribe_packet::SubscribePacket;
+pub use unsubscribe_ack_packet::UnsubscribeAckPacket;
