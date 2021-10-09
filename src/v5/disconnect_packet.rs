@@ -175,9 +175,27 @@ impl DisconnectPacket {
     pub fn reason_code(&self) -> DisconnectReasonCode {
         self.reason_code
     }
+
+    pub fn properties_mut(&mut self) -> &mut Properties {
+        &mut self.properties
+    }
+
+    pub fn properties(&self) -> &Properties {
+        &self.properties
+    }
 }
 
-pub const DISCONNECT_PROPERTIES: &[PropertyType] = &[];
+pub const DISCONNECT_PROPERTIES: &[PropertyType] = &[
+    // The Session Expiry Interval MUST NOT be sent on a DISCONNECT by the Server [MQTT-3.14.2-2].
+    PropertyType::SessionExpiryInterval,
+    // The sender MUST NOT send this Property if it would increase the size of the DISCONNECT packet
+    // beyond the Maximum Packet Size specified by the receiver [MQTT-3.14.2-3].
+    PropertyType::ReasonString,
+    // The sender MUST NOT send this property if it would increase the size of the DISCONNECT
+    // packet beyond the Maximum Packet Size specified by the receiver [MQTT-3.14.2-4].
+    PropertyType::UserProperty,
+    PropertyType::ServerReference,
+];
 
 impl EncodePacket for DisconnectPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
