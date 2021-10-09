@@ -5,7 +5,7 @@
 use std::convert::TryFrom;
 
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, PropertyType, ShortProperties};
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 #[repr(u8)]
@@ -74,7 +74,7 @@ impl PublishCompleteReasonCode {
 pub struct PublishCompletePacket {
     packet_id: PacketId,
     reason_code: PublishCompleteReasonCode,
-    properties: ShortProperties,
+    properties: Properties,
 }
 
 impl PublishCompletePacket {
@@ -103,11 +103,11 @@ impl PublishCompletePacket {
         self.reason_code
     }
 
-    pub fn properties(&self) -> &ShortProperties {
+    pub fn properties(&self) -> &Properties {
         &self.properties
     }
 
-    pub fn mut_properties(&mut self) -> &mut ShortProperties {
+    pub fn mut_properties(&mut self) -> &mut Properties {
         &mut self.properties
     }
 }
@@ -163,7 +163,7 @@ impl DecodePacket for PublishCompletePacket {
             PublishCompleteReasonCode::default()
         };
         let properties = if remaining_length > PublishCompleteReasonCode::const_bytes() {
-            let properties = ShortProperties::decode(ba)?;
+            let properties = Properties::decode(ba)?;
             if let Err(property_type) =
                 check_property_type_list(properties.props(), PUBLISH_COMPLETE_PROPERTIES)
             {
@@ -175,7 +175,7 @@ impl DecodePacket for PublishCompletePacket {
             }
             properties
         } else {
-            ShortProperties::new()
+            Properties::new()
         };
         Ok(PublishCompletePacket {
             packet_id,

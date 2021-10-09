@@ -5,7 +5,7 @@
 use std::convert::TryFrom;
 
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, PropertyType, ShortProperties};
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// Byte 3 in the Variable Header is the PUBREC Reason Code. If the Remaining Length is 2,
@@ -106,7 +106,7 @@ impl PublishReceivedReasonCode {
 pub struct PublishReceivedPacket {
     packet_id: PacketId,
     reason_code: PublishReceivedReasonCode,
-    properties: ShortProperties,
+    properties: Properties,
 }
 
 pub const PUBLISH_RECEIVED_PROPERTIES: &[PropertyType] = &[
@@ -144,11 +144,11 @@ impl PublishReceivedPacket {
         self.reason_code
     }
 
-    pub fn properties(&self) -> &ShortProperties {
+    pub fn properties(&self) -> &Properties {
         &self.properties
     }
 
-    pub fn mut_properties(&mut self) -> &mut ShortProperties {
+    pub fn mut_properties(&mut self) -> &mut Properties {
         &mut self.properties
     }
 }
@@ -201,7 +201,7 @@ impl DecodePacket for PublishReceivedPacket {
             PublishReceivedReasonCode::default()
         };
         let properties = if remaining_length > PublishReceivedReasonCode::const_bytes() {
-            let properties = ShortProperties::decode(ba)?;
+            let properties = Properties::decode(ba)?;
             if let Err(property_type) =
                 check_property_type_list(properties.props(), PUBLISH_RECEIVED_PROPERTIES)
             {
@@ -213,7 +213,7 @@ impl DecodePacket for PublishReceivedPacket {
             }
             properties
         } else {
-            ShortProperties::new()
+            Properties::new()
         };
         Ok(PublishReceivedPacket {
             packet_id,
