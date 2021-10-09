@@ -134,6 +134,21 @@ impl TryFrom<u8> for DisconnectReasonCode {
     }
 }
 
+impl DecodePacket for DisconnectReasonCode {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let byte = ba.read_byte()?;
+        let flag = Self::try_from(byte)?;
+        Ok(flag)
+    }
+}
+
+impl EncodePacket for DisconnectReasonCode {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        buf.push(*self as u8);
+        Ok(self.bytes())
+    }
+}
+
 /// The Disconnect packet is the final packet sent to the Server from a Client.
 ///
 /// When the Server receives this packet, it will close the network connection
@@ -171,7 +186,7 @@ impl EncodePacket for DisconnectPacket {
         let remaining_length = self.reason_code.bytes() + self.properties.bytes();
         let fixed_header = FixedHeader::new(PacketType::Disconnect, remaining_length)?;
         fixed_header.encode(buf)?;
-        buf.push(self.reason_code as u8);
+        self.reason_code.encode(buf)?;
         self.properties.encode(buf)?;
 
         Ok(buf.len() - old_len)
@@ -194,9 +209,7 @@ impl DecodePacket for DisconnectPacket {
             return Ok(Self::default());
         }
 
-        let reason_code_byte = ba.read_byte()?;
-        let reason_code = DisconnectReasonCode::try_from(reason_code_byte)?;
-
+        let reason_code = DisconnectReasonCode::decode(ba)?;
         let properties = Properties::decode(ba)?;
         if let Err(property_type) =
             check_property_type_list(properties.props(), DISCONNECT_PROPERTIES)
