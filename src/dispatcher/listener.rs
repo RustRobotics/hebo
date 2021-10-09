@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{PublishPacket, SubscribePacket, UnsubscribePacket};
+use codec::v3::{PublishPacket, SubscribePacket, UnsubscribePacket};
 
 use super::Dispatcher;
 use crate::commands::{DispatcherToListenerCmd, ListenerToDispatcherCmd};

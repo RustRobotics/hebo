@@ -4,7 +4,7 @@
 
 //! Backends app handlers
 
-use codec::PublishPacket;
+use codec::v3::PublishPacket;
 
 use super::Dispatcher;
 use crate::commands::BackendsToDispatcherCmd;

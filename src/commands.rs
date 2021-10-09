@@ -3,8 +3,11 @@
 // in the LICENSE file.
 
 use codec::{
-    ConnectAckPacket, ConnectPacket, PacketId, PublishPacket, QoS, SubscribeAck,
-    SubscribeAckPacket, SubscribePacket, UnsubscribePacket,
+    v3::{
+        ConnectAckPacket, ConnectPacket, PublishPacket, SubscribeAck, SubscribeAckPacket,
+        SubscribePacket, UnsubscribePacket,
+    },
+    PacketId, QoS,
 };
 use tokio::sync::oneshot;
 

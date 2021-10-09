@@ -5,7 +5,7 @@
 //! Metrics service backend.
 //! Embed a sys_tree module to send $SYS messages to dispatcher.
 
-use codec::{PublishPacket, QoS};
+use codec::{v3::PublishPacket, QoS};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use tokio::sync::mpsc::{Receiver, Sender};

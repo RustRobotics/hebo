@@ -4,7 +4,9 @@
 
 //! Session cmd handlers.
 
-use codec::{ConnectPacket, PublishPacket, SubscribeAckPacket, SubscribePacket, UnsubscribePacket};
+use codec::v3::{
+    ConnectPacket, PublishPacket, SubscribeAckPacket, SubscribePacket, UnsubscribePacket,
+};
 
 use super::Listener;
 use crate::listener::{

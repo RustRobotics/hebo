@@ -2,7 +2,10 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{DisconnectPacket, EncodePacket, Packet, PacketId, PacketType};
+use codec::{
+    v3::{DisconnectPacket, Packet, PacketType},
+    EncodePacket, PacketId,
+};
 use std::collections::HashSet;
 use std::time::Instant;
 use tokio::sync::mpsc::{Receiver, Sender};

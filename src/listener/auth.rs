@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{ConnectAckPacket, ConnectReturnCode};
+use codec::v3::{ConnectAckPacket, ConnectReturnCode};
 
 use super::Listener;
 use crate::commands::{AuthToListenerCmd, ListenerToSessionCmd};

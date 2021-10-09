@@ -4,7 +4,7 @@
 
 //! Dispatcher cmd handlers.
 
-use codec::{PublishPacket, SubscribeAckPacket};
+use codec::v3::{PublishPacket, SubscribeAckPacket};
 
 use super::Listener;
 use crate::commands::{DispatcherToListenerCmd, ListenerToSessionCmd};

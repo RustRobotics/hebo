@@ -5,8 +5,8 @@
 //! Manage subscription trie.
 
 use codec::{
-    PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, SubscribePattern,
-    UnsubscribePacket,
+    v3::{PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribePacket},
+    SubscribePattern,
 };
 use std::collections::{BTreeSet, HashMap};
 
@@ -75,6 +75,8 @@ impl SubTrie {
     pub fn unsubscribe(&mut self, session_gid: SessionGid, packet: UnsubscribePacket) -> usize {
         if let Some(set) = self.map.get_mut(&session_gid) {
             // TODO(Shaohua): DO NOT clone topic patterns.
+            // FIXME(Shaohua): SubTopic type error
+            /*
             let to_be_removed: Vec<SubscribePattern> = set
                 .iter()
                 .filter(|p| packet.topics().contains(p.topic().topic()))
@@ -85,6 +87,8 @@ impl SubTrie {
             }
 
             to_be_removed.len()
+            */
+            0
         } else {
             log::error!("trie: No subscription for gid: {:?}", session_gid);
             0

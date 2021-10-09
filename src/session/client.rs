@@ -5,10 +5,14 @@
 //! Handles client packets
 
 use codec::{
-    utils::random_client_id, ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode,
-    DecodeError, DecodePacket, FixedHeader, PacketType, PingRequestPacket, PingResponsePacket,
-    PublishCompletePacket, PublishPacket, PublishReceivedPacket, PublishReleasePacket, QoS,
-    SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
+    utils::random_client_id,
+    v3::{
+        ConnectAckPacket, ConnectPacket, ConnectReturnCode, FixedHeader, PacketType,
+        PingRequestPacket, PingResponsePacket, PublishCompletePacket, PublishPacket,
+        PublishReceivedPacket, PublishReleasePacket, SubscribeAck, SubscribeAckPacket,
+        SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
+    },
+    ByteArray, DecodeError, DecodePacket, QoS,
 };
 
 use super::{Session, Status};
@@ -141,9 +145,9 @@ impl Session {
         // from the Client within one and a half times the Keep Alive time period,
         // it MUST disconnect the Network Connection to the Client as if the network
         // had failed [MQTT-3.1.2-24].
-        if packet.keep_alive > 0 {
+        if packet.keep_alive() > 0 {
             self.config
-                .set_keep_alive((packet.keep_alive as f64 * 1.5) as u64);
+                .set_keep_alive((packet.keep_alive() as f64 * 1.5) as u64);
         }
 
         // From [MQTT-3.1.3-8].
