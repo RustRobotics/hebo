@@ -60,20 +60,9 @@ impl TryFrom<u8> for QoS {
     }
 }
 
-impl Into<u8> for QoS {
-    fn into(self) -> u8 {
-        match self {
-            Self::AtMostOnce => 0,
-            Self::AtLeastOnce => 1,
-            Self::ExactOnce => 2,
-        }
-    }
-}
-
 impl EncodePacket for QoS {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        let byte: u8 = (*self).into();
-        v.push(byte);
+        v.push(*self as u8);
         Ok(self.bytes())
     }
 }
