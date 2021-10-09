@@ -108,6 +108,17 @@ impl AuthPacket {
     }
 }
 
+pub const AUTH_PROPERTIES: &[PropertyType] = &[
+    PropertyType::AuthenticationMethod,
+    PropertyType::AuthenticationData,
+    // The sender MUST NOT send this property if it would increase the size of
+    // the AUTH packet beyond the Maximum Packet Size specified by the receiver [MQTT-3.15.2-2].
+    PropertyType::ReasonString,
+    // The sender MUST NOT send this property if it would increase the size of the AUTH packet
+    // beyond the Maximum Packet Size specified by the receiver [MQTT-3.15.2-3].
+    PropertyType::UserProperty,
+];
+
 impl EncodePacket for AuthPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
@@ -138,6 +149,19 @@ impl DecodePacket for AuthPacket {
             return Ok(AuthPacket::default());
         }
 
-        Ok(AuthPacket::new())
+        let reason_code = AuthReasonCode::decode(ba)?;
+        let properties = Properties::decode(ba)?;
+        if let Err(property_type) = check_property_type_list(properties.props(), AUTH_PROPERTIES) {
+            log::error!(
+                "v5/AuthPacket: property type {:?} cannot be used in properties!",
+                property_type
+            );
+            return Err(DecodeError::InvalidPropertyType);
+        }
+
+        Ok(Self {
+            reason_code,
+            properties,
+        })
     }
 }
