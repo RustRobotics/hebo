@@ -18,7 +18,7 @@ mod subscribe_packet;
 pub use connect_ack_packet::{ConnectAckPacket, ConnectReasonCode};
 pub use connect_packet::ConnectPacket;
 pub use header::{FixedHeader, Packet, PacketType};
-pub use property::{Properties, Property, PropertyType, ShortProperties};
+pub use property::{Properties, Property, PropertyType};
 pub use publish_ack_packet::PublishAckPacket;
 pub use publish_complete_packet::PublishCompletePacket;
 pub use publish_packet::PublishPacket;
