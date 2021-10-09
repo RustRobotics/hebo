@@ -78,6 +78,15 @@ impl TryFrom<u8> for SubscribeReasonCode {
             0x00 => Ok(Self::GrantedQoS0),
             0x01 => Ok(Self::GrantedQoS1),
             0x02 => Ok(Self::GrantedQoS2),
+            0x80 => Ok(Self::UnspecifiedError),
+            0x83 => Ok(Self::ImplementationSpecificError),
+            0x87 => Ok(Self::NotAuthorized),
+            0x8f => Ok(Self::TopicFilterInvalid),
+            0x91 => Ok(Self::PacketIdentifierInUse),
+            0x97 => Ok(Self::QuotaExceeded),
+            0x9e => Ok(Self::SharedSubscriptionsNotSupported),
+            0xa1 => Ok(Self::SubscriptionIdentifiersNotSupported),
+            0xa2 => Ok(Self::WildcardSubscriptionsNotSupported),
             _ => Err(DecodeError::OtherErrors),
         }
     }
