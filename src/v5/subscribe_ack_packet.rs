@@ -177,22 +177,20 @@ impl SubscribeAckPacket {
         self.packet_id
     }
 
-    pub fn set_ack(&mut self, reasons: &[SubscribeReasonCode]) -> &mut Self {
-        self.reasons.clear();
-        self.reasons.extend(reasons);
-        self
-    }
-
-    pub fn reasons(&self) -> &[SubscribeReasonCode] {
-        &self.reasons
-    }
-
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
     pub fn properties(&self) -> &Properties {
         &self.properties
+    }
+
+    pub fn reasons_mut(&mut self) -> &mut Vec<SubscribeReasonCode> {
+        &mut self.reasons
+    }
+
+    pub fn reasons(&self) -> &[SubscribeReasonCode] {
+        &self.reasons
     }
 }
 
