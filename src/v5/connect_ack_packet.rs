@@ -271,6 +271,7 @@ impl EncodePacket for ConnectAckPacket {
         let ack_flags = if self.session_present { 0b0000_0001 } else { 0 };
         buf.push(ack_flags);
         buf.push(self.reason_code as u8);
+        // TODO(Shaohua): Encode properties
 
         Ok(buf.len() - old_len)
     }
