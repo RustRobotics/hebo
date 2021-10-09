@@ -932,6 +932,11 @@ impl Properties {
 
 impl DecodePacket for Properties {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        // If Property Length is not present in packet Variable Header, use default value.
+        if ba.remaining_bytes() == 0 {
+            return Ok(Self::new());
+        }
+
         let len = VarInt::decode(ba)?;
 
         let mut props = Vec::with_capacity(len.value());
