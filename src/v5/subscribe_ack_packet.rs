@@ -2,24 +2,99 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use std::convert::TryFrom;
+
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
 /// Reply to each subscribed topic.
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SubscribeAck {
-    /// Maximum level of QoS the Server granted for this topic.
-    QoS(QoS),
+pub enum SubscribeReasonCode {
+    /// The subscription is accepted and the maximum QoS sent will be QoS 0.
+    ///
+    /// This might be a lower QoS than was requested.
+    GrantedQoS0 = 0x00,
 
-    /// This subscription if failed or not.
-    Failed,
+    /// The subscription is accepted and the maximum QoS sent will be QoS 1.
+    ///
+    /// This might be a lower QoS than was requested.
+    GrantedQoS1 = 0x01,
+
+    /// The subscription is accepted and any received QoS will be sent to this subscription.
+    GrantedQoS2 = 0x02,
+
+    /// The subscription is not accepted and the Server either does not wish to reveal
+    /// the reason or none of the other Reason Codes apply.
+    UnspecifiedError = 0x80,
+
+    /// The SUBSCRIBE is valid but the Server does not accept it.
+    ImplementationSpecificError = 0x83,
+
+    /// The Client is not authorized to make this subscription.
+    NotAuthorized = 0x87,
+
+    /// The Topic Filter is correctly formed but is not allowed for this Client.
+    TopicFilterInvalid = 0x8f,
+
+    /// The specified Packet Identifier is already in use.
+    PacketIdentifierInUse = 0x91,
+
+    /// An implementation or administrative imposed limit has been exceeded.
+    QuotaExceeded = 0x97,
+
+    /// The Server does not support Shared Subscriptions for this Client.
+    SharedSubscriptionsNotSupported = 0x9e,
+
+    /// The Server does not support Subscription Identifiers; the subscription is not accepted.
+    SubscriptionIdentifiersNotSupported = 0xa1,
+
+    /// The Server does not support Wildcard Subscriptions; the subscription is not accepted.
+    WildcardSubscriptionsNotSupported = 0xa2,
 }
 
-impl Default for SubscribeAck {
+impl Default for SubscribeReasonCode {
     fn default() -> Self {
-        SubscribeAck::Failed
+        Self::GrantedQoS0
+    }
+}
+
+impl SubscribeReasonCode {
+    pub fn bytes(&self) -> usize {
+        1
+    }
+
+    pub fn const_bytes() -> usize {
+        1
+    }
+}
+
+impl TryFrom<u8> for SubscribeReasonCode {
+    type Error = DecodeError;
+
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
+        match v {
+            0x00 => Ok(Self::GrantedQoS0),
+            0x01 => Ok(Self::GrantedQoS1),
+            0x02 => Ok(Self::GrantedQoS2),
+            _ => Err(DecodeError::OtherErrors),
+        }
+    }
+}
+
+impl DecodePacket for SubscribeReasonCode {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let byte = ba.read_byte()?;
+        let flag = Self::try_from(byte)?;
+        Ok(flag)
+    }
+}
+
+impl EncodePacket for SubscribeReasonCode {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        buf.push(*self as u8);
+        Ok(self.bytes())
     }
 }
 
@@ -50,9 +125,12 @@ pub struct SubscribeAckPacket {
 
     properties: Properties,
 
-    /// A list of acknowledgement to subscribed topics.
-    /// The order of acknowledgement match the order of topic in Subscribe packet.
-    acknowledgements: Vec<SubscribeAck>,
+    /// The Payload contains a list of Reason Codes.
+    ///
+    /// Each Reason Code corresponds to a Topic Filter in the SUBSCRIBE packet
+    /// being acknowledged. The order of Reason Codes in the SUBACK packet MUST match
+    /// the order of Topic Filters in the SUBSCRIBE packet [MQTT-3.9.3-1].
+    reasons: Vec<SubscribeReasonCode>,
 }
 
 pub const SUBSCRIBE_ACK_PROPERTIES: &[PropertyType] = &[
@@ -65,19 +143,19 @@ pub const SUBSCRIBE_ACK_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl SubscribeAckPacket {
-    pub fn new(packet_id: PacketId, ack: SubscribeAck) -> Self {
+    pub fn new(packet_id: PacketId, reason: SubscribeReasonCode) -> Self {
         Self {
             packet_id,
             properties: Properties::new(),
-            acknowledgements: vec![ack],
+            reasons: vec![reason],
         }
     }
 
-    pub fn with_vec(packet_id: PacketId, acknowledgements: Vec<SubscribeAck>) -> Self {
+    pub fn with_vec(packet_id: PacketId, reasons: Vec<SubscribeReasonCode>) -> Self {
         Self {
             packet_id,
             properties: Properties::new(),
-            acknowledgements,
+            reasons,
         }
     }
 
@@ -90,14 +168,14 @@ impl SubscribeAckPacket {
         self.packet_id
     }
 
-    pub fn set_ack(&mut self, ack: &[SubscribeAck]) -> &mut Self {
-        self.acknowledgements.clear();
-        self.acknowledgements.extend(ack);
+    pub fn set_ack(&mut self, reasons: &[SubscribeReasonCode]) -> &mut Self {
+        self.reasons.clear();
+        self.reasons.extend(reasons);
         self
     }
 
-    pub fn acknowledgements(&self) -> &[SubscribeAck] {
-        &self.acknowledgements
+    pub fn reasons(&self) -> &[SubscribeReasonCode] {
+        &self.reasons
     }
 
     pub fn properties_mut(&mut self) -> &mut Properties {
@@ -128,26 +206,19 @@ impl DecodePacket for SubscribeAckPacket {
             return Err(DecodeError::InvalidPropertyType);
         }
 
-        let mut acknowledgements = Vec::new();
+        let mut reasons = Vec::new();
         let mut remaining_length = packet_id.bytes() + properties.bytes();
 
         while remaining_length < fixed_header.remaining_length() {
-            let payload = ba.read_byte()?;
-            remaining_length += QoS::const_bytes();
-            match payload & 0b1000_0011 {
-                0b1000_0000 => acknowledgements.push(SubscribeAck::Failed),
-                0b0000_0010 => acknowledgements.push(SubscribeAck::QoS(QoS::ExactOnce)),
-                0b0000_0001 => acknowledgements.push(SubscribeAck::QoS(QoS::AtLeastOnce)),
-                0b0000_0000 => acknowledgements.push(SubscribeAck::QoS(QoS::AtMostOnce)),
-
-                _ => return Err(DecodeError::InvalidQoS),
-            }
+            let reason = SubscribeReasonCode::decode(ba)?;
+            reasons.push(reason);
+            remaining_length += reason.bytes();
         }
 
         Ok(SubscribeAckPacket {
             packet_id,
             properties,
-            acknowledgements,
+            reasons,
         })
     }
 }
@@ -155,21 +226,16 @@ impl DecodePacket for SubscribeAckPacket {
 impl EncodePacket for SubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let remaining_length =
-            self.packet_id.bytes() + QoS::const_bytes() * self.acknowledgements.len();
+        let remaining_length = self.packet_id.bytes()
+            + self.properties.bytes()
+            + self.reasons.len() * SubscribeReasonCode::const_bytes();
         let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;
         self.properties.encode(buf)?;
 
-        for ack in &self.acknowledgements {
-            let flag = {
-                match *ack {
-                    SubscribeAck::Failed => 0b1000_0000,
-                    SubscribeAck::QoS(qos) => qos as u8,
-                }
-            };
-            buf.push(flag);
+        for reason in &self.reasons {
+            reason.encode(buf)?;
         }
 
         Ok(buf.len() - old_len)
