@@ -2,6 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use std::fmt;
+
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, StringData};
 
 /// A UTF-8 String Pair consists of two UTF-8 Encoded Strings.
@@ -48,6 +50,12 @@ impl StringPairData {
 
     pub fn bytes(&self) -> usize {
         self.0.bytes() + self.1.bytes()
+    }
+}
+
+impl fmt::Display for StringPairData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.0, self.1)
     }
 }
 

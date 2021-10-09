@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use byteorder::{BigEndian, WriteBytesExt};
+use std::fmt;
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
@@ -25,6 +26,12 @@ impl U16Data {
 
     pub const fn const_bytes() -> usize {
         2
+    }
+}
+
+impl fmt::Display for U16Data {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

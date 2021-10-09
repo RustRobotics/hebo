@@ -2,6 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use std::fmt;
+
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// The Variable Byte Integer is encoded using an encoding scheme which uses a single byte
@@ -77,6 +79,12 @@ impl VarInt {
 
     pub fn is_empty(&self) -> bool {
         self.0 == 0
+    }
+}
+
+impl fmt::Display for VarInt {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

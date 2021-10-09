@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use byteorder::{BigEndian, WriteBytesExt};
+use std::fmt;
 use std::io::Write;
 
 use crate::{
@@ -76,6 +77,12 @@ impl StringData {
 
     pub fn clear(&mut self) {
         self.0.clear();
+    }
+}
+
+impl fmt::Display for StringData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

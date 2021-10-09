@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use byteorder::{BigEndian, WriteBytesExt};
+use std::fmt;
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
@@ -21,6 +22,12 @@ impl U32Data {
 
     pub fn bytes(&self) -> usize {
         4
+    }
+}
+
+impl fmt::Display for U32Data {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
