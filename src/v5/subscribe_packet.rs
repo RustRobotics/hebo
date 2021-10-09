@@ -2,11 +2,197 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use std::convert::TryFrom;
+
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS, SubscribeTopic,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS, SubTopic,
 };
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RetainHandling {
+    /// 0 = Send retained messages at the time of the subscribe.
+    Send = 0,
+
+    /// 1 = Send retained messages at subscribe only if the subscription does not currently exist.
+    SendFirst = 1,
+
+    /// 2 = Do not send retained messages at the time of the subscribe.
+    NoSend = 2,
+}
+
+impl Default for RetainHandling {
+    fn default() -> Self {
+        Self::Send
+    }
+}
+
+impl TryFrom<u8> for RetainHandling {
+    type Error = DecodeError;
+
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
+        match v {
+            0 => Ok(Self::Send),
+            1 => Ok(Self::SendFirst),
+            2 => Ok(Self::NoSend),
+            _ => Err(DecodeError::OtherErrors),
+        }
+    }
+}
+
+/// Topic/QoS pair.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SubscribeTopic {
+    /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
+    topic: SubTopic,
+
+    /// Bits 0 and 1 of the Subscription Options represent Maximum QoS field.
+    ///
+    /// This gives the maximum QoS level at which the Server can send Application Messages
+    /// to the Client. It is a Protocol Error if the Maximum QoS field has the value 3.
+    qos: QoS,
+
+    /// Bit 2 of the Subscription Options represents the No Local option.
+    ///
+    /// If the value is 1, Application Messages MUST NOT be forwarded to a connection
+    /// with a ClientID equal to the ClientID of the publishing connection [MQTT-3.8.3-3].
+    ///
+    /// It is a Protocol Error to set the No Local bit to 1 on a Shared Subscription [MQTT-3.8.3-4].
+    no_local: bool,
+
+    /// Bit 3 of the Subscription Options represents the Retain As Published option.
+    ///
+    /// If 1, Application Messages forwarded using this subscription keep the RETAIN flag
+    /// they were published with. If 0, Application Messages forwarded using this subscription
+    /// have the RETAIN flag set to 0. Retained messages sent when the subscription
+    /// is established have the RETAIN flag set to 1.
+    retain_as_published: bool,
+
+    /// Bits 4 and 5 of the Subscription Options represent the Retain Handling option.
+    ///
+    /// This option specifies whether retained messages are sent when the subscription
+    /// is established. This does not affect the sending of retained messages
+    /// at any point after the subscribe. If there are no retained messages
+    /// matching the Topic Filter, all of these values act the same. The values are:
+    ///
+    /// - 0 = Send retained messages at the time of the subscribe
+    /// - 1 = Send retained messages at subscribe only if the subscription does not currently exist
+    /// - 2 = Do not send retained messages at the time of the subscribe
+    ///
+    /// It is a Protocol Error to send a Retain Handling value of 3.
+    retain_handling: RetainHandling,
+}
+
+impl SubscribeTopic {
+    pub fn new(topic: &str, qos: QoS) -> Result<Self, EncodeError> {
+        let topic = SubTopic::new(topic)?;
+        Ok(Self {
+            topic,
+            qos,
+            ..Self::default()
+        })
+    }
+
+    pub fn set_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
+        self.topic = SubTopic::new(topic)?;
+        Ok(self)
+    }
+
+    pub fn topic(&self) -> &str {
+        self.topic.as_ref()
+    }
+
+    pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
+        self.qos = qos;
+        self
+    }
+
+    pub fn qos(&self) -> QoS {
+        self.qos
+    }
+
+    pub fn set_no_local(&mut self, no_local: bool) -> &mut Self {
+        self.no_local = no_local;
+        self
+    }
+
+    pub fn no_local(&self) -> bool {
+        self.no_local
+    }
+
+    pub fn set_retain_as_published(&mut self, retain_as_published: bool) -> &mut Self {
+        self.retain_as_published = retain_as_published;
+        self
+    }
+
+    pub fn retain_as_published(&self) -> bool {
+        self.retain_as_published
+    }
+
+    pub fn set_retain_handling(&mut self, retain_handling: RetainHandling) -> &mut Self {
+        self.retain_handling = retain_handling;
+        self
+    }
+
+    pub fn retain_handling(&self) -> RetainHandling {
+        self.retain_handling
+    }
+
+    pub fn bytes(&self) -> usize {
+        1 + self.topic.bytes()
+    }
+}
+
+impl EncodePacket for SubscribeTopic {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        self.topic.encode(buf)?;
+        let mut flag: u8 = 0b0000_0011 & (self.qos as u8);
+        if self.no_local {
+            flag |= 0b0000_0100;
+        }
+        if self.retain_as_published {
+            flag |= 0b0000_1000;
+        }
+        flag |= 0b0011_0000 & (self.retain_handling as u8);
+        buf.push(flag);
+
+        Ok(self.bytes())
+    }
+}
+
+impl DecodePacket for SubscribeTopic {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let topic = SubTopic::decode(ba)?;
+
+        let flag = ba.read_byte()?;
+        // Bits 0 and 1 of the Subscription Options represent Maximum QoS field.
+        // This gives the maximum QoS level at which the Server can send
+        // Application Messages to the Client. It is a Protocol Error if
+        // the Maximum QoS field has the value 3.
+        let qos = QoS::try_from(flag & 0b0000_0011)?;
+
+        let no_local = (flag & 0b0000_0100) == 0b0000_0100;
+        let retain_as_published = (flag & 0b0000_1000) == 0b0000_1000;
+        let retain_handling = RetainHandling::try_from(flag & 0b0011_0000)?;
+
+        // Bits 6 and 7 of the Subscription Options byte are reserved for future use.
+        // The Server MUST treat a SUBSCRIBE packet as malformed if any of Reserved bits
+        // in the Payload are non-zero [MQTT-3.8.3-5].
+        if flag & 0b1100_0000 != 0b0000_0000 {
+            return Err(DecodeError::OtherErrors);
+        }
+
+        Ok(Self {
+            topic,
+            qos,
+            no_local,
+            retain_as_published,
+            retain_handling,
+        })
+    }
+}
 
 /// Subscribe packet is sent from the Client to the Server to subscribe one or more topics.
 /// This packet also specifies the maximum QoS with which the Server can send Application
