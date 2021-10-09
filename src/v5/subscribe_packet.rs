@@ -4,8 +4,7 @@
 
 use std::convert::TryFrom;
 
-use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{property, FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS, SubTopic,
 };
@@ -309,7 +308,16 @@ impl DecodePacket for SubscribePacket {
 
         let properties = Properties::decode(ba)?;
         if let Err(property_type) =
-            check_property_type_list(properties.props(), SUBSCRIBE_PROPERTIES)
+            property::check_property_type_list(properties.props(), SUBSCRIBE_PROPERTIES)
+        {
+            log::error!(
+                "v5/SubscribePacket: property type {:?} cannot be used in properties!",
+                property_type
+            );
+            return Err(DecodeError::InvalidPropertyType);
+        }
+        if let Err(property_type) =
+            property::check_multiple_subscription_identifiers(properties.props())
         {
             log::error!(
                 "v5/SubscribePacket: property type {:?} cannot be used in properties!",

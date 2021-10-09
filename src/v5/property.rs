@@ -14,6 +14,19 @@ pub const MULTIPLE_PROPERTIES: &[PropertyType] = &[
     PropertyType::SubscriptionIdentifier,
 ];
 
+pub fn check_multiple_subscription_identifiers(
+    properties: &[Property],
+) -> Result<(), PropertyType> {
+    let count = properties
+        .iter()
+        .filter(|p| p.property_type() == PropertyType::SubscriptionIdentifier)
+        .count();
+    if count > 1 {
+        return Err(PropertyType::SubscriptionIdentifier);
+    }
+    Ok(())
+}
+
 pub fn check_property_type_list(
     properties: &[Property],
     types: &[PropertyType],
