@@ -85,6 +85,15 @@ impl Default for ConnectReasonCode {
     }
 }
 
+impl ConnectReasonCode {
+    pub fn bytes(&self) -> usize {
+        1
+    }
+    pub fn const_bytes() -> usize {
+        1
+    }
+}
+
 impl TryFrom<u8> for ConnectReasonCode {
     type Error = DecodeError;
     fn try_from(v: u8) -> Result<Self, Self::Error> {
@@ -112,6 +121,21 @@ impl TryFrom<u8> for ConnectReasonCode {
             0x9f => Ok(Self::ConnectionRateExceeded),
             _ => Err(DecodeError::OtherErrors),
         }
+    }
+}
+
+impl DecodePacket for ConnectReasonCode {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let byte = ba.read_byte()?;
+        let flag = Self::try_from(byte)?;
+        Ok(flag)
+    }
+}
+
+impl EncodePacket for ConnectReasonCode {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        buf.push(*self as u8);
+        Ok(self.bytes())
     }
 }
 
@@ -240,8 +264,7 @@ impl DecodePacket for ConnectAckPacket {
 
         let ack_flags = ba.read_byte()?;
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
-        let reason_code_byte = ba.read_byte()?;
-        let reason_code = ConnectReasonCode::try_from(reason_code_byte)?;
+        let reason_code = ConnectReasonCode::decode(ba)?;
         let properties = Properties::decode(ba)?;
 
         if let Err(property_type) =
@@ -265,13 +288,15 @@ impl DecodePacket for ConnectAckPacket {
 impl EncodePacket for ConnectAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let fixed_header = FixedHeader::new(PacketType::ConnectAck, 2)?;
+
+        let remaining_length = 1 + self.reason_code.bytes() + self.properties.bytes();
+        let fixed_header = FixedHeader::new(PacketType::ConnectAck, remaining_length)?;
         fixed_header.encode(buf)?;
 
         let ack_flags = if self.session_present { 0b0000_0001 } else { 0 };
         buf.push(ack_flags);
-        buf.push(self.reason_code as u8);
-        // TODO(Shaohua): Encode properties
+        self.reason_code.encode(buf)?;
+        self.properties.encode(buf)?;
 
         Ok(buf.len() - old_len)
     }
@@ -280,20 +305,5 @@ impl EncodePacket for ConnectAckPacket {
 impl Packet for ConnectAckPacket {
     fn packet_type(&self) -> PacketType {
         PacketType::ConnectAck
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{ByteArray, ConnectAckPacket, DecodePacket};
-
-    #[test]
-    fn test_decode() {
-        let buf: Vec<u8> = vec![0x20, 0x02, 0x00, 0x00];
-        let mut ba = ByteArray::new(&buf);
-        let packet = ConnectAckPacket::decode(&mut ba);
-        assert!(packet.is_ok());
-        let packet = packet.unwrap();
-        assert_eq!(packet.session_present, false);
     }
 }
