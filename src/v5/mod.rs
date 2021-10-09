@@ -2,6 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+mod auth_packet;
 mod connect_ack_packet;
 mod connect_packet;
 mod disconnect_packet;
@@ -20,6 +21,7 @@ mod subscribe_packet;
 mod unsubscribe_ack_packet;
 mod unsubscribe_packet;
 
+pub use auth_packet::AuthPacket;
 pub use connect_ack_packet::{ConnectAckPacket, ConnectReasonCode};
 pub use connect_packet::ConnectPacket;
 pub use disconnect_packet::DisconnectPacket;

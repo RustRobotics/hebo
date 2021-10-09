@@ -101,7 +101,7 @@ impl EncodePacket for UnsubscribeReasonCode {
 /// +-------------------------+
 /// | Properties ...          |
 /// +-------------------------+
-/// | Reason Code             |
+/// | Reason Code ...         |
 /// +-------------------------+
 /// ```
 ///

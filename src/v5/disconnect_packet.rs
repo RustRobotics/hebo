@@ -155,6 +155,18 @@ impl EncodePacket for DisconnectReasonCode {
 /// and will not send any more packets. And the Server will discard any Will message
 /// associated with current connection.
 ///
+/// ```txt
+///  7                       0
+/// +-------------------------+
+/// | Fixed header            |
+/// |                         |
+/// +-------------------------+
+/// | Reason Code             |
+/// +-------------------------+
+/// | Properties ...          |
+/// +-------------------------+
+/// ```
+///
 /// This packet does not contain variable header or payload.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct DisconnectPacket {

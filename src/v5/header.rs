@@ -233,6 +233,9 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             15 => {
+                // Bits 3,2,1 and 0 of the Fixed Header of the AUTH packet are reserved
+                // and MUST all be set to 0. The Client or Server MUST treat any other value
+                // as malformed and close the Network Connection [MQTT-3.15.1-1].
                 if flag != 0b0000_0000 {
                     log::error!("header: Got packet flag in Auth: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
