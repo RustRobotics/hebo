@@ -15,6 +15,7 @@ mod reason_code;
 mod subscribe_ack_packet;
 mod subscribe_packet;
 mod unsubscribe_ack_packet;
+mod unsubscribe_packet;
 
 pub use connect_ack_packet::{ConnectAckPacket, ConnectReasonCode};
 pub use connect_packet::ConnectPacket;
@@ -29,3 +30,4 @@ pub use reason_code::ReasonCode;
 pub use subscribe_ack_packet::SubscribeAckPacket;
 pub use subscribe_packet::SubscribePacket;
 pub use unsubscribe_ack_packet::UnsubscribeAckPacket;
+pub use unsubscribe_packet::UnsubscribePacket;

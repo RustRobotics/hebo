@@ -277,6 +277,14 @@ impl SubscribePacket {
         self.packet_id
     }
 
+    pub fn properties_mut(&mut self) -> &mut Properties {
+        &mut self.properties
+    }
+
+    pub fn properties(&self) -> &Properties {
+        &self.properties
+    }
+
     pub fn set_topics(&mut self, topics: &[SubscribeTopic]) -> &mut Self {
         self.topics.clear();
         self.topics.extend_from_slice(topics);
