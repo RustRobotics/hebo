@@ -2,8 +2,6 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
-
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic};
@@ -116,6 +114,8 @@ impl UnsubscribePacket {
     }
 }
 
+pub const UNSUBSCRIBE_PROPERTIES: &[PropertyType] = &[PropertyType::UserProperty];
+
 impl DecodePacket for UnsubscribePacket {
     fn decode(ba: &mut ByteArray) -> Result<UnsubscribePacket, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
@@ -125,12 +125,21 @@ impl DecodePacket for UnsubscribePacket {
 
         let packet_id = PacketId::decode(ba)?;
         if packet_id.value() == 0 {
-            // SUBSCRIBE, UNSUBSCRIBE, and PUBLISH (in cases where QoS > 0) Control Packets
-            // MUST contain a non-zero 16-bit Packet Identifier. [MQTT-2.3.1-1]
             return Err(DecodeError::InvalidPacketId);
         }
 
-        let mut remaining_length = packet_id.bytes();
+        let properties = Properties::decode(ba)?;
+        if let Err(property_type) =
+            check_property_type_list(properties.props(), UNSUBSCRIBE_PROPERTIES)
+        {
+            log::error!(
+                "v5/UnsubscribePacket: property type {:?} cannot be used in properties!",
+                property_type
+            );
+            return Err(DecodeError::InvalidPropertyType);
+        }
+
+        let mut remaining_length = packet_id.bytes() + properties.bytes();
         let mut topics = Vec::new();
         while remaining_length < fixed_header.remaining_length() {
             let topic = SubTopic::decode(ba)?;
@@ -138,20 +147,23 @@ impl DecodePacket for UnsubscribePacket {
             topics.push(topic);
         }
 
-        // The Payload of an UNSUBSCRIBE packet MUST contain at least one Topic Filter.
-        // An UNSUBSCRIBE packet with no payload is a protocol violation [MQTT-4.10.3-2].
+        // The Payload of an UNSUBSCRIBE packet MUST contain at least one Topic Filter [MQTT-3.10.3-2].
         if topics.is_empty() {
             return Err(DecodeError::EmptyTopicFilter);
         }
 
-        Ok(UnsubscribePacket { packet_id, topics })
+        Ok(UnsubscribePacket {
+            packet_id,
+            properties,
+            topics,
+        })
     }
 }
 
 impl EncodePacket for UnsubscribePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
-        let mut remaining_length: usize = self.packet_id.bytes();
+        let mut remaining_length: usize = self.packet_id.bytes() + self.properties.bytes();
         for topic in &self.topics {
             remaining_length += topic.bytes();
         }
@@ -160,6 +172,7 @@ impl EncodePacket for UnsubscribePacket {
         fixed_header.encode(v)?;
 
         self.packet_id.encode(v)?;
+        self.properties.encode(v)?;
 
         for topic in &self.topics {
             topic.encode(v)?;
