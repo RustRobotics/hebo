@@ -8,7 +8,7 @@ use codec::{
     v3::{PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket, UnsubscribePacket},
     SubscribePattern,
 };
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
 use super::Dispatcher;
 use crate::commands::DispatcherToListenerCmd;
@@ -16,7 +16,7 @@ use crate::types::SessionGid;
 
 #[derive(Debug, Default, Clone)]
 pub struct SubTrie {
-    map: HashMap<SessionGid, BTreeSet<SubscribePattern>>,
+    map: HashMap<SessionGid, HashMap<String, SubscribePattern>>,
 }
 
 impl SubTrie {
@@ -34,7 +34,7 @@ impl SubTrie {
         let patterns = match self.map.get_mut(&session_gid) {
             Some(patterns) => patterns,
             None => {
-                let patterns = BTreeSet::new();
+                let patterns = HashMap::new();
                 self.map.insert(session_gid, patterns);
                 self.map.get_mut(&session_gid).unwrap()
             }
@@ -51,7 +51,7 @@ impl SubTrie {
             // TODO(Shaohua): Update qos in SubscribeAck.
             match SubscribePattern::parse(topic.topic(), topic.qos()) {
                 Ok(pattern) => {
-                    patterns.insert(pattern);
+                    patterns.insert(topic.topic().to_string(), pattern);
                     ack_vec.push(SubscribeAck::QoS(topic.qos()));
                     pattern_added += 1;
                 }
@@ -74,21 +74,17 @@ impl SubTrie {
 
     pub fn unsubscribe(&mut self, session_gid: SessionGid, packet: UnsubscribePacket) -> usize {
         if let Some(set) = self.map.get_mut(&session_gid) {
-            // TODO(Shaohua): DO NOT clone topic patterns.
-            // FIXME(Shaohua): SubTopic type error
-            /*
-            let to_be_removed: Vec<SubscribePattern> = set
+            let to_be_removed: Vec<String> = packet
+                .topics()
                 .iter()
-                .filter(|p| packet.topics().contains(p.topic().topic()))
-                .map(|p| p.clone())
+                .filter(|topic| set.contains_key(topic.as_ref()))
+                .map(|topic| topic.as_ref().to_string())
                 .collect();
             for p in &to_be_removed {
                 set.remove(p);
             }
 
             to_be_removed.len()
-            */
-            0
         } else {
             log::error!("trie: No subscription for gid: {:?}", session_gid);
             0
@@ -99,7 +95,7 @@ impl SubTrie {
         let mut vec = vec![];
         let topic = packet.topic();
         for (session_gid, topic_patterns) in self.map.iter() {
-            for topic_pattern in topic_patterns {
+            for topic_pattern in topic_patterns.values() {
                 if topic_pattern.topic().is_match(topic) {
                     vec.push(*session_gid);
                     break;
