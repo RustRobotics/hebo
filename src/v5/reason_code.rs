@@ -32,6 +32,8 @@ pub enum ReasonCode {
     /// This might be a lower QoS than was requested.
     ///
     /// AUTH: Authentication is successful. Sent by server.
+    ///
+    /// PUBACK: The message is accepted. Publication of the QoS 1 message proceeds.
     Success = 0x00,
 
     /// Granted QoS 1: SUBACK
@@ -52,6 +54,10 @@ pub enum ReasonCode {
     DisconnectWithWillMessage = 0x04,
 
     /// No matching subscribers: PUBACK, PUBREC
+    ///
+    /// PUBACK: The message is accepted but there are no subscribers. This is sent only by the Server.
+    /// If the Server knows that there are no matching subscribers, it MAY use
+    /// this Reason Code instead of 0x00 (Success).
     NoMatchingSubscribers = 0x10,
 
     /// No subscription existed: UNSUBACK
@@ -82,6 +88,9 @@ pub enum ReasonCode {
     ///
     /// SUBACK: The subscription is not accepted and the Server either does not wish to reveal
     /// the reason or none of the other Reason Codes apply.
+    ///
+    /// PUBACK: The receiver does not accept the publish but either does not want to reveal the reason,
+    /// or it does not match one of the other values.
     UnspecifiedError = 0x80,
 
     /// Malformed Packet: CONNACK, DISCONNECT
@@ -109,6 +118,8 @@ pub enum ReasonCode {
     /// UNSUBACK: The UNSUBSCRIBE is valid but the Server does not accept it.
     ///
     /// SUBACK: The SUBSCRIBE is valid but the Server does not accept it.
+    ///
+    /// PUBACK: The PUBLISH is valid but the receiver is not willing to accept it.
     ImplementationSpecificError = 0x83,
 
     /// Unsupported Protocol Version: CONNACK
@@ -135,6 +146,8 @@ pub enum ReasonCode {
     /// UNSUBACK: The Client is not authorized to unsubscribe.
     ///
     /// SUBACK: The Client is not authorized to make this subscription.
+    ///
+    /// PUBACK: The PUBLISH is not authorized.
     NotAuthorized = 0x87,
 
     /// Server unavailable: CONNACK
@@ -194,6 +207,8 @@ pub enum ReasonCode {
     ///
     /// DISCONNECT: The Topic Name is correctly formed, but is not accepted by this Client or Server.
     /// Sent by client or server.
+    ///
+    /// PUBACK: The Topic Name is not malformed, but is not accepted by this Client or Server.
     TopicNameInvalid = 0x90,
 
     /// Packet Identifier in use: PUBACK, PUBREC, SUBACK, UNSUBACK
@@ -201,6 +216,9 @@ pub enum ReasonCode {
     /// UNSUBACK: The specified Packet Identifier is already in use.
     ///
     /// SUBACK: The specified Packet Identifier is already in use.
+    ///
+    /// PUBACK: The Packet Identifier is already in use. This might indicate a mismatch
+    /// in the Session State between the Client and Server.
     PacketIdentifierInUse = 0x91,
 
     /// Packet Identifier not found: PUBREL, PUBCOMP
@@ -232,6 +250,8 @@ pub enum ReasonCode {
     /// CONNACK: An implementation or administrative imposed limit has been exceeded.
     ///
     /// SUBACK: An implementation or administrative imposed limit has been exceeded.
+    ///
+    /// PUBACK: An implementation or administrative imposed limit has been exceeded.
     QuotaExceeded = 0x97,
 
     /// Administrative action: DISCONNECT
@@ -240,6 +260,8 @@ pub enum ReasonCode {
     /// Payload format invalid: CONNACK, PUBACK, PUBREC, DISCONNECT
     ///
     /// CONNACK: The Will Payload does not match the specified Payload Format Indicator.
+    ///
+    /// PUBACK: The payload format does not match the specified Payload Format Indicator.
     PayloadFormatInvalid = 0x99,
 
     /// Retain not supported: CONNACK, DISCONNECT

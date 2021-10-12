@@ -29,7 +29,7 @@ pub use header::{FixedHeader, Packet, PacketType};
 pub use ping_request_packet::PingRequestPacket;
 pub use ping_response_packet::PingResponsePacket;
 pub use property::{Properties, Property, PropertyType};
-pub use publish_ack_packet::PublishAckPacket;
+pub use publish_ack_packet::{PublishAckPacket, PUBLISH_ACK_PROPERTIES, PUBLISH_ACK_REASONS};
 pub use publish_complete_packet::PublishCompletePacket;
 pub use publish_packet::PublishPacket;
 pub use publish_received_packet::PublishReceivedPacket;
