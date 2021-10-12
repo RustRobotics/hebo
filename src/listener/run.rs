@@ -40,7 +40,9 @@ impl Listener {
                 },
 
                 Some(cmd) = dispatcher_receiver.recv() => {
-                    self.handle_dispatcher_cmd(cmd).await;
+                    if let Err(err) = self.handle_dispatcher_cmd(cmd).await {
+                        log::error!("handle dispatcher cmd failed: {:?}", err);
+                    }
                 }
 
                 Some(cmd) = auth_receiver.recv() => {

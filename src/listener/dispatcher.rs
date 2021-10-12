@@ -8,11 +8,15 @@ use codec::v3::{ConnectReturnCode, PublishPacket, SubscribeAckPacket};
 
 use super::Listener;
 use crate::commands::{DispatcherToListenerCmd, ListenerToSessionCmd};
+use crate::error::Error;
 use crate::session::CachedSession;
 use crate::types::SessionId;
 
 impl Listener {
-    pub(super) async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
+    pub(super) async fn handle_dispatcher_cmd(
+        &mut self,
+        cmd: DispatcherToListenerCmd,
+    ) -> Result<(), Error> {
         match cmd {
             DispatcherToListenerCmd::CheckCachedSessionResp(session_id, cached_session) => {
                 self.on_dispatcher_check_cached_session(session_id, cached_session)
@@ -31,32 +35,21 @@ impl Listener {
         &mut self,
         session_id: SessionId,
         cached_session: Option<CachedSession>,
-    ) {
-        if let Err(err) = self
-            .session_send_connect_ack(session_id, ConnectReturnCode::Accepted, cached_session)
+    ) -> Result<(), Error> {
+        self.session_send_connect_ack(session_id, ConnectReturnCode::Accepted, cached_session)
             .await
-        {
-            log::warn!(
-                "Failed to send connect ack packet from listener to session: {:?}",
-                err
-            );
-        }
     }
 
-    async fn on_dispatcher_publish(&mut self, session_id: SessionId, packet: PublishPacket) {
+    async fn on_dispatcher_publish(
+        &mut self,
+        session_id: SessionId,
+        packet: PublishPacket,
+    ) -> Result<(), Error> {
         if let Some(session_sender) = self.session_senders.get(&session_id) {
             let cmd = ListenerToSessionCmd::Publish(packet);
-            if let Err(err) = session_sender.send(cmd).await {
-                log::warn!(
-                    "Failed to send publish packet from listener to session: {:?}",
-                    err
-                );
-            }
+            session_sender.send(cmd).await.map_err(Into::into)
         } else {
-            log::error!(
-                "listener: Failed to find session_sender with id: {}",
-                session_id
-            );
+            Err(Error::session_error(session_id))
         }
     }
 
@@ -64,7 +57,7 @@ impl Listener {
         &mut self,
         session_id: SessionId,
         packet: SubscribeAckPacket,
-    ) {
+    ) -> Result<(), Error> {
         self.session_send_publish_ack(session_id, packet).await
     }
 }
