@@ -49,15 +49,7 @@ impl Listener {
         self.connecting_sessions.remove(&session_id);
 
         if access_granted {
-            // Add client id to cache.
-            if let Some(client_id) = self.session_ids.get(&session_id) {
-                self.client_ids.insert(client_id.to_string(), session_id);
-            } else {
-                log::error!(
-                    "listener: Failed to find client id with session: {}",
-                    session_id
-                );
-            }
+            self.client_ids.insert(client_id.to_string(), session_id);
         }
 
         if let Some(session_sender) = self.session_senders.get(&session_id) {

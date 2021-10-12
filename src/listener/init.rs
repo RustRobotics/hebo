@@ -5,7 +5,7 @@
 //! Initialize Listener
 
 use futures_util::StreamExt;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs::{self, File};
 use std::io::BufReader;
 use std::path::Path;
@@ -52,9 +52,9 @@ impl Listener {
             current_session_id: 0,
 
             session_senders: HashMap::new(),
-            session_ids: HashMap::new(),
             client_ids: BTreeMap::new(),
-            connecting_sessions: HashMap::new(),
+
+            connecting_sessions: HashSet::new(),
 
             session_sender,
             session_receiver: Some(session_receiver),

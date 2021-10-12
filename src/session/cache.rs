@@ -11,4 +11,8 @@ impl CachedSession {
     pub fn new(client_id: String) -> Self {
         Self { client_id }
     }
+
+    pub fn client_id(&self) -> &str {
+        &self.client_id
+    }
 }

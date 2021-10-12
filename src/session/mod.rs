@@ -79,10 +79,6 @@ impl Session {
         }
     }
 
-    pub fn clean_session(&self) -> bool {
-        self.clean_session
-    }
-
     pub async fn run_loop(mut self) {
         // TODO(Shaohua): Set buffer cap based on settings
         let mut buf = Vec::with_capacity(1024);

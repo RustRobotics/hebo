@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
@@ -32,11 +32,10 @@ pub struct Listener {
     current_session_id: SessionId,
 
     session_senders: HashMap<SessionId, Sender<ListenerToSessionCmd>>,
-    session_ids: HashMap<SessionId, String>,
     client_ids: BTreeMap<String, SessionId>,
 
     // session_id -> clean_session.
-    connecting_sessions: HashMap<SessionId, bool>,
+    connecting_sessions: HashSet<SessionId>,
 
     session_sender: Sender<SessionToListenerCmd>,
     session_receiver: Option<Receiver<SessionToListenerCmd>>,

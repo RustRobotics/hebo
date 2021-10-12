@@ -68,10 +68,7 @@ impl Listener {
         }
 
         // TODO(Shaohua): Check duplicated ConnectPacket.
-        self.connecting_sessions
-            .insert(session_id, packet.connect_flags().clean_session());
-        self.session_ids
-            .insert(session_id, packet.client_id().to_string());
+        self.connecting_sessions.insert(session_id);
 
         // Send request to auth app.
         self.auth_sender
@@ -89,13 +86,6 @@ impl Listener {
         // Delete session info
         if self.session_senders.remove(&session_id).is_none() {
             log::error!("Failed to remove pipeline with session id: {}", session_id);
-        }
-        if let Some(client_id) = self.session_ids.remove(&session_id) {
-            if self.client_ids.remove(&client_id).is_none() {
-                log::error!("Failed to remove client id: {}", client_id);
-            }
-        } else {
-            log::error!("Failed to remove session id: {}", session_id);
         }
 
         self.dispatcher_sender
