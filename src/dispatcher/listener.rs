@@ -12,6 +12,10 @@ impl Dispatcher {
     pub(super) async fn handle_listener_cmd(&mut self, cmd: ListenerToDispatcherCmd) {
         log::info!("handle_listener_cmd: {:?}", cmd);
         match cmd {
+            ListenerToDispatcherCmd::CheckCachedSession(session_gid, client_id) => {
+                self.on_listener_check_cached_session(session_gid, client_id)
+                    .await
+            }
             ListenerToDispatcherCmd::Publish(packet) => {
                 self.backends_store_packet(&packet).await;
                 self.on_listener_publish(&packet).await;
@@ -29,6 +33,14 @@ impl Dispatcher {
                 self.metrics_on_session_removed(listener_id).await;
             }
         }
+    }
+
+    async fn on_listener_check_cached_session(
+        &mut self,
+        session_gid: SessionGid,
+        client_id: String,
+    ) {
+        let cached_session = self.cached_sessions.pop(&client_id);
     }
 
     pub(super) async fn on_listener_publish(&mut self, packet: &PublishPacket) {

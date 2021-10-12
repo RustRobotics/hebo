@@ -17,4 +17,8 @@ impl CachedSessions {
             map: HashMap::new(),
         }
     }
+
+    pub fn pop(&mut self, client_id: &str) -> Option<CachedSession> {
+        self.map.remove(client_id)
+    }
 }

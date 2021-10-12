@@ -13,6 +13,8 @@ use tokio::sync::oneshot;
 
 use crate::types::{ListenerId, SessionGid, SessionId, SessionInfo, Uptime};
 
+use crate::session::CachedSession;
+
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
     /// session_gid, username, password
@@ -71,6 +73,8 @@ pub enum SessionToListenerCmd {
 
 #[derive(Debug, Clone)]
 pub enum DispatcherToListenerCmd {
+    CheckCachedSessionResp(SessionId, Option<CachedSession>),
+
     Publish(SessionId, PublishPacket),
 
     SubscribeAck(SessionId, SubscribeAckPacket),
@@ -78,6 +82,9 @@ pub enum DispatcherToListenerCmd {
 
 #[derive(Debug, Clone)]
 pub enum ListenerToDispatcherCmd {
+    // client-id
+    CheckCachedSession(SessionGid, String),
+
     Publish(PublishPacket),
 
     Subscribe(SessionGid, SubscribePacket),
