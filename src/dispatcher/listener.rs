@@ -41,6 +41,24 @@ impl Dispatcher {
         client_id: String,
     ) {
         let cached_session = self.cached_sessions.pop(&client_id);
+        if let Some(listener_sender) = self.listener_senders.get(&session_gid.listener_id()) {
+            let cmd = DispatcherToListenerCmd::CheckCachedSessionResp(
+                session_gid.session_id(),
+                cached_session,
+            );
+            if let Err(err) = listener_sender.send(cmd).await {
+                log::error!(
+                    "dispatcher: Failed to send check cached session to listener: {:?}, err: {:?}",
+                    session_gid,
+                    err
+                );
+            }
+        } else {
+            log::error!(
+                "dispatcher: Failed to find listener sender with id: {}",
+                session_gid.listener_id()
+            );
+        }
     }
 
     pub(super) async fn on_listener_publish(&mut self, packet: &PublishPacket) {

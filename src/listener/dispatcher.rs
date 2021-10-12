@@ -4,20 +4,45 @@
 
 //! Dispatcher cmd handlers.
 
-use codec::v3::{PublishPacket, SubscribeAckPacket};
+use codec::v3::{ConnectReturnCode, PublishPacket, SubscribeAckPacket};
 
 use super::Listener;
 use crate::commands::{DispatcherToListenerCmd, ListenerToSessionCmd};
+use crate::session::CachedSession;
 use crate::types::SessionId;
 
 impl Listener {
     pub(super) async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToListenerCmd) {
         match cmd {
+            DispatcherToListenerCmd::CheckCachedSessionResp(session_id, cached_session) => {
+                self.on_dispatcher_check_cached_session(session_id, cached_session)
+                    .await
+            }
             DispatcherToListenerCmd::Publish(session_id, packet) => {
                 self.on_dispatcher_publish(session_id, packet).await
             }
             DispatcherToListenerCmd::SubscribeAck(session_id, packet) => {
                 self.on_dispatcher_subscribe_ack(session_id, packet).await
+            }
+        }
+    }
+
+    async fn on_dispatcher_check_cached_session(
+        &mut self,
+        session_id: SessionId,
+        cached_session: Option<CachedSession>,
+    ) {
+        if let Some(cached_session) = cached_session {
+        } else {
+            // No cached session object found, just send auth cmd.
+            if let Err(err) = self
+                .session_send_connect_ack(session_id, ConnectReturnCode::Accepted)
+                .await
+            {
+                log::warn!(
+                    "Failed to send connect ack packet from listener to session: {:?}",
+                    err
+                );
             }
         }
     }

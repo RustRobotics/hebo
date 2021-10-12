@@ -5,7 +5,8 @@
 //! Session cmd handlers.
 
 use codec::v3::{
-    ConnectPacket, PublishPacket, SubscribeAckPacket, SubscribePacket, UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, SubscribeAckPacket,
+    SubscribePacket, UnsubscribePacket,
 };
 
 use super::Listener;
@@ -154,6 +155,21 @@ impl Listener {
     /// Send disconnect cmd to session.
     async fn disconnect_session(&mut self, session_id: SessionId) -> Result<(), Error> {
         let cmd = ListenerToSessionCmd::Disconnect;
+        if let Some(session_sender) = self.session_senders.get(&session_id) {
+            session_sender.send(cmd).await.map_err(Into::into)
+        } else {
+            Err(Error::session_error(session_id))
+        }
+    }
+
+    pub(crate) async fn session_send_connect_ack(
+        &mut self,
+        session_id: SessionId,
+        reason: ConnectReturnCode,
+    ) -> Result<(), Error> {
+        let ack_packet = ConnectAckPacket::new(false, reason);
+        let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
+
         if let Some(session_sender) = self.session_senders.get(&session_id) {
             session_sender.send(cmd).await.map_err(Into::into)
         } else {

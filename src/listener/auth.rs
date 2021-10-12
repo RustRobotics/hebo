@@ -2,10 +2,10 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::v3::{ConnectAckPacket, ConnectPacket, ConnectReturnCode};
+use codec::v3::{ConnectPacket, ConnectReturnCode};
 
 use super::Listener;
-use crate::commands::{AuthToListenerCmd, ListenerToDispatcherCmd, ListenerToSessionCmd};
+use crate::commands::{AuthToListenerCmd, ListenerToDispatcherCmd};
 use crate::error::Error;
 use crate::types::{SessionGid, SessionId};
 
@@ -44,26 +44,16 @@ impl Listener {
 
         // If not granted, reject this session here.
         if !access_granted {
-            let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::Unauthorized);
-            let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
-
-            if let Some(session_sender) = self.session_senders.get(&session_id) {
-                return session_sender.send(cmd).await.map_err(Into::into);
-            } else {
-                return Err(Error::session_error(session_id));
-            }
+            return self
+                .session_send_connect_ack(session_id, ConnectReturnCode::Unauthorized)
+                .await;
         }
 
         // Clean session flag is on.
         if packet.connect_flags().clean_session() {
-            let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::Accepted);
-            let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
-
-            if let Some(session_sender) = self.session_senders.get(&session_id) {
-                return session_sender.send(cmd).await.map_err(Into::into);
-            } else {
-                return Err(Error::session_error(session_id));
-            }
+            return self
+                .session_send_connect_ack(session_id, ConnectReturnCode::Accepted)
+                .await;
         }
 
         self.client_ids
@@ -74,6 +64,6 @@ impl Listener {
             SessionGid::new(self.id, session_id),
             packet.client_id().to_string(),
         );
-        Ok(())
+        self.dispatcher_sender.send(cmd).await.map_err(Into::into)
     }
 }
