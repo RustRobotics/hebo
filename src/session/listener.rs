@@ -15,6 +15,7 @@ use codec::{
 use super::{Session, Status};
 use crate::commands::ListenerToSessionCmd;
 use crate::error::Error;
+use crate::session::CachedSession;
 
 impl Session {
     pub(super) async fn handle_listener_packet(
@@ -22,7 +23,9 @@ impl Session {
         cmd: ListenerToSessionCmd,
     ) -> Result<(), Error> {
         match cmd {
-            ListenerToSessionCmd::ConnectAck(packet) => self.on_listener_connect_ack(packet).await,
+            ListenerToSessionCmd::ConnectAck(packet, cached_session) => {
+                self.on_listener_connect_ack(packet, cached_session).await
+            }
             ListenerToSessionCmd::PublishAck(packet_id, qos, accepted) => {
                 self.on_listener_publish_ack(packet_id, qos, accepted).await
             }
@@ -34,7 +37,11 @@ impl Session {
         }
     }
 
-    async fn on_listener_connect_ack(&mut self, packet: ConnectAckPacket) -> Result<(), Error> {
+    async fn on_listener_connect_ack(
+        &mut self,
+        packet: ConnectAckPacket,
+        cached_session: Option<CachedSession>,
+    ) -> Result<(), Error> {
         // Send connect ack first, then update status.
         let return_code = packet.return_code();
         self.send(packet).await?;
@@ -43,6 +50,11 @@ impl Session {
             ConnectReturnCode::Accepted => Status::Connected,
             _ => Status::Disconnected,
         };
+
+        if let Some(cached_session) = cached_session {
+            self.load_cached_session(cached_session);
+        }
+
         Ok(())
     }
 

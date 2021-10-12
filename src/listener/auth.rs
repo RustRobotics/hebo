@@ -45,14 +45,14 @@ impl Listener {
         // If not granted, reject this session here.
         if !access_granted {
             return self
-                .session_send_connect_ack(session_id, ConnectReturnCode::Unauthorized)
+                .session_send_connect_ack(session_id, ConnectReturnCode::Unauthorized, None)
                 .await;
         }
 
         // Clean session flag is on.
         if packet.connect_flags().clean_session() {
             return self
-                .session_send_connect_ack(session_id, ConnectReturnCode::Accepted)
+                .session_send_connect_ack(session_id, ConnectReturnCode::Accepted, None)
                 .await;
         }
 

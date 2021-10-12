@@ -32,18 +32,14 @@ impl Listener {
         session_id: SessionId,
         cached_session: Option<CachedSession>,
     ) {
-        if let Some(cached_session) = cached_session {
-        } else {
-            // No cached session object found, just send auth cmd.
-            if let Err(err) = self
-                .session_send_connect_ack(session_id, ConnectReturnCode::Accepted)
-                .await
-            {
-                log::warn!(
-                    "Failed to send connect ack packet from listener to session: {:?}",
-                    err
-                );
-            }
+        if let Err(err) = self
+            .session_send_connect_ack(session_id, ConnectReturnCode::Accepted, cached_session)
+            .await
+        {
+            log::warn!(
+                "Failed to send connect ack packet from listener to session: {:?}",
+                err
+            );
         }
     }
 

@@ -14,6 +14,7 @@ use crate::listener::{
     ListenerToAclCmd, ListenerToAuthCmd, ListenerToDispatcherCmd, ListenerToSessionCmd,
     SessionToListenerCmd,
 };
+use crate::session::CachedSession;
 use crate::types::{SessionGid, SessionId};
 use crate::Error;
 
@@ -166,9 +167,10 @@ impl Listener {
         &mut self,
         session_id: SessionId,
         reason: ConnectReturnCode,
+        cached_session: Option<CachedSession>,
     ) -> Result<(), Error> {
         let ack_packet = ConnectAckPacket::new(false, reason);
-        let cmd = ListenerToSessionCmd::ConnectAck(ack_packet);
+        let cmd = ListenerToSessionCmd::ConnectAck(ack_packet, cached_session);
 
         if let Some(session_sender) = self.session_senders.get(&session_id) {
             session_sender.send(cmd).await.map_err(Into::into)

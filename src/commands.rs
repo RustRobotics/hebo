@@ -47,7 +47,7 @@ pub enum ListenerToAclCmd {
 #[derive(Debug, Clone)]
 pub enum ListenerToSessionCmd {
     /// Accepted or not.
-    ConnectAck(ConnectAckPacket),
+    ConnectAck(ConnectAckPacket, Option<CachedSession>),
 
     /// Response to Publish packet.
     ///
