@@ -22,9 +22,9 @@ mod unsubscribe_ack_packet;
 mod unsubscribe_packet;
 
 pub use auth_packet::AuthPacket;
-pub use connect_ack_packet::{ConnectAckPacket, CONNECT_REASON_CODE_LIST};
+pub use connect_ack_packet::{ConnectAckPacket, CONNECT_ACK_PROPERTIES, CONNECT_REASON_CODE_LIST};
 pub use connect_packet::ConnectPacket;
-pub use disconnect_packet::DisconnectPacket;
+pub use disconnect_packet::{DisconnectPacket, DISCONNECT_PROPERTIES, DISCONNECT_REASON_CODE_LIST};
 pub use header::{FixedHeader, Packet, PacketType};
 pub use ping_request_packet::PingRequestPacket;
 pub use ping_response_packet::PingResponsePacket;

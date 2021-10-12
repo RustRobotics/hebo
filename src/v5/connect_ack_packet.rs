@@ -6,32 +6,6 @@ use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
-/// If the Server sends a ConnectAck packet with non-zero return code, it MUST
-/// close the network connection.
-pub const CONNECT_REASON_CODE_LIST: &[ReasonCode] = &[
-    ReasonCode::Success,
-    ReasonCode::UnspecifiedError,
-    ReasonCode::MalformedPacket,
-    ReasonCode::ProtocolError,
-    ReasonCode::ImplementationSpecificError,
-    ReasonCode::UnsupportedProtocolVersion,
-    ReasonCode::ClientIdentifierNotValid,
-    ReasonCode::BadUserNameOrPassword,
-    ReasonCode::NotAuthorized,
-    ReasonCode::ServerUnavailable,
-    ReasonCode::ServerBusy,
-    ReasonCode::Banned,
-    ReasonCode::BadAuthenticationMethod,
-    ReasonCode::TopicNameInvalid,
-    ReasonCode::PacketTooLarge,
-    ReasonCode::QuotaExceeded,
-    ReasonCode::PayloadFormatInvalid,
-    ReasonCode::QoSNotSupported,
-    ReasonCode::UseAnotherServer,
-    ReasonCode::ServerMoved,
-    ReasonCode::ConnectionRateExceeded,
-];
-
 /// The CONNACK packet is the packet sent by the Server in response to a CONNECT packet
 /// received from a Client.
 ///
@@ -85,6 +59,32 @@ pub struct ConnectAckPacket {
 
     properties: Properties,
 }
+
+/// If the Server sends a ConnectAck packet with non-zero return code, it MUST
+/// close the network connection.
+pub const CONNECT_REASON_CODE_LIST: &[ReasonCode] = &[
+    ReasonCode::Success,
+    ReasonCode::UnspecifiedError,
+    ReasonCode::MalformedPacket,
+    ReasonCode::ProtocolError,
+    ReasonCode::ImplementationSpecificError,
+    ReasonCode::UnsupportedProtocolVersion,
+    ReasonCode::ClientIdentifierNotValid,
+    ReasonCode::BadUserNameOrPassword,
+    ReasonCode::NotAuthorized,
+    ReasonCode::ServerUnavailable,
+    ReasonCode::ServerBusy,
+    ReasonCode::Banned,
+    ReasonCode::BadAuthenticationMethod,
+    ReasonCode::TopicNameInvalid,
+    ReasonCode::PacketTooLarge,
+    ReasonCode::QuotaExceeded,
+    ReasonCode::PayloadFormatInvalid,
+    ReasonCode::QoSNotSupported,
+    ReasonCode::UseAnotherServer,
+    ReasonCode::ServerMoved,
+    ReasonCode::ConnectionRateExceeded,
+];
 
 pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
     PropertyType::SessionExpiryInterval,

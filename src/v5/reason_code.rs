@@ -22,6 +22,9 @@ pub enum ReasonCode {
     /// - Granted QoS 0: SUBACK
     ///
     /// CONNACK: Connection accepted.
+    ///
+    /// DISCONNECT: Close the connection normally.  Do not send the Will Message.
+    /// Sent by client or server.
     Success = 0x00,
 
     /// Granted QoS 1: SUBACK
@@ -31,6 +34,9 @@ pub enum ReasonCode {
     GrantedQos2 = 0x02,
 
     /// Disconnect with Will Message: DISCONNECT
+    ///
+    /// DISCONNECT: The Client wishes to disconnect but requires that the Server
+    /// also publishes its Will Message. Sent by client.
     DisconnectWithWillMessage = 0x04,
 
     /// No matching subscribers: PUBACK, PUBREC
@@ -49,21 +55,32 @@ pub enum ReasonCode {
     ///
     /// CONNACK: The Server does not wish to reveal the reason for the failure, or
     /// none of the other Reason Codes apply.
+    ///
+    /// DISCONNECT: The Connection is closed but the sender either does not wish to reveal the reason,
+    /// or none of the other Reason Codes apply. Sent by client or server.
     UnspecifiedError = 0x80,
 
     /// Malformed Packet: CONNACK, DISCONNECT
     ///
     /// CONNACK: Data within the CONNECT packet could not be correctly parsed.
+    ///
+    /// DISCONNECT: The received packet does not conform to this specification.
+    /// Sent by client or server.
     MalformedPacket = 0x81,
 
     /// Protocol Error: CONNACK, DISCONNECT
     ///
     /// CONNACK: Data in the CONNECT packet does not conform to this specification.
+    ///
+    /// DISCONNECT: An unexpected or out of order packet was received. Sent by client or server.
     ProtocolError = 0x82,
 
     /// Implementation specific error: CONNACK, PUBACK, PUBREC, SUBACK, UNSUBACK, DISCONNECT
     ///
     /// CONNACK: The CONNECT is valid but is not accepted by this Server.
+    ///
+    /// DISCONNECT: The packet received is valid but cannot be processed by this implementation.
+    /// Sent by client or server.
     ImplementationSpecificError = 0x83,
 
     /// Unsupported Protocol Version: CONNACK
@@ -84,6 +101,8 @@ pub enum ReasonCode {
     /// Not authorized: CONNACK, PUBACK, PUBREC, SUBACK, UNSUBACK, DISCONNECT
     ///
     /// CONNACK: The Client is not authorized to connect.
+    ///
+    /// DISCONNECT: The request is not authorized. Sent by server.
     NotAuthorized = 0x87,
 
     /// Server unavailable: CONNACK
@@ -94,6 +113,9 @@ pub enum ReasonCode {
     /// Server busy: CONNACK, DISCONNECT
     ///
     /// CONNACK: The Server is busy. Try again later.
+    ///
+    /// DISCONNECT: The Server is busy and cannot continue processing requests from this Client.
+    /// Sent by server.
     ServerBusy = 0x89,
 
     /// Banned: CONNACK
@@ -102,6 +124,8 @@ pub enum ReasonCode {
     Banned = 0x8a,
 
     /// Server shutting down: DISCONNECT
+    ///
+    /// DISCONNECT: The Server is shutting down. Sent by server.
     ServerShuttingDown = 0x8b,
 
     /// Bad authentication method: CONNACK, DISCONNECT
@@ -111,17 +135,29 @@ pub enum ReasonCode {
     BadAuthenticationMethod = 0x8c,
 
     /// Keep Alive timeout: DISCONNECT
+    ///
+    /// DISCONNECT: The Connection is closed because no packet has been received for 1.5 times the Keepalive time.
+    /// Sent by server.
     KeepAliveTimeout = 0x8d,
 
     /// Session taken over: DISCONNECT
+    ///
+    /// DISCONNECT: Another Connection using the same ClientID has connected causing this Connection to be closed.
+    /// Sent by server.
     SessionTakenOver = 0x8e,
 
     /// Topic Filter invalid: SUBACK, UNSUBACK, DISCONNECT
+    ///
+    /// DISCONNECT: The Topic Filter is correctly formed, but is not accepted by this Sever.
+    /// Sent by server.
     TopicFilterInvalid = 0x8f,
 
     /// Topic Name invalid: CONNACK, PUBACK, PUBREC, DISCONNECT
     ///
     /// CONNACK: The Will Topic Name is not malformed, but is not accepted by this Server.
+    ///
+    /// DISCONNECT: The Topic Name is correctly formed, but is not accepted by this Client or Server.
+    /// Sent by client or server.
     TopicNameInvalid = 0x90,
 
     /// Packet Identifier in use: PUBACK, PUBREC, SUBACK, UNSUBACK
@@ -131,9 +167,16 @@ pub enum ReasonCode {
     PacketIdentifierNotFound = 0x92,
 
     /// Receive Maximum exceeded: DISCONNECT
+    ///
+    /// DISCONNECT: The Client or Server has received more than Receive Maximum publication
+    /// for which it has not sent PUBACK or PUBCOMP. Sent by client or server.
     ReceiveMaximumExceeded = 0x93,
 
     /// Topic Alias invalid: DISCONNECT
+    ///
+    /// DISCONNECT: The Client or Server has received a PUBLISH packet containing a Topic Alias
+    /// which is greater than the Maximum Topic Alias it sent in the CONNECT or CONNACK packet.
+    /// Sent by client or server.
     TopicAliasInvalid = 0x94,
 
     /// Packet too large: CONNACK, DISCONNECT
