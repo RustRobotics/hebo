@@ -2,142 +2,35 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
-
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
 /// close the network connection.
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ConnectReasonCode {
-    /// Connection accepted.
-    Accepted = 0x00,
-
-    /// The Server does not wish to reveal the reason for the failure, or
-    /// none of the other Reason Codes apply.
-    UnspecifiedError = 0x80,
-
-    /// Data within the CONNECT packet could not be correctly parsed.
-    MalformedPacket = 0x81,
-
-    /// Data in the CONNECT packet does not conform to this specification.
-    ProtocolError = 0x82,
-
-    /// The CONNECT is valid but is not accepted by this Server.
-    ImplementationSpecificError = 0x83,
-
-    /// The Server does not support the version of the MQTT protocol requested by the Client.
-    UnsupportedProtocolVersion = 0x84,
-
-    /// The Client Identifier is a valid string but is not allowed by the Server.
-    ClientIdentifierNotValid = 0x85,
-
-    /// The Server does not accept the User Name or Password specified by the Client
-    BadUserNameOrPassword = 0x86,
-
-    /// The Client is not authorized to connect.
-    NotAuthorized = 0x87,
-
-    /// The MQTT Server is not available.
-    ServerUnavailable = 0x88,
-
-    /// The Server is busy. Try again later.
-    ServerBusy = 0x89,
-
-    /// This Client has been banned by administrative action. Contact the server administrator.
-    Banned = 0x8a,
-
-    /// The authentication method is not supported or does not match the authentication method
-    /// currently in use.
-    BadAuthenticationMethod = 0x8c,
-
-    /// The Will Topic Name is not malformed, but is not accepted by this Server.
-    TopicNameInvalid = 0x90,
-
-    /// The CONNECT packet exceeded the maximum permissible size.
-    PacketTooLarge = 0x95,
-
-    /// An implementation or administrative imposed limit has been exceeded.
-    QuotaExceeded = 0x97,
-
-    /// The Will Payload does not match the specified Payload Format Indicator.
-    PayloadFormatInvalid = 0x99,
-
-    /// The Server does not support the QoS set in Will QoS.
-    QoSNotSupported = 0x9b,
-
-    /// The Client should temporarily use another server.
-    UseAnotherServer = 0x9c,
-
-    /// The Client should permanently use another server.
-    ServerMoved = 0x9d,
-
-    /// The connection rate limit has been exceeded.
-    ConnectionRateExceeded = 0x9f,
-}
-
-impl Default for ConnectReasonCode {
-    fn default() -> ConnectReasonCode {
-        ConnectReasonCode::Accepted
-    }
-}
-
-impl ConnectReasonCode {
-    pub fn bytes(&self) -> usize {
-        1
-    }
-    pub fn const_bytes() -> usize {
-        1
-    }
-}
-
-impl TryFrom<u8> for ConnectReasonCode {
-    type Error = DecodeError;
-    fn try_from(v: u8) -> Result<Self, Self::Error> {
-        match v {
-            0x00 => Ok(Self::Accepted),
-            0x80 => Ok(Self::UnspecifiedError),
-            0x81 => Ok(Self::MalformedPacket),
-            0x82 => Ok(Self::ProtocolError),
-            0x83 => Ok(Self::ImplementationSpecificError),
-            0x84 => Ok(Self::UnsupportedProtocolVersion),
-            0x85 => Ok(Self::ClientIdentifierNotValid),
-            0x86 => Ok(Self::BadUserNameOrPassword),
-            0x87 => Ok(Self::NotAuthorized),
-            0x88 => Ok(Self::ServerUnavailable),
-            0x89 => Ok(Self::ServerBusy),
-            0x8a => Ok(Self::Banned),
-            0x8c => Ok(Self::BadAuthenticationMethod),
-            0x90 => Ok(Self::TopicNameInvalid),
-            0x95 => Ok(Self::PacketTooLarge),
-            0x97 => Ok(Self::QuotaExceeded),
-            0x99 => Ok(Self::PayloadFormatInvalid),
-            0x9b => Ok(Self::QoSNotSupported),
-            0x9c => Ok(Self::UseAnotherServer),
-            0x9d => Ok(Self::ServerMoved),
-            0x9f => Ok(Self::ConnectionRateExceeded),
-            _ => Err(DecodeError::OtherErrors),
-        }
-    }
-}
-
-impl DecodePacket for ConnectReasonCode {
-    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let byte = ba.read_byte()?;
-        let flag = Self::try_from(byte)?;
-        Ok(flag)
-    }
-}
-
-impl EncodePacket for ConnectReasonCode {
-    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        buf.push(*self as u8);
-        Ok(self.bytes())
-    }
-}
+pub const CONNECT_REASON_CODE_LIST: &[ReasonCode] = &[
+    ReasonCode::Success,
+    ReasonCode::UnspecifiedError,
+    ReasonCode::MalformedPacket,
+    ReasonCode::ProtocolError,
+    ReasonCode::ImplementationSpecificError,
+    ReasonCode::UnsupportedProtocolVersion,
+    ReasonCode::ClientIdentifierNotValid,
+    ReasonCode::BadUserNameOrPassword,
+    ReasonCode::NotAuthorized,
+    ReasonCode::ServerUnavailable,
+    ReasonCode::ServerBusy,
+    ReasonCode::Banned,
+    ReasonCode::BadAuthenticationMethod,
+    ReasonCode::TopicNameInvalid,
+    ReasonCode::PacketTooLarge,
+    ReasonCode::QuotaExceeded,
+    ReasonCode::PayloadFormatInvalid,
+    ReasonCode::QoSNotSupported,
+    ReasonCode::UseAnotherServer,
+    ReasonCode::ServerMoved,
+    ReasonCode::ConnectionRateExceeded,
+];
 
 /// The CONNACK packet is the packet sent by the Server in response to a CONNECT packet
 /// received from a Client.
@@ -188,7 +81,7 @@ pub struct ConnectAckPacket {
     session_present: bool,
 
     /// Byte 2 in the connection return code.
-    reason_code: ConnectReasonCode,
+    reason_code: ReasonCode,
 
     properties: Properties,
 }
@@ -214,10 +107,10 @@ pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl ConnectAckPacket {
-    pub fn new(mut session_present: bool, reason_code: ConnectReasonCode) -> ConnectAckPacket {
+    pub fn new(mut session_present: bool, reason_code: ReasonCode) -> ConnectAckPacket {
         // If a Server sends a CONNACK packet containing a non-zero Reason Code
         // it MUST set Session Present to 0 [MQTT-3.2.2-6].
-        if reason_code != ConnectReasonCode::Accepted {
+        if reason_code != ReasonCode::Success {
             session_present = false;
         }
         ConnectAckPacket {
@@ -227,15 +120,18 @@ impl ConnectAckPacket {
         }
     }
 
-    pub fn set_reason_code(&mut self, code: ConnectReasonCode) -> &mut Self {
-        if code != ConnectReasonCode::Accepted {
+    pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> Result<&mut Self, EncodeError> {
+        if !CONNECT_REASON_CODE_LIST.contains(&reason_code) {
+            return Err(EncodeError::InvalidReasonCode);
+        }
+        if reason_code != ReasonCode::Success {
             self.session_present = false;
         }
-        self.reason_code = code;
-        self
+        self.reason_code = reason_code;
+        Ok(self)
     }
 
-    pub fn reason_code(&self) -> ConnectReasonCode {
+    pub fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
@@ -264,7 +160,11 @@ impl DecodePacket for ConnectAckPacket {
 
         let ack_flags = ba.read_byte()?;
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
-        let reason_code = ConnectReasonCode::decode(ba)?;
+        let reason_code = ReasonCode::decode(ba)?;
+        if !CONNECT_REASON_CODE_LIST.contains(&reason_code) {
+            log::error!("Invalid reason code {:?}", reason_code);
+            return Err(DecodeError::InvalidReasonCode);
+        }
         let properties = Properties::decode(ba)?;
 
         if let Err(property_type) =

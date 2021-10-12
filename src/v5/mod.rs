@@ -22,7 +22,7 @@ mod unsubscribe_ack_packet;
 mod unsubscribe_packet;
 
 pub use auth_packet::AuthPacket;
-pub use connect_ack_packet::{ConnectAckPacket, ConnectReasonCode};
+pub use connect_ack_packet::{ConnectAckPacket, CONNECT_REASON_CODE_LIST};
 pub use connect_packet::ConnectPacket;
 pub use disconnect_packet::DisconnectPacket;
 pub use header::{FixedHeader, Packet, PacketType};

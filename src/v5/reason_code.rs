@@ -20,6 +20,8 @@ pub enum ReasonCode {
     /// - Success: CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, UNSUBACK, AUTH
     /// - Normal disconnection: DISCONNECT
     /// - Granted QoS 0: SUBACK
+    ///
+    /// CONNACK: Connection accepted.
     Success = 0x00,
 
     /// Granted QoS 1: SUBACK
@@ -44,42 +46,68 @@ pub enum ReasonCode {
     ReAuthenticate = 0x19,
 
     /// Unspecified error: CONNACK, PUBACK, PUBREC, SUBACK, UNSUBACK, DISCONNECT
+    ///
+    /// CONNACK: The Server does not wish to reveal the reason for the failure, or
+    /// none of the other Reason Codes apply.
     UnspecifiedError = 0x80,
 
     /// Malformed Packet: CONNACK, DISCONNECT
+    ///
+    /// CONNACK: Data within the CONNECT packet could not be correctly parsed.
     MalformedPacket = 0x81,
 
     /// Protocol Error: CONNACK, DISCONNECT
+    ///
+    /// CONNACK: Data in the CONNECT packet does not conform to this specification.
     ProtocolError = 0x82,
 
     /// Implementation specific error: CONNACK, PUBACK, PUBREC, SUBACK, UNSUBACK, DISCONNECT
+    ///
+    /// CONNACK: The CONNECT is valid but is not accepted by this Server.
     ImplementationSpecificError = 0x83,
 
     /// Unsupported Protocol Version: CONNACK
+    ///
+    /// CONNACK: The Server does not support the version of the MQTT protocol requested by the Client.
     UnsupportedProtocolVersion = 0x84,
 
     /// Client Identifier not valid: CONNACK
+    ///
+    /// CONNACK: The Client Identifier is a valid string but is not allowed by the Server.
     ClientIdentifierNotValid = 0x85,
 
     /// Bad User Name or Password: CONNACK
+    ///
+    /// CONNACK: The Server does not accept the User Name or Password specified by the Client
     BadUserNameOrPassword = 0x86,
 
     /// Not authorized: CONNACK, PUBACK, PUBREC, SUBACK, UNSUBACK, DISCONNECT
+    ///
+    /// CONNACK: The Client is not authorized to connect.
     NotAuthorized = 0x87,
 
     /// Server unavailable: CONNACK
+    ///
+    /// CONNACK: The MQTT Server is not available.
     ServerUnavailable = 0x88,
 
     /// Server busy: CONNACK, DISCONNECT
+    ///
+    /// CONNACK: The Server is busy. Try again later.
     ServerBusy = 0x89,
 
     /// Banned: CONNACK
+    ///
+    /// CONNACK: This Client has been banned by administrative action. Contact the server administrator.
     Banned = 0x8a,
 
     /// Server shutting down: DISCONNECT
     ServerShuttingDown = 0x8b,
 
     /// Bad authentication method: CONNACK, DISCONNECT
+    ///
+    /// CONNACK: The authentication method is not supported or does not match
+    /// the authentication method currently in use.
     BadAuthenticationMethod = 0x8c,
 
     /// Keep Alive timeout: DISCONNECT
@@ -92,6 +120,8 @@ pub enum ReasonCode {
     TopicFilterInvalid = 0x8f,
 
     /// Topic Name invalid: CONNACK, PUBACK, PUBREC, DISCONNECT
+    ///
+    /// CONNACK: The Will Topic Name is not malformed, but is not accepted by this Server.
     TopicNameInvalid = 0x90,
 
     /// Packet Identifier in use: PUBACK, PUBREC, SUBACK, UNSUBACK
@@ -107,36 +137,50 @@ pub enum ReasonCode {
     TopicAliasInvalid = 0x94,
 
     /// Packet too large: CONNACK, DISCONNECT
+    ///
+    /// CONNACK: The CONNECT packet exceeded the maximum permissible size.
     PacketTooLarge = 0x95,
 
     /// Message rate too high: DISCONNECT
     MessageRateTooHigh = 0x96,
 
     /// Quota exceeded: CONNACK, PUBACK, PUBREC, SUBACK, DISCONNECT
+    ///
+    /// CONNACK: An implementation or administrative imposed limit has been exceeded.
     QuotaExceeded = 0x97,
 
     /// Administrative action: DISCONNECT
     AdministrativeAction = 0x98,
 
     /// Payload format invalid: CONNACK, PUBACK, PUBREC, DISCONNECT
+    ///
+    /// CONNACK: The Will Payload does not match the specified Payload Format Indicator.
     PayloadFormatInvalid = 0x99,
 
     /// Retain not supported: CONNACK, DISCONNECT
     RetainNotSupported = 0x9a,
 
     /// QoS not supported: CONNACK, DISCONNECT
+    ///
+    /// CONNACK: The Server does not support the QoS set in Will QoS.
     QoSNotSupported = 0x9b,
 
     /// Use another server: CONNACK, DISCONNECT
+    ///
+    /// CONNACK: The Client should temporarily use another server.
     UseAnotherServer = 0x9c,
 
     /// Server moved: CONNACK, DISCONNECT
+    ///
+    /// CONNACK: The Client should permanently use another server.
     ServerMoved = 0x9d,
 
     /// Shared Subscriptions not supported: SUBACK, DISCONNECT
     SharedSubscriptionNotSupported = 0x9e,
 
     /// Connection rate exceeded: CONNACK, DISCONNECT
+    ///
+    /// CONNACK: The connection rate limit has been exceeded.
     ConnectionRateExceeded = 0x9f,
 
     /// Maximum connect time: DISCONNECT

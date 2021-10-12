@@ -57,6 +57,9 @@ pub enum DecodeError {
     /// Failed to parse property value.
     InvalidPropertyValue,
 
+    /// Used in v5 protocol.
+    InvalidReasonCode,
+
     /// Byte array index ouf of range.
     OutOfRangeError,
 
@@ -97,6 +100,9 @@ pub enum EncodeError {
     InvalidTopic(TopicError),
 
     InvalidVarInt,
+
+    /// Used in v5 protocol.
+    InvalidReasonCode,
 }
 
 impl From<std::io::Error> for EncodeError {
