@@ -15,13 +15,15 @@ use crate::error::{Error, ErrorKind};
 use crate::stream::Stream;
 use crate::types::SessionId;
 
+mod cache;
 mod client;
 mod config;
 mod listener;
 
+pub use cache::CachedSession;
 pub use config::SessionConfig;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
     Invalid,
     Connecting,

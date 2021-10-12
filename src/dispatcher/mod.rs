@@ -19,12 +19,15 @@ mod gateway;
 mod listener;
 mod metrics;
 mod rule_engine;
+mod sessions;
 mod trie;
 
 /// Dispatcher is a message router.
 #[derive(Debug)]
 pub struct Dispatcher {
     sub_trie: trie::SubTrie,
+
+    cached_sessions: sessions::CachedSessions,
 
     backends_sender: Sender<DispatcherToBackendsCmd>,
     backends_receiver: Receiver<BackendsToDispatcherCmd>,
@@ -67,6 +70,8 @@ impl Dispatcher {
     ) -> Self {
         Self {
             sub_trie: trie::SubTrie::new(),
+
+            cached_sessions: sessions::CachedSessions::new(),
 
             backends_sender,
             backends_receiver,
