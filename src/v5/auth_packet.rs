@@ -2,77 +2,9 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
-
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
-
-/// Byte 0 in the Variable Header is the Authenticate Reason Code.
-///
-/// The values for the one byte unsigned Authenticate Reason Code field are shown below.
-///
-/// The sender of the AUTH Packet MUST use one of the Authenticate Reason Codes [MQTT-3.15.2-1].
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum AuthReasonCode {
-    /// Authentication is successful
-    ///
-    /// Sent by server.
-    Success = 0x00,
-
-    /// Continue the authentication with another step.
-    ///
-    /// Sent by client or server.
-    ContinueAuthentication = 0x18,
-
-    /// Initiate a re-authentication
-    ///
-    /// Sent by client.
-    ReAuthenticate = 0x19,
-}
-
-impl AuthReasonCode {
-    pub fn bytes(&self) -> usize {
-        1
-    }
-    pub fn const_bytes() -> usize {
-        1
-    }
-}
-
-impl Default for AuthReasonCode {
-    fn default() -> Self {
-        Self::Success
-    }
-}
-
-impl TryFrom<u8> for AuthReasonCode {
-    type Error = DecodeError;
-    fn try_from(v: u8) -> Result<Self, Self::Error> {
-        match v {
-            0x00 => Ok(Self::Success),
-            0x18 => Ok(Self::ContinueAuthentication),
-            0x19 => Ok(Self::ReAuthenticate),
-            _ => Err(DecodeError::OtherErrors),
-        }
-    }
-}
-
-impl DecodePacket for AuthReasonCode {
-    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let byte = ba.read_byte()?;
-        let flag = Self::try_from(byte)?;
-        Ok(flag)
-    }
-}
-
-impl EncodePacket for AuthReasonCode {
-    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        buf.push(*self as u8);
-        Ok(self.bytes())
-    }
-}
 
 /// An AUTH packet is sent from Client to Server or Server to Client
 /// as part of an extended authentication exchange, such as challenge / response authentication.
@@ -81,7 +13,7 @@ impl EncodePacket for AuthReasonCode {
 /// did not contain the same Authentication Method.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct AuthPacket {
-    reason_code: AuthReasonCode,
+    reason_code: ReasonCode,
     properties: Properties,
 }
 
@@ -90,12 +22,12 @@ impl AuthPacket {
         Self::default()
     }
 
-    pub fn set_reason_code(&mut self, code: AuthReasonCode) -> &mut Self {
+    pub fn set_reason_code(&mut self, code: ReasonCode) -> &mut Self {
         self.reason_code = code;
         self
     }
 
-    pub fn reason_code(&self) -> AuthReasonCode {
+    pub fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
@@ -107,6 +39,17 @@ impl AuthPacket {
         &self.properties
     }
 }
+
+/// Byte 0 in the Variable Header is the Authenticate Reason Code.
+///
+/// The values for the one byte unsigned Authenticate Reason Code field are shown below.
+///
+/// The sender of the AUTH Packet MUST use one of the Authenticate Reason Codes [MQTT-3.15.2-1].
+pub const AUTH_REASONS: &[ReasonCode] = &[
+    ReasonCode::Success,
+    ReasonCode::ContinueAuthentication,
+    ReasonCode::ReAuthenticate,
+];
 
 pub const AUTH_PROPERTIES: &[PropertyType] = &[
     PropertyType::AuthenticationMethod,
@@ -149,7 +92,12 @@ impl DecodePacket for AuthPacket {
             return Ok(AuthPacket::default());
         }
 
-        let reason_code = AuthReasonCode::decode(ba)?;
+        let reason_code = ReasonCode::decode(ba)?;
+        if !AUTH_REASONS.contains(&reason_code) {
+            log::error!("Invalid reason code: {:?}", reason_code);
+            return Err(DecodeError::InvalidReasonCode);
+        }
+
         let properties = Properties::decode(ba)?;
         if let Err(property_type) = check_property_type_list(properties.props(), AUTH_PROPERTIES) {
             log::error!(

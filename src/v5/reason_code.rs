@@ -30,6 +30,8 @@ pub enum ReasonCode {
     ///
     /// SUBACK: The subscription is accepted and the maximum QoS sent will be QoS 0.
     /// This might be a lower QoS than was requested.
+    ///
+    /// AUTH: Authentication is successful. Sent by server.
     Success = 0x00,
 
     /// Granted QoS 1: SUBACK
@@ -58,9 +60,13 @@ pub enum ReasonCode {
     NoSubscriptionExisted = 0x11,
 
     /// Continue authentication: AUTH
+    ///
+    /// AUTH: Continue the authentication with another step. Sent by client or server.
     ContinueAuthentication = 0x18,
 
     /// Re-authenticate: AUTH
+    ///
+    /// AUTH: Initiate a re-authentication. Sent by client.
     ReAuthenticate = 0x19,
 
     /// Unspecified error: CONNACK, PUBACK, PUBREC, SUBACK, UNSUBACK, DISCONNECT

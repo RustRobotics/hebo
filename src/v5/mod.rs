@@ -21,7 +21,7 @@ mod subscribe_packet;
 mod unsubscribe_ack_packet;
 mod unsubscribe_packet;
 
-pub use auth_packet::AuthPacket;
+pub use auth_packet::{AuthPacket, AUTH_PROPERTIES, AUTH_REASONS};
 pub use connect_ack_packet::{ConnectAckPacket, CONNECT_ACK_PROPERTIES, CONNECT_REASONS};
 pub use connect_packet::ConnectPacket;
 pub use disconnect_packet::{DisconnectPacket, DISCONNECT_PROPERTIES, DISCONNECT_REASONS};
