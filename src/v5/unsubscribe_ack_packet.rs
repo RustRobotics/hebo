@@ -84,7 +84,7 @@ impl UnsubscribeAckPacket {
 ///
 /// The Server sending an UNSUBACK packet MUST use one of the Unsubscribe Reason Code
 /// values for each Topic Filter received [MQTT-3.11.3-2].
-pub const UNSUBSCRIBE_REASON_CODE_LIST: &[ReasonCode] = &[
+pub const UNSUBSCRIBE_REASONS: &[ReasonCode] = &[
     ReasonCode::Success,
     ReasonCode::NoSubscriptionExisted,
     ReasonCode::UnspecifiedError,
@@ -132,7 +132,7 @@ impl DecodePacket for UnsubscribeAckPacket {
 
         while remaining_length < fixed_header.remaining_length() {
             let reason = ReasonCode::decode(ba)?;
-            if !UNSUBSCRIBE_REASON_CODE_LIST.contains(&reason) {
+            if !UNSUBSCRIBE_REASONS.contains(&reason) {
                 log::error!("Invalid reason code: {:?}", reason);
                 return Err(DecodeError::InvalidReasonCode);
             }

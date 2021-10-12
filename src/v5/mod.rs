@@ -22,9 +22,9 @@ mod unsubscribe_ack_packet;
 mod unsubscribe_packet;
 
 pub use auth_packet::AuthPacket;
-pub use connect_ack_packet::{ConnectAckPacket, CONNECT_ACK_PROPERTIES, CONNECT_REASON_CODE_LIST};
+pub use connect_ack_packet::{ConnectAckPacket, CONNECT_ACK_PROPERTIES, CONNECT_REASONS};
 pub use connect_packet::ConnectPacket;
-pub use disconnect_packet::{DisconnectPacket, DISCONNECT_PROPERTIES, DISCONNECT_REASON_CODE_LIST};
+pub use disconnect_packet::{DisconnectPacket, DISCONNECT_PROPERTIES, DISCONNECT_REASONS};
 pub use header::{FixedHeader, Packet, PacketType};
 pub use ping_request_packet::PingRequestPacket;
 pub use ping_response_packet::PingResponsePacket;
@@ -35,9 +35,9 @@ pub use publish_packet::PublishPacket;
 pub use publish_received_packet::PublishReceivedPacket;
 pub use publish_release_packet::PublishReleasePacket;
 pub use reason_code::ReasonCode;
-pub use subscribe_ack_packet::SubscribeAckPacket;
+pub use subscribe_ack_packet::{SubscribeAckPacket, SUBSCRIBE_ACK_PROPERTIES, SUBSCRIBE_REASONS};
 pub use subscribe_packet::SubscribePacket;
 pub use unsubscribe_ack_packet::{
-    UnsubscribeAckPacket, UNSUBSCRIBE_ACK_PROPERTIES, UNSUBSCRIBE_REASON_CODE_LIST,
+    UnsubscribeAckPacket, UNSUBSCRIBE_ACK_PROPERTIES, UNSUBSCRIBE_REASONS,
 };
 pub use unsubscribe_packet::{UnsubscribePacket, UNSUBSCRIBE_PROPERTIES};

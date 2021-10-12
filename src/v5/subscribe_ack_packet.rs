@@ -2,110 +2,9 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
-
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
-
-/// Reply to each subscribed topic.
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SubscribeReasonCode {
-    /// The subscription is accepted and the maximum QoS sent will be QoS 0.
-    ///
-    /// This might be a lower QoS than was requested.
-    GrantedQoS0 = 0x00,
-
-    /// The subscription is accepted and the maximum QoS sent will be QoS 1.
-    ///
-    /// This might be a lower QoS than was requested.
-    GrantedQoS1 = 0x01,
-
-    /// The subscription is accepted and any received QoS will be sent to this subscription.
-    GrantedQoS2 = 0x02,
-
-    /// The subscription is not accepted and the Server either does not wish to reveal
-    /// the reason or none of the other Reason Codes apply.
-    UnspecifiedError = 0x80,
-
-    /// The SUBSCRIBE is valid but the Server does not accept it.
-    ImplementationSpecificError = 0x83,
-
-    /// The Client is not authorized to make this subscription.
-    NotAuthorized = 0x87,
-
-    /// The Topic Filter is correctly formed but is not allowed for this Client.
-    TopicFilterInvalid = 0x8f,
-
-    /// The specified Packet Identifier is already in use.
-    PacketIdentifierInUse = 0x91,
-
-    /// An implementation or administrative imposed limit has been exceeded.
-    QuotaExceeded = 0x97,
-
-    /// The Server does not support Shared Subscriptions for this Client.
-    SharedSubscriptionsNotSupported = 0x9e,
-
-    /// The Server does not support Subscription Identifiers; the subscription is not accepted.
-    SubscriptionIdentifiersNotSupported = 0xa1,
-
-    /// The Server does not support Wildcard Subscriptions; the subscription is not accepted.
-    WildcardSubscriptionsNotSupported = 0xa2,
-}
-
-impl Default for SubscribeReasonCode {
-    fn default() -> Self {
-        Self::GrantedQoS0
-    }
-}
-
-impl SubscribeReasonCode {
-    pub fn bytes(&self) -> usize {
-        1
-    }
-
-    pub fn const_bytes() -> usize {
-        1
-    }
-}
-
-impl TryFrom<u8> for SubscribeReasonCode {
-    type Error = DecodeError;
-
-    fn try_from(v: u8) -> Result<Self, Self::Error> {
-        match v {
-            0x00 => Ok(Self::GrantedQoS0),
-            0x01 => Ok(Self::GrantedQoS1),
-            0x02 => Ok(Self::GrantedQoS2),
-            0x80 => Ok(Self::UnspecifiedError),
-            0x83 => Ok(Self::ImplementationSpecificError),
-            0x87 => Ok(Self::NotAuthorized),
-            0x8f => Ok(Self::TopicFilterInvalid),
-            0x91 => Ok(Self::PacketIdentifierInUse),
-            0x97 => Ok(Self::QuotaExceeded),
-            0x9e => Ok(Self::SharedSubscriptionsNotSupported),
-            0xa1 => Ok(Self::SubscriptionIdentifiersNotSupported),
-            0xa2 => Ok(Self::WildcardSubscriptionsNotSupported),
-            _ => Err(DecodeError::OtherErrors),
-        }
-    }
-}
-
-impl DecodePacket for SubscribeReasonCode {
-    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let byte = ba.read_byte()?;
-        let flag = Self::try_from(byte)?;
-        Ok(flag)
-    }
-}
-
-impl EncodePacket for SubscribeReasonCode {
-    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        buf.push(*self as u8);
-        Ok(self.bytes())
-    }
-}
 
 /// Reply to Subscribe packet.
 ///
@@ -139,8 +38,24 @@ pub struct SubscribeAckPacket {
     /// Each Reason Code corresponds to a Topic Filter in the SUBSCRIBE packet
     /// being acknowledged. The order of Reason Codes in the SUBACK packet MUST match
     /// the order of Topic Filters in the SUBSCRIBE packet [MQTT-3.9.3-1].
-    reasons: Vec<SubscribeReasonCode>,
+    reasons: Vec<ReasonCode>,
 }
+
+/// Reply to each subscribed topic.
+pub const SUBSCRIBE_REASONS: &[ReasonCode] = &[
+    ReasonCode::Success,
+    ReasonCode::GrantedQoS1,
+    ReasonCode::GrantedQoS2,
+    ReasonCode::UnspecifiedError,
+    ReasonCode::ImplementationSpecificError,
+    ReasonCode::NotAuthorized,
+    ReasonCode::TopicFilterInvalid,
+    ReasonCode::PacketIdentifierInUse,
+    ReasonCode::QuotaExceeded,
+    ReasonCode::SharedSubscriptionNotSupported,
+    ReasonCode::SubscriptionIdentifiersNotSupported,
+    ReasonCode::WildcardSubscriptionsNotSupported,
+];
 
 pub const SUBSCRIBE_ACK_PROPERTIES: &[PropertyType] = &[
     // The Server MUST NOT send this Property if it would increase the size of
@@ -152,7 +67,7 @@ pub const SUBSCRIBE_ACK_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl SubscribeAckPacket {
-    pub fn new(packet_id: PacketId, reason: SubscribeReasonCode) -> Self {
+    pub fn new(packet_id: PacketId, reason: ReasonCode) -> Self {
         Self {
             packet_id,
             properties: Properties::new(),
@@ -160,7 +75,7 @@ impl SubscribeAckPacket {
         }
     }
 
-    pub fn with_vec(packet_id: PacketId, reasons: Vec<SubscribeReasonCode>) -> Self {
+    pub fn with_vec(packet_id: PacketId, reasons: Vec<ReasonCode>) -> Self {
         Self {
             packet_id,
             properties: Properties::new(),
@@ -185,11 +100,11 @@ impl SubscribeAckPacket {
         &self.properties
     }
 
-    pub fn reasons_mut(&mut self) -> &mut Vec<SubscribeReasonCode> {
+    pub fn reasons_mut(&mut self) -> &mut Vec<ReasonCode> {
         &mut self.reasons
     }
 
-    pub fn reasons(&self) -> &[SubscribeReasonCode] {
+    pub fn reasons(&self) -> &[ReasonCode] {
         &self.reasons
     }
 }
@@ -217,7 +132,10 @@ impl DecodePacket for SubscribeAckPacket {
         let mut remaining_length = packet_id.bytes() + properties.bytes();
 
         while remaining_length < fixed_header.remaining_length() {
-            let reason = SubscribeReasonCode::decode(ba)?;
+            let reason = ReasonCode::decode(ba)?;
+            if !SUBSCRIBE_REASONS.contains(&reason) {
+                return Err(DecodeError::InvalidReasonCode);
+            }
             reasons.push(reason);
             remaining_length += reason.bytes();
         }
@@ -235,7 +153,7 @@ impl EncodePacket for SubscribeAckPacket {
         let old_len = buf.len();
         let remaining_length = self.packet_id.bytes()
             + self.properties.bytes()
-            + self.reasons.len() * SubscribeReasonCode::const_bytes();
+            + self.reasons.len() * ReasonCode::const_bytes();
         let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;

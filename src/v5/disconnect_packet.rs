@@ -57,7 +57,7 @@ impl DisconnectPacket {
 /// Byte 1 in the Variable Header is the Disconnect Reason Code.
 ///
 /// If the Remaining Length is less than 1 the value of 0x00 (Normal disconnection) is used.
-pub const DISCONNECT_REASON_CODE_LIST: &[ReasonCode] = &[
+pub const DISCONNECT_REASONS: &[ReasonCode] = &[
     ReasonCode::Success,
     ReasonCode::DisconnectWithWillMessage,
     ReasonCode::UnspecifiedError,
@@ -118,7 +118,7 @@ impl DecodePacket for DisconnectPacket {
         }
 
         let reason_code = ReasonCode::decode(ba)?;
-        if !DISCONNECT_REASON_CODE_LIST.contains(&reason_code) {
+        if !DISCONNECT_REASONS.contains(&reason_code) {
             log::error!("Invalid reason code {:?}", reason_code);
             return Err(DecodeError::InvalidReasonCode);
         }

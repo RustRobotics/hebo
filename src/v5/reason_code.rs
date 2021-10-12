@@ -27,13 +27,21 @@ pub enum ReasonCode {
     /// Sent by client or server.
     ///
     /// UNSUBACK: The subscription is deleted.
+    ///
+    /// SUBACK: The subscription is accepted and the maximum QoS sent will be QoS 0.
+    /// This might be a lower QoS than was requested.
     Success = 0x00,
 
     /// Granted QoS 1: SUBACK
-    GrantedQos1 = 0x01,
+    ///
+    /// SUBACK: The subscription is accepted and the maximum QoS sent will be QoS 1.
+    /// This might be a lower QoS than was requested.
+    GrantedQoS1 = 0x01,
 
     /// Granted QoS 2: SUBACK
-    GrantedQos2 = 0x02,
+    ///
+    /// SUBACK: The subscription is accepted and any received QoS will be sent to this subscription.
+    GrantedQoS2 = 0x02,
 
     /// Disconnect with Will Message: DISCONNECT
     ///
@@ -65,6 +73,9 @@ pub enum ReasonCode {
     ///
     /// UNSUBACK: The unsubscribe could not be completed and the Server either does not
     /// wish to reveal the reason or none of the other Reason Codes apply.
+    ///
+    /// SUBACK: The subscription is not accepted and the Server either does not wish to reveal
+    /// the reason or none of the other Reason Codes apply.
     UnspecifiedError = 0x80,
 
     /// Malformed Packet: CONNACK, DISCONNECT
@@ -90,6 +101,8 @@ pub enum ReasonCode {
     /// Sent by client or server.
     ///
     /// UNSUBACK: The UNSUBSCRIBE is valid but the Server does not accept it.
+    ///
+    /// SUBACK: The SUBSCRIBE is valid but the Server does not accept it.
     ImplementationSpecificError = 0x83,
 
     /// Unsupported Protocol Version: CONNACK
@@ -114,6 +127,8 @@ pub enum ReasonCode {
     /// DISCONNECT: The request is not authorized. Sent by server.
     ///
     /// UNSUBACK: The Client is not authorized to unsubscribe.
+    ///
+    /// SUBACK: The Client is not authorized to make this subscription.
     NotAuthorized = 0x87,
 
     /// Server unavailable: CONNACK
@@ -163,6 +178,8 @@ pub enum ReasonCode {
     /// Sent by server.
     ///
     /// UNSUBACK: The Topic Filter is correctly formed but is not allowed for this Client.
+    ///
+    /// SUBACK: The Topic Filter is correctly formed but is not allowed for this Client.
     TopicFilterInvalid = 0x8f,
 
     /// Topic Name invalid: CONNACK, PUBACK, PUBREC, DISCONNECT
@@ -176,6 +193,8 @@ pub enum ReasonCode {
     /// Packet Identifier in use: PUBACK, PUBREC, SUBACK, UNSUBACK
     ///
     /// UNSUBACK: The specified Packet Identifier is already in use.
+    ///
+    /// SUBACK: The specified Packet Identifier is already in use.
     PacketIdentifierInUse = 0x91,
 
     /// Packet Identifier not found: PUBREL, PUBCOMP
@@ -205,6 +224,8 @@ pub enum ReasonCode {
     /// Quota exceeded: CONNACK, PUBACK, PUBREC, SUBACK, DISCONNECT
     ///
     /// CONNACK: An implementation or administrative imposed limit has been exceeded.
+    ///
+    /// SUBACK: An implementation or administrative imposed limit has been exceeded.
     QuotaExceeded = 0x97,
 
     /// Administrative action: DISCONNECT
@@ -234,6 +255,8 @@ pub enum ReasonCode {
     ServerMoved = 0x9d,
 
     /// Shared Subscriptions not supported: SUBACK, DISCONNECT
+    ///
+    /// SUBACK: The Server does not support Shared Subscriptions for this Client.
     SharedSubscriptionNotSupported = 0x9e,
 
     /// Connection rate exceeded: CONNACK, DISCONNECT
@@ -245,9 +268,13 @@ pub enum ReasonCode {
     MaximumConnectTime = 0xa0,
 
     /// Subscription Identifiers not supported: SUBACK, DISCONNECT
+    ///
+    /// SUBACK: The Server does not support Subscription Identifiers; the subscription is not accepted.
     SubscriptionIdentifiersNotSupported = 0xa1,
 
     /// Wildcard Subscriptions not supported: SUBACK, DISCONNECT
+    ///
+    /// SUBACK: The Server does not support Wildcard Subscriptions; the subscription is not accepted.
     WildcardSubscriptionsNotSupported = 0xa2,
 }
 
@@ -262,8 +289,8 @@ impl TryFrom<u8> for ReasonCode {
     fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
             0x00 => Ok(Self::Success),
-            0x01 => Ok(Self::GrantedQos1),
-            0x02 => Ok(Self::GrantedQos2),
+            0x01 => Ok(Self::GrantedQoS1),
+            0x02 => Ok(Self::GrantedQoS2),
             0x04 => Ok(Self::DisconnectWithWillMessage),
             0x10 => Ok(Self::NoMatchingSubscribers),
             0x11 => Ok(Self::NoSubscriptionExisted),

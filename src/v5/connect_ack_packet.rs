@@ -62,7 +62,7 @@ pub struct ConnectAckPacket {
 
 /// If the Server sends a ConnectAck packet with non-zero return code, it MUST
 /// close the network connection.
-pub const CONNECT_REASON_CODE_LIST: &[ReasonCode] = &[
+pub const CONNECT_REASONS: &[ReasonCode] = &[
     ReasonCode::Success,
     ReasonCode::UnspecifiedError,
     ReasonCode::MalformedPacket,
@@ -121,7 +121,7 @@ impl ConnectAckPacket {
     }
 
     pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> Result<&mut Self, EncodeError> {
-        if !CONNECT_REASON_CODE_LIST.contains(&reason_code) {
+        if !CONNECT_REASONS.contains(&reason_code) {
             return Err(EncodeError::InvalidReasonCode);
         }
         if reason_code != ReasonCode::Success {
@@ -161,7 +161,7 @@ impl DecodePacket for ConnectAckPacket {
         let ack_flags = ba.read_byte()?;
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
         let reason_code = ReasonCode::decode(ba)?;
-        if !CONNECT_REASON_CODE_LIST.contains(&reason_code) {
+        if !CONNECT_REASONS.contains(&reason_code) {
             log::error!("Invalid reason code {:?}", reason_code);
             return Err(DecodeError::InvalidReasonCode);
         }
