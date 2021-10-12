@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::v3::{ConnectAckPacket, ConnectReturnCode};
+use codec::v3::{ConnectAckPacket, ConnectPacket, ConnectReturnCode};
 
 use super::Listener;
 use crate::commands::{AuthToListenerCmd, ListenerToSessionCmd};
@@ -12,8 +12,9 @@ use crate::types::SessionId;
 impl Listener {
     pub(super) async fn handle_auth_cmd(&mut self, cmd: AuthToListenerCmd) -> Result<(), Error> {
         match cmd {
-            AuthToListenerCmd::ResponseAuth(session_id, access_granted) => {
-                self.on_auth_response(session_id, access_granted).await
+            AuthToListenerCmd::ResponseAuth(session_id, access_granted, packet) => {
+                self.on_auth_response(session_id, access_granted, packet)
+                    .await
             }
         }
     }
@@ -22,6 +23,7 @@ impl Listener {
         &mut self,
         session_id: SessionId,
         access_granted: bool,
+        packet: ConnectPacket,
     ) -> Result<(), Error> {
         // If the Server accepts a connection with CleanSession set to 1,
         // the Server MUST set Session Present to 0 in the CONNACK packet
@@ -49,7 +51,8 @@ impl Listener {
         self.connecting_sessions.remove(&session_id);
 
         if access_granted {
-            self.client_ids.insert(client_id.to_string(), session_id);
+            self.client_ids
+                .insert(packet.client_id().to_string(), session_id);
         }
 
         if let Some(session_sender) = self.session_senders.get(&session_id) {

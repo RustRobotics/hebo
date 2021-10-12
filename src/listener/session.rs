@@ -74,8 +74,7 @@ impl Listener {
         self.auth_sender
             .send(ListenerToAuthCmd::RequestAuth(
                 SessionGid::new(self.id, session_id),
-                packet.username().to_string(),
-                packet.password().to_vec(),
+                packet,
             ))
             .await
             .map_err(Into::into)

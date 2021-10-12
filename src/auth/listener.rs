@@ -2,6 +2,8 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use codec::v3::ConnectPacket;
+
 use super::AuthApp;
 use crate::commands::{AuthToListenerCmd, ListenerToAuthCmd};
 use crate::error::{Error, ErrorKind};
@@ -14,9 +16,8 @@ impl AuthApp {
     ) -> Result<(), Error> {
         log::info!("AuthApp::handle_listener_cmd(), cmd: {:?}", cmd);
         match cmd {
-            ListenerToAuthCmd::RequestAuth(session_gid, username, password) => {
-                self.on_listener_request_auth(session_gid, username, password)
-                    .await
+            ListenerToAuthCmd::RequestAuth(session_gid, packet) => {
+                self.on_listener_request_auth(session_gid, packet).await
             }
         }
     }
@@ -24,13 +25,14 @@ impl AuthApp {
     async fn on_listener_request_auth(
         &mut self,
         session_gid: SessionGid,
-        username: String,
-        password: Vec<u8>,
+        packet: ConnectPacket,
     ) -> Result<(), Error> {
+        let username = packet.username();
+        let password = packet.password();
         let access_granted = if username.is_empty() {
             self.allow_anonymous
         } else if let Some(file_auth) = &self.file_auth {
-            file_auth.is_match(&username, &password)?
+            file_auth.is_match(username, password)?
         } else {
             false
         };
@@ -39,7 +41,11 @@ impl AuthApp {
         }
         for (sender_listener_id, sender) in &self.listener_senders {
             if *sender_listener_id == session_gid.listener_id() {
-                let cmd = AuthToListenerCmd::ResponseAuth(session_gid.session_id(), access_granted);
+                let cmd = AuthToListenerCmd::ResponseAuth(
+                    session_gid.session_id(),
+                    access_granted,
+                    packet,
+                );
                 sender.send(cmd).await?;
                 return Ok(());
             }

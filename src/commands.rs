@@ -16,13 +16,13 @@ use crate::types::{ListenerId, SessionGid, SessionId, SessionInfo, Uptime};
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
     /// session_gid, username, password
-    RequestAuth(SessionGid, String, Vec<u8>),
+    RequestAuth(SessionGid, ConnectPacket),
 }
 
 #[derive(Debug, Clone)]
 pub enum AuthToListenerCmd {
     /// session-id, access-granted
-    ResponseAuth(SessionId, bool),
+    ResponseAuth(SessionId, bool, ConnectPacket),
 }
 
 #[derive(Debug, Clone)]
