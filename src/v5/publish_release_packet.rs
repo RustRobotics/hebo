@@ -2,53 +2,9 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
-
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
-
-/// Byte 3 in the Variable Header is the PUBREL Reason Code. If the Remaining Length is 2,
-/// the value of 0x00 (Success) is used.
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PublishReleaseReasonCode {
-    /// Message released.
-    Success = 0x00,
-
-    /// The Packet Identifier is not known.
-    ///
-    /// This is not an error during recovery, but at other times indicates a mismatch
-    /// between the Session State on the Client and Server.
-    PacketIdentifierNotFound = 0x92,
-}
-
-impl Default for PublishReleaseReasonCode {
-    fn default() -> Self {
-        Self::Success
-    }
-}
-
-impl TryFrom<u8> for PublishReleaseReasonCode {
-    type Error = DecodeError;
-    fn try_from(v: u8) -> Result<Self, Self::Error> {
-        match v {
-            0x00 => Ok(Self::Success),
-            0x92 => Ok(Self::PacketIdentifierNotFound),
-            _ => Err(DecodeError::OtherErrors),
-        }
-    }
-}
-
-impl PublishReleaseReasonCode {
-    pub fn bytes(&self) -> usize {
-        1
-    }
-
-    pub fn const_bytes() -> usize {
-        1
-    }
-}
 
 /// Response to a Publish packet with QoS 2. It is the third packet of the QoS 2 protocol
 /// exchange.
@@ -75,7 +31,7 @@ impl PublishReleaseReasonCode {
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PublishReleasePacket {
     packet_id: PacketId,
-    reason_code: PublishReleaseReasonCode,
+    reason_code: ReasonCode,
     properties: Properties,
 }
 
@@ -96,12 +52,12 @@ impl PublishReleasePacket {
         self.packet_id
     }
 
-    pub fn set_reason_code(&mut self, reason_code: PublishReleaseReasonCode) -> &mut Self {
+    pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> &mut Self {
         self.reason_code = reason_code;
         self
     }
 
-    pub fn reason_code(&self) -> PublishReleaseReasonCode {
+    pub fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
@@ -113,6 +69,11 @@ impl PublishReleasePacket {
         &mut self.properties
     }
 }
+
+/// Byte 3 in the Variable Header is the PUBREL Reason Code. If the Remaining Length is 2,
+/// the value of 0x00 (Success) is used.
+pub const PUBLISH_RELEASE_REASONS: &[ReasonCode] =
+    &[ReasonCode::Success, ReasonCode::PacketIdentifierNotFound];
 
 pub const PUBLISH_RELEASE_PROPERTIES: &[PropertyType] = &[
     // The sender MUST NOT send this Property if it would increase the size of the PUBREL packet
@@ -128,7 +89,7 @@ impl EncodePacket for PublishReleasePacket {
         let old_len = buf.len();
 
         let mut packet_bytes = self.packet_id.bytes();
-        if self.reason_code != PublishReleaseReasonCode::Success || !self.properties.is_empty() {
+        if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
             packet_bytes += self.reason_code.bytes();
         }
         if !self.properties.is_empty() {
@@ -137,7 +98,7 @@ impl EncodePacket for PublishReleasePacket {
         let fixed_header = FixedHeader::new(PacketType::PublishRelease, packet_bytes)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;
-        if self.reason_code != PublishReleaseReasonCode::Success || !self.properties.is_empty() {
+        if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
             buf.push(self.reason_code as u8);
         }
         if !self.properties.is_empty() {
@@ -164,13 +125,17 @@ impl DecodePacket for PublishReleasePacket {
         }
         let packet_id = PacketId::decode(ba)?;
         let remaining_length = fixed_header.remaining_length() - packet_id.bytes();
-        let reason_code = if remaining_length >= PublishReleaseReasonCode::const_bytes() {
-            let reason_code_byte = ba.read_byte()?;
-            PublishReleaseReasonCode::try_from(reason_code_byte)?
+        let reason_code = if remaining_length >= ReasonCode::const_bytes() {
+            ReasonCode::decode(ba)?
         } else {
-            PublishReleaseReasonCode::default()
+            ReasonCode::default()
         };
-        let properties = if remaining_length > PublishReleaseReasonCode::const_bytes() {
+        if !PUBLISH_RELEASE_REASONS.contains(&reason_code) {
+            log::error!("Invalid reason code: {:?}", reason_code);
+            return Err(DecodeError::InvalidReasonCode);
+        }
+
+        let properties = if remaining_length > ReasonCode::const_bytes() {
             let properties = Properties::decode(ba)?;
             if let Err(property_type) =
                 check_property_type_list(properties.props(), PUBLISH_RELEASE_PROPERTIES)

@@ -37,7 +37,9 @@ pub use publish_packet::PublishPacket;
 pub use publish_received_packet::{
     PublishReceivedPacket, PUBLISH_RECEIVED_PROPERTIES, PUBLISH_RECEIVED_REASONS,
 };
-pub use publish_release_packet::PublishReleasePacket;
+pub use publish_release_packet::{
+    PublishReleasePacket, PUBLISH_RELEASE_PROPERTIES, PUBLISH_RELEASE_REASONS,
+};
 pub use reason_code::ReasonCode;
 pub use subscribe_ack_packet::{SubscribeAckPacket, SUBSCRIBE_ACK_PROPERTIES, SUBSCRIBE_REASONS};
 pub use subscribe_packet::SubscribePacket;

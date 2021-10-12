@@ -38,6 +38,8 @@ pub enum ReasonCode {
     /// PUBCOMP: Message released.
     ///
     /// PUBREC: The message is accepted. Publication of the QoS 2 message proceeds.
+    ///
+    /// PUBREL: Message released.
     Success = 0x00,
 
     /// Granted QoS 1: SUBACK
@@ -246,6 +248,9 @@ pub enum ReasonCode {
     /// PUBCOMP: The Packet Identifier is not known.
     /// This is not an error during recovery, but at other times indicates a mismatch
     /// between the Session State on the Client and Server.
+    ///
+    /// PUBREL: The Packet Identifier is not known. This is not an error during recovery,
+    /// but at other times indicates a mismatch between the Session State on the Client and Server.
     PacketIdentifierNotFound = 0x92,
 
     /// Receive Maximum exceeded: DISCONNECT
