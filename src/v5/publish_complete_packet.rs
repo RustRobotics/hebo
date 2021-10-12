@@ -2,51 +2,9 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
-
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
-
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PublishCompleteReasonCode {
-    /// Message released.
-    Success = 0x00,
-
-    /// The Packet Identifier is not known.
-    ///
-    /// This is not an error during recovery, but at other times indicates a mismatch
-    /// between the Session State on the Client and Server.
-    PacketIdentifierNotFound = 0x92,
-}
-
-impl Default for PublishCompleteReasonCode {
-    fn default() -> Self {
-        Self::Success
-    }
-}
-
-impl TryFrom<u8> for PublishCompleteReasonCode {
-    type Error = DecodeError;
-    fn try_from(v: u8) -> Result<Self, Self::Error> {
-        match v {
-            0x00 => Ok(Self::Success),
-            0x92 => Ok(Self::PacketIdentifierNotFound),
-            _ => Err(DecodeError::OtherErrors),
-        }
-    }
-}
-
-impl PublishCompleteReasonCode {
-    pub fn bytes(&self) -> usize {
-        1
-    }
-
-    pub fn const_bytes() -> usize {
-        1
-    }
-}
 
 /// Response to a Publish packet with QoS 2. It is the fourth and final packet of
 /// the QoS 2 protocol exchange.
@@ -73,7 +31,7 @@ impl PublishCompleteReasonCode {
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PublishCompletePacket {
     packet_id: PacketId,
-    reason_code: PublishCompleteReasonCode,
+    reason_code: ReasonCode,
     properties: Properties,
 }
 
@@ -94,12 +52,12 @@ impl PublishCompletePacket {
         self.packet_id
     }
 
-    pub fn set_reason_code(&mut self, reason_code: PublishCompleteReasonCode) -> &mut Self {
+    pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> &mut Self {
         self.reason_code = reason_code;
         self
     }
 
-    pub fn reason_code(&self) -> PublishCompleteReasonCode {
+    pub fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
@@ -112,6 +70,9 @@ impl PublishCompletePacket {
     }
 }
 
+pub const PUBLISH_COMPLETE_REASONS: &[ReasonCode] =
+    &[ReasonCode::Success, ReasonCode::PacketIdentifierNotFound];
+
 pub const PUBLISH_COMPLETE_PROPERTIES: &[PropertyType] =
     &[PropertyType::ReasonString, PropertyType::UserProperty];
 
@@ -120,7 +81,7 @@ impl EncodePacket for PublishCompletePacket {
         let old_len = buf.len();
 
         let mut packet_bytes = self.packet_id.bytes();
-        if self.reason_code != PublishCompleteReasonCode::Success || !self.properties.is_empty() {
+        if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
             packet_bytes += self.reason_code.bytes();
         }
         if !self.properties.is_empty() {
@@ -129,7 +90,7 @@ impl EncodePacket for PublishCompletePacket {
         let fixed_header = FixedHeader::new(PacketType::PublishComplete, packet_bytes)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;
-        if self.reason_code != PublishCompleteReasonCode::Success || !self.properties.is_empty() {
+        if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
             buf.push(self.reason_code as u8);
         }
         if !self.properties.is_empty() {
@@ -156,13 +117,17 @@ impl DecodePacket for PublishCompletePacket {
         }
         let packet_id = PacketId::decode(ba)?;
         let remaining_length = fixed_header.remaining_length() - packet_id.bytes();
-        let reason_code = if remaining_length >= PublishCompleteReasonCode::const_bytes() {
-            let reason_code_byte = ba.read_byte()?;
-            PublishCompleteReasonCode::try_from(reason_code_byte)?
+        let reason_code = if remaining_length >= ReasonCode::const_bytes() {
+            ReasonCode::decode(ba)?
         } else {
-            PublishCompleteReasonCode::default()
+            ReasonCode::default()
         };
-        let properties = if remaining_length > PublishCompleteReasonCode::const_bytes() {
+        if !PUBLISH_COMPLETE_REASONS.contains(&reason_code) {
+            log::error!("Invalid reason code: {:?}", reason_code);
+            return Err(DecodeError::InvalidReasonCode);
+        }
+
+        let properties = if remaining_length > ReasonCode::const_bytes() {
             let properties = Properties::decode(ba)?;
             if let Err(property_type) =
                 check_property_type_list(properties.props(), PUBLISH_COMPLETE_PROPERTIES)

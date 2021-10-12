@@ -34,6 +34,8 @@ pub enum ReasonCode {
     /// AUTH: Authentication is successful. Sent by server.
     ///
     /// PUBACK: The message is accepted. Publication of the QoS 1 message proceeds.
+    ///
+    /// PUBCOMP: Message released.
     Success = 0x00,
 
     /// Granted QoS 1: SUBACK
@@ -222,6 +224,10 @@ pub enum ReasonCode {
     PacketIdentifierInUse = 0x91,
 
     /// Packet Identifier not found: PUBREL, PUBCOMP
+    ///
+    /// PUBCOMP: The Packet Identifier is not known.
+    /// This is not an error during recovery, but at other times indicates a mismatch
+    /// between the Session State on the Client and Server.
     PacketIdentifierNotFound = 0x92,
 
     /// Receive Maximum exceeded: DISCONNECT
