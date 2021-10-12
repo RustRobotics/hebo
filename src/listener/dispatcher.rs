@@ -65,6 +65,6 @@ impl Listener {
         session_id: SessionId,
         packet: SubscribeAckPacket,
     ) {
-        self.send_session_publish_ack(session_id, packet).await
+        self.session_send_publish_ack(session_id, packet).await
     }
 }

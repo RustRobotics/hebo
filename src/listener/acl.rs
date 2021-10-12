@@ -72,7 +72,7 @@ impl Listener {
         } else {
             // All of topic filters are rejected.
             let ack_packet = SubscribeAckPacket::with_vec(packet.packet_id(), acks);
-            self.send_session_publish_ack(session_id, ack_packet).await;
+            self.session_send_publish_ack(session_id, ack_packet).await;
             Ok(())
         }
     }
