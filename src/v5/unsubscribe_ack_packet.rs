@@ -2,89 +2,9 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use std::convert::TryFrom;
-
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
-
-/// Each Reason Code corresponds to a Topic Filter in the UNSUBSCRIBE packet being acknowledged.
-///
-/// The Server sending an UNSUBACK packet MUST use one of the Unsubscribe Reason Code
-/// values for each Topic Filter received [MQTT-3.11.3-2].
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum UnsubscribeReasonCode {
-    /// The subscription is deleted.
-    Success = 0x00,
-
-    /// No matching Topic Filter is being used by the Client.
-    NoSubscriptionExisted = 0x11,
-
-    /// The unsubscribe could not be completed and the Server either does not
-    /// wish to reveal the reason or none of the other Reason Codes apply.
-    UnspecifiedError = 0x80,
-
-    /// The UNSUBSCRIBE is valid but the Server does not accept it.
-    ImplementationSpecificError = 0x83,
-
-    /// The Client is not authorized to unsubscribe.
-    NotAuthorized = 0x87,
-
-    /// The Topic Filter is correctly formed but is not allowed for this Client.
-    TopicFilterInvalid = 0x8f,
-
-    /// The specified Packet Identifier is already in use.
-    PacketIdentifierInUse = 0x91,
-}
-
-impl Default for UnsubscribeReasonCode {
-    fn default() -> Self {
-        Self::Success
-    }
-}
-
-impl UnsubscribeReasonCode {
-    pub fn bytes(&self) -> usize {
-        1
-    }
-
-    pub fn const_bytes() -> usize {
-        1
-    }
-}
-
-impl TryFrom<u8> for UnsubscribeReasonCode {
-    type Error = DecodeError;
-
-    fn try_from(v: u8) -> Result<Self, Self::Error> {
-        match v {
-            0x00 => Ok(Self::Success),
-            0x11 => Ok(Self::NoSubscriptionExisted),
-            0x80 => Ok(Self::UnspecifiedError),
-            0x83 => Ok(Self::ImplementationSpecificError),
-            0x87 => Ok(Self::NotAuthorized),
-            0x8f => Ok(Self::TopicFilterInvalid),
-            0x91 => Ok(Self::PacketIdentifierInUse),
-            _ => Err(DecodeError::OtherErrors),
-        }
-    }
-}
-
-impl DecodePacket for UnsubscribeReasonCode {
-    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
-        let byte = ba.read_byte()?;
-        let flag = Self::try_from(byte)?;
-        Ok(flag)
-    }
-}
-
-impl EncodePacket for UnsubscribeReasonCode {
-    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        buf.push(*self as u8);
-        Ok(self.bytes())
-    }
-}
 
 /// UnsubscribeAck packet is sent by the Server to the Client to confirm receipt of an
 /// Unsubscribe packet.
@@ -115,11 +35,11 @@ pub struct UnsubscribeAckPacket {
 
     /// The order of Reason Codes in the UNSUBACK packet MUST match the order of
     /// Topic Filters in the UNSUBSCRIBE packet [MQTT-3.11.3-1].
-    reasons: Vec<UnsubscribeReasonCode>,
+    reasons: Vec<ReasonCode>,
 }
 
 impl UnsubscribeAckPacket {
-    pub fn new(packet_id: PacketId, reason: UnsubscribeReasonCode) -> Self {
+    pub fn new(packet_id: PacketId, reason: ReasonCode) -> Self {
         Self {
             packet_id,
             properties: Properties::new(),
@@ -127,7 +47,7 @@ impl UnsubscribeAckPacket {
         }
     }
 
-    pub fn with_vec(packet_id: PacketId, reasons: Vec<UnsubscribeReasonCode>) -> Self {
+    pub fn with_vec(packet_id: PacketId, reasons: Vec<ReasonCode>) -> Self {
         Self {
             packet_id,
             properties: Properties::new(),
@@ -151,14 +71,28 @@ impl UnsubscribeAckPacket {
         &self.properties
     }
 
-    pub fn reasons_mut(&mut self) -> &mut Vec<UnsubscribeReasonCode> {
+    pub fn reasons_mut(&mut self) -> &mut Vec<ReasonCode> {
         &mut self.reasons
     }
 
-    pub fn reasons(&self) -> &[UnsubscribeReasonCode] {
+    pub fn reasons(&self) -> &[ReasonCode] {
         &self.reasons
     }
 }
+
+/// Each Reason Code corresponds to a Topic Filter in the UNSUBSCRIBE packet being acknowledged.
+///
+/// The Server sending an UNSUBACK packet MUST use one of the Unsubscribe Reason Code
+/// values for each Topic Filter received [MQTT-3.11.3-2].
+pub const UNSUBSCRIBE_REASON_CODE_LIST: &[ReasonCode] = &[
+    ReasonCode::Success,
+    ReasonCode::NoSubscriptionExisted,
+    ReasonCode::UnspecifiedError,
+    ReasonCode::ImplementationSpecificError,
+    ReasonCode::NotAuthorized,
+    ReasonCode::TopicFilterInvalid,
+    ReasonCode::PacketIdentifierInUse,
+];
 
 pub const UNSUBSCRIBE_ACK_PROPERTIES: &[PropertyType] = &[
     // The Server MUST NOT send this Property if it would increase the size of
@@ -197,7 +131,11 @@ impl DecodePacket for UnsubscribeAckPacket {
         let mut remaining_length = packet_id.bytes() + properties.bytes();
 
         while remaining_length < fixed_header.remaining_length() {
-            let reason = UnsubscribeReasonCode::decode(ba)?;
+            let reason = ReasonCode::decode(ba)?;
+            if !UNSUBSCRIBE_REASON_CODE_LIST.contains(&reason) {
+                log::error!("Invalid reason code: {:?}", reason);
+                return Err(DecodeError::InvalidReasonCode);
+            }
             reasons.push(reason);
             remaining_length += reason.bytes();
         }
@@ -215,7 +153,7 @@ impl EncodePacket for UnsubscribeAckPacket {
         let old_len = buf.len();
         let remaining_length = self.packet_id.bytes()
             + self.properties.bytes()
-            + self.reasons.len() * UnsubscribeReasonCode::const_bytes();
+            + self.reasons.len() * ReasonCode::const_bytes();
         let fixed_header = FixedHeader::new(PacketType::UnsubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;

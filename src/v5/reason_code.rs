@@ -25,6 +25,8 @@ pub enum ReasonCode {
     ///
     /// DISCONNECT: Close the connection normally.  Do not send the Will Message.
     /// Sent by client or server.
+    ///
+    /// UNSUBACK: The subscription is deleted.
     Success = 0x00,
 
     /// Granted QoS 1: SUBACK
@@ -43,6 +45,8 @@ pub enum ReasonCode {
     NoMatchingSubscribers = 0x10,
 
     /// No subscription existed: UNSUBACK
+    ///
+    /// UNSUBACK: No matching Topic Filter is being used by the Client.
     NoSubscriptionExisted = 0x11,
 
     /// Continue authentication: AUTH
@@ -58,6 +62,9 @@ pub enum ReasonCode {
     ///
     /// DISCONNECT: The Connection is closed but the sender either does not wish to reveal the reason,
     /// or none of the other Reason Codes apply. Sent by client or server.
+    ///
+    /// UNSUBACK: The unsubscribe could not be completed and the Server either does not
+    /// wish to reveal the reason or none of the other Reason Codes apply.
     UnspecifiedError = 0x80,
 
     /// Malformed Packet: CONNACK, DISCONNECT
@@ -81,6 +88,8 @@ pub enum ReasonCode {
     ///
     /// DISCONNECT: The packet received is valid but cannot be processed by this implementation.
     /// Sent by client or server.
+    ///
+    /// UNSUBACK: The UNSUBSCRIBE is valid but the Server does not accept it.
     ImplementationSpecificError = 0x83,
 
     /// Unsupported Protocol Version: CONNACK
@@ -103,6 +112,8 @@ pub enum ReasonCode {
     /// CONNACK: The Client is not authorized to connect.
     ///
     /// DISCONNECT: The request is not authorized. Sent by server.
+    ///
+    /// UNSUBACK: The Client is not authorized to unsubscribe.
     NotAuthorized = 0x87,
 
     /// Server unavailable: CONNACK
@@ -150,6 +161,8 @@ pub enum ReasonCode {
     ///
     /// DISCONNECT: The Topic Filter is correctly formed, but is not accepted by this Sever.
     /// Sent by server.
+    ///
+    /// UNSUBACK: The Topic Filter is correctly formed but is not allowed for this Client.
     TopicFilterInvalid = 0x8f,
 
     /// Topic Name invalid: CONNACK, PUBACK, PUBREC, DISCONNECT
@@ -161,6 +174,8 @@ pub enum ReasonCode {
     TopicNameInvalid = 0x90,
 
     /// Packet Identifier in use: PUBACK, PUBREC, SUBACK, UNSUBACK
+    ///
+    /// UNSUBACK: The specified Packet Identifier is already in use.
     PacketIdentifierInUse = 0x91,
 
     /// Packet Identifier not found: PUBREL, PUBCOMP

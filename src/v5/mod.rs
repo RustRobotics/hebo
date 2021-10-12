@@ -37,5 +37,7 @@ pub use publish_release_packet::PublishReleasePacket;
 pub use reason_code::ReasonCode;
 pub use subscribe_ack_packet::SubscribeAckPacket;
 pub use subscribe_packet::SubscribePacket;
-pub use unsubscribe_ack_packet::UnsubscribeAckPacket;
-pub use unsubscribe_packet::UnsubscribePacket;
+pub use unsubscribe_ack_packet::{
+    UnsubscribeAckPacket, UNSUBSCRIBE_ACK_PROPERTIES, UNSUBSCRIBE_REASON_CODE_LIST,
+};
+pub use unsubscribe_packet::{UnsubscribePacket, UNSUBSCRIBE_PROPERTIES};
