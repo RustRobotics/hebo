@@ -4,6 +4,7 @@
 
 use std::process::Command;
 use std::thread::{self, JoinHandle};
+use std::time::Duration;
 use subprocess::{Exec, Popen, PopenConfig, PopenError};
 
 use super::Error;
@@ -35,5 +36,6 @@ impl Server {
         Command::new(PROGRAM)
             .args(["-c", &self.config, "-s"])
             .spawn();
+        thread::sleep(Duration::from_secs(1));
     }
 }

@@ -2,8 +2,9 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Write;
+use std::path::Path;
 
 use super::Error;
 
@@ -14,11 +15,19 @@ pub struct ServerConfig {
 
 impl ServerConfig {
     pub fn new(filename: &str, content: &str) -> Result<Self, Error> {
-        let mut file = File::open(filename)?;
-        file.write(content.as_bytes())?;
+        let path = Path::new(filename);
+        let parent = path.parent().unwrap();
+        println!("parent: {:?}", parent);
+        fs::create_dir_all(parent)?;
+        let mut file = File::create(filename)?;
+        file.write_all(content.as_bytes())?;
         Ok(Self {
             filename: filename.to_string(),
         })
+    }
+
+    pub fn filename(&self) -> &str {
+        &self.filename
     }
 }
 

@@ -6,11 +6,11 @@ use std::io;
 
 #[derive(Debug)]
 pub enum Error {
-    IoError(std::io::Error),
+    IoError(String),
 }
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        Error::IoError(err)
+        Error::IoError(format!("{:?}", err))
     }
 }
