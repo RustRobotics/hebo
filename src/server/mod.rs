@@ -108,7 +108,7 @@ impl ServerContext {
     }
 
     pub fn send_stop_signal(&mut self) -> Result<(), Error> {
-        self.send_signal(nc::SIGSTOP)
+        self.send_signal(nc::SIGTERM)
     }
 
     /// Notify server process to reload config by sending a signal.
