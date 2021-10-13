@@ -8,7 +8,7 @@ use std::time::Duration;
 mod common;
 use common::{Error, Server, ServerConfig};
 
-const CONFIG: &str = r#"
+const ALLOW_CONFIG: &str = r#"
 [general]
 pid_file = "/tmp/hebo-tests/mqtt-1888.pid"
 
@@ -20,9 +20,39 @@ address = "0.0.0.0:1888"
 log_file = "/tmp/hebo-tests/hebo-1888.log"
 "#;
 
+const DENY_CONFIG: &str = r#"
+[general]
+pid_file = "/tmp/hebo-tests/mqtt-1888.pid"
+
+[[listeners]]
+protocol = "mqtt"
+address = "0.0.0.0:1888"
+
+[security]
+allow_anonymous = false
+
+[log]
+log_file = "/tmp/hebo-tests/hebo-1888.log"
+"#;
+
 #[test]
-fn test_conn_max_connections() -> Result<(), Error> {
-    let config = ServerConfig::new("/tmp/hebo-tests/01-connect-allow-anonymous.conf", CONFIG)?;
+fn test_conn_allow_anonymous() -> Result<(), Error> {
+    let config = ServerConfig::new(
+        "/tmp/hebo-tests/01-connect-allow-anonymous.conf",
+        ALLOW_CONFIG,
+    )?;
+    let mut server = Server::start(config.filename())?;
+    sleep(Duration::from_secs(10));
+    server.terminate();
+    Ok(())
+}
+
+#[test]
+fn test_conn_deny_anonymous() -> Result<(), Error> {
+    let config = ServerConfig::new(
+        "/tmp/hebo-tests/01-connect-allow-anonymous.conf",
+        DENY_CONFIG,
+    )?;
     let mut server = Server::start(config.filename())?;
     sleep(Duration::from_secs(10));
     server.terminate();
