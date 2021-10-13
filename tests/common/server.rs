@@ -6,10 +6,7 @@ use std::process::Command;
 use std::thread::{self, JoinHandle};
 use subprocess::{Exec, Popen, PopenConfig, PopenError};
 
-#[derive(Debug)]
-pub enum Error {
-    IoError(std::io::Error),
-}
+use super::Error;
 
 #[derive(Debug)]
 pub struct Server {
