@@ -219,9 +219,6 @@ mod tests {
         assert!(config.is_ok());
         let config = config.unwrap();
         let uri = config.get_uri();
-        assert_eq!(
-            uri,
-            "redis+unix:///var/run/redis.sock?db=1&password=password1"
-        );
+        assert_eq!(uri, "redis+unix:///var/run/redis.sock?db=1&pass=password1");
     }
 }
