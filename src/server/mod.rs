@@ -103,9 +103,17 @@ impl ServerContext {
         }
     }
 
-    /// Notify server process to reload config by sending `SIGUSR1` signal.
-    pub fn send_reload(&mut self) -> Result<(), Error> {
-        log::info!("send_reload()");
+    pub fn send_reload_signal(&mut self) -> Result<(), Error> {
+        self.send_signal(nc::SIGUSR1)
+    }
+
+    pub fn send_stop_signal(&mut self) -> Result<(), Error> {
+        self.send_signal(nc::SIGSTOP)
+    }
+
+    /// Notify server process to reload config by sending a signal.
+    fn send_signal(&mut self, sig: i32) -> Result<(), Error> {
+        log::info!("send_signal() {}", sig);
         let mut fd = File::open(&self.config.general().pid_file())?;
         let mut pid_str = String::new();
         fd.read_to_string(&mut pid_str)?;
@@ -121,7 +129,7 @@ impl ServerContext {
                 ),
             )
         })?;
-        nc::kill(pid, nc::SIGUSR1).map_err(|err| {
+        nc::kill(pid, sig).map_err(|err| {
             Error::from_string(
                 ErrorKind::PidError,
                 format!(

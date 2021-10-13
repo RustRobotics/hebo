@@ -34,6 +34,13 @@ pub fn run_server() -> Result<(), Error> {
                 .help("Reload config"),
         )
         .arg(
+            Arg::with_name("stop")
+                .short("s")
+                .long("stop")
+                .takes_value(false)
+                .help("Stop"),
+        )
+        .arg(
             Arg::with_name("test")
                 .short("t")
                 .long("test")
@@ -58,8 +65,11 @@ pub fn run_server() -> Result<(), Error> {
     let mut server = ServerContext::new(config);
 
     if matches.is_present("reload") {
-        log::info!("Reload is present");
-        return server.send_reload();
+        return server.send_reload_signal();
+    }
+
+    if matches.is_present("stop") {
+        return server.send_stop_signal();
     }
 
     let runtime = Runtime::new()?;
