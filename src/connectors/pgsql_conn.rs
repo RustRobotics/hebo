@@ -194,6 +194,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_pgsql_conn() {
         let config = PgSQLConnConfig {
             password: "hebo-password".to_string(),

@@ -205,6 +205,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_redis_conn_config_uds() {
         let config: Result<RedisConnConfig, Error> = toml::from_str(
             r#"

@@ -180,20 +180,21 @@ mod tests {
         assert!(config.is_ok());
     }
 
-    #[derive(Debug, PartialEq, Eq, Clone)]
-    struct Payment {
-        customer_id: i32,
-        amount: i32,
-        account_name: Option<String>,
-    }
-
     #[test]
+    #[ignore]
     fn test_mysql_conn() {
         let config = MySQLConnConfig {
             username: "hebo-user".to_string(),
             password: "hebo-password".to_string(),
             ..MySQLConnConfig::default()
         };
+
+        #[derive(Debug, PartialEq, Eq, Clone)]
+        struct Payment {
+            customer_id: i32,
+            amount: i32,
+            account_name: Option<String>,
+        }
 
         tokio_test::block_on(async {
             let mysql_conn = MySQLConn::connect(&config).await;

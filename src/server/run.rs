@@ -68,7 +68,7 @@ pub fn run_server() -> Result<(), Error> {
 
 /// Run server with predefined config.
 ///
-/// Useful for integrity tests.
+/// Useful for integration tests.
 pub fn run_server_with_config(config: Config) -> Result<(), Error> {
     init_log(&config.log())?;
     let mut server = ServerContext::new(config);

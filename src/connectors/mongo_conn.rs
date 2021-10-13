@@ -166,6 +166,8 @@ impl MongoConn {
 
 #[cfg(test)]
 mod tests {
+    use mongodb::bson::Document;
+
     use super::*;
 
     #[test]
@@ -183,6 +185,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn test_mongo_conn() {
         let config = MongoConnConfig {
             username: Some("root".to_string()),
@@ -194,13 +197,12 @@ mod tests {
         assert!(mongo_conn.is_ok());
         let mut mongo_conn = mongo_conn.unwrap();
 
-        // TODO(Shaohua): Fix tokio error.
         tokio_test::block_on(async {
             let db = mongo_conn.get_conn();
             let collection_name = "hebo_test_temp";
             let ret = db.create_collection(collection_name, None).await;
             assert!(ret.is_ok());
-            let collection_handle = db.collection(collection_name);
+            let collection_handle = db.collection::<Document>(collection_name);
             let ret = collection_handle.drop(None).await;
             assert!(ret.is_ok());
         });
