@@ -11,13 +11,10 @@ clean :
 	-rm -f *.vglog *.db
 	$(MAKE) -C c clean
 
-test-compile :
-	$(MAKE) -C c
-
-ptest : test-compile msg_sequence_test
+ptest : msg_sequence_test
 	./test.py
 
-test : test-compile msg_sequence_test 01 02 03 04 05 06 07 08 09 10 11 12 13 14
+test : msg_sequence_test 01 02 03 04 05 06 07 08 09 10 11 12 13 14
 
 msg_sequence_test:
 	./msg_sequence_test.py
