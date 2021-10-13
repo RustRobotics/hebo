@@ -31,6 +31,7 @@ pub struct RedisConnConfig {
     /// Redis server port.
     ///
     /// Default is 6379
+    #[serde(default = "RedisConnConfig::default_port")]
     pub port: u16,
 
     /// Redis database number.
@@ -187,7 +188,6 @@ mod tests {
     fn test_redis_conn_config() {
         let config: Result<RedisConnConfig, Error> = toml::from_str(
             r#"
-        use_ds = false
         database = 1
         username = "user1"
         password = "password1"
@@ -205,7 +205,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_redis_conn_config_uds() {
         let config: Result<RedisConnConfig, Error> = toml::from_str(
             r#"
