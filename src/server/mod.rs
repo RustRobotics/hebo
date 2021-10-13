@@ -4,7 +4,6 @@
 
 //! ServerContex is the main entry pointer of hebo server.
 
-use clap::Arg;
 use std::fs::File;
 use std::io::{Read, Write};
 use tokio::runtime::Runtime;
@@ -17,68 +16,12 @@ use crate::commands::{
 };
 use crate::config::Config;
 use crate::error::{Error, ErrorKind};
-use crate::log::init_log;
 
 mod dashboard;
 mod init;
+pub mod run;
 
-pub const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
-// TODO(Shaohua): Move to consts module.
 pub const CHANNEL_CAPACITY: usize = 16;
-
-/// Entry point of server
-pub fn run_server() -> Result<(), Error> {
-    let matches = clap::App::new("Hebo")
-        .version("0.1.0")
-        .author("Xu Shaohua <shaohua@biofan.org>")
-        .about("High Performance MQTT Server")
-        .arg(
-            Arg::with_name("config")
-                .short("c")
-                .long("config")
-                .value_name("config_file")
-                .takes_value(true)
-                .help("Specify config file path"),
-        )
-        .arg(
-            Arg::with_name("reload")
-                .short("r")
-                .long("reload")
-                .takes_value(false)
-                .help("Reload config"),
-        )
-        .arg(
-            Arg::with_name("test")
-                .short("t")
-                .long("test")
-                .takes_value(false)
-                .help("Test config file"),
-        )
-        .get_matches();
-
-    let config_file = matches.value_of("config").unwrap_or(DEFAULT_CONFIG);
-    let config_content = std::fs::read_to_string(config_file)?;
-    let config: Config = toml::from_str(&config_content).map_err(|err| {
-        Error::from_string(ErrorKind::ConfigError, format!("Invalid config: {:?}", err))
-    })?;
-
-    if matches.is_present("test") {
-        println!("The configuration file {} syntax is Ok", config_file);
-        return Ok(());
-    }
-
-    init_log(&config.log())?;
-
-    let mut server = ServerContext::new(config);
-
-    if matches.is_present("reload") {
-        log::info!("Reload is present");
-        return server.reload();
-    }
-
-    let runtime = Runtime::new()?;
-    server.run_loop(runtime)
-}
 
 /// ServerContext manages lifetime of Dispatcher and Listeners.
 /// All kernel signals are handled here.

@@ -9,5 +9,5 @@ use hebo::{server, Error};
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 fn main() -> Result<(), Error> {
-    server::run_server()
+    server::run::run_server()
 }
