@@ -2,28 +2,41 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-use subprocess::unix::PopenExt;
-use subprocess::{Popen, PopenConfig};
+use std::process::Command;
+use std::thread::{self, JoinHandle};
+use subprocess::{Exec, Popen, PopenConfig, PopenError};
 
 #[derive(Debug)]
 pub enum Error {
-    PopenError(subprocess::PopenError),
     IoError(std::io::Error),
 }
 
 #[derive(Debug)]
 pub struct Server {
-    p: Popen,
+    config: String,
+    handler: JoinHandle<()>,
 }
 
+const PROGRAM: &str = "./target/debug/hebo";
+
 impl Server {
-    pub fn start() -> Result<Self, Error> {
-        let p = Popen::create(&["./target/release/hebo", "-c"], PopenConfig::default())
-            .map_err(|err| Error::PopenError(err))?;
-        Ok(Self { p })
+    pub fn start(config: &str) -> Result<Self, Error> {
+        let config_str = config.to_string();
+        let handler = thread::spawn(move || {
+            let exec = Exec::cmd(PROGRAM).args(&["-c", &config_str]).detached();
+            if let Err(err) = exec.join() {
+                eprintln!("Failed to run server program");
+            }
+        });
+        Ok(Self {
+            handler,
+            config: config.to_string(),
+        })
     }
 
-    pub fn terminate(&mut self) -> Result<(), Error> {
-        self.p.terminate().map_err(|err| Error::IoError(err))
+    pub fn terminate(&mut self) {
+        Command::new(PROGRAM)
+            .args(["-c", &self.config, "-s"])
+            .spawn();
     }
 }

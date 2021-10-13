@@ -7,8 +7,11 @@ use common::Server;
 
 #[test]
 fn test_conn_max_connections() {
-    let server = Server::start();
+    let server = Server::start("examples/mqtt.toml");
     assert!(server.is_ok());
     let mut server = server.unwrap();
+    //let ret = nc::pause();
+    // assert!(ret.is_err());
+    std::thread::sleep(std::time::Duration::from_secs(3));
     server.terminate();
 }
