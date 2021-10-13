@@ -6,21 +6,12 @@ all :
 
 check : test
 
-test : utest
+test :
 	$(MAKE) -C broker test
-	$(MAKE) -C lib test
-	$(MAKE) -C client test
 
-ptest : utest
+ptest :
 	$(MAKE) -C broker ptest
-	$(MAKE) -C lib ptest
-	$(MAKE) -C client test
-
-utest :
-	$(MAKE) -C unit test
 
 reallyclean : clean
 clean : 
-	$(MAKE) -C lib clean
 	$(MAKE) -C broker clean
-	$(MAKE) -C unit clean
