@@ -833,6 +833,7 @@ dependencies = [
  "redis",
  "serde",
  "serde_derive",
+ "subprocess",
  "tokio",
  "tokio-postgres",
  "tokio-rustls",
