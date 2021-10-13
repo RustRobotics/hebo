@@ -7,6 +7,7 @@
 use std::fs::File;
 use std::io::{Read, Write};
 use tokio::runtime::Runtime;
+use tokio::signal::unix::{signal, SignalKind};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
 use crate::commands::{
@@ -103,8 +104,8 @@ impl ServerContext {
     }
 
     /// Notify server process to reload config by sending `SIGUSR1` signal.
-    pub fn reload(&mut self) -> Result<(), Error> {
-        log::info!("reload()");
+    pub fn send_reload(&mut self) -> Result<(), Error> {
+        log::info!("send_reload()");
         let mut fd = File::open(&self.config.general().pid_file())?;
         let mut pid_str = String::new();
         fd.read_to_string(&mut pid_str)?;
@@ -152,6 +153,11 @@ impl ServerContext {
 
     async fn run_inner_loop(&mut self) -> Result<(), Error> {
         log::info!("ServerContext::run_inner_loop()");
+        let mut sigusr1_stream = signal(SignalKind::user_defined1())?;
+        let mut sigterm_stream = signal(SignalKind::terminate())?;
+        let mut sigquit_stream = signal(SignalKind::quit())?;
+        let mut sigint_stream = signal(SignalKind::interrupt())?;
+
         loop {
             tokio::select! {
                 Some(cmd) = self.dashboard_receiver.recv() => {
@@ -159,11 +165,25 @@ impl ServerContext {
                         log::error!("Failed to handle dashboard cmd: {:?}", err);
                     }
                 }
+                Some(_) = sigusr1_stream.recv() => {
+                    log::info!("Realod config");
+                    // TODO(Shaohua): Reload config and send new config to other apps.
+                },
+                Some(_) = sigterm_stream.recv() => {
+                    log::info!("Quit with SIGTERM");
+                    break;
+                }
+                Some(_) = sigquit_stream.recv() => {
+                    log::info!("Quit with SIGQUIT");
+                    break;
+                }
+                Some(_) = sigint_stream.recv() => {
+                    log::info!("Quit with SIGINT");
+                    break;
+                }
             }
         }
 
-        // TODO(Shaohua): Break main loop
-        #[allow(unreachable_code)]
         Ok(())
     }
 }

@@ -59,7 +59,7 @@ pub fn run_server() -> Result<(), Error> {
 
     if matches.is_present("reload") {
         log::info!("Reload is present");
-        return server.reload();
+        return server.send_reload();
     }
 
     let runtime = Runtime::new()?;
