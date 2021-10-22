@@ -12,8 +12,7 @@ use std::path::Path;
 use std::sync::Arc;
 use tokio::net::UnixListener;
 use tokio::sync::mpsc::{self, Receiver, Sender};
-use tokio_rustls::rustls::internal::pemfile;
-use tokio_rustls::rustls::{Certificate, NoClientAuth, PrivateKey, ServerConfig};
+use tokio_rustls::rustls::{server::NoClientAuth, Certificate, PrivateKey, ServerConfig};
 use tokio_rustls::TlsAcceptor;
 
 use super::Listener;
@@ -71,7 +70,7 @@ impl Listener {
     }
 
     fn load_certs(path: &Path) -> Result<Vec<Certificate>, Error> {
-        pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
+        rustls_pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
             Error::from_string(
                 ErrorKind::CertError,
                 format!("Failed to load cert file at {:?}, got: {:?}", path, err),
@@ -80,12 +79,13 @@ impl Listener {
     }
 
     fn load_keys(path: &Path) -> Result<Vec<PrivateKey>, Error> {
-        if let Ok(keys) = pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)) {
+        if let Ok(keys) = rustls_pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)) {
             if !keys.is_empty() {
                 return Ok(keys);
             }
         }
-        if let Ok(keys) = pemfile::pkcs8_private_keys(&mut BufReader::new(File::open(path)?)) {
+        if let Ok(keys) = rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(File::open(path)?))
+        {
             if !keys.is_empty() {
                 return Ok(keys);
             }
