@@ -12,7 +12,7 @@ use std::path::Path;
 use std::sync::Arc;
 use tokio::net::UnixListener;
 use tokio::sync::mpsc::{self, Receiver, Sender};
-use tokio_rustls::rustls::{server::NoClientAuth, Certificate, PrivateKey, ServerConfig};
+use tokio_rustls::rustls;
 use tokio_rustls::TlsAcceptor;
 
 use super::Listener;
@@ -69,7 +69,7 @@ impl Listener {
         }
     }
 
-    fn load_certs(path: &Path) -> Result<Vec<Certificate>, Error> {
+    fn load_certs(path: &Path) -> Result<Vec<rustls::Certificate>, Error> {
         let items =
             rustls_pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
                 Error::from_string(
@@ -77,19 +77,28 @@ impl Listener {
                     format!("Failed to load cert file at {:?}, got: {:?}", path, err),
                 )
             })?;
-        Ok(items.into_iter().map(|item| Certificate(item)).collect())
+        Ok(items
+            .into_iter()
+            .map(|item| rustls::Certificate(item))
+            .collect())
     }
 
-    fn load_keys(path: &Path) -> Result<Vec<PrivateKey>, Error> {
+    fn load_keys(path: &Path) -> Result<Vec<rustls::PrivateKey>, Error> {
         if let Ok(keys) = rustls_pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)) {
             if !keys.is_empty() {
-                return Ok(keys.into_iter().map(|item| PrivateKey(item)).collect());
+                return Ok(keys
+                    .into_iter()
+                    .map(|item| rustls::PrivateKey(item))
+                    .collect());
             }
         }
         if let Ok(keys) = rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(File::open(path)?))
         {
             if !keys.is_empty() {
-                return Ok(keys.into_iter().map(|item| PrivateKey(item)).collect());
+                return Ok(keys
+                    .into_iter()
+                    .map(|item| rustls::PrivateKey(item))
+                    .collect());
             }
         }
 
@@ -99,7 +108,7 @@ impl Listener {
         ))
     }
 
-    fn get_cert_config(listener_config: &config::Listener) -> Result<ServerConfig, Error> {
+    fn get_cert_config(listener_config: &config::Listener) -> Result<rustls::ServerConfig, Error> {
         let cert_file = listener_config
             .cert_file()
             .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
@@ -109,16 +118,25 @@ impl Listener {
 
         let certs = Listener::load_certs(cert_file)?;
         let mut keys = Listener::load_keys(key_file)?;
-        let mut config = ServerConfig::new(NoClientAuth::new());
-        config
-            .set_single_cert(certs, keys.remove(0))
+
+        rustls::ServerConfig::builder()
+            .with_safe_default_cipher_suites()
+            .with_safe_default_kx_groups()
+            .with_protocol_versions(rustls::ALL_VERSIONS)
+            .map_err(|err| {
+                Error::from_string(
+                    ErrorKind::CertError,
+                    format!("Failed to init ConfigBuilder, got {:?}", err),
+                )
+            })?
+            .with_no_client_auth()
+            .with_single_cert(certs, keys.remove(0))
             .map_err(|err| {
                 Error::from_string(
                     ErrorKind::CertError,
                     format!("Failed to init ServerConfig, got {:?}", err),
                 )
-            })?;
-        Ok(config)
+            })
     }
 
     pub async fn bind(
