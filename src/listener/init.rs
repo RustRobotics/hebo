@@ -70,24 +70,26 @@ impl Listener {
     }
 
     fn load_certs(path: &Path) -> Result<Vec<Certificate>, Error> {
-        rustls_pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
-            Error::from_string(
-                ErrorKind::CertError,
-                format!("Failed to load cert file at {:?}, got: {:?}", path, err),
-            )
-        })
+        let items =
+            rustls_pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
+                Error::from_string(
+                    ErrorKind::CertError,
+                    format!("Failed to load cert file at {:?}, got: {:?}", path, err),
+                )
+            })?;
+        Ok(items.into_iter().map(|item| Certificate(item)).collect())
     }
 
     fn load_keys(path: &Path) -> Result<Vec<PrivateKey>, Error> {
         if let Ok(keys) = rustls_pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)) {
             if !keys.is_empty() {
-                return Ok(keys);
+                return Ok(keys.into_iter().map(|item| PrivateKey(item)).collect());
             }
         }
         if let Ok(keys) = rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(File::open(path)?))
         {
             if !keys.is_empty() {
-                return Ok(keys);
+                return Ok(keys.into_iter().map(|item| PrivateKey(item)).collect());
             }
         }
 
