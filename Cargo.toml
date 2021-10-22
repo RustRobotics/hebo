@@ -1,6 +1,6 @@
 [package]
 name = "codec"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2021"
 description = "Packet codec for MQTT protocol"
