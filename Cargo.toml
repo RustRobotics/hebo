@@ -39,22 +39,22 @@ http = "0.2.5"
 jemallocator = { version = "0.3.2", optional = true }
 log = "0.4.14"
 log4rs = { version = "1.0.0", features = [ "background_rotation", "gzip" ] }
-mongodb = "2.0.1"
+mongodb = "2.0.2"
 mysql_async = "0.28.1"
-nc = "0.7.12"
-openssl = "0.10.36"
-quinn = "0.7.2"
+nc = "0.7.13"
+openssl = "0.10.38"
+quinn = "0.8.0"
 rand = "0.8.4"
-redis = { version = "0.21.3", features = ["tokio-comp", "connection-manager"] }
+redis = { version = "0.21.4", features = ["tokio-comp", "connection-manager"] }
 rustls-pemfile = "0.2.1"
 serde = "1.0.130"
 serde_derive = "1.0.130"
-tokio = { version = "1.12.0", features = ["full"] }
-tokio-postgres = "0.7.4"
-tokio-rustls = "0.23.0"
-tokio-tungstenite = { version = "0.15.0", features = ["rustls-tls"] }
+tokio = { version = "1.14.0", features = ["full"] }
+tokio-postgres = "0.7.5"
+tokio-rustls = "0.23.1"
+tokio-tungstenite = { version = "0.16.0", features = ["rustls"] }
 toml = "0.5.8"
-warp = "0.3.1"
+warp = "0.3.2"
 webpki-roots = "0.22.1"
 
 [dev-dependencies]
