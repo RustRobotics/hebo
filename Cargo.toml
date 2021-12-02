@@ -26,31 +26,34 @@ full = [
   "allocator",
 ]
 allocator = ["jemallocator"]
+mongodb_conn = ["mongodb"]
+mysql_conn = ["mysql_async"]
+pgsql_conn = ["tokio-postgres"]
 
 [dependencies]
 base64 = "0.13.0"
 chrono = { version = "0.4.19", features = ["serde"] }
-clap = "2.33.3"
+clap = "2.34.0"
 codec = { path = "../codec" }
 env_logger = "0.9.0"
-futures = "0.3.17"
-futures-util = "0.3.17"
+futures = "0.3.18"
+futures-util = "0.3.18"
 http = "0.2.5"
 jemallocator = { version = "0.3.2", optional = true }
 log = "0.4.14"
 log4rs = { version = "1.0.0", features = [ "background_rotation", "gzip" ] }
-mongodb = "2.0.2"
-mysql_async = "0.28.1"
+mongodb = { version = "2.0.2", optional = true }
+mysql_async = { version = "0.28.1", optional = true }
 nc = "0.7.13"
 openssl = "0.10.38"
 quinn = "0.8.0"
 rand = "0.8.4"
-redis = { version = "0.21.4", features = ["tokio-comp", "connection-manager"] }
+redis = { version = "0.21.4", features = ["tokio-comp", "connection-manager"], optional = true }
 rustls-pemfile = "0.2.1"
 serde = "1.0.130"
 serde_derive = "1.0.130"
 tokio = { version = "1.14.0", features = ["full"] }
-tokio-postgres = "0.7.5"
+tokio-postgres = { version = "0.7.5", optional = true }
 tokio-rustls = "0.23.1"
 tokio-tungstenite = { version = "0.16.0", features = ["rustls"] }
 toml = "0.5.8"
