@@ -187,24 +187,28 @@ impl From<base64::DecodeError> for Error {
     }
 }
 
+#[cfg(feature = "redis_conn")]
 impl From<redis::RedisError> for Error {
     fn from(err: redis::RedisError) -> Self {
         Error::from_string(ErrorKind::RedisError, format!("{:?}", err))
     }
 }
 
+#[cfg(feature = "mysql_conn")]
 impl From<mysql_async::Error> for Error {
     fn from(err: mysql_async::Error) -> Self {
         Error::from_string(ErrorKind::MySQLError, format!("{:?}", err))
     }
 }
 
+#[cfg(feature = "pgsql_conn")]
 impl From<tokio_postgres::Error> for Error {
     fn from(err: tokio_postgres::Error) -> Self {
         Error::from_string(ErrorKind::PgSQLError, format!("{:?}", err))
     }
 }
 
+#[cfg(feature = "mongodb_conn")]
 impl From<mongodb::error::Error> for Error {
     fn from(err: mongodb::error::Error) -> Self {
         Error::from_string(ErrorKind::MongoError, format!("{:?}", err))
