@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use codec::QoS;
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 

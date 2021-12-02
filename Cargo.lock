@@ -817,7 +817,6 @@ dependencies = [
  "redis",
  "rustls-pemfile",
  "serde",
- "serde_derive",
  "subprocess",
  "tokio",
  "tokio-postgres",
