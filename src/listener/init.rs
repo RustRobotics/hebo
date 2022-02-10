@@ -12,8 +12,7 @@ use std::path::Path;
 use std::sync::Arc;
 use tokio::net::UnixListener;
 use tokio::sync::mpsc::{self, Receiver, Sender};
-use tokio_rustls::rustls;
-use tokio_rustls::TlsAcceptor;
+use tokio_rustls::{rustls, TlsAcceptor};
 
 use super::Listener;
 use super::Protocol;
@@ -212,44 +211,21 @@ impl Listener {
                     .key_file()
                     .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
                 let key = fs::read(key_file)?;
-
-                let key = if key_file.extension().map_or(false, |x| x == "der") {
-                    quinn::PrivateKey::from_der(&key)?
-                } else {
-                    quinn::PrivateKey::from_pem(&key)?
-                };
+                let key = rustls::PrivateKey(key);
 
                 let cert_file = listener_config
                     .cert_file()
                     .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
-                let cert_chain = fs::read(cert_file)?;
+                let cert = fs::read(cert_file)?;
+                let cert = rustls::Certificate(cert);
 
-                let cert_chain = if cert_file.extension().map_or(false, |x| x == "der") {
-                    quinn::CertificateChain::from_certs(Some(
-                        quinn::Certificate::from_der(&cert_chain).map_err(|err| {
-                            Error::from_string(
-                                ErrorKind::CertError,
-                                format!("cert_file {:?} is invalid, err: {:?}", &cert_file, err),
-                            )
-                        })?,
-                    ))
-                } else {
-                    quinn::CertificateChain::from_pem(&cert_chain).map_err(|err| {
-                        Error::from_string(
-                            ErrorKind::CertError,
-                            format!("cert_file {:?} is invalid, err: {:?}", &cert_file, err),
-                        )
-                    })?
-                };
+                let server_config = quinn::ServerConfig::with_single_cert(vec![cert], key)?;
 
-                let mut config_builder = quinn::ServerConfigBuilder::default();
-                config_builder.certificate(cert_chain, key)?;
-
-                let mut endpoint_builder = quinn::Endpoint::builder();
-                endpoint_builder.listen(config_builder.build());
                 // Bind this endpoint to a UDP socket on the given server address.
                 let udp_socket = new_udp_socket(address, device)?;
-                let (endpoint, incoming) = endpoint_builder.with_socket(udp_socket)?;
+                let endpoint = quinn::EndpointConfig::default();
+                let (endpoint, incoming) =
+                    quinn::Endpoint::new(endpoint, Some(server_config), udp_socket)?;
                 return new_listener(Protocol::Quic(endpoint, incoming));
             }
         }
