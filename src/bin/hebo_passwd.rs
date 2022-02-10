@@ -15,32 +15,32 @@ fn main() -> Result<(), Error> {
         .author("Xu Shaohua <shaohua@biofan.org>")
         .about("hebo-passwd is a tool for managing password files for hebo")
         .arg(
-            Arg::with_name("add")
-                .short("a")
+            Arg::new("add")
+                .short('a')
                 .long("add")
                 .takes_value(true)
                 .value_name("username:passwd")
-                .multiple(true)
+                .multiple_occurrences(true)
                 .help("Add username:passwd pair. Or update if username already exists."),
         )
         .arg(
-            Arg::with_name("delete")
-                .short("d")
+            Arg::new("delete")
+                .short('d')
                 .long("delete")
                 .takes_value(true)
                 .value_name("username")
-                .multiple(true)
+                .multiple_occurrences(true)
                 .help("Delete the username rather than adding/updating its password."),
         )
         .arg(
-            Arg::with_name("update")
-                .short("u")
+            Arg::new("update")
+                .short('u')
                 .long("update")
                 .takes_value(false)
                 .help("Update a plain text password file to use hashed passwords"),
         )
         .arg(
-            Arg::with_name("password_file")
+            Arg::new("password_file")
                 .required(true)
                 .help("password_file will be crated if not exist"),
         )
