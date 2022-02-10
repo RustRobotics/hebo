@@ -133,11 +133,20 @@ impl From<tungstenite::Error> for Error {
     }
 }
 
-impl From<quinn::EndpointError> for Error {
-    fn from(err: quinn::EndpointError) -> Self {
+impl From<quinn::ReadError> for Error {
+    fn from(err: quinn::ReadError) -> Self {
         Error::from_string(
             ErrorKind::SocketError,
-            format!("Quic endpoint error: {}", err),
+            format!("Quic read error: {:?}", err),
+        )
+    }
+}
+
+impl From<quinn::WriteError> for Error {
+    fn from(err: quinn::WriteError) -> Self {
+        Error::from_string(
+            ErrorKind::SocketError,
+            format!("Quic write error: {:?}", err),
         )
     }
 }
@@ -151,27 +160,18 @@ impl From<quinn::ConnectionError> for Error {
     }
 }
 
-impl From<quinn::ParseError> for Error {
-    fn from(err: quinn::ParseError) -> Self {
-        Error::from_string(
-            ErrorKind::CertError,
-            format!("Quic parse cert failed: {}", err),
-        )
-    }
-}
+//impl From<quinn::ParseError> for Error {
+//    fn from(err: quinn::ParseError) -> Self {
+//        Error::from_string(
+//            ErrorKind::CertError,
+//            format!("Quic parse cert failed: {}", err),
+//        )
+//    }
+//}
 
-impl From<rustls::TLSError> for Error {
-    fn from(err: rustls::TLSError) -> Self {
-        Error::from_string(
-            ErrorKind::CertError,
-            format!("Rustls parse cert failed: {}", err),
-        )
-    }
-}
-
-impl From<quinn::WriteError> for Error {
-    fn from(err: quinn::WriteError) -> Self {
-        Error::from_string(ErrorKind::SocketError, format!("Quic write error: {}", err))
+impl From<rustls::Error> for Error {
+    fn from(err: rustls::Error) -> Self {
+        Error::from_string(ErrorKind::CertError, format!("Rustls error: {:?}", err))
     }
 }
 
