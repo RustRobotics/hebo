@@ -19,30 +19,30 @@ pub fn run_server() -> Result<(), Error> {
         .author("Xu Shaohua <shaohua@biofan.org>")
         .about("High Performance MQTT Server")
         .arg(
-            Arg::with_name("config")
-                .short("c")
+            Arg::new("config")
+                .short('c')
                 .long("config")
                 .value_name("config_file")
                 .takes_value(true)
                 .help("Specify config file path"),
         )
         .arg(
-            Arg::with_name("reload")
-                .short("r")
+            Arg::new("reload")
+                .short('r')
                 .long("reload")
                 .takes_value(false)
                 .help("Reload config"),
         )
         .arg(
-            Arg::with_name("stop")
-                .short("s")
+            Arg::new("stop")
+                .short('s')
                 .long("stop")
                 .takes_value(false)
                 .help("Stop"),
         )
         .arg(
-            Arg::with_name("test")
-                .short("t")
+            Arg::new("test")
+                .short('t')
                 .long("test")
                 .takes_value(false)
                 .help("Test config file"),
