@@ -126,13 +126,9 @@ impl Session {
         // as if the Client had provided that unique ClientId [MQTT-3.1.3-6].
         if packet.client_id().is_empty() {
             if self.config.allow_empty_client_id() {
-                if let Ok(new_client_id) = random_client_id() {
-                    // No need to catch errors as client id is always valid.
-                    let _ = packet.set_client_id(&new_client_id);
-                } else {
-                    // Almost never happens.
-                    return self.reject_client_id().await;
-                }
+                let new_client_id = random_client_id();
+                // No need to catch errors as client id is always valid.
+                let _ = packet.set_client_id(&new_client_id);
             } else {
                 return self.reject_client_id().await;
             }

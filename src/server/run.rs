@@ -14,7 +14,7 @@ pub const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
 
 /// Entry point of server
 pub fn run_server() -> Result<(), Error> {
-    let matches = clap::App::new("Hebo")
+    let matches = clap::Command::new("Hebo")
         .version("0.1.0")
         .author("Xu Shaohua <shaohua@biofan.org>")
         .about("High Performance MQTT Server")

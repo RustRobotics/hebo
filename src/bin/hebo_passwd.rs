@@ -10,7 +10,7 @@ use hebo::error::{Error, ErrorKind};
 fn main() -> Result<(), Error> {
     env_logger::init();
 
-    let matches = clap::App::new("Hebo Passwd")
+    let matches = clap::Command::new("Hebo Passwd")
         .version("0.1.0")
         .author("Xu Shaohua <shaohua@biofan.org>")
         .about("hebo-passwd is a tool for managing password files for hebo")
