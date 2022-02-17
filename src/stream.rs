@@ -4,13 +4,14 @@
 
 use futures_util::{SinkExt, StreamExt};
 use std::fmt;
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::BufReader;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpStream, UnixStream};
 use tokio_rustls::client::TlsStream;
-use tokio_rustls::{rustls::ClientConfig, webpki::DNSNameRef, TlsConnector};
+use tokio_rustls::rustls;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
 use crate::connect_options::{
@@ -25,66 +26,84 @@ pub enum Stream {
     Wss(WebSocketStream<TlsStream<TcpStream>>),
     Uds(UnixStream),
     Quic(quinn::NewConnection),
+    // TODO(Shaohua): Remove this value.
     None,
 }
 
 impl fmt::Debug for Stream {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Stream::Mqtt(..) => f.write_str("Mqtt"),
-            Stream::Mqtts(..) => f.write_str("Mqtts"),
-            Stream::Ws(..) => f.write_str("Ws"),
-            Stream::Wss(..) => f.write_str("Wsx"),
-            Stream::Uds(..) => f.write_str("Uds"),
-            Stream::Quic(..) => f.write_str("Quic"),
-            Stream::None => f.write_str("None"),
+            Self::Mqtt(..) => f.write_str("Mqtt"),
+            Self::Mqtts(..) => f.write_str("Mqtts"),
+            Self::Ws(..) => f.write_str("Ws"),
+            Self::Wss(..) => f.write_str("Wsx"),
+            Self::Uds(..) => f.write_str("Uds"),
+            Self::Quic(..) => f.write_str("Quic"),
+            Self::None => f.write_str("None"),
         }
     }
 }
 
 impl Stream {
-    pub async fn connect(connect_type: &ConnectType) -> Result<Stream, Error> {
+    pub async fn connect(connect_type: &ConnectType) -> Result<Self, Error> {
         match connect_type {
-            ConnectType::Mqtt(mqtt_connect) => Stream::new_mqtt(mqtt_connect).await,
-            ConnectType::Mqtts(mqtts_connect) => Stream::new_mqtts(mqtts_connect).await,
-            ConnectType::Ws(ws_connect) => Stream::new_ws(ws_connect).await,
-            ConnectType::Wss(wss_connect) => Stream::new_wss(wss_connect).await,
-            ConnectType::Uds(uds_connect) => Stream::new_uds(uds_connect).await,
-            ConnectType::Quic(quic_connect) => Stream::new_quic(quic_connect).await,
+            ConnectType::Mqtt(mqtt_connect) => Self::new_mqtt(mqtt_connect).await,
+            ConnectType::Mqtts(mqtts_connect) => Self::new_mqtts(mqtts_connect).await,
+            ConnectType::Ws(ws_connect) => Self::new_ws(ws_connect).await,
+            ConnectType::Wss(wss_connect) => Self::new_wss(wss_connect).await,
+            ConnectType::Uds(uds_connect) => Self::new_uds(uds_connect).await,
+            ConnectType::Quic(quic_connect) => Self::new_quic(quic_connect).await,
         }
     }
 
-    async fn new_mqtt(mqtt_connect: &MqttConnect) -> Result<Stream, Error> {
+    async fn new_mqtt(mqtt_connect: &MqttConnect) -> Result<Self, Error> {
         let tcp_stream = TcpStream::connect(mqtt_connect.address).await?;
-        Ok(Stream::Mqtt(tcp_stream))
+        Ok(Self::Mqtt(tcp_stream))
     }
 
-    async fn new_mqtts(mqtts_connect: &MqttsConnect) -> Result<Stream, Error> {
-        let mut config = ClientConfig::new();
-        match &mqtts_connect.tls_type {
+    async fn new_tls_stream(
+        tls_type: &TlsType,
+        server_address: &SocketAddr,
+        server_domain: &str,
+    ) -> Result<TlsStream<TcpStream>, Error> {
+        let mut root_store = rustls::RootCertStore::empty();
+        match tls_type {
             TlsType::SelfSigned(self_signed) => {
-                let mut pem = BufReader::new(File::open(&self_signed.cert)?);
-                config
-                    .root_store
-                    .add_pem_file(&mut pem)
-                    .expect("Invalid ca");
+                let mut pem_buf = BufReader::new(File::open(&self_signed.cert)?);
+                let pem_data = rustls_pemfile::certs(&mut pem_buf).unwrap();
+                root_store.add_parsable_certificates(&pem_data);
             }
             TlsType::CASigned => {
-                config
-                    .root_store
-                    .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
+                root_store.add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
             }
         }
-        let config = Arc::new(config);
-        let connector = TlsConnector::from(config);
-        let tcp_stream = TcpStream::connect(mqtts_connect.address).await?;
-        let domain = DNSNameRef::try_from_ascii_str(&mqtts_connect.domain).unwrap();
+        let config_builder = rustls::ClientConfig::builder()
+            .with_safe_defaults()
+            .with_root_certificates(root_store);
+        let client_config: rustls::ClientConfig = config_builder.with_no_client_auth();
+        let rc_client_config = Arc::new(client_config);
+        let connector = tokio_rustls::TlsConnector::from(rc_client_config);
+        let tcp_stream = TcpStream::connect(server_address).await?;
+        // TODO(Shaohua): Convert error type.
+        let domain = rustls::ServerName::try_from(server_domain).unwrap();
 
+        // TODO(Shaohua): Convert error type.
         let tls_stream = connector
             .connect(domain, tcp_stream)
             .await
             .expect("Invalid connector");
-        Ok(Stream::Mqtts(tls_stream))
+
+        return Ok(tls_stream);
+    }
+
+    async fn new_mqtts(mqtts_connect: &MqttsConnect) -> Result<Self, Error> {
+        let tls_stream = Self::new_tls_stream(
+            &mqtts_connect.tls_type,
+            &mqtts_connect.address,
+            &mqtts_connect.domain,
+        )
+        .await?;
+        Ok(Self::Mqtts(tls_stream))
     }
 
     async fn new_ws(ws_connect: &WsConnect) -> Result<Stream, Error> {
@@ -95,31 +114,12 @@ impl Stream {
     }
 
     async fn new_wss(wss_connect: &WssConnect) -> Result<Stream, Error> {
-        let mut config = ClientConfig::new();
-        match &wss_connect.tls_type {
-            TlsType::SelfSigned(self_signed) => {
-                let mut pem = BufReader::new(File::open(&self_signed.cert)?);
-                config
-                    .root_store
-                    .add_pem_file(&mut pem)
-                    .expect("Invalid ca");
-            }
-            TlsType::CASigned => {
-                config
-                    .root_store
-                    .add_server_trust_anchors(&webpki_roots::TLS_SERVER_ROOTS);
-            }
-        }
-        let config = Arc::new(config);
-        let connector = TlsConnector::from(config);
-        let tcp_stream = TcpStream::connect(wss_connect.address).await?;
-        let domain = DNSNameRef::try_from_ascii_str(&wss_connect.domain).unwrap();
-
-        let tls_stream = connector
-            .connect(domain, tcp_stream)
-            .await
-            .expect("Invalid connector");
-
+        let tls_stream = Self::new_tls_stream(
+            &wss_connect.tls_type,
+            &wss_connect.address,
+            &wss_connect.domain,
+        )
+        .await?;
         let ws_url = format!("ws://{}{}", wss_connect.address, &wss_connect.path);
         let (ws_stream, _) = tokio_tungstenite::client_async(ws_url, tls_stream).await?;
         Ok(Stream::Wss(ws_stream))
@@ -131,27 +131,27 @@ impl Stream {
     }
 
     async fn new_quic(quic_connect: &QuicConnect) -> Result<Stream, Error> {
-        let mut client_config = quinn::ClientConfigBuilder::default();
-        match &quic_connect.tls_type {
-            TlsType::SelfSigned(self_signed) => {
-                let cert_content = fs::read(&self_signed.cert)?;
-                let cert_chain = if self_signed.cert.extension().map_or(false, |x| x == "der") {
-                    quinn::Certificate::from_der(&cert_content)?
-                } else {
-                    quinn::Certificate::from_pem(&cert_content)?
-                };
-                client_config.add_certificate_authority(cert_chain)?;
-            }
-            TlsType::CASigned => {
-                // Use default ca roots
-            }
-        }
+        // TODO(Shaohua): set client config.
+        //        let mut client_config = quinn::ClientConfigBuilder::default();
+        //        match &quic_connect.tls_type {
+        //            TlsType::SelfSigned(self_signed) => {
+        //                let cert_content = fs::read(&self_signed.cert)?;
+        //                let cert_chain = if self_signed.cert.extension().map_or(false, |x| x == "der") {
+        //                    quinn::Certificate::from_der(&cert_content)?
+        //                } else {
+        //                    quinn::Certificate::from_pem(&cert_content)?
+        //                };
+        //                client_config.add_certificate_authority(cert_chain)?;
+        //            }
+        //            TlsType::CASigned => {
+        //                // Use default ca roots
+        //            }
+        //        }
 
-        let mut endpoint = quinn::Endpoint::builder();
-        endpoint.default_client_config(client_config.build());
-        let (endpoint, _) = endpoint.bind(&quic_connect.client_address)?;
+        let endpoint = quinn::Endpoint::client(quic_connect.client_address)?;
+        //endpoint.set_default_client_config(client_config.build());
         let quic_connection = endpoint
-            .connect(&quic_connect.server_address, &quic_connect.domain)?
+            .connect(quic_connect.server_address, &quic_connect.domain)?
             .await?;
         Ok(Stream::Quic(quic_connection))
     }
