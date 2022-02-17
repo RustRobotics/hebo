@@ -24,8 +24,8 @@ pub enum ErrorKind {
     /// Socket stream error.
     SocketError,
 
-    /// Cert files error.
-    CertError,
+    /// Configure error.
+    ConfigError,
 
     /// Invalid pid.
     PidError,
@@ -66,19 +66,19 @@ impl std::error::Error for Error {}
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        Error::from_string(ErrorKind::IoError, format!("IoError {}", err))
+        Error::from_string(ErrorKind::IoError, format!("IoError {:?}", err))
     }
 }
 
 impl From<tungstenite::Error> for Error {
     fn from(err: tungstenite::Error) -> Self {
-        Error::from_string(ErrorKind::IoError, format!("Websocket error: {}", err))
+        Error::from_string(ErrorKind::IoError, format!("Websocket error: {:?}", err))
     }
 }
 
 impl From<tokio_rustls::webpki::Error> for Error {
     fn from(err: tokio_rustls::webpki::Error) -> Self {
-        Error::from_string(ErrorKind::CertError, format!("webpki error: {}", err))
+        Error::from_string(ErrorKind::ConfigError, format!("webpki error: {:?}", err))
     }
 }
 
@@ -86,7 +86,7 @@ impl From<quinn::ConnectError> for Error {
     fn from(err: quinn::ConnectError) -> Self {
         Error::from_string(
             ErrorKind::SocketError,
-            format!("Quic connect error: {}", err),
+            format!("Quic connect error: {:?}", err),
         )
     }
 }
@@ -95,32 +95,23 @@ impl From<quinn::ConnectionError> for Error {
     fn from(err: quinn::ConnectionError) -> Self {
         Error::from_string(
             ErrorKind::SocketError,
-            format!("Quic connection error: {}", err),
+            format!("Quic connection error: {:?}", err),
         )
     }
 }
 
-impl From<quinn::EndpointError> for Error {
-    fn from(err: quinn::EndpointError) -> Self {
+impl From<quinn::ConfigError> for Error {
+    fn from(err: quinn::ConfigError) -> Self {
         Error::from_string(
-            ErrorKind::SocketError,
-            format!("Quic endpoint error: {}", err),
-        )
-    }
-}
-
-impl From<quinn::ParseError> for Error {
-    fn from(err: quinn::ParseError) -> Self {
-        Error::from_string(
-            ErrorKind::CertError,
-            format!("Quic parse cert failed: {}", err),
+            ErrorKind::ConfigError,
+            format!("Quic config error: {:?}", err),
         )
     }
 }
 
 impl From<quinn::WriteError> for Error {
     fn from(err: quinn::WriteError) -> Self {
-        Error::from_string(ErrorKind::SocketError, format!("Quic write error: {}", err))
+        Error::from_string(ErrorKind::SocketError, format!("Quic write error: {:?}", err))
     }
 }
 
