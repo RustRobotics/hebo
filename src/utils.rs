@@ -8,18 +8,18 @@ use rand::{thread_rng, Rng};
 use crate::DecodeError;
 
 /// Generate random string.
-pub fn random_string(len: usize) -> Result<String, StringError> {
+pub fn random_string(len: usize) -> String {
     String::from_utf8(
         thread_rng()
             .sample_iter(&Alphanumeric)
             .take(len)
             .collect::<Vec<u8>>(),
     )
-    .map_err(|_err| StringError::InvalidRandomString)
+    .expect("Invalid random string")
 }
 
 /// Generate random client id in valid characters.
-pub fn random_client_id() -> Result<String, StringError> {
+pub fn random_client_id() -> String {
     let mut rng = rand::thread_rng();
     let len = rng.gen_range(14..22);
     String::from_utf8(
@@ -27,7 +27,7 @@ pub fn random_client_id() -> Result<String, StringError> {
             .take(len)
             .collect::<Vec<u8>>(),
     )
-    .map_err(|_err| StringError::InvalidRandomString)
+    .expect("Invalid random string")
 }
 
 #[derive(Debug, PartialEq)]
@@ -41,8 +41,6 @@ pub enum StringError {
 
     /// Server or client shall DISCONNECT immediately.
     SeriousError,
-
-    InvalidRandomString,
 }
 
 impl From<std::string::FromUtf8Error> for StringError {
