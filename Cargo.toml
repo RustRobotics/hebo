@@ -2,7 +2,7 @@
 name = "ruo"
 version = "0.1.0"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 byteorder = "1.4.3"
@@ -17,9 +17,3 @@ tokio-rustls = "0.23.2"
 tokio-tungstenite = "0.16.1"
 url = "2.2.2"
 webpki-roots = "0.22.2"
-
-[dev-dependencies]
-protobuf = "2.27.1"
-
-[build-dependencies]
-protobuf-codegen-pure = "2.27.1"
