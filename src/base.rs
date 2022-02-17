@@ -2,7 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use std::convert::TryFrom;
 
 use super::{ByteArray, DecodeError, EncodeError};

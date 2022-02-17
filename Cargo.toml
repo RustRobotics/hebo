@@ -9,6 +9,5 @@ description = "Packet codec for MQTT protocol"
 byteorder = "1.4.3"
 bytes = "1.1.0"
 log = "0.4.14"
-rand = "0.8.4"
-serde = "1.0.130"
-serde_derive = "1.0.130"
+rand = "0.8.5"
+serde = { version = "1.0.136", features = ["derive"] }
