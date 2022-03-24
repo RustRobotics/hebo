@@ -2,6 +2,7 @@
 name = "ruo"
 version = "0.1.0"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
+license = "Apache-2.0"
 edition = "2021"
 
 [features]
@@ -9,15 +10,15 @@ blocking = []
 
 [dependencies]
 byteorder = "1.4.3"
-codec = { path = "../codec" }
+codec = { path = "../codec", package = "hebo_codec" }
 env_logger = "0.9.0"
 futures = "0.3.21"
 futures-util = "0.3.21"
-log = "0.4.14"
-quinn = "0.8.0"
+log = "0.4.16"
+quinn = "0.8.1"
 rustls-pemfile = "0.3.0"
 tokio = { version = "1.17.0", features = ["full"] }
-tokio-rustls = "0.23.2"
-tokio-tungstenite = { version = "0.16.1", features = ["rustls-tls-webpki-roots"] }
+tokio-rustls = "0.23.3"
+tokio-tungstenite = { version = "0.17.1", features = ["rustls-tls-webpki-roots"] }
 url = "2.2.2"
 webpki-roots = "0.22.2"
