@@ -1,5 +1,5 @@
 [package]
-name = "codec"
+name = "hebo_codec"
 version = "0.1.2"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2021"
@@ -8,6 +8,6 @@ description = "Packet codec for MQTT protocol"
 [dependencies]
 byteorder = "1.4.3"
 bytes = "1.1.0"
-log = "0.4.14"
+log = "0.4.16"
 rand = "0.8.5"
 serde = { version = "1.0.136", features = ["derive"] }
