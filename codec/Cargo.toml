@@ -4,6 +4,7 @@ version = "0.1.2"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2021"
 description = "Packet codec for MQTT protocol"
+license = "AGPL-3.0-only"
 
 [dependencies]
 byteorder = "1.4.3"
