@@ -3,9 +3,8 @@ name = "hebo"
 version = "0.2.3"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2021"
-license = "Apache-2.0"
+license = "AGPL-3.0-only"
 description = "Distributed MQTT broker"
-publish = false
 
 [[bin]]
 name = "hebo"
