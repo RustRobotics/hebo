@@ -1,0 +1,31 @@
+{
+  "data": [
+    {
+      "stats": {
+        "topics.max": 0,
+        "topics.count": 0,
+        "subscriptions.shared.max": 0,
+        "subscriptions.shared.count": 0,
+        "subscriptions.max": 0,
+        "subscriptions.count": 0,
+        "subscribers.max": 0,
+        "subscribers.count": 0,
+        "suboptions.max": 0,
+        "suboptions.count": 0,
+        "sessions.max": 0,
+        "sessions.count": 0,
+        "routes.max": 0,
+        "routes.count": 0,
+        "retained.max": 3,
+        "retained.count": 3,
+        "connections.max": 0,
+        "connections.count": 0,
+        "channels.max": 0,
+        "channels.count": 0
+      },
+      "node": "557ac18040ff@192.168.32.2"
+    }
+  ],
+  "code": 0
+}
+

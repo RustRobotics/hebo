@@ -1,0 +1,11 @@
+[general]
+pid_file = "/tmp/hebo/quic-8993.pid"
+
+[[listeners]]
+address = "0.0.0.0:8993"
+protocol = "quic"
+cert_file = "./examples/certs/cert.der"
+key_file = "./examples/certs/key.der"
+
+[log]
+log_file = "/tmp/hebo/hebo.log"

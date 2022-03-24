@@ -1,0 +1,62 @@
+
+digraph {
+	// cli
+	CLI -> "Rest API" [style=dotted, color=blue];
+	"Rest API" -> CLI [style=dotted, color=red];
+
+	// dashboard app
+	Dashboard -> "Rest API" [style=dotted, color=blue];
+	"Rest API" -> Dashboard [style=dotted, color=red];
+
+	"Rest API" -> "Server Context" [style=dotted, color=blue];
+
+	"Server Context" [shape=box];
+	"Server Context" -> ACL [dir=both, color=blue];
+	"Server Context" -> Auth [dir=both, color=blue];
+	"Server Context" -> Backends [dir=both, color=blue];
+	"Server Context" -> Bridge [dir=both, color=blue];
+	"Server Context" -> Gateway [dir=both, color=blue];
+	"Server Context" -> Metrix [dir=both, color=blue];
+	"Server Context" -> "Cluster Dispatcher" [dir=both, style=dotted, color=blue];
+	"Server Context" -> "Rule Engine" [dir=both, color=blue];
+
+	"Cluster Dispatcher" -> Dispatcher [dir=both, color=red, style=dotted];
+
+	Dispatcher -> Listeners [dir=both];
+	Listeners -> Sessions [dir=both];
+
+	Dispatcher -> Backends [dir=both];
+	Backends -> Memory [color=red, style=dotted];
+	"Persistent Storage" [shape=cylinder];
+	Backends -> "Persistent Storage" [color=red, style=dotted];
+
+	// ACL app
+	ACL -> Listeners [dir=both];
+	ACL -> "ACL File";
+	"ACL Database" [shape=cylinder];
+	ACL -> "ACL Database" [style=dotted, color=red];
+
+	// auth app
+	Auth -> Listeners [dir=both];
+	Auth -> "Password File";
+	"Auth Database" [shape=cylinder];
+	Auth -> "Auth Database" [style=dotted, color=red];
+
+	// mqtt bridge app
+	Dispatcher -> Bridge [dir=both];
+
+	// gateway app
+	Dispatcher -> Gateway [dir=both];
+	ExternalProtocols [shape=record, label="{ CoAP | Stomp | MQTT-SN | LwM2M }"];
+	Gateway -> ExternalProtocols [style=dotted, color=red];
+
+	// monitor app
+	Dispatcher -> Metrix [dir=both];
+	Metrix -> Promethous [style=dotted, color=red];
+	Metrix -> SysTree;
+
+	// rule engine app
+	Dispatcher -> "Rule Engine" [dir=both];
+	"Forward Database" [shape=cylinder];
+	"Rule Engine" -> "Forward Database" [style=dotted, color=red];
+}
