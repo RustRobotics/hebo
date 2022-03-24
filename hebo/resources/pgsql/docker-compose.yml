@@ -1,0 +1,14 @@
+version: "3.0"
+services:
+  redis:
+    image: postgres:13-buster
+    restart: always
+    ports:
+      - 127.0.0.1:5432:5432
+    environment:
+      POSTGRES_PASSWORD: hebo-password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: hebo-mqtt
+    volumes:
+      - ./db:/var/lib/postgresql
+      - ./db/data:/var/lib/postgresql/data

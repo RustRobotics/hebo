@@ -1,0 +1,12 @@
+
+[general]
+pid_file = "/tmp/hebo/wss-8084.pid"
+
+[[listeners]]
+address = "0.0.0.0:8084"
+protocol = "wss"
+cert_file = "./examples/certs/cert.pem"
+key_file = "./examples/certs/key.pem"
+
+[log]
+log_file = "/tmp/hebo/hebo.log"

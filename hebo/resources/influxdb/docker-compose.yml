@@ -1,0 +1,14 @@
+version: "3.0"
+services:
+  redis:
+    image: influxdb:2.0
+    restart: always
+    ports:
+      - 127.0.0.1:8086:8086
+    environment:
+      DOCKER_INFLUXDB_INIT_USERNAME: hebo-user
+      DOCKER_INFLUXDB_INIT_PASSWORD: hebo-password
+      DOCKER_INFLUXDB_INIT_ORG: hebo-org
+      DOCKER_INFLUXDB_INIT_BUCKET: hebo-bucket
+    volumes:
+      - ./db:/var/lib/influxdb
