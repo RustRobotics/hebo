@@ -1,0 +1,7 @@
+
+[workspace]
+members = [
+  "codec",
+  "hebo",
+  "ruo",
+]
