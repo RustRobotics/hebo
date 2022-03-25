@@ -330,9 +330,8 @@ mod tests {
     fn test_topic_match() {
         let t_sys = Topic::parse("$SYS");
         assert!(t_sys.is_ok());
-        let t_sys = t_sys.unwrap();
-
-        let t_any = Topic::parse("#").unwrap();
+        //let t_sys = t_sys.unwrap();
+        //let t_any = Topic::parse("#").unwrap();
         // FIXME(Shaohua):
         //assert!(t_any.is_match(t_sys.str()));
 

@@ -175,26 +175,36 @@ mod tests {
         let buf = [0x7e];
         let mut ba = ByteArray::new(&buf);
         let ret = VarInt::decode(&mut ba);
-        assert_eq!(ret.unwrap().0, 126);
+        assert!(ret.is_ok());
+        let ret = ret.unwrap();
+        assert_eq!(ret.0, 126);
 
         let buf = [0x92, 0x01];
         let mut ba = ByteArray::new(&buf);
         let ret = VarInt::decode(&mut ba);
-        assert_eq!(ret.unwrap().0, 146);
+        assert!(ret.is_ok());
+        let ret = ret.unwrap();
+        assert_eq!(ret.0, 146);
 
         let buf = [0x81, 0x80, 0x01];
         let mut ba = ByteArray::new(&buf);
         let ret = VarInt::decode(&mut ba);
-        assert_eq!(ret.unwrap().0, 16_385);
+        assert!(ret.is_ok());
+        let ret = ret.unwrap();
+        assert_eq!(ret.0, 16_385);
 
         let buf = [0x81, 0x80, 0x80, 0x01];
         let mut ba = ByteArray::new(&buf);
         let ret = VarInt::decode(&mut ba);
-        assert_eq!(ret.unwrap().0, 2_097_153);
+        assert!(ret.is_ok());
+        let ret = ret.unwrap();
+        assert_eq!(ret.0, 2_097_153);
 
         let buf = [0xff, 0xff, 0xff, 0x7f];
         let mut ba = ByteArray::new(&buf);
         let ret = VarInt::decode(&mut ba);
-        assert_eq!(ret.unwrap().0, 268_435_455);
+        assert!(ret.is_ok());
+        let ret = ret.unwrap();
+        assert_eq!(ret.0, 268_435_455);
     }
 }

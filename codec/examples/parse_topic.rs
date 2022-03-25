@@ -1,4 +1,4 @@
-use codec::topic::Topic;
+use hebo_codec::topic::Topic;
 
 fn main() {
     let t_sys = Topic::parse("$SYS/dev/cpu/+").unwrap();
