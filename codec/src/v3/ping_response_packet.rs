@@ -45,17 +45,3 @@ impl DecodePacket for PingResponsePacket {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_encode() {
-        let packet = PingResponsePacket::new();
-        let mut buf = Vec::new();
-        let ret = packet.encode(&mut buf);
-        assert!(ret.is_ok());
-        assert_eq!(ret, Ok(2));
-    }
-}

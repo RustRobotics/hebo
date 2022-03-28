@@ -315,7 +315,26 @@ impl EncodePacket for FixedHeader {
         v.push(packet_type);
 
         self.remaining_length.encode(v)?;
+        println!("remaining length: {:?}", self.remaining_length);
 
         Ok(self.packet_type.len() + self.remaining_length.len())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_encode() {
+        let mut buf = Vec::new();
+        println!("buf size: {}", buf.len());
+        let fixed_header = FixedHeader::new(PacketType::PingResponse, 0);
+        assert!(fixed_header.is_ok());
+        let fixed_header = fixed_header.unwrap();
+        let ret = fixed_header.encode(&mut buf);
+        assert!(ret.is_ok());
+        println!("buf size: {}", buf.len());
+        assert_eq!(ret, Ok(2));
     }
 }
