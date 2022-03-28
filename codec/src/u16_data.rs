@@ -20,7 +20,7 @@ impl U16Data {
         self.0
     }
 
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
         2
     }
 

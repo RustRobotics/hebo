@@ -20,7 +20,11 @@ impl U32Data {
         self.0
     }
 
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
+        4
+    }
+
+    pub const fn const_bytes() -> usize {
         4
     }
 }
