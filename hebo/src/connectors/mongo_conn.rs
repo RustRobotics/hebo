@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use mongodb::options::{ClientOptions, Credential, ServerAddress};
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use std::time::Duration;
 
 use crate::error::Error;

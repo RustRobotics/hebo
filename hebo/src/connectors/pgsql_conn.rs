@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use std::time::Duration;
 use tokio_postgres::config::{Config, SslMode};
 use tokio_postgres::NoTls;
