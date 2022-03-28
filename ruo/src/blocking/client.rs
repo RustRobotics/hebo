@@ -2,21 +2,21 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use codec::{
-    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, DisconnectPacket,
-    EncodePacket, FixedHeader, PacketId, PacketType, PingRequestPacket, PublishAckPacket,
-    PublishPacket, QoS, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
-    UnsubscribePacket,
+use codec::v3::{
+    ConnectAckPacket, ConnectPacket, ConnectReturnCode, DisconnectPacket, FixedHeader, PacketType,
+    PingRequestPacket, PublishAckPacket, PublishPacket, SubscribeAckPacket, SubscribePacket,
+    UnsubscribeAckPacket, UnsubscribePacket,
 };
+use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::Duration;
 
+use super::stream::Stream;
 use crate::connect_options::*;
 use crate::error::Error;
-use crate::sync_stream::Stream;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq)]
 pub enum ClientStatus {
@@ -138,7 +138,7 @@ impl Client {
     }
 
     pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
-        let packet = SubscribePacket::new(topic, qos, 0)?;
+        let packet = SubscribePacket::new(topic, qos, PacketId::new(0))?;
         self.client_sender
             .send(ClientToInnerCmd::Subscribe(packet))
             .unwrap();
@@ -146,7 +146,7 @@ impl Client {
     }
 
     pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
-        let packet = UnsubscribePacket::new(topic, 0);
+        let packet = UnsubscribePacket::new(topic, PacketId::new(0))?;
         self.client_sender
             .send(ClientToInnerCmd::Unsubscribe(packet))
             .unwrap();
@@ -202,7 +202,7 @@ impl ClientInner {
             stream,
             status: ClientStatus::Initialized,
             topics: HashMap::new(),
-            packet_id: 1,
+            packet_id: PacketId::new(1),
             subscribing_packets: HashMap::new(),
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
@@ -261,7 +261,7 @@ impl ClientInner {
         let mut ba = ByteArray::new(buf);
         let fixed_header = FixedHeader::decode(&mut ba)?;
         log::info!("fixed header: {:?}", fixed_header);
-        match fixed_header.packet_type {
+        match fixed_header.packet_type() {
             PacketType::ConnectAck => self.on_connect_ack(&buf),
             PacketType::Publish { .. } => self.on_message(&buf),
             PacketType::PublishAck => self.on_publish_ack(&buf),
@@ -277,7 +277,7 @@ impl ClientInner {
 
     fn do_connect(&mut self) -> Result<(), Error> {
         log::info!(" inner do_connect() client id: {}", &self.client_id);
-        let conn_packet = ConnectPacket::new(&self.client_id);
+        let conn_packet = ConnectPacket::new(&self.client_id)?;
         self.send(conn_packet)
     }
 
@@ -438,7 +438,7 @@ impl ClientInner {
 
     fn next_packet_id(&mut self) -> PacketId {
         if self.packet_id == u16::MAX {
-            self.packet_id = 1;
+            self.packet_id = PacketId::new(1);
         } else {
             self.packet_id += 1;
         }
