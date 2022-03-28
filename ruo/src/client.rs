@@ -2,12 +2,12 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use codec::{
-    ByteArray, ConnectAckPacket, ConnectPacket, ConnectReturnCode, DecodePacket, DisconnectPacket,
-    EncodePacket, FixedHeader, PacketId, PacketType, PingRequestPacket, PublishAckPacket,
-    PublishPacket, QoS, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
-    UnsubscribePacket,
+use codec::v3::{
+    ConnectAckPacket, ConnectPacket, ConnectReturnCode, DisconnectPacket, FixedHeader, PacketType,
+    PingRequestPacket, PublishAckPacket, PublishPacket, SubscribeAckPacket, SubscribePacket,
+    UnsubscribeAckPacket, UnsubscribePacket,
 };
+use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::future::Future;
@@ -48,7 +48,7 @@ impl Client {
             stream: Stream::None,
             status: ConnectStatus::Disconnected,
             topics: HashMap::new(),
-            packet_id: 1,
+            packet_id: PacketId::new(1),
             subscribing_packets: HashMap::new(),
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
@@ -76,7 +76,7 @@ impl Client {
         }
 
         self.stream = Stream::connect(self.connect_options.connect_type()).await?;
-        let conn_packet = ConnectPacket::new(self.connect_options.client_id());
+        let conn_packet = ConnectPacket::new(self.connect_options.client_id())?;
         log::info!("send conn packet");
         self.send(conn_packet).await
     }
@@ -112,7 +112,7 @@ impl Client {
     async fn handle_session_packet(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let fixed_header = FixedHeader::decode(&mut ba)?;
-        match fixed_header.packet_type {
+        match fixed_header.packet_type() {
             PacketType::ConnectAck => self.connect_ack(&buf).await,
             PacketType::Publish { .. } => self.on_message(&buf).await,
             PacketType::PublishAck => self.publish_ack(&buf),
@@ -169,7 +169,7 @@ impl Client {
     pub async fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
         log::info!("unsubscribe to: {:?}", topic);
         let packet_id = self.next_packet_id();
-        let packet = UnsubscribePacket::new(topic, packet_id);
+        let packet = UnsubscribePacket::new(topic, packet_id)?;
         self.unsubscribing_packets.insert(packet_id, packet.clone());
         self.send(packet).await
     }
@@ -287,7 +287,7 @@ impl Client {
 
     fn next_packet_id(&mut self) -> PacketId {
         if self.packet_id == u16::MAX {
-            self.packet_id = 1;
+            self.packet_id = PacketId::new(1);
         } else {
             self.packet_id += 1;
         }
