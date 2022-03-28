@@ -109,13 +109,7 @@ impl DecodePacket for VarInt {
             }
         }
 
-        // Sometimes we only receive header part of packet and decide
-        // whether to prevent from sending more bytes.
-        if ba.remaining_bytes() < remaining_length as usize {
-            Err(DecodeError::InvalidVarInt)
-        } else {
-            Ok(VarInt(remaining_length))
-        }
+        Ok(VarInt(remaining_length))
     }
 }
 
