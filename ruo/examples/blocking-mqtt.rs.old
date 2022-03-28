@@ -4,7 +4,7 @@
 
 use codec::QoS;
 use ruo::connect_options::{ConnectOptions, ConnectType, MqttConnect};
-use ruo::sync_client::Client;
+use ruo::blocking::client::Client;
 use std::net::SocketAddr;
 
 fn on_connect(client: &mut Client) {

@@ -4,7 +4,7 @@
 
 use codec::QoS;
 use ruo::connect_options::{ConnectOptions, ConnectType, MqttConnect};
-use ruo::sync_client::{Client, ClientStatus};
+use ruo::blocking::client::{Client, ClientStatus};
 use std::net::SocketAddr;
 use std::time::Duration;
 
