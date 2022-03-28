@@ -21,6 +21,7 @@ pub struct VarInt(usize);
 pub const MAX_PACKET_LEN: usize = 0x7f_ff_ff_ff;
 
 impl VarInt {
+    /// Returns an empty var int object.
     pub fn new() -> Self {
         Self(0)
     }
@@ -32,10 +33,12 @@ impl VarInt {
         Ok(Self(len))
     }
 
+    /// Returns number of bytes of this var int object consums.
     pub fn len(&self) -> usize {
-        self.0
+        self.bytes()
     }
 
+    /// Returns integer value this var int object presents.
     pub fn value(&self) -> usize {
         self.0
     }
@@ -65,6 +68,7 @@ impl VarInt {
         Ok(())
     }
 
+    /// Returns number of bytes of this var int object consums.
     pub fn bytes(&self) -> usize {
         if self.0 > 0x7f_ff_ff {
             3
@@ -77,6 +81,7 @@ impl VarInt {
         }
     }
 
+    /// Returns true if var int is zero.
     pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
