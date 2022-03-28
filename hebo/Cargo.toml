@@ -19,15 +19,20 @@ name = "hebo-passwd"
 path = "src/bin/hebo_passwd.rs"
 
 [features]
-default = []
+default = ["full"]
 
 full = [
   "allocator",
+  "mongodb_conn",
+  "mysql_conn",
+  "pgsql_conn",
+  "redis_conn",
 ]
 allocator = ["jemallocator"]
 mongodb_conn = ["mongodb"]
 mysql_conn = ["mysql_async"]
 pgsql_conn = ["tokio-postgres"]
+redis_conn = ["redis"]
 
 [dependencies]
 base64 = "0.13.0"
