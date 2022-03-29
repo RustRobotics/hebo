@@ -30,51 +30,49 @@ fn get_log_level(level: config::LogLevel) -> LevelFilter {
 }
 
 pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
-    let stdout = console::ConsoleAppender::builder()
-        .target(console::Target::Stderr)
-        .encoder(Box::new(PatternEncoder::new("{d} {h({l})} - {m}{n}")))
-        .build();
-
-    let roller_pattern = log_conf.log_file().to_str().ok_or_else(|| {
-        Error::from_string(
-            ErrorKind::ConfigError,
-            format!("config: Invalid log file {:?}", log_conf.log_file()),
-        )
-    })?;
-    let roller_pattern = roller_pattern.to_string() + ROLLER_PATTERN;
-    let roller = FixedWindowRoller::builder()
-        .build(&roller_pattern, ROLLER_COUNT)
-        .map_err(|err| {
-            Error::from_string(
-                ErrorKind::LoggerError,
-                format!("Failed to init roller pattern, {:?}", err),
-            )
-        })?;
-    let rolling_policy = Box::new(CompoundPolicy::new(
-        Box::new(SizeTrigger::new(LOG_FILE_SIZE)),
-        Box::new(roller),
-    ));
-    let requests = RollingFileAppender::builder()
-        .build(log_conf.log_file(), rolling_policy)
-        .map_err(|err| {
-            Error::from_string(
-                ErrorKind::LoggerError,
-                format!("Failed to init roller appender, {:?}", err),
-            )
-        })?;
-
     let log_level = get_log_level(log_conf.log_level());
 
     const STDOUT_NAME: &str = "stdout";
     const ROLLER_NAME: &str = "roller";
-    let config = Config::builder()
-        .appender(Appender::builder().build(STDOUT_NAME, Box::new(stdout)))
-        .appender(Appender::builder().build(ROLLER_NAME, Box::new(requests)))
-        .build(
-            Root::builder()
-                .appenders([ROLLER_NAME, STDOUT_NAME])
-                .build(log_level),
-        )
+
+    let mut config_builder = Config::builder();
+    if log_conf.console_log() {
+        let stdout = console::ConsoleAppender::builder()
+            .target(console::Target::Stderr)
+            .encoder(Box::new(PatternEncoder::new("{d} {h({l})} - {m}{n}")))
+            .build();
+        config_builder =
+            config_builder.appender(Appender::builder().build(STDOUT_NAME, Box::new(stdout)));
+    }
+    if let Some(log_file) = log_conf.log_file() {
+        let roller_pattern = log_file.to_string() + ROLLER_PATTERN;
+        let roller = FixedWindowRoller::builder()
+            .build(&roller_pattern, ROLLER_COUNT)
+            .map_err(|err| {
+                Error::from_string(
+                    ErrorKind::LoggerError,
+                    format!("Failed to init roller pattern, {:?}", err),
+                )
+            })?;
+        let rolling_policy = Box::new(CompoundPolicy::new(
+            Box::new(SizeTrigger::new(LOG_FILE_SIZE)),
+            Box::new(roller),
+        ));
+        let requests = RollingFileAppender::builder()
+            .build(log_file, rolling_policy)
+            .map_err(|err| {
+                Error::from_string(
+                    ErrorKind::LoggerError,
+                    format!("Failed to init roller appender, {:?}", err),
+                )
+            })?;
+
+        config_builder =
+            config_builder.appender(Appender::builder().build(ROLLER_NAME, Box::new(requests)));
+    }
+
+    let config = config_builder
+        .build(Root::builder().build(log_level))
         .map_err(|err| {
             Error::from_string(
                 ErrorKind::LoggerError,

@@ -3,7 +3,6 @@
 // in the LICENSE file.
 
 use serde::Deserialize;
-use std::path::{Path, PathBuf};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Log {
@@ -29,9 +28,9 @@ pub struct Log {
 
     /// Path to log file.
     ///
-    /// Default is "/var/log/hebo/hebo.log".
+    /// Default is None.
     #[serde(default = "Log::default_log_file")]
-    log_file: PathBuf,
+    log_file: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Clone, Copy)]
@@ -64,8 +63,9 @@ impl Log {
         LogLevel::Info
     }
 
-    pub fn default_log_file() -> PathBuf {
-        PathBuf::from("/var/log/hebo/hebo.log")
+    pub fn default_log_file() -> Option<String> {
+        //PathBuf::from("/var/log/hebo/hebo.log")
+        None
     }
 
     pub fn console_log(&self) -> bool {
@@ -76,8 +76,8 @@ impl Log {
         self.log_level
     }
 
-    pub fn log_file(&self) -> &Path {
-        self.log_file.as_path()
+    pub fn log_file(&self) -> Option<&String> {
+        self.log_file.as_ref()
     }
 }
 
