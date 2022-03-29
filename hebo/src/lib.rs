@@ -25,6 +25,3 @@ pub mod stream;
 pub mod types;
 
 pub use error::Error;
-
-#[cfg(test)]
-pub mod client;
