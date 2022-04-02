@@ -1,0 +1,37 @@
+
+[general]
+pid_file = "/tmp/hebo/multi-protocols.pid"
+
+[[listeners]]
+address = "0.0.0.0:1883"
+protocol = "mqtt"
+
+[[listeners]]
+address = "0.0.0.0:8883"
+protocol = "mqtts"
+cert_file = "./examples/certs/cert.pem"
+key_file = "./examples/certs/key.pem"
+
+[[listeners]]
+address = "0.0.0.0:8083"
+protocol = "ws"
+path = "/mqtt"
+
+[[listeners]]
+address = "0.0.0.0:8084"
+protocol = "wss"
+cert_file = "./examples/certs/cert.pem"
+key_file = "./examples/certs/key.pem"
+
+[[listeners]]
+address = "/tmp/hebo/uds.sock"
+protocol = "uds"
+
+[[listeners]]
+address = "0.0.0.0:8993"
+protocol = "quic"
+cert_file = "./examples/certs/cert.der"
+key_file = "./examples/certs/key.der"
+
+[log]
+log_file = "/tmp/hebo/hebo.log"

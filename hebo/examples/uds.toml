@@ -1,0 +1,10 @@
+[general]
+
+pid_file = "/tmp/hebo/uds.pid"
+
+[[listeners]]
+address = "/tmp/hebo/uds.sock"
+protocol = "uds"
+
+[log]
+log_file = "/tmp/hebo/hebo.log"

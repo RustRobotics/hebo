@@ -1,3 +1,4 @@
 
 # About
-GUI and CLI for MQTT, based on Qt and Hebo.
+Hebo is a cross-platform MQTT Broker.
+It also includes client of MQTT protocol, namely `ruo`.

@@ -1,0 +1,14 @@
+version: "3.0"
+services:
+  redis:
+    image: mysql:8
+    restart: always
+    ports:
+      - 127.0.0.1:3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: hebo-mqtt
+      MYSQL_USER: hebo-user
+      MYSQL_PASSWORD: hebo-password
+    volumes:
+      - ./db:/var/lib/mysql

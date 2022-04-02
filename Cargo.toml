@@ -1,0 +1,8 @@
+
+[workspace]
+members = [
+  "codec",
+  "hebo",
+  "ruo",
+]
+resolver = "2"

@@ -1,0 +1,10 @@
+[general]
+pid_file = "/tmp/hebo/ws-8083.pid"
+
+[[listeners]]
+address = "0.0.0.0:8083"
+protocol = "ws"
+path = "/mqtt"
+
+[log]
+log_file = "/tmp/hebo/hebo.log"
