@@ -1,9 +1,0 @@
-<!DOCTYPE RCC>
-<RCC version="1.0">
-  <qresource prefix="/misc">
-    <file>canvas-palette.json</file>
-    <file>gtk-palette.json</file>
-    <file>shape-palette.json</file>
-    <file>software-license.json</file>
-  </qresource>
-</RCC>
