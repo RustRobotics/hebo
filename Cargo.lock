@@ -1029,10 +1029,11 @@ name = "hebo-cli"
 version = "0.1.0"
 
 [[package]]
-name = "hebo-daemon"
+name = "hebo-ui-daemon"
 version = "0.1.0"
 dependencies = [
  "prost",
+ "tokio",
  "tonic",
  "tonic-build",
 ]
