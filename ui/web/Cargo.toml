@@ -5,7 +5,18 @@ edition = "2021"
 license = "GPL-3.0"
 
 [dependencies]
-log = "0.4.14"
+grpc-web-client = { git = "https://github.com/HeboProject/grpc-web-client", branch = "dev-hebo" }
+js-sys = { version = "0.3.56", default-features = false }
+log = "0.4.16"
+prost = { version = "0.10.0", default-features = false }
+protos = { path = "../protos" }
+tonic = { version = "0.7.1", default-features = false, features = ["codegen", "prost"] }
+wasm-bindgen = { version = "0.2.79", default-features = false, features = ["serde-serialize"] }
+wasm-bindgen-test = { version = "0.3.29", default-features = false }
 wasm-logger = "0.2.0"
-web-sys = "0.3.55"
-yew = "0.18"
+web-sys = "0.3.56"
+yew = "0.19.3"
+
+[build-dependencies]
+tonic-build = { version = "0.7.0", default-features = false, features = ["prost"] }
+
