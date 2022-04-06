@@ -1033,9 +1033,9 @@ name = "hebo-ui-daemon"
 version = "0.1.0"
 dependencies = [
  "prost",
+ "protos",
  "tokio",
  "tonic",
- "tonic-build",
 ]
 
 [[package]]
@@ -2174,6 +2174,15 @@ checksum = "926681c118ae6e512a3ccefd4abbe5521a14f4cc1e207356d4d00c0b7f2006fd"
 dependencies = [
  "bytes",
  "prost",
+]
+
+[[package]]
+name = "protos"
+version = "0.1.0"
+dependencies = [
+ "prost",
+ "tonic",
+ "tonic-build",
 ]
 
 [[package]]
