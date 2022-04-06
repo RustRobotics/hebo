@@ -2,10 +2,14 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-use yew::prelude::*;
+use yew::prelude::{html, Component, Context, Html};
+
+mod client;
 
 enum Msg {
     AddOne,
+    SayHello,
+    SayHelloReturns(bool),
 }
 
 struct Model {
@@ -20,24 +24,38 @@ impl Component for Model {
         Self { value: 0 }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::AddOne => {
                 self.value += 1;
-                // the value has changed so we need to
-                // re-render for it to appear on the page
+                true
+            }
+            Msg::SayHello => {
+                ctx.link().send_future(async move {
+                    client::say_hello().await;
+                    Msg::SayHelloReturns(true)
+                });
+                true
+            }
+            Msg::SayHelloReturns(state) => {
+                log::info!("resp state: {}", state);
                 true
             }
         }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        // This gives us a component's "`Scope`" which allows us to send messages, etc to the component.
         let link = ctx.link();
         html! {
             <div>
-                <button onclick={link.callback(|_| Msg::AddOne)}>{ "+1" }</button>
-                <p>{ self.value }</p>
+                <div>
+                    <button onclick={link.callback(|_| Msg::AddOne)}>{ "+1" }</button>
+                    <p>{ self.value }</p>
+                </div>
+
+                <div>
+                    <button onclick={link.callback(|_| Msg::SayHello)}>{ "Hello" }</button>
+                </div>
             </div>
         }
     }
