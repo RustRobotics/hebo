@@ -4,6 +4,8 @@ members = [
   "codec",
   "hebo",
   "ruo",
-  "ui",
+  "ui/web",
+  "ui/cli",
+  "ui/daemon",
 ]
 resolver = "2"

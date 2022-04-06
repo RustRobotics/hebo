@@ -970,7 +970,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "hebo-ui"
+name = "hebo-cli"
+version = "0.1.0"
+
+[[package]]
+name = "hebo-daemon"
+version = "0.1.0"
+
+[[package]]
+name = "hebo-web"
 version = "0.1.0"
 dependencies = [
  "log",
