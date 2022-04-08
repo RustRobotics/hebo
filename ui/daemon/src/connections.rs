@@ -2,8 +2,6 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use tonic::{Request, Response, Status};
-
 use protos::connection::connection_server::Connection;
 use protos::connection::{
     BagIndex, BagRecordResult, BagReplayResult, BenchmarkReply, ConnectStateReply, ConnectionIndex,
@@ -20,7 +18,7 @@ impl Connection for ConnectionManager {
     /// Create a new connection, uuid field is ignored.
     async fn new_connection(
         &self,
-        request: tonic::Request<ConnectionInfo>,
+        _request: tonic::Request<ConnectionInfo>,
     ) -> Result<tonic::Response<GeneralConnectionReply>, tonic::Status> {
         todo!()
     }
@@ -28,7 +26,7 @@ impl Connection for ConnectionManager {
     /// Get details of a connection.
     async fn get_connection(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<GetConnectionReply>, tonic::Status> {
         todo!()
     }
@@ -36,7 +34,7 @@ impl Connection for ConnectionManager {
     /// Edit a connection by overriding all fields.
     async fn edit_connection(
         &self,
-        request: tonic::Request<ConnectionInfo>,
+        _request: tonic::Request<ConnectionInfo>,
     ) -> Result<tonic::Response<GeneralConnectionReply>, tonic::Status> {
         todo!()
     }
@@ -44,7 +42,7 @@ impl Connection for ConnectionManager {
     /// Delete a connection by index.
     async fn delete_connection(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<GeneralConnectionReply>, tonic::Status> {
         todo!()
     }
@@ -52,7 +50,7 @@ impl Connection for ConnectionManager {
     /// Connect to broker.
     async fn connect_to(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<ConnectStateReply>, tonic::Status> {
         todo!()
     }
@@ -60,7 +58,7 @@ impl Connection for ConnectionManager {
     /// Get connection state.
     async fn get_connection_state(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<ConnectStateReply>, tonic::Status> {
         todo!()
     }
@@ -68,7 +66,7 @@ impl Connection for ConnectionManager {
     /// Disconnect from broker.
     async fn disconnect(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<ConnectStateReply>, tonic::Status> {
         todo!()
     }
@@ -76,7 +74,7 @@ impl Connection for ConnectionManager {
     /// Publish message to broker.
     async fn publish(
         &self,
-        request: tonic::Request<PublishRequest>,
+        _request: tonic::Request<PublishRequest>,
     ) -> Result<tonic::Response<PublishReply>, tonic::Status> {
         todo!()
     }
@@ -84,7 +82,7 @@ impl Connection for ConnectionManager {
     /// Add a new subscription info.
     async fn add_subscription(
         &self,
-        request: tonic::Request<SubscriptionInfo>,
+        _request: tonic::Request<SubscriptionInfo>,
     ) -> Result<tonic::Response<GeneralSubscriptionReply>, tonic::Status> {
         todo!()
     }
@@ -92,7 +90,7 @@ impl Connection for ConnectionManager {
     /// List available subscriptions of this connection.
     async fn list_subscriptions(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<SubscriptionInfos>, tonic::Status> {
         todo!()
     }
@@ -100,7 +98,7 @@ impl Connection for ConnectionManager {
     /// Get detail of a subscription.
     async fn get_subscription(
         &self,
-        request: tonic::Request<SubscriptionIndex>,
+        _request: tonic::Request<SubscriptionIndex>,
     ) -> Result<tonic::Response<SubscriptionInfo>, tonic::Status> {
         todo!()
     }
@@ -108,7 +106,7 @@ impl Connection for ConnectionManager {
     /// Edit a specific subscription.
     async fn edit_subscription(
         &self,
-        request: tonic::Request<SubscriptionInfo>,
+        _request: tonic::Request<SubscriptionInfo>,
     ) -> Result<tonic::Response<SubscriptionInfo>, tonic::Status> {
         todo!()
     }
@@ -116,7 +114,7 @@ impl Connection for ConnectionManager {
     /// Subscript to or unsubscribe from the broker.
     async fn toggle_subscription(
         &self,
-        request: tonic::Request<SubscribeRequest>,
+        _request: tonic::Request<SubscribeRequest>,
     ) -> Result<tonic::Response<SubscriptionInfo>, tonic::Status> {
         todo!()
     }
@@ -124,7 +122,7 @@ impl Connection for ConnectionManager {
     /// Delete a subscription from this connection.
     async fn delete_subscription(
         &self,
-        request: tonic::Request<SubscriptionIndex>,
+        _request: tonic::Request<SubscriptionIndex>,
     ) -> Result<tonic::Response<GeneralSubscriptionReply>, tonic::Status> {
         todo!()
     }
@@ -132,7 +130,7 @@ impl Connection for ConnectionManager {
     /// Save current subscribed messages to bag file.
     async fn bag_start_record(
         &self,
-        request: tonic::Request<BagIndex>,
+        _request: tonic::Request<BagIndex>,
     ) -> Result<tonic::Response<BagRecordResult>, tonic::Status> {
         todo!()
     }
@@ -140,7 +138,7 @@ impl Connection for ConnectionManager {
     /// Stop recording messages of current connection.
     async fn bag_stop_record(
         &self,
-        request: tonic::Request<BagIndex>,
+        _request: tonic::Request<BagIndex>,
     ) -> Result<tonic::Response<BagRecordResult>, tonic::Status> {
         todo!()
     }
@@ -148,7 +146,7 @@ impl Connection for ConnectionManager {
     /// Get detail of a bag file.
     async fn bag_get_info(
         &self,
-        request: tonic::Request<BagIndex>,
+        _request: tonic::Request<BagIndex>,
     ) -> Result<tonic::Response<BagRecordResult>, tonic::Status> {
         todo!()
     }
@@ -156,7 +154,7 @@ impl Connection for ConnectionManager {
     /// Start replay of a bag file.
     async fn bag_start_replay(
         &self,
-        request: tonic::Request<BagIndex>,
+        _request: tonic::Request<BagIndex>,
     ) -> Result<tonic::Response<BagReplayResult>, tonic::Status> {
         todo!()
     }
@@ -164,7 +162,7 @@ impl Connection for ConnectionManager {
     /// Stop replay of a bag file.
     async fn bag_stop_replay(
         &self,
-        request: tonic::Request<BagIndex>,
+        _request: tonic::Request<BagIndex>,
     ) -> Result<tonic::Response<BagReplayResult>, tonic::Status> {
         todo!()
     }
@@ -172,7 +170,7 @@ impl Connection for ConnectionManager {
     /// Get broker statics.
     async fn get_statics(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<StaticsReply>, tonic::Status> {
         todo!()
     }
@@ -180,7 +178,7 @@ impl Connection for ConnectionManager {
     /// Run benchmark on this broker.
     async fn run_benchmark(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<BenchmarkReply>, tonic::Status> {
         todo!()
     }
@@ -188,7 +186,7 @@ impl Connection for ConnectionManager {
     /// Get benchmark state.
     async fn get_benchmark_reply(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<BenchmarkReply>, tonic::Status> {
         todo!()
     }
@@ -196,7 +194,7 @@ impl Connection for ConnectionManager {
     /// Stop a benchmark work.
     async fn stop_benchmark(
         &self,
-        request: tonic::Request<ConnectionIndex>,
+        _request: tonic::Request<ConnectionIndex>,
     ) -> Result<tonic::Response<BenchmarkReply>, tonic::Status> {
         todo!()
     }
