@@ -5,3 +5,7 @@
 pub mod hello_world {
     tonic::include_proto!("hello_world");
 }
+
+pub mod connection {
+    tonic::include_proto!("connection");
+}

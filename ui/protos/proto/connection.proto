@@ -1,27 +1,26 @@
 
-
 syntax = "proto3";
 
 package connection;
 
-service ConnectionManager {
+service Connection {
   // Create a new connection, uuid field is ignored.
-  rpc New (ConnectionInfo) returns (GeneralConnectionReply) {}
+  rpc NewConnection (ConnectionInfo) returns (GeneralConnectionReply) {}
 
   // Get details of a connection.
-  rpc Get (ConnectionIndex) returns (GetConnectionReply) {}
+  rpc GetConnection (ConnectionIndex) returns (GetConnectionReply) {}
 
   // Edit a connection by overriding all fields.
-  rpc Edit (ConnectionInfo) returns (GeneralConnectionReply) {}
+  rpc EditConnection (ConnectionInfo) returns (GeneralConnectionReply) {}
 
   // Delete a connection by index.
-  rpc Delete (ConnectionIndex) returns (GeneralConnectionReply) {}
+  rpc DeleteConnection (ConnectionIndex) returns (GeneralConnectionReply) {}
 
   // Connect to broker.
-  rpc Connect (ConnectionIndex) returns (ConnectStateReply) {}
+  rpc ConnectTo (ConnectionIndex) returns (ConnectStateReply) {}
 
   // Get connection state.
-  rpc GetState (ConnectionIndex) returns (ConnectStateReply) {}
+  rpc GetConnectionState (ConnectionIndex) returns (ConnectStateReply) {}
 
   // Disconnect from broker.
   rpc Disconnect (ConnectionIndex) returns (ConnectStateReply) {}
@@ -30,7 +29,7 @@ service ConnectionManager {
   rpc Publish (PublishRequest) returns (PublishReply) {}
 
   // Add a new subscription info.
-  rpc AddSubscriptioin (SubscriptionInfo) returns (GeneralSubscriptionReply) {}
+  rpc AddSubscription (SubscriptionInfo) returns (GeneralSubscriptionReply) {}
 
   // List available subscriptions of this connection.
   rpc ListSubscriptions (ConnectionIndex) returns (SubscriptionInfos) {}
@@ -38,10 +37,10 @@ service ConnectionManager {
   // Get detail of a subscription.
   rpc GetSubscription (SubscriptionIndex) returns (SubscriptionInfo) {}
 
-  // Edit a specific subscirption.
+  // Edit a specific subscription.
   rpc EditSubscription (SubscriptionInfo) returns (SubscriptionInfo) {}
 
-  // Subscript to or unsubscript from the broker.
+  // Subscript to or unsubscribe from the broker.
   rpc ToggleSubscription (SubscribeRequest) returns (SubscriptionInfo) {}
 
   // Delete a subscription from this connection.
