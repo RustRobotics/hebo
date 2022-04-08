@@ -2,6 +2,7 @@
 [workspace]
 members = [
   "codec",
+  "hebo",
   "ruo",
   "ui/cli",
   "ui/daemon",
