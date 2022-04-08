@@ -26,6 +26,12 @@ service ConnectionManager {
   // Disconnect from broker.
   rpc Disconnect (ConnectionIndex) returns (ConnectStateReply) {}
 
+  // Publish message to broker.
+  rpc Publish (PublishRequest) returns (PublishReply) {}
+
+  // Subscribe a topic on broker.
+  rpc Subscribe (SubscribeRequest) returns (SubscribeReply) {}
+
   // Save current subscribed messages to bag file.
   rpc BagStartRecord (BagIndex) returns (BagRecordResult) {}
 
@@ -103,6 +109,37 @@ message LastWill {
   QoS qos = 2;
   bool retain = 3;
   bytes payload = 4;
+}
+
+message PublishRequest {
+  string connection_uuid = 1;
+  string topic = 2;
+  QoS qos = 3;
+  bool retain = 4;
+  bytes payload = 5;
+}
+
+message PublishReply {
+  string connection_uuid = 1;
+  string topic = 2;
+  bool ok = 3;
+  string error_message = 4;
+}
+
+message SubscribeRequest {
+  string connection_uuid = 1;
+  string topic_pattern = 2;
+  QoS qos = 3;
+  string color = 4;
+  string alias = 5;
+  string comment = 6;
+}
+
+message SubscribeReply {
+  string connection_uuid = 1;
+  string topic_pattern = 2;
+  bool ok = 3;
+  string error_message = 4;
 }
 
 message BagIndex {
