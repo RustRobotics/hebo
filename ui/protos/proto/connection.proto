@@ -4,17 +4,76 @@ syntax = "proto3";
 
 package connection;
 
-service Connection {
-  rpc New (NewConnectionRequest) returns (NewConnectionReply) {}
+service ConnectionManager {
+  // Create a new connection, uuid field is ignored.
+  rpc New (ConnectionInfo) returns (GeneralConnectionReply) {}
+
+  // Get details of a connection.
+  rpc Get (ConnectionIndex) returns (GetConnectionReply) {}
+
+  // Edit a connection by overriding all fields.
+  rpc Edit (ConnectionInfo) returns (GeneralConnectionReply) {}
+
+  // Delete a connection by index.
+  rpc Delete (ConnectionIndex) returns (GeneralConnectionReply) {}
+
+  // Connect to broker.
+  rpc Connect (ConnectionIndex) returns (ConnectStateReply) {}
+
+  // Get connection state.
+  rpc GetState (ConnectionIndex) returns (ConnectStateReply) {}
+
+  // Disconnect from broker.
+  rpc Disconnect (ConnectionIndex) returns (ConnectStateReply) {}
+
+  // Save current subscribed messages to bag file.
+  rpc BagStartRecord (BagIndex) returns (BagRecordResult) {}
+
+  // Stop recording messages of current connection.
+  rpc BagStopRecord (BagIndex) returns (BagRecordResult) {}
+
+  // Get detail of a bag file.
+  rpc BagGetInfo (BagIndex) returns (BagRecordResult) {}
+
+  // Start replay of a bag file.
+  rpc BagStartReplay (BagIndex) returns (BagReplayResult) {}
+
+  // Stop replay of a bag file.
+  rpc BagStopReplay (BagIndex) returns (BagReplayResult) {}
+
+  // Get broker statics.
+  rpc GetStatics (ConnectionIndex) returns (StaticsReply) {}
+
+  // Run benchmark on this broker.
+  rpc RunBenchmark (ConnectionIndex) returns (BenchmarkReply) {}
+
+  // Get benchmark state.
+  rpc GetBenchmarkReply (ConnectionIndex) returns (BenchmarkReply) {}
+
+  // Stop a benchmark work.
+  rpc StopBenchmark (ConnectionIndex) returns (BenchmarkReply) {}
 }
 
-message NewConnectionRequest {
-}
-
-message NewConnectionReply {
+message GeneralConnectionReply {
   bool ok = 1;
   string error_message = 2;
   string uuid = 3;
+}
+
+message ConnectStateReply {
+  string uuid = 1;
+  ConnectionState state = 2;
+  string error_message = 3;
+}
+
+message ConnectionIndex {
+  string uuid = 1;
+}
+
+message GetConnectionReply {
+  bool ok = 1;
+  string error_message = 2;
+  ConnectionInfo info = 3;
 }
 
 message ConnectionInfo {
@@ -36,7 +95,7 @@ message ConnectionInfo {
   MqttVersion mqtt_version = 13;
 
   // Last Will
-  optional LastWill last_will = 14;
+  LastWill last_will = 14;
 }
 
 message LastWill {
@@ -44,6 +103,40 @@ message LastWill {
   QoS qos = 2;
   bool retain = 3;
   bytes payload = 4;
+}
+
+message BagIndex {
+  string connection_uuid = 1;
+
+  // Absolute path to local bag file.
+  string bag_path = 2;
+}
+
+message BagRecordResult {
+  string connection_uuid = 1;
+  bool ok = 2;
+  string bag_path = 3;
+  repeated string subscriptions = 4;
+  int32 messages = 5;
+  int64 file_size = 6;
+}
+
+message BagReplayResult {
+  string connection_uuid = 1;
+  bool ok = 2;
+  string bag_path = 3;
+  repeated string subscriptions = 4;
+  int32 total_messages = 5;
+  int32 played_messages = 6;
+  int64 file_size = 7;
+}
+
+message StaticsReply {
+  bool ok = 1;
+}
+
+message BenchmarkReply {
+  bool ok = 1;
 }
 
 enum QoS {
@@ -56,4 +149,11 @@ enum MqttVersion {
   MQTT_3_1 = 0;
   MQTT_3_1_1 = 1;
   MQTT_5 = 2;
+}
+
+enum ConnectionState {
+  Disconnected = 0;
+  Connecting = 1;
+  Connected = 2;
+  ConnectFailed = 3;
 }
