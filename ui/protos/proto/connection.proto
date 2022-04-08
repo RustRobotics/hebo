@@ -29,8 +29,23 @@ service ConnectionManager {
   // Publish message to broker.
   rpc Publish (PublishRequest) returns (PublishReply) {}
 
-  // Subscribe a topic on broker.
-  rpc Subscribe (SubscribeRequest) returns (SubscribeReply) {}
+  // Add a new subscription info.
+  rpc AddSubscriptioin (SubscriptionInfo) returns (GeneralSubscriptionReply) {}
+
+  // List available subscriptions of this connection.
+  rpc ListSubscriptions (ConnectionIndex) returns (SubscriptionInfos) {}
+
+  // Get detail of a subscription.
+  rpc GetSubscription (SubscriptionIndex) returns (SubscriptionInfo) {}
+
+  // Edit a specific subscirption.
+  rpc EditSubscription (SubscriptionInfo) returns (SubscriptionInfo) {}
+
+  // Subscript to or unsubscript from the broker.
+  rpc ToggleSubscription (SubscribeRequest) returns (SubscriptionInfo) {}
+
+  // Delete a subscription from this connection.
+  rpc DeleteSubscription (SubscriptionIndex) returns (GeneralSubscriptionReply) {}
 
   // Save current subscribed messages to bag file.
   rpc BagStartRecord (BagIndex) returns (BagRecordResult) {}
@@ -126,20 +141,34 @@ message PublishReply {
   string error_message = 4;
 }
 
-message SubscribeRequest {
-  string connection_uuid = 1;
+message SubscriptionInfo {
+  SubscriptionIndex index = 1;
   string topic_pattern = 2;
   QoS qos = 3;
   string color = 4;
   string alias = 5;
   string comment = 6;
+  bool is_subscribing = 7;
 }
 
-message SubscribeReply {
+message SubscriptionInfos {
+  repeated string ids = 1;
+}
+
+message SubscribeRequest {
+  SubscriptionIndex index = 1;
+  bool is_subscribing = 2;
+}
+
+message SubscriptionIndex {
   string connection_uuid = 1;
-  string topic_pattern = 2;
-  bool ok = 3;
-  string error_message = 4;
+  string subscription_uuid = 2;
+}
+
+message GeneralSubscriptionReply {
+  SubscriptionIndex index = 1;
+  bool ok = 2;
+  string error_message = 3;
 }
 
 message BagIndex {
