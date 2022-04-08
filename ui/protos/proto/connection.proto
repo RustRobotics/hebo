@@ -1,0 +1,59 @@
+
+
+syntax = "proto3";
+
+package connection;
+
+service Connection {
+  rpc New (NewConnectionRequest) returns (NewConnectionReply) {}
+}
+
+message NewConnectionRequest {
+}
+
+message NewConnectionReply {
+  bool ok = 1;
+  string error_message = 2;
+  string uuid = 3;
+}
+
+message ConnectionInfo {
+  // General Info
+  string uuid = 1;
+  string name = 2;
+  string client_id = 3;
+  string host = 4;
+  string port = 5;
+  string username = 6;
+  string password = 7;
+  bool with_ssl = 8;
+
+  // Advanced Info
+  int32 connection_timeout = 9;
+  int32 keep_alive = 10;
+  bool clean_session = 11;
+  bool auto_reconnect = 12;
+  MqttVersion mqtt_version = 13;
+
+  // Last Will
+  optional LastWill last_will = 14;
+}
+
+message LastWill {
+  string topic = 1;
+  QoS qos = 2;
+  bool retain = 3;
+  bytes payload = 4;
+}
+
+enum QoS {
+  AT_MOST_ONCE = 0;
+  AT_LEAST_ONCE = 1;
+  EXACT_ONCE = 2;
+}
+
+enum MqttVersion {
+  MQTT_3_1 = 0;
+  MQTT_3_1_1 = 1;
+  MQTT_5 = 2;
+}

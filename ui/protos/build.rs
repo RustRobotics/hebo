@@ -2,7 +2,12 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tonic_build::compile_protos("proto/hello_world.proto")?;
-    Ok(())
+fn main() {
+    tonic_build::configure()
+        .build_server(true)
+        .compile(
+            &["proto/hello_world.proto", "proto/connection.proto"],
+            &["proto"],
+        )
+        .unwrap();
 }
