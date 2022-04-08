@@ -1,9 +1,5 @@
-pub mod hello_world {
-    tonic::include_proto!("hello_world");
-}
-
-use hello_world::greeter_client::GreeterClient;
-use hello_world::HelloRequest;
+use crate::protos::hello_world::greeter_client::GreeterClient;
+use crate::protos::hello_world::HelloRequest;
 
 use grpc_web_client::Client;
 

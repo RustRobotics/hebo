@@ -9,7 +9,6 @@ grpc-web-client = { git = "https://github.com/HeboProject/grpc-web-client", bran
 js-sys = { version = "0.3.56", default-features = false }
 log = "0.4.16"
 prost = { version = "0.10.0", default-features = false }
-#protos = { path = "../protos" }
 tonic = { version = "0.7.1", default-features = false, features = ["codegen", "prost"] }
 wasm-bindgen = { version = "0.2.79", default-features = false, features = ["serde-serialize"] }
 wasm-bindgen-futures = "0.4.29"

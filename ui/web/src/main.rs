@@ -5,6 +5,7 @@
 use yew::prelude::{html, Component, Context, Html};
 
 mod client;
+mod protos;
 
 enum Msg {
     AddOne,
