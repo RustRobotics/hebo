@@ -23,13 +23,17 @@ impl Greeter for MyGreeter {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    pretty_env_logger::init();
+
     let addr = "[::1]:50051".parse().unwrap();
     let greeter = MyGreeter::default();
 
     println!("GreeterServer listening on {}", addr);
+    let config = tonic_web::config().allow_all_origins();
 
     Server::builder()
-        .add_service(GreeterServer::new(greeter))
+        .accept_http1(true)
+        .add_service(config.enable(GreeterServer::new(greeter)))
         .serve(addr)
         .await?;
 
