@@ -3,5 +3,6 @@
 // in the LICENSE file.
 
 pub mod about;
+pub mod log;
 pub mod new_connection;
 pub mod settings;
