@@ -16,6 +16,7 @@ wasm-bindgen-test = { version = "0.3.30", default-features = false }
 wasm-logger = "0.2.0"
 web-sys = "0.3.57"
 yew = "0.19.3"
+yew-router = "0.16.0"
 
 [build-dependencies]
 tonic-build = { version = "0.7.0", default-features = false, features = ["prost"] }
