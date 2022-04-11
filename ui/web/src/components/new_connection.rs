@@ -6,7 +6,9 @@ use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use yew::{html, Component, Context, Html};
 
-pub enum NewConnectionMsg {}
+pub enum NewConnectionMsg {
+    RefreshClientId,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum ProtocolType {
@@ -20,6 +22,7 @@ pub struct NewConnectionComponent {
     name: String,
     client_id: String,
     protocol: ProtocolType,
+    host: String,
     port: u16,
     username: String,
     password: String,
@@ -32,7 +35,7 @@ impl NewConnectionComponent {
         let s = String::from_utf8(rng.sample_iter(&Alphanumeric).take(8).collect::<Vec<u8>>())
             .expect("Invalid random string");
 
-        format!("hebo_{}", s)
+        format!("hebo_{}", s.to_lowercase())
     }
 }
 
@@ -45,6 +48,7 @@ impl Component for NewConnectionComponent {
             name: String::new(),
             client_id: Self::random_client_id(),
             protocol: ProtocolType::Mqtt,
+            host: "localhost".to_string(),
             port: 1883,
             username: String::new(),
             password: String::new(),
@@ -52,7 +56,18 @@ impl Component for NewConnectionComponent {
         }
     }
 
-    fn view(&self, _ctx: &Context<Self>) -> Html {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+        match msg {
+            NewConnectionMsg::RefreshClientId => {
+                self.client_id = Self::random_client_id();
+                true
+            }
+        }
+    }
+
+    fn view(&self, ctx: &Context<Self>) -> Html {
+        let link = ctx.link();
+
         html! {
             <div>
                 <h1>{"NewConnection"}</h1>
@@ -61,7 +76,36 @@ impl Component for NewConnectionComponent {
                     <h2>{"General"}</h2>
                     <div>
                         <label>{"Name"}</label>
-                        <input type="text" />
+                        <input type="text" value={self.name.clone()} />
+                    </div>
+                    <div>
+                        <label>{"Client Id"}</label>
+                        <input type="text" value={self.client_id.clone()} />
+                        <button type="button"
+                            onclick={link.callback(|_event| NewConnectionMsg::RefreshClientId)}
+                        >
+                            {"Refresh"}
+                        </button>
+                    </div>
+                    <div>
+                        <label>{"Host"}</label>
+                        <input type="text" value={self.host.clone()} />
+                    </div>
+                    <div>
+                        <label>{"Port"}</label>
+                        <input type="text" value={self.port.to_string()} />
+                    </div>
+                    <div>
+                        <label>{"Username"}</label>
+                        <input type="text" value={self.username.clone()} />
+                    </div>
+                    <div>
+                        <label>{"Password"}</label>
+                        <input type="text" value={self.password.clone()} />
+                    </div>
+                    <div>
+                        <label>{"SSL/TLS"}</label>
+                        <input type="checkbox" checked={self.with_ssl} />
                     </div>
                 </div>
 
