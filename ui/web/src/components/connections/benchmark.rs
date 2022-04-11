@@ -4,16 +4,12 @@
 
 use yew::{html, Component, Context, Html};
 
-pub mod bag;
-pub mod benchmark;
-pub mod subscription;
+pub enum BenchmarkMsg {}
 
-pub enum ConnectionsMsg {}
+pub struct BenchmarkComponent {}
 
-pub struct ConnectionsComponent {}
-
-impl Component for ConnectionsComponent {
-    type Message = ConnectionsMsg;
+impl Component for BenchmarkComponent {
+    type Message = BenchmarkMsg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
@@ -23,7 +19,7 @@ impl Component for ConnectionsComponent {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div>
-                <h1>{"Connections"}</h1>
+                <h1>{"Benchmark"}</h1>
             </div>
         }
     }
