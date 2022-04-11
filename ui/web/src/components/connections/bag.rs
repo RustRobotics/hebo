@@ -4,12 +4,12 @@
 
 use yew::{html, Component, Context, Html};
 
-pub enum ConnectionsMsg {}
+pub enum BagMsg {}
 
-pub struct ConnectionsComponent {}
+pub struct BagComponent {}
 
-impl Component for ConnectionsComponent {
-    type Message = ConnectionsMsg;
+impl Component for BagComponent {
+    type Message = BagMsg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
@@ -19,7 +19,7 @@ impl Component for ConnectionsComponent {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
             <div>
-                <h1>{"Connections"}</h1>
+                <h1>{"Bag"}</h1>
             </div>
         }
     }
