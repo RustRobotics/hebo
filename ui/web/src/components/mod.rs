@@ -4,7 +4,6 @@
 
 pub mod about;
 pub mod connections;
-pub mod left_panel;
 pub mod log;
 pub mod new_connection;
 pub mod settings;

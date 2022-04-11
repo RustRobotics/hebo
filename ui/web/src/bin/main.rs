@@ -2,9 +2,9 @@
 // Use of this source is governed by General Public License that can be found
 // in the LICENSE file.
 
-use hebo_web::app::AppModel;
+use hebo_web::app::AppComponent;
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
-    yew::start_app::<AppModel>();
+    yew::start_app::<AppComponent>();
 }
