@@ -83,10 +83,6 @@ impl Component for AppComponent {
                     <main>
                         <Switch<Route> render={Switch::render(switch)} />
                     </main>
-
-                    <footer>
-                        <span>{"Copyright (c) 2022, all rights reserved."}</span>
-                    </footer>
                 </BrowserRouter>
             </div>
         }

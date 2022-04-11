@@ -5,10 +5,12 @@ edition = "2021"
 license = "GPL-3.0"
 
 [dependencies]
+getrandom = { version = "0.2", features = ["js"] }
 grpc-web-client = { git = "https://github.com/HeboProject/grpc-web-client", rev = "0343bdb321" }
 js-sys = { version = "0.3.57", default-features = false }
 log = "0.4.16"
 prost = { version = "0.10.0", default-features = false }
+rand = { version = "0.8.5", features = ["getrandom"] }
 tonic = { version = "0.7.1", default-features = false, features = ["codegen", "prost"] }
 wasm-bindgen = { version = "0.2.80", default-features = false, features = ["serde-serialize"] }
 wasm-bindgen-futures = "0.4.30"
