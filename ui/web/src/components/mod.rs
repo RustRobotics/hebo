@@ -3,3 +3,4 @@
 // in the LICENSE file.
 
 pub mod about;
+pub mod settings;
