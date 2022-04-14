@@ -5,7 +5,7 @@ edition = "2021"
 license = "GPL-3.0"
 
 [dependencies]
-prost = "0.10.0"
+prost = "0.10.1"
 tonic = "0.7.1"
 
 [build-dependencies]
