@@ -2,9 +2,13 @@
 [workspace]
 members = [
   "codec",
+  "hebo",
   "ruo",
   "ui/cli",
   "ui/daemon",
   "ui/protos",
+]
+
+exclude = [
   "ui/web",
 ]

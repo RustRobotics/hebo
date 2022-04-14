@@ -23,3 +23,6 @@ yew-router = "0.16.0"
 [build-dependencies]
 tonic-build = { version = "0.7.0", default-features = false, features = ["prost"] }
 
+[[bin]]
+name = "hebo-web"
+path = "src/bin/main.rs"
