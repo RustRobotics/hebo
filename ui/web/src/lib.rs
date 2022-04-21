@@ -3,6 +3,6 @@
 // in the LICENSE file.
 
 pub mod app;
-pub mod client;
-pub mod components;
-pub mod protos;
+mod client;
+mod components;
+mod protos;

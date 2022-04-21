@@ -48,7 +48,7 @@ fn switch(routes: &Route) -> Html {
 impl AppComponent {
     fn left_panel(&self) -> Html {
         html! {
-            <nav role="navigation" aria-label="main navigation">
+            <nav class="left-panel" role="navigation" aria-label="main navigation">
                 <ul>
                     <li><Link<Route> to={Route::Home}>{"Home"}</Link<Route>></li>
                     <li><Link<Route> to={Route::NewConnection}>{"New"}</Link<Route>></li>
@@ -76,15 +76,15 @@ impl Component for AppComponent {
 
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
-            <div>
+            <>
                 <BrowserRouter>
                     {self.left_panel() }
 
-                    <main>
+                    <div class="main-content">
                         <Switch<Route> render={Switch::render(switch)} />
-                    </main>
+                    </div>
                 </BrowserRouter>
-            </div>
+            </>
         }
     }
 }

@@ -1,0 +1,23 @@
+/** main style **/
+
+.left-panel {
+    position: absolute;
+    width: 140px;
+
+    ul {
+        list-style: none;
+
+        li {
+            height: 48px;
+
+            a {
+                text-decoration: none;
+            }
+        }
+
+    }
+}
+
+.main-content {
+    margin-left: 140px;
+}

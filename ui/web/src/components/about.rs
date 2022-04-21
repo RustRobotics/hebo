@@ -17,7 +17,7 @@ impl Component for AboutComponent {
     fn view(&self, _ctx: &Context<Self>) -> Html {
         html! {
            <div>
-                <h1>{"About"}</h1>
+                <h2>{"About"}</h2>
             </div>
         }
     }

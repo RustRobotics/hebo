@@ -31,7 +31,7 @@ pub struct NewConnectionComponent {
 
 impl NewConnectionComponent {
     pub fn random_client_id() -> String {
-        let mut rng = rand::thread_rng();
+        let rng = rand::thread_rng();
         let s = String::from_utf8(rng.sample_iter(&Alphanumeric).take(8).collect::<Vec<u8>>())
             .expect("Invalid random string");
 
