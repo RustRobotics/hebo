@@ -4,7 +4,7 @@
 
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use yew::{html, Component, Context, Html};
+use yew::prelude::*;
 
 pub enum NewConnectionMsg {
     RefreshClientId,
@@ -16,6 +16,19 @@ enum ProtocolType {
     SecureMqtt,
     WebSocket,
     SecureWebSocket,
+    Quic,
+}
+
+impl ToString for ProtocolType {
+    fn to_string(&self) -> String {
+        match self {
+            ProtocolType::Mqtt => "mqtt".to_string(),
+            ProtocolType::SecureMqtt => "mqtts".to_string(),
+            ProtocolType::WebSocket => "ws".to_string(),
+            ProtocolType::SecureWebSocket => "wss".to_string(),
+            ProtocolType::Quic => "quic".to_string(),
+        }
+    }
 }
 
 pub struct NewConnectionComponent {
@@ -70,30 +83,37 @@ impl Component for NewConnectionComponent {
 
         html! {
             <div>
-                <h1>{"NewConnection"}</h1>
+                <h1>{ "NewConnection" }</h1>
 
                 <div>
-                    <h2>{"General"}</h2>
+                    <h2>{ "General" }</h2>
                     <div>
-                        <label>{"Name"}</label>
-                        <input type="text" value={self.name.clone()} />
+                        <label>{ "Name" }</label>
+                        <input type="text" value={ self.name.clone() } />
                     </div>
                     <div>
-                        <label>{"Client Id"}</label>
-                        <input type="text" value={self.client_id.clone()} />
+                        <label>{ "Client Id" }</label>
+                        <input type="text" value={ self.client_id.clone() } />
                         <button type="button"
-                            onclick={link.callback(|_event| NewConnectionMsg::RefreshClientId)}
+                            onclick={ link.callback(|_event| NewConnectionMsg::RefreshClientId) }
                         >
-                            {"Refresh"}
+                            { "Refresh" }
                         </button>
                     </div>
                     <div>
+                        <select value={ self.protocol.to_string() }>
+                            <option value={ "mqtt" }>{ "mqtt" }</option>
+                            <option value={ "mqtts" }>{ "mqtts" }</option>
+                            <option value={ "ws" }>{ "ws" }</option>
+                            <option value={ "wss" }>{ "wss" }</option>
+                            <option value={ "quic" }>{ "quic" }</option>
+                        </select>
                         <label>{"Host"}</label>
                         <input type="text" value={self.host.clone()} />
                     </div>
                     <div>
                         <label>{"Port"}</label>
-                        <input type="text" value={self.port.to_string()} />
+                        <input type="number" value={self.port.to_string()} />
                     </div>
                     <div>
                         <label>{"Username"}</label>
