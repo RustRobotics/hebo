@@ -129,16 +129,19 @@ impl ServerContext {
                 ),
             )
         })?;
-        nc::kill(pid, sig).map_err(|err| {
-            Error::from_string(
-                ErrorKind::PidError,
-                format!(
-                    "Failed to notify process {}, got {}",
-                    pid,
-                    nc::strerror(err)
-                ),
-            )
-        })?;
+
+        unsafe {
+            nc::kill(pid, sig).map_err(|err| {
+                Error::from_string(
+                    ErrorKind::PidError,
+                    format!(
+                        "Failed to notify process {}, got {}",
+                        pid,
+                        nc::strerror(err)
+                    ),
+                )
+            })?;
+        }
         Ok(())
     }
 

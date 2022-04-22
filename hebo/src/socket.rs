@@ -10,23 +10,25 @@ use crate::error::{Error, ErrorKind};
 
 fn bind_device(socket_fd: RawFd, device: &str) -> Result<(), Error> {
     if !device.is_empty() {
-        nc::setsockopt(
-            socket_fd,
-            nc::SOL_SOCKET,
-            nc::SO_BINDTODEVICE,
-            device.as_ptr() as usize,
-            device.len() as nc::socklen_t,
-        )
-        .map_err(|errno| {
-            Error::from_string(
-                ErrorKind::KernelError,
-                format!(
-                    "Failed to bind device: {}, err: {}",
-                    device,
-                    nc::strerror(errno)
-                ),
+        unsafe {
+            nc::setsockopt(
+                socket_fd,
+                nc::SOL_SOCKET,
+                nc::SO_BINDTODEVICE,
+                device.as_ptr() as usize,
+                device.len() as nc::socklen_t,
             )
-        })?;
+            .map_err(|errno| {
+                Error::from_string(
+                    ErrorKind::KernelError,
+                    format!(
+                        "Failed to bind device: {}, err: {}",
+                        device,
+                        nc::strerror(errno)
+                    ),
+                )
+            })?;
+        }
     }
     Ok(())
 }
@@ -45,22 +47,24 @@ fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
     // TODO(Shaohua): Replace with nc::TCP_FASTOPEN in new version.
     const TCP_FASTOPEN: i32 = 23;
 
-    nc::setsockopt(
-        socket_fd,
-        nc::IPPROTO_TCP,
-        TCP_FASTOPEN,
-        queue_len_ptr,
-        std::mem::size_of_val(&queue_len) as u32,
-    )
-    .map_err(|errno| {
-        Error::from_string(
-            ErrorKind::KernelError,
-            format!(
-                "Failed to enable socket fast open, got err: {}",
-                nc::strerror(errno)
-            ),
+    unsafe {
+        nc::setsockopt(
+            socket_fd,
+            nc::IPPROTO_TCP,
+            TCP_FASTOPEN,
+            queue_len_ptr,
+            std::mem::size_of_val(&queue_len) as u32,
         )
-    })
+        .map_err(|errno| {
+            Error::from_string(
+                ErrorKind::KernelError,
+                format!(
+                    "Failed to enable socket fast open, got err: {}",
+                    nc::strerror(errno)
+                ),
+            )
+        })
+    }
 }
 
 pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener, Error> {
