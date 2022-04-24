@@ -24,6 +24,7 @@ use crate::rule_engine::RuleEngineApp;
 impl ServerContext {
     pub(crate) async fn init_modules(&mut self, runtime: &Runtime) -> Result<(), Error> {
         log::info!("ServerContext::init_modules()");
+
         let (listeners_to_dispatcher_sender, listeners_to_dispatcher_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
         let mut dispatcher_to_listener_senders = Vec::new();
@@ -38,6 +39,7 @@ impl ServerContext {
         let mut listeners_info = Vec::new();
 
         // Listeners module.
+        let mut listener_objs = Vec::new();
         for l in self.config.listeners() {
             listeners_info.push((listener_id, l.address().clone()));
             let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
@@ -52,7 +54,7 @@ impl ServerContext {
                 mpsc::channel(CHANNEL_CAPACITY);
             acl_to_listener_senders.push((listener_id, acl_to_listener_sender));
 
-            let mut listener = Listener::bind(
+            let listener = Listener::bind(
                 listener_id,
                 l.clone(),
                 // dispatcher module
@@ -67,11 +69,17 @@ impl ServerContext {
             )
             .await
             .expect(&format!("Failed to listen at {:?}", &listeners_info.last()));
+            listener_objs.push(listener);
+            listener_id += 1;
+        }
+
+        self.set_uid()?;
+
+        for mut listener in listener_objs.into_iter() {
             let handle = runtime.spawn(async move {
                 listener.run_loop().await;
             });
             handles.push(handle);
-            listener_id += 1;
         }
 
         // Metrics module.

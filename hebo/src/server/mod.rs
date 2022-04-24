@@ -160,6 +160,33 @@ impl ServerContext {
         Ok(())
     }
 
+    fn set_uid(&self) -> Result<(), Error> {
+        let euid = unsafe { nc::geteuid() };
+        if euid == 0 {
+            // For root.
+            let user = self.config.general().user();
+            if let Some(user) = users::get_user_by_name(user) {
+                let real_uid = user.uid();
+                if let Err(errno) = unsafe { nc::setuid(real_uid) } {
+                    Err(Error::from_string(
+                        ErrorKind::ConfigError,
+                        format!("Failed to setuid({})", real_uid),
+                    ))
+                } else {
+                    Ok(())
+                }
+            } else {
+                Err(Error::from_string(
+                    ErrorKind::ConfigError,
+                    format!("Failed to get user entry by name: {}", user),
+                ))
+            }
+        } else {
+            // Normal user, do nothing.
+            Ok(())
+        }
+    }
+
     /// Init modules and run tokio runtime.
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
         self.write_pid()?;
