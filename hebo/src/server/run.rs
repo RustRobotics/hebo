@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use clap::Arg;
+use std::path::Path;
 use tokio::runtime::Runtime;
 
 use super::ServerContext;
@@ -11,6 +12,10 @@ use crate::error::{Error, ErrorKind};
 use crate::log::init_log;
 
 pub const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
+const OPT_CONFIG: &str = "config";
+const OPT_RELOAD: &str = "reload";
+const OPT_STOP: &str = "stop";
+const OPT_TEST: &str = "test";
 
 /// Entry point of server
 pub fn run_server() -> Result<(), Error> {
@@ -19,56 +24,68 @@ pub fn run_server() -> Result<(), Error> {
         .author("Xu Shaohua <shaohua@biofan.org>")
         .about("High Performance MQTT Server")
         .arg(
-            Arg::new("config")
+            Arg::new(OPT_CONFIG)
                 .short('c')
-                .long("config")
+                .long(OPT_CONFIG)
                 .value_name("config_file")
                 .takes_value(true)
                 .help("Specify config file path"),
         )
         .arg(
-            Arg::new("reload")
+            Arg::new(OPT_RELOAD)
                 .short('r')
-                .long("reload")
+                .long(OPT_RELOAD)
                 .takes_value(false)
                 .help("Reload config"),
         )
         .arg(
-            Arg::new("stop")
+            Arg::new(OPT_STOP)
                 .short('s')
-                .long("stop")
+                .long(OPT_STOP)
                 .takes_value(false)
                 .help("Stop"),
         )
         .arg(
-            Arg::new("test")
+            Arg::new(OPT_TEST)
                 .short('t')
-                .long("test")
+                .long(OPT_TEST)
                 .takes_value(false)
                 .help("Test config file"),
         )
         .get_matches();
 
-    let config_file = matches.value_of("config").unwrap_or(DEFAULT_CONFIG);
-    let config_content = std::fs::read_to_string(config_file)?;
-    let config: Config = toml::from_str(&config_content).map_err(|err| {
-        Error::from_string(ErrorKind::ConfigError, format!("Invalid config: {:?}", err))
-    })?;
+    let config_file = if let Some(config_file) = matches.value_of(OPT_CONFIG) {
+        Some(config_file)
+    } else if Path::new(DEFAULT_CONFIG).exists() {
+        Some(DEFAULT_CONFIG)
+    } else {
+        None
+    };
 
-    if matches.is_present("test") {
-        println!("The configuration file {} syntax is Ok", config_file);
-        return Ok(());
-    }
+    let config = if let Some(config_file) = config_file {
+        let config_content = std::fs::read_to_string(config_file)?;
+        let config = toml::from_str(&config_content).map_err(|err| {
+            Error::from_string(ErrorKind::ConfigError, format!("Invalid config: {:?}", err))
+        })?;
+        if matches.is_present(OPT_TEST) {
+            println!("The configuration file {} syntax is Ok", config_file);
+            return Ok(());
+        }
+        config
+    } else {
+        Config::default()
+    };
+    println!("config: {:?}", config);
 
     init_log(&config.log())?;
 
     let mut server = ServerContext::new(config);
 
-    if matches.is_present("reload") {
+    if matches.is_present(OPT_RELOAD) {
         return server.send_reload_signal();
     }
 
-    if matches.is_present("stop") {
+    if matches.is_present(OPT_STOP) {
         return server.send_stop_signal();
     }
 

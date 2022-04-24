@@ -19,7 +19,7 @@ pub use security::Security;
 pub use storage::Storage;
 
 /// Server main config.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct Config {
     #[serde(default = "General::default")]
     general: General,
