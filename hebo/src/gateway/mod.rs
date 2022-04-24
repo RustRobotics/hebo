@@ -9,7 +9,6 @@ use crate::commands::{DispatcherToGatewayCmd, GatewayToDispatcherCmd, ServerCont
 mod dispatcher;
 mod server;
 
-#[derive(Debug)]
 pub struct GatewayApp {
     dispatcher_sender: Sender<GatewayToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToGatewayCmd>,

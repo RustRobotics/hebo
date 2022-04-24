@@ -23,7 +23,6 @@ mod sessions;
 mod trie;
 
 /// Dispatcher is a message router.
-#[derive(Debug)]
 pub struct Dispatcher {
     sub_trie: trie::SubTrie,
 

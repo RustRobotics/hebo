@@ -12,7 +12,6 @@ mod dispatcher;
 pub mod memory;
 mod server;
 
-#[derive(Debug)]
 pub struct BackendsApp {
     dispatcher_sender: Sender<BackendsToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToBackendsCmd>,

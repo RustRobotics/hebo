@@ -11,7 +11,6 @@ use crate::commands::{
 mod dispatcher;
 mod server;
 
-#[derive(Debug)]
 pub struct RuleEngineApp {
     dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToRuleEngineCmd>,

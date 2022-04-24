@@ -26,7 +26,6 @@ pub const CHANNEL_CAPACITY: usize = 16;
 
 /// ServerContext manages lifetime of Dispatcher and Listeners.
 /// All kernel signals are handled here.
-#[derive(Debug)]
 pub struct ServerContext {
     config: Config,
 

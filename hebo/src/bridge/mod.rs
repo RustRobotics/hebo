@@ -9,7 +9,6 @@ use crate::commands::{BridgeToDispatcherCmd, DispatcherToBridgeCmd, ServerContex
 mod dispatcher;
 mod server;
 
-#[derive(Debug)]
 pub struct BridgeApp {
     dispatcher_sender: Sender<BridgeToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToBridgeCmd>,
