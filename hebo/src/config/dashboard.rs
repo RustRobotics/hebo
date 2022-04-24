@@ -4,6 +4,8 @@
 
 use serde::Deserialize;
 
+use crate::error::Error;
+
 /// Configuration for dashboard app.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Dashboard {
@@ -21,6 +23,11 @@ impl Dashboard {
 
     pub fn address(&self) -> &str {
         &self.address
+    }
+
+    pub fn validate(&self) -> Result<(), Error> {
+        // TODO(Shaohua): Validate socket address
+        Ok(())
     }
 }
 

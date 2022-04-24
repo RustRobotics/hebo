@@ -6,6 +6,8 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use crate::error::Error;
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct Storage {
     /// Save persistent message data to disk.
@@ -74,6 +76,11 @@ impl Storage {
     pub fn auto_save_on_change(&self) -> Option<Duration> {
         self.auto_save_on_change
             .and_then(|interval| Some(Duration::from_secs(interval)))
+    }
+
+    pub fn validate(&self) -> Result<(), Error> {
+        // TODO(Shaohua): check storage file permission
+        Ok(())
     }
 }
 

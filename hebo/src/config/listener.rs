@@ -5,6 +5,8 @@
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+use crate::error::Error;
+
 /// Binding protocol types.
 #[derive(Debug, Deserialize, Clone, Copy)]
 pub enum Protocol {
@@ -249,6 +251,11 @@ impl Listener {
 
     pub fn max_inflight_messages(&self) -> usize {
         self.max_inflight_messages
+    }
+
+    pub fn validate(&self) -> Result<(), Error> {
+        // TODO(Shaohua): validate integer range.
+        Ok(())
     }
 }
 

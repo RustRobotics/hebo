@@ -5,6 +5,8 @@
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+use crate::error::Error;
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct Security {
     /// Determines whether clients that connect without providing a username are allowed to connect.
@@ -44,6 +46,11 @@ impl Security {
 
     pub fn password_file(&self) -> Option<&Path> {
         self.password_file.as_ref().and_then(|p| Some(p.as_path()))
+    }
+
+    pub fn validate(&self) -> Result<(), Error> {
+        // TODO(Shaohua): Validate password file entry
+        Ok(())
     }
 }
 

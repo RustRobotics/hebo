@@ -4,6 +4,8 @@
 
 use serde::Deserialize;
 
+use crate::error::Error;
+
 mod dashboard;
 mod general;
 mod listener;
@@ -63,5 +65,18 @@ impl Config {
 
     pub fn dashboard(&self) -> &Dashboard {
         &self.dashboard
+    }
+
+    pub fn validate(&self) -> Result<(), Error> {
+        self.general.validate()?;
+
+        for listener in &self.listeners {
+            listener.validate()?;
+        }
+
+        self.security.validate()?;
+        self.storage.validate()?;
+        self.log.validate()?;
+        self.dashboard.validate()
     }
 }

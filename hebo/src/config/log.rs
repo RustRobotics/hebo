@@ -4,6 +4,8 @@
 
 use serde::Deserialize;
 
+use crate::error::Error;
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct Log {
     /// Alaso print log to console.
@@ -78,6 +80,11 @@ impl Log {
 
     pub fn log_file(&self) -> Option<&String> {
         self.log_file.as_ref()
+    }
+
+    pub fn validate(&self) -> Result<(), Error> {
+        // TODO(Shaohua): Validate file permission
+        Ok(())
     }
 }
 

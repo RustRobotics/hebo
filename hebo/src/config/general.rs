@@ -7,6 +7,8 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use crate::error::Error;
+
 /// General section in config.
 #[derive(Debug, Deserialize, Clone)]
 pub struct General {
@@ -159,6 +161,11 @@ impl General {
 
     pub fn max_packet_size(&self) -> usize {
         self.max_packet_size
+    }
+
+    pub fn validate(&self) -> Result<(), Error> {
+        // TODO(Shaohua): Validate user exists
+        Ok(())
     }
 }
 
