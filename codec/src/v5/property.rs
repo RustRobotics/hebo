@@ -142,6 +142,9 @@ pub enum Property {
     /// It is a Protocol Error to include the Payload Format Indicator more than once.
     /// The Server MAY validate that the Will Message is of the format indicated,
     /// and if it is not send a CONNACK with the Reason Code of 0x99 (Payload format invalid).
+    ///
+    /// - [Unicode]: https://unicode.org/standard/standard.html
+    /// - [RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
     PayloadFormatIndicator(BoolData),
 
     /// Message Expiry Interval
