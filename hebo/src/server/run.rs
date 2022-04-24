@@ -43,14 +43,14 @@ pub fn run_server() -> Result<(), Error> {
                 .short('s')
                 .long(OPT_STOP)
                 .takes_value(false)
-                .help("Stop"),
+                .help("Stop server"),
         )
         .arg(
             Arg::new(OPT_TEST)
                 .short('t')
                 .long(OPT_TEST)
                 .takes_value(false)
-                .help("Test config file"),
+                .help("Test config file and exit"),
         )
         .get_matches();
 
@@ -75,7 +75,6 @@ pub fn run_server() -> Result<(), Error> {
     } else {
         Config::default()
     };
-    println!("config: {:?}", config);
 
     init_log(&config.log())?;
 

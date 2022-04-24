@@ -146,7 +146,16 @@ impl ServerContext {
 
     fn write_pid(&self) -> Result<(), Error> {
         let pid = std::process::id();
-        let mut fd = File::create(&self.config.general().pid_file())?;
+        let mut fd = File::create(&self.config.general().pid_file()).map_err(|err| {
+            Error::from_string(
+                ErrorKind::IoError,
+                format!(
+                    "Failed to write pid to file {:?}, got err: {:?}",
+                    &self.config.general().pid_file(),
+                    err
+                ),
+            )
+        })?;
         write!(fd, "{}", pid)?;
         Ok(())
     }
