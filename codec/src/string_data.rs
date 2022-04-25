@@ -55,8 +55,8 @@ use crate::{
 /// wherever it appears in a string and MUST NOT be skipped over or stripped off
 /// by a packet receiver [MQTT-1.5.4-3].
 ///
-/// - [RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
-/// - [Unicode]: https://unicode.org/standard/standard.html
+/// [RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
+/// [Unicode]: https://unicode.org/standard/standard.html
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct StringData(String);
 
