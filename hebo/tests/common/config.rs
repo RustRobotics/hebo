@@ -2,11 +2,10 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use hebo::error::Error;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
-
-use super::Error;
 
 /// ServerConfig is used to save config string to local filesystem.
 ///
@@ -36,7 +35,7 @@ impl ServerConfig {
 impl Drop for ServerConfig {
     fn drop(&mut self) {
         if let Err(err) = std::fs::remove_file(&self.filename) {
-            eprintln!("Failed to remove file: {}", self.filename);
+            eprintln!("Failed to remove file: {}, err: {:?}", self.filename, err);
         }
     }
 }
