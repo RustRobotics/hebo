@@ -12,7 +12,7 @@ mod dispatcher;
 mod server;
 
 pub struct RuleEngineApp {
-    dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
+    _dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToRuleEngineCmd>,
 
     server_ctx_receiver: Receiver<ServerContextToRuleEngineCmd>,
@@ -21,13 +21,13 @@ pub struct RuleEngineApp {
 impl RuleEngineApp {
     pub fn new(
         // dispatcher
-        dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
+        _dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToRuleEngineCmd>,
         // server ctx
         server_ctx_receiver: Receiver<ServerContextToRuleEngineCmd>,
     ) -> Self {
         Self {
-            dispatcher_sender,
+            _dispatcher_sender,
             dispatcher_receiver,
             server_ctx_receiver,
         }

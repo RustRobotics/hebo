@@ -34,23 +34,23 @@ pub struct ServerContext {
     dashboard_receiver: Receiver<DashboardToServerContexCmd>,
 
     // server_ctx -> acl
-    acl_sender: Sender<ServerContextToAclCmd>,
+    _acl_sender: Sender<ServerContextToAclCmd>,
     acl_receiver: Option<Receiver<ServerContextToAclCmd>>,
 
     // server_ctx -> auth
-    auth_sender: Sender<ServerContextToAuthCmd>,
+    _auth_sender: Sender<ServerContextToAuthCmd>,
     auth_receiver: Option<Receiver<ServerContextToAuthCmd>>,
 
     // server_ctx -> backends
-    backends_sender: Sender<ServerContextToBackendsCmd>,
+    _backends_sender: Sender<ServerContextToBackendsCmd>,
     backends_receiver: Option<Receiver<ServerContextToBackendsCmd>>,
 
     // server_ctx -> bridge
-    bridge_sender: Sender<ServerContextToBridgeCmd>,
+    _bridge_sender: Sender<ServerContextToBridgeCmd>,
     bridge_receiver: Option<Receiver<ServerContextToBridgeCmd>>,
 
     // server_ctx -> gateway
-    gateway_sender: Sender<ServerContextToGatewayCmd>,
+    _gateway_sender: Sender<ServerContextToGatewayCmd>,
     gateway_receiver: Option<Receiver<ServerContextToGatewayCmd>>,
 
     // server_ctx -> metrics
@@ -58,20 +58,20 @@ pub struct ServerContext {
     metrics_receiver: Option<Receiver<ServerContextToMetricsCmd>>,
 
     // server_ctx -> rule_engine
-    rule_engine_sender: Sender<ServerContextToRuleEngineCmd>,
+    _rule_engine_sender: Sender<ServerContextToRuleEngineCmd>,
     rule_engine_receiver: Option<Receiver<ServerContextToRuleEngineCmd>>,
 }
 
 impl ServerContext {
     pub fn new(config: Config) -> ServerContext {
         let (dashboard_sender, dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (acl_sender, acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (auth_sender, auth_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (backends_sender, backends_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (bridge_sender, bridge_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (gateway_sender, gateway_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (_acl_sender, acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (_auth_sender, auth_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (_backends_sender, backends_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (_bridge_sender, bridge_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (_gateway_sender, gateway_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (metrics_sender, metrics_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (rule_engine_sender, rule_engine_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (_rule_engine_sender, rule_engine_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
         ServerContext {
             config,
@@ -79,25 +79,25 @@ impl ServerContext {
             dashboard_sender: Some(dashboard_sender),
             dashboard_receiver,
 
-            acl_sender,
+            _acl_sender,
             acl_receiver: Some(acl_receiver),
 
-            auth_sender,
+            _auth_sender,
             auth_receiver: Some(auth_receiver),
 
-            backends_sender,
+            _backends_sender,
             backends_receiver: Some(backends_receiver),
 
-            bridge_sender,
+            _bridge_sender,
             bridge_receiver: Some(bridge_receiver),
 
-            gateway_sender,
+            _gateway_sender,
             gateway_receiver: Some(gateway_receiver),
 
             metrics_sender,
             metrics_receiver: Some(metrics_receiver),
 
-            rule_engine_sender,
+            _rule_engine_sender,
             rule_engine_receiver: Some(rule_engine_receiver),
         }
     }
@@ -170,7 +170,11 @@ impl ServerContext {
                 if let Err(errno) = unsafe { nc::setuid(real_uid) } {
                     Err(Error::from_string(
                         ErrorKind::ConfigError,
-                        format!("Failed to setuid({})", real_uid),
+                        format!(
+                            "Failed to setuid({}), got err: {}",
+                            real_uid,
+                            nc::strerror(errno)
+                        ),
                     ))
                 } else {
                     Ok(())

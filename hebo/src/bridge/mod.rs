@@ -10,7 +10,7 @@ mod dispatcher;
 mod server;
 
 pub struct BridgeApp {
-    dispatcher_sender: Sender<BridgeToDispatcherCmd>,
+    _dispatcher_sender: Sender<BridgeToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToBridgeCmd>,
 
     server_ctx_receiver: Receiver<ServerContextToBridgeCmd>,
@@ -19,13 +19,13 @@ pub struct BridgeApp {
 impl BridgeApp {
     pub fn new(
         // dispatcher
-        dispatcher_sender: Sender<BridgeToDispatcherCmd>,
+        _dispatcher_sender: Sender<BridgeToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToBridgeCmd>,
         // server ctx
         server_ctx_receiver: Receiver<ServerContextToBridgeCmd>,
     ) -> Self {
         Self {
-            dispatcher_sender,
+            _dispatcher_sender,
             dispatcher_receiver,
             server_ctx_receiver,
         }

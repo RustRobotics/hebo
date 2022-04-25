@@ -10,7 +10,7 @@ mod dispatcher;
 mod server;
 
 pub struct GatewayApp {
-    dispatcher_sender: Sender<GatewayToDispatcherCmd>,
+    _dispatcher_sender: Sender<GatewayToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToGatewayCmd>,
 
     server_ctx_receiver: Receiver<ServerContextToGatewayCmd>,
@@ -19,13 +19,13 @@ pub struct GatewayApp {
 impl GatewayApp {
     pub fn new(
         // dispatcher
-        dispatcher_sender: Sender<GatewayToDispatcherCmd>,
+        _dispatcher_sender: Sender<GatewayToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToGatewayCmd>,
         // server ctx
         server_ctx_receiver: Receiver<ServerContextToGatewayCmd>,
     ) -> Self {
         Self {
-            dispatcher_sender,
+            _dispatcher_sender,
             dispatcher_receiver,
 
             server_ctx_receiver,

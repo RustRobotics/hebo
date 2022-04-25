@@ -28,13 +28,13 @@ pub struct Dispatcher {
 
     cached_sessions: sessions::CachedSessions,
 
-    backends_sender: Sender<DispatcherToBackendsCmd>,
+    _backends_sender: Sender<DispatcherToBackendsCmd>,
     backends_receiver: Receiver<BackendsToDispatcherCmd>,
 
-    bridge_sender: Sender<DispatcherToBridgeCmd>,
+    _bridge_sender: Sender<DispatcherToBridgeCmd>,
     bridge_receiver: Receiver<BridgeToDispatcherCmd>,
 
-    gateway_sender: Sender<DispatcherToGatewayCmd>,
+    _gateway_sender: Sender<DispatcherToGatewayCmd>,
     gateway_receiver: Receiver<GatewayToDispatcherCmd>,
 
     metrics_sender: Sender<DispatcherToMetricsCmd>,
@@ -43,19 +43,19 @@ pub struct Dispatcher {
     listener_senders: HashMap<ListenerId, Sender<DispatcherToListenerCmd>>,
     listener_receiver: Receiver<ListenerToDispatcherCmd>,
 
-    rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
+    _rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
     rule_engine_receiver: Receiver<RuleEngineToDispatcherCmd>,
 }
 
 impl Dispatcher {
     pub fn new(
-        backends_sender: Sender<DispatcherToBackendsCmd>,
+        _backends_sender: Sender<DispatcherToBackendsCmd>,
         backends_receiver: Receiver<BackendsToDispatcherCmd>,
 
-        bridge_sender: Sender<DispatcherToBridgeCmd>,
+        _bridge_sender: Sender<DispatcherToBridgeCmd>,
         bridge_receiver: Receiver<BridgeToDispatcherCmd>,
 
-        gateway_sender: Sender<DispatcherToGatewayCmd>,
+        _gateway_sender: Sender<DispatcherToGatewayCmd>,
         gateway_receiver: Receiver<GatewayToDispatcherCmd>,
 
         metrics_sender: Sender<DispatcherToMetricsCmd>,
@@ -64,7 +64,7 @@ impl Dispatcher {
         listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToDispatcherCmd>,
 
-        rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
+        _rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
         rule_engine_receiver: Receiver<RuleEngineToDispatcherCmd>,
     ) -> Self {
         Self {
@@ -72,13 +72,13 @@ impl Dispatcher {
 
             cached_sessions: sessions::CachedSessions::new(),
 
-            backends_sender,
+            _backends_sender,
             backends_receiver,
 
-            bridge_sender,
+            _bridge_sender,
             bridge_receiver,
 
-            gateway_sender,
+            _gateway_sender,
             gateway_receiver,
 
             metrics_sender,
@@ -87,7 +87,7 @@ impl Dispatcher {
             listener_senders: listener_senders.into_iter().collect(),
             listener_receiver,
 
-            rule_engine_sender,
+            _rule_engine_sender,
             rule_engine_receiver,
         }
     }

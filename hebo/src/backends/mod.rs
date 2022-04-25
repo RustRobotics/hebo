@@ -13,7 +13,7 @@ pub mod memory;
 mod server;
 
 pub struct BackendsApp {
-    dispatcher_sender: Sender<BackendsToDispatcherCmd>,
+    _dispatcher_sender: Sender<BackendsToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToBackendsCmd>,
 
     server_ctx_receiver: Receiver<ServerContextToBackendsCmd>,
@@ -22,13 +22,13 @@ pub struct BackendsApp {
 impl BackendsApp {
     pub fn new(
         // dispatcher
-        dispatcher_sender: Sender<BackendsToDispatcherCmd>,
+        _dispatcher_sender: Sender<BackendsToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToBackendsCmd>,
         // server ctx
         server_ctx_receiver: Receiver<ServerContextToBackendsCmd>,
     ) -> Self {
         Self {
-            dispatcher_sender,
+            _dispatcher_sender,
             dispatcher_receiver,
 
             server_ctx_receiver,
