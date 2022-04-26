@@ -63,9 +63,17 @@ pub fn run_server() -> Result<(), Error> {
     };
 
     let config = if let Some(config_file) = config_file {
-        let config_content = std::fs::read_to_string(config_file)?;
+        let config_content = std::fs::read_to_string(config_file).map_err(|err| {
+            Error::from_string(
+                ErrorKind::ConfigError,
+                format!("Failed to read config file {}, err: {:?}", config_file, err),
+            )
+        })?;
         let config: Config = toml::from_str(&config_content).map_err(|err| {
-            Error::from_string(ErrorKind::ConfigError, format!("Invalid config: {:?}", err))
+            Error::from_string(
+                ErrorKind::ConfigError,
+                format!("Invalid toml config file {}, err: {:?}", config_file, err),
+            )
         })?;
 
         config.validate()?;
