@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use serde::Deserialize;
+use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 
 use crate::error::Error;
@@ -254,7 +255,8 @@ impl Listener {
     }
 
     pub fn validate(&self) -> Result<(), Error> {
-        // TODO(Shaohua): validate integer range.
+        let _socket = TcpListener::bind(&self.address)?;
+        // TODO(Shaohua): Validate cert and key files.
         Ok(())
     }
 }
