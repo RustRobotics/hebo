@@ -3,16 +3,16 @@
 // in the LICENSE file.
 
 use hebo::error::{Error, ErrorKind};
+use std::io::{self, Write};
 use std::path::PathBuf;
 use std::process::Command;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
-use subprocess::Exec;
 
 pub struct Server {
     config_file: String,
     exec_file: PathBuf,
-    _handler: JoinHandle<()>,
+    handler: JoinHandle<()>,
 }
 
 impl Server {
@@ -22,25 +22,28 @@ impl Server {
         let exec_file = Self::get_exec_file()?;
         let exec_file_clone = exec_file.clone();
 
-        let _handler = thread::spawn(move || {
-            let exec = Exec::cmd(exec_file_clone)
+        let handler = thread::spawn(move || {
+            let output = Command::new(exec_file_clone)
                 .args(&["-c", &config_file_clone])
-                .detached();
-            if let Err(err) = exec.join() {
-                eprintln!("Failed to run server program, err: {:?}", err);
-            }
+                .output()
+                .expect("Failed to run hebo server");
+            assert!(output.status.success());
+            io::stdout().write_all(&output.stdout).unwrap();
+            io::stderr().write_all(&output.stderr).unwrap();
         });
         Ok(Self {
             config_file,
             exec_file,
-            _handler,
+            handler,
         })
     }
 
-    pub fn terminate(&mut self) {
+    pub fn terminate(self) {
         let ret = Command::new(&self.exec_file)
             .args(["-c", &self.config_file, "-s"])
             .spawn();
+        assert!(ret.is_ok());
+        let ret = self.handler.join();
         assert!(ret.is_ok());
         thread::sleep(Duration::from_secs(1));
     }
