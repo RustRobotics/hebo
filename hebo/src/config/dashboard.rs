@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use serde::Deserialize;
+use std::net::TcpListener;
 
 use crate::error::Error;
 
@@ -40,7 +41,9 @@ impl Dashboard {
     }
 
     pub fn validate(&self) -> Result<(), Error> {
-        // TODO(Shaohua): Validate socket address
+        if self.enable {
+            let _socket = TcpListener::bind(&self.address)?;
+        }
         Ok(())
     }
 }
