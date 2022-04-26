@@ -3,6 +3,8 @@
 // in the LICENSE file.
 
 use serde::Deserialize;
+use std::fs::{self, File};
+use std::path::Path;
 
 use crate::error::Error;
 
@@ -83,7 +85,13 @@ impl Log {
     }
 
     pub fn validate(&self) -> Result<(), Error> {
-        // TODO(Shaohua): Validate file permission
+        if let Some(log_file) = &self.log_file {
+            let path = Path::new(log_file);
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent)?;
+                let _fd = File::options().append(true).open(log_file)?;
+            }
+        }
         Ok(())
     }
 }
