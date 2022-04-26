@@ -5,7 +5,7 @@
 use serde::Deserialize;
 use std::net::TcpListener;
 
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 /// Configuration for dashboard app.
 #[derive(Debug, Deserialize, Clone)]
@@ -42,7 +42,15 @@ impl Dashboard {
 
     pub fn validate(&self) -> Result<(), Error> {
         if self.enable {
-            let _socket = TcpListener::bind(&self.address)?;
+            let _socket = TcpListener::bind(&self.address).map_err(|err| {
+                Error::from_string(
+                    ErrorKind::ConfigError,
+                    format!(
+                        "Failed to bind to address {} for dashboard, err: {:?}",
+                        &self.address, err
+                    ),
+                )
+            })?;
         }
         Ok(())
     }

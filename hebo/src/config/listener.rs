@@ -6,7 +6,7 @@ use serde::Deserialize;
 use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 /// Binding protocol types.
 #[derive(Debug, Deserialize, Clone, Copy)]
@@ -255,7 +255,15 @@ impl Listener {
     }
 
     pub fn validate(&self) -> Result<(), Error> {
-        let _socket = TcpListener::bind(&self.address)?;
+        let _socket = TcpListener::bind(&self.address).map_err(|err| {
+            Error::from_string(
+                ErrorKind::ConfigError,
+                format!(
+                    "Failed to bind to address {} for listener, err: {:?}",
+                    &self.address, err
+                ),
+            )
+        })?;
         // TODO(Shaohua): Validate cert and key files.
         Ok(())
     }
