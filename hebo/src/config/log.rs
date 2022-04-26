@@ -6,7 +6,7 @@ use serde::Deserialize;
 use std::fs::{self, File};
 use std::path::Path;
 
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Log {
@@ -88,8 +88,25 @@ impl Log {
         if let Some(log_file) = &self.log_file {
             let path = Path::new(log_file);
             if let Some(parent) = path.parent() {
-                fs::create_dir_all(parent)?;
-                let _fd = File::options().append(true).open(log_file)?;
+                fs::create_dir_all(parent).map_err(|err| {
+                    Error::from_string(
+                        ErrorKind::ConfigError,
+                        format!(
+                            "Failed to create parent directory for log file: {}, err: {:?}",
+                            log_file, err
+                        ),
+                    )
+                })?;
+                let _fd = File::options()
+                    .create(true)
+                    .append(true)
+                    .open(log_file)
+                    .map_err(|err| {
+                        Error::from_string(
+                            ErrorKind::ConfigError,
+                            format!("Failed to create log file: {}, err: {:?}", log_file, err),
+                        )
+                    })?;
             }
         }
         Ok(())
