@@ -2,8 +2,8 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use hebo::error::Error;
-use std::fs::{self, File};
+use hebo::error::{Error, ErrorKind};
+use std::fs;
 use std::io::Write;
 use std::path::Path;
 
@@ -19,9 +19,21 @@ impl ServerConfig {
     pub fn new(filename: &str, content: &str) -> Result<Self, Error> {
         let path = Path::new(filename);
         let parent = path.parent().unwrap();
-        fs::create_dir_all(parent)?;
-        let mut file = File::create(filename)?;
-        file.write_all(content.as_bytes())?;
+        fs::create_dir_all(parent).map_err(|err| {
+            Error::from_string(
+                ErrorKind::ConfigError,
+                format!(
+                    "Failed to create parent directory for config: {}, err: {}",
+                    filename, err
+                ),
+            )
+        })?;
+        fs::write(filename, content).map_err(|err| {
+            Error::from_string(
+                ErrorKind::ConfigError,
+                format!("Failed to write to config file: {}, err: {}", filename, err),
+            )
+        })?;
         Ok(Self {
             filename: filename.to_string(),
         })
