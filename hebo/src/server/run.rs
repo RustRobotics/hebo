@@ -76,7 +76,10 @@ pub fn run_server() -> Result<(), Error> {
             )
         })?;
 
-        config.validate()?;
+        if let Err(err) = config.validate() {
+            eprintln!("Failed to validate config file!");
+            return Err(err);
+        }
 
         if matches.is_present(OPT_TEST) {
             println!("The configuration file {} syntax is Ok", config_file);
