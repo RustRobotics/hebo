@@ -193,6 +193,11 @@ impl ServerContext {
 
     /// Init modules and run tokio runtime.
     pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
+        if let Err(err) = self.config.validate(true) {
+            eprintln!("Failed to validate config file!");
+            return Err(err);
+        }
+
         self.write_pid()?;
 
         runtime.block_on(async {

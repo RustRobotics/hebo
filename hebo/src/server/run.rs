@@ -76,12 +76,11 @@ pub fn run_server() -> Result<(), Error> {
             )
         })?;
 
-        if let Err(err) = config.validate() {
-            eprintln!("Failed to validate config file!");
-            return Err(err);
-        }
-
         if matches.is_present(OPT_TEST) {
+            if let Err(err) = config.validate(false) {
+                eprintln!("Failed to validate config file!");
+                return Err(err);
+            }
             println!("The configuration file {} syntax is Ok", config_file);
             return Ok(());
         }
@@ -94,12 +93,12 @@ pub fn run_server() -> Result<(), Error> {
 
     let mut server = ServerContext::new(config);
 
-    if matches.is_present(OPT_RELOAD) {
-        return server.send_reload_signal();
-    }
-
     if matches.is_present(OPT_STOP) {
         return server.send_stop_signal();
+    }
+
+    if matches.is_present(OPT_RELOAD) {
+        return server.send_reload_signal();
     }
 
     let runtime = Runtime::new()?;
