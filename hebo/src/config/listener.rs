@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use serde::Deserialize;
-use std::net::TcpListener;
+use std::net::{TcpListener, ToSocketAddrs};
 use std::path::{Path, PathBuf};
 
 use crate::error::{Error, ErrorKind};
@@ -254,16 +254,28 @@ impl Listener {
         self.max_inflight_messages
     }
 
-    pub fn validate(&self) -> Result<(), Error> {
-        let _socket = TcpListener::bind(&self.address).map_err(|err| {
-            Error::from_string(
-                ErrorKind::ConfigError,
-                format!(
-                    "Failed to bind to address {} for listener, err: {:?}",
-                    &self.address, err
-                ),
-            )
-        })?;
+    pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
+        if bind_address {
+            let _socket = TcpListener::bind(&self.address).map_err(|err| {
+                Error::from_string(
+                    ErrorKind::ConfigError,
+                    format!(
+                        "Failed to bind to address {} for listener, err: {:?}",
+                        &self.address, err
+                    ),
+                )
+            })?;
+        } else {
+            let _ = self.address.to_socket_addrs().map_err(|err| {
+                Error::from_string(
+                    ErrorKind::ConfigError,
+                    format!(
+                        "Invalid socket address in config: {}, err: {:?}",
+                        &self.address, err
+                    ),
+                )
+            })?;
+        }
         // TODO(Shaohua): Validate cert and key files.
         Ok(())
     }

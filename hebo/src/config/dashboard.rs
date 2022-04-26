@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use serde::Deserialize;
-use std::net::TcpListener;
+use std::net::{TcpListener, ToSocketAddrs};
 
 use crate::error::{Error, ErrorKind};
 
@@ -40,17 +40,29 @@ impl Dashboard {
         &self.address
     }
 
-    pub fn validate(&self) -> Result<(), Error> {
+    pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
         if self.enable {
-            let _socket = TcpListener::bind(&self.address).map_err(|err| {
-                Error::from_string(
-                    ErrorKind::ConfigError,
-                    format!(
-                        "Failed to bind to address {} for dashboard, err: {:?}",
-                        &self.address, err
-                    ),
-                )
-            })?;
+            if bind_address {
+                let _socket = TcpListener::bind(&self.address).map_err(|err| {
+                    Error::from_string(
+                        ErrorKind::ConfigError,
+                        format!(
+                            "Failed to bind to address {} for dashboard, err: {:?}",
+                            &self.address, err
+                        ),
+                    )
+                })?;
+            } else {
+                let _ = self.address.to_socket_addrs().map_err(|err| {
+                    Error::from_string(
+                        ErrorKind::ConfigError,
+                        format!(
+                            "Invalid socket address in config: {}, err: {:?}",
+                            &self.address, err
+                        ),
+                    )
+                })?;
+            }
         }
         Ok(())
     }

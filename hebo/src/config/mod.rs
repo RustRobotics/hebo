@@ -67,16 +67,16 @@ impl Config {
         &self.dashboard
     }
 
-    pub fn validate(&self) -> Result<(), Error> {
+    pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
         self.general.validate()?;
 
         for listener in &self.listeners {
-            listener.validate()?;
+            listener.validate(bind_address)?;
         }
 
         self.security.validate()?;
         self.storage.validate()?;
         self.log.validate()?;
-        self.dashboard.validate()
+        self.dashboard.validate(bind_address)
     }
 }
