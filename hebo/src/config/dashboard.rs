@@ -9,6 +9,12 @@ use crate::error::Error;
 /// Configuration for dashboard app.
 #[derive(Debug, Deserialize, Clone)]
 pub struct Dashboard {
+    /// Enable dashboard or not.
+    ///
+    /// Default is true.
+    #[serde(default = "Dashboard::default_enable")]
+    enable: bool,
+
     /// Binding address.
     ///
     /// Default is `127.0.0.1:18083`.
@@ -17,8 +23,16 @@ pub struct Dashboard {
 }
 
 impl Dashboard {
+    fn default_enable() -> bool {
+        true
+    }
+
     fn default_address() -> String {
         "127.0.0.1:18083".to_string()
+    }
+
+    pub fn enable(&self) -> bool {
+        self.enable
     }
 
     pub fn address(&self) -> &str {
@@ -34,6 +48,7 @@ impl Dashboard {
 impl Default for Dashboard {
     fn default() -> Self {
         Self {
+            enable: Self::default_enable(),
             address: Self::default_address(),
         }
     }

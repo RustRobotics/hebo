@@ -177,15 +177,17 @@ impl ServerContext {
         handles.push(bridge_handle);
 
         // dashboard module.
-        let mut dashboard_app = DashboardApp::new(
-            self.config.dashboard(),
-            // server ctx
-            self.dashboard_sender.take().unwrap(),
-        )?;
-        let dashboard_handle = runtime.spawn(async move {
-            dashboard_app.run_loop().await;
-        });
-        handles.push(dashboard_handle);
+        if self.config.dashboard().enable() {
+            let mut dashboard_app = DashboardApp::new(
+                self.config.dashboard(),
+                // server ctx
+                self.dashboard_sender.take().unwrap(),
+            )?;
+            let dashboard_handle = runtime.spawn(async move {
+                dashboard_app.run_loop().await;
+            });
+            handles.push(dashboard_handle);
+        }
 
         // gateway module.
         let (gateway_to_dispatcher_sender, gateway_to_dispatcher_receiver) =
