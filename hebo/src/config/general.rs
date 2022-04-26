@@ -7,7 +7,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 /// General section in config.
 #[derive(Debug, Deserialize, Clone)]
@@ -21,6 +21,8 @@ pub struct General {
     sys_interval: u64,
 
     /// When run as root, drop privileges to this user.
+    ///
+    /// If hebo is launched by non-root account, this property is ignored.
     ///
     /// Default user is "hebo".
     #[serde(default = "General::default_user")]
@@ -164,7 +166,16 @@ impl General {
     }
 
     pub fn validate(&self) -> Result<(), Error> {
-        // TODO(Shaohua): Validate user exists
+        let euid = unsafe { nc::geteuid() };
+        if euid == 0 {
+            // For root only.
+            if let None = users::get_user_by_name(&self.user) {
+                return Err(Error::from_string(
+                    ErrorKind::ConfigError,
+                    format!("Failed to find user info with name: {}", &self.user),
+                ));
+            }
+        }
         Ok(())
     }
 }

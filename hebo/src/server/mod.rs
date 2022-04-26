@@ -163,7 +163,7 @@ impl ServerContext {
     fn set_uid(&self) -> Result<(), Error> {
         let euid = unsafe { nc::geteuid() };
         if euid == 0 {
-            // For root.
+            // For root only.
             let user = self.config.general().user();
             if let Some(user) = users::get_user_by_name(user) {
                 let real_uid = user.uid();
