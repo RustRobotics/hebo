@@ -18,6 +18,9 @@ pub enum ErrorKind {
     /// Packet decode error.
     DecodeError,
 
+    /// Not expected packet.
+    PacketError,
+
     /// Send packet error.
     SendError,
 
@@ -111,7 +114,10 @@ impl From<quinn::ConfigError> for Error {
 
 impl From<quinn::WriteError> for Error {
     fn from(err: quinn::WriteError) -> Self {
-        Error::from_string(ErrorKind::SocketError, format!("Quic write error: {:?}", err))
+        Error::from_string(
+            ErrorKind::SocketError,
+            format!("Quic write error: {:?}", err),
+        )
     }
 }
 

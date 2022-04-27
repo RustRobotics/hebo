@@ -27,6 +27,8 @@ pub struct ClientInnerV3 {
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
     publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
+
+    buffer: Vec<u8>,
 }
 
 impl ClientInnerV3 {
@@ -42,6 +44,9 @@ impl ClientInnerV3 {
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
+
+            // TODO(Shaohua): Support large packets.
+            buffer: Vec::with_capacity(1024),
         }
     }
 
@@ -54,6 +59,25 @@ impl ClientInnerV3 {
     }
 
     fn read_stream(&mut self) -> Result<(), Error> {
+        if let Some(stream) = &mut self.stream {
+            self.buffer.resize(self.buffer.capacity(), 0);
+            if let Ok(n_recv) = stream.read_buf(&mut self.buffer) {
+                return Ok(());
+            } else {
+                return Err(Error::new(
+                    ErrorKind::SocketError,
+                    "Failed to read bytes from socket",
+                ));
+            }
+        } else {
+            return Err(Error::new(
+                ErrorKind::SocketError,
+                "Socket is uninitialized",
+            ));
+        }
+    }
+
+    fn _read_stream(&mut self) -> Result<(), Error> {
         // TODO(Shaohua): Support large packets.
         let mut buf = Vec::with_capacity(1024);
         let timeout = Duration::from_millis(1);
@@ -89,7 +113,6 @@ impl ClientInnerV3 {
         let fixed_header = FixedHeader::decode(&mut ba)?;
         log::info!("fixed header: {:?}", fixed_header);
         match fixed_header.packet_type() {
-            PacketType::ConnectAck => self.on_connect_ack(&buf),
             PacketType::Publish { .. } => self.on_message(&buf),
             PacketType::PublishAck => self.on_publish_ack(&buf),
             PacketType::SubscribeAck => self.on_subscribe_ack(&buf),
@@ -116,13 +139,38 @@ impl ClientInnerV3 {
         }
     }
 
-    pub fn connect(&mut self) -> Result<(), Error> {
+    pub fn connect(&mut self) -> Result<bool, Error> {
         assert_eq!(self.status, ClientStatus::Disconnected);
         let stream = Stream::new(self.connect_options.connect_type())?;
         self.stream = Some(stream);
         let conn_packet = ConnectPacket::new(&self.connect_options.client_id())?;
         self.status = ClientStatus::Connecting;
-        self.send_packet(conn_packet)
+        self.send_packet(conn_packet)?;
+        self.read_stream()?;
+
+        let mut ba = ByteArray::new(&mut self.buffer);
+        let fixed_header = FixedHeader::decode(&mut ba)?;
+        match fixed_header.packet_type() {
+            PacketType::ConnectAck => {
+                let packet = ConnectAckPacket::decode(&mut ba)?;
+                match packet.return_code() {
+                    ConnectReturnCode::Accepted => {
+                        self.status = ClientStatus::Connected;
+                        return Ok(true);
+                    }
+                    _ => {
+                        log::warn!("Failed to connect to server, {:?}", packet.return_code());
+                        return Ok(false);
+                    }
+                }
+            }
+            t => {
+                return Err(Error::from_string(
+                    ErrorKind::PacketError,
+                    format!("Expected connect packet, got: {:?}", t),
+                ));
+            }
+        }
     }
 
     pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
@@ -191,22 +239,6 @@ impl ClientInnerV3 {
     fn on_ping_resp(&self) -> Result<(), Error> {
         log::info!("on ping resp");
         // TODO(Shaohua): Reset reconnect timer.
-        Ok(())
-    }
-
-    fn on_connect_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
-        let mut ba = ByteArray::new(buf);
-        let packet = ConnectAckPacket::decode(&mut ba)?;
-        match packet.return_code() {
-            ConnectReturnCode::Accepted => {
-                self.status = ClientStatus::Connected;
-                //self.on_connect();
-            }
-            _ => {
-                log::warn!("Failed to connect to server, {:?}", packet.return_code());
-                // TODO(Shaohua): Returns error
-            }
-        }
         Ok(())
     }
 

@@ -66,7 +66,7 @@ impl Client {
     }
 
     /// Connect to server.
-    pub fn connect(&mut self) -> Result<(), Error> {
+    pub fn connect(&mut self) -> Result<bool, Error> {
         match &mut self.inner {
             Inner::V3(inner) => inner.connect(),
             Inner::V4(inner) => inner.connect(),
