@@ -21,7 +21,7 @@ address = "0.0.0.0:1889"
 allow_anonymous = true
 
 [dashboard]
-address = "0.0.0.0:18084"
+enable = false
 
 [log]
 log_file = "/tmp/hebo-tests/hebo-1889.log"
@@ -39,7 +39,7 @@ address = "0.0.0.0:1890"
 allow_anonymous = true
 
 [dashboard]
-address = "0.0.0.0:18085"
+enable = false
 
 [log]
 log_file = "/tmp/hebo-tests/hebo-1890.log"
@@ -57,7 +57,7 @@ address = "0.0.0.0:1891"
 allow_anonymous = false
 
 [dashboard]
-address = "0.0.0.0:18086"
+enable = false
 
 [log]
 log_file = "/tmp/hebo-tests/hebo-1891.log"
@@ -75,7 +75,7 @@ address = "0.0.0.0:1892"
 allow_anonymous = false
 
 [dashboard]
-address = "0.0.0.0:18087"
+enable = false
 
 [log]
 log_file = "/tmp/hebo-tests/hebo-1892.log"
