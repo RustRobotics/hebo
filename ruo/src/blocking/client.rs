@@ -34,29 +34,17 @@ impl fmt::Debug for Client {
 impl Client {
     /// Create a new mqtt client.
     ///
-    /// No packet is sent to server before calling [`connect()`].
-    pub fn new(
-        connect_options: ConnectOptions,
-        protocol_level: ProtocolLevel,
-    ) -> Result<Self, Error> {
+    /// No packet is sent to server before calling [`Self::connect()`].
+    pub fn new(connect_options: ConnectOptions, protocol_level: ProtocolLevel) -> Self {
         let inner = match protocol_level {
-            ProtocolLevel::V31 => {
-                let inner = ClientInnerV3::new(connect_options)?;
-                Inner::V3(inner)
-            }
-            ProtocolLevel::V311 => {
-                let inner = ClientInnerV4::new(connect_options)?;
-                Inner::V4(inner)
-            }
-            ProtocolLevel::V5 => {
-                let inner = ClientInnerV5::new(connect_options)?;
-                Inner::V5(inner)
-            }
+            ProtocolLevel::V31 => Inner::V3(ClientInnerV3::new(connect_options)),
+            ProtocolLevel::V311 => Inner::V4(ClientInnerV4::new(connect_options)),
+            ProtocolLevel::V5 => Inner::V5(ClientInnerV5::new(connect_options)),
         };
-        Ok(Self {
+        Self {
             protocol_level,
             inner,
-        })
+        }
     }
 
     /// Get mqtt connection options.
@@ -86,6 +74,7 @@ impl Client {
         }
     }
 
+    /// Publish packet.
     pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) => inner.publish(topic, qos, data),
@@ -94,6 +83,7 @@ impl Client {
         }
     }
 
+    /// Subscribe to topic.
     pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) => inner.subscribe(topic, qos),
@@ -102,6 +92,7 @@ impl Client {
         }
     }
 
+    /// Unsubscribe specific topic or topic pattern.
     pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) => inner.unsubscribe(topic),
@@ -114,6 +105,7 @@ impl Client {
         todo!()
     }
 
+    /// Disconnect from server.
     pub fn disconnect(&mut self) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) => inner.disconnect(),

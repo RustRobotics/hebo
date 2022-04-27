@@ -14,13 +14,13 @@ use std::time::Duration;
 use super::stream::Stream;
 use super::ClientStatus;
 use crate::connect_options::*;
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 
 pub struct ClientInnerV3 {
     connect_options: ConnectOptions,
     status: ClientStatus,
 
-    stream: Stream,
+    stream: Option<Stream>,
     topics: HashMap<String, PacketId>,
     packet_id: PacketId,
     subscribing_packets: HashMap<PacketId, SubscribePacket>,
@@ -30,20 +30,19 @@ pub struct ClientInnerV3 {
 }
 
 impl ClientInnerV3 {
-    pub fn new(connect_options: ConnectOptions) -> Result<Self, Error> {
-        let stream = Stream::new(connect_options.connect_type())?;
-        Ok(Self {
+    pub fn new(connect_options: ConnectOptions) -> Self {
+        Self {
             connect_options,
             status: ClientStatus::Disconnected,
 
-            stream,
+            stream: None,
             topics: HashMap::new(),
             packet_id: PacketId::new(1),
             subscribing_packets: HashMap::new(),
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
-        })
+        }
     }
 
     pub fn connect_options(&self) -> &ConnectOptions {
@@ -54,33 +53,35 @@ impl ClientInnerV3 {
         self.status
     }
 
-    pub fn run_loop(&mut self) -> Result<(), Error> {
+    fn read_stream(&mut self) -> Result<(), Error> {
+        // TODO(Shaohua): Support large packets.
         let mut buf = Vec::with_capacity(1024);
         let timeout = Duration::from_millis(1);
 
-        loop {
-            buf.resize(buf.capacity(), 0);
-            if let Ok(n_recv) = self.stream.read_buf(&mut buf) {
-                if n_recv > 0 {
-                    if let Err(err) = self.handle_session_packet(&mut buf) {
-                        log::error!("err: {:?}", err);
+        if self.stream.is_some() {
+            let mut stream = self.stream.take().unwrap();
+            loop {
+                buf.resize(buf.capacity(), 0);
+                if let Ok(n_recv) = stream.read_buf(&mut buf) {
+                    if n_recv > 0 {
+                        if let Err(err) = self.handle_session_packet(&mut buf) {
+                            log::error!("err: {:?}", err);
+                        }
+                        buf.clear();
+                    } else if n_recv == 0 {
+                        log::warn!("n_recv is 0");
+                        break;
                     }
-                    buf.clear();
-                } else if n_recv == 0 {
-                    log::warn!("n_recv is 0");
-                    break;
                 }
             }
+            self.stream = Some(stream);
+            return Ok(());
+        } else {
+            return Err(Error::new(
+                ErrorKind::SocketError,
+                "Socket is uninitialized",
+            ));
         }
-
-        Ok(())
-    }
-
-    fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
-        // TODO(Shaohua): Replace Vec<u8> with ByteArray.
-        let mut buf = Vec::new();
-        packet.encode(&mut buf)?;
-        self.stream.write_all(&buf).map_err(|err| err.into())
     }
 
     fn handle_session_packet(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
@@ -101,12 +102,31 @@ impl ClientInnerV3 {
         }
     }
 
+    fn send_packet<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
+        // TODO(Shaohua): Replace Vec<u8> with ByteArray.
+        let mut buf = Vec::new();
+        packet.encode(&mut buf)?;
+        if let Some(stream) = &mut self.stream {
+            stream.write_all(&buf).map_err(|err| err.into())
+        } else {
+            Err(Error::new(
+                ErrorKind::SocketError,
+                "Socket is uninitialized",
+            ))
+        }
+    }
+
     pub fn connect(&mut self) -> Result<(), Error> {
+        assert_eq!(self.status, ClientStatus::Disconnected);
+        let stream = Stream::new(self.connect_options.connect_type())?;
+        self.stream = Some(stream);
         let conn_packet = ConnectPacket::new(&self.connect_options.client_id())?;
-        self.send(conn_packet)
+        self.status = ClientStatus::Connecting;
+        self.send_packet(conn_packet)
     }
 
     pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
+        assert_eq!(self.status, ClientStatus::Connected);
         let mut packet = PublishPacket::new(topic, qos, data)?;
         let packet_id = self.next_packet_id();
         packet.set_packet_id(packet_id);
@@ -122,35 +142,42 @@ impl ClientInnerV3 {
             }
             _ => (),
         }
-        self.send(packet)
+        self.send_packet(packet)
     }
 
     pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
+        assert_eq!(self.status, ClientStatus::Connected);
         let packet_id = self.next_packet_id();
         // TODO(Shaohua): Support multiple topics.
         //self.topics.insert(packet.topic().to_string(), packet_id);
         let packet = SubscribePacket::new(topic, qos, packet_id)?;
         self.subscribing_packets.insert(packet_id, packet.clone());
-        self.send(packet)
+        self.send_packet(packet)
     }
 
     pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
+        assert_eq!(self.status, ClientStatus::Connected);
         let packet_id = self.next_packet_id();
         let packet = UnsubscribePacket::new(topic, packet_id)?;
         self.unsubscribing_packets.insert(packet_id, packet.clone());
-        self.send(packet)
+        self.send_packet(packet)
     }
 
     /// Send disconnect packet to broker.
     pub fn disconnect(&mut self) -> Result<(), Error> {
+        assert_eq!(self.status, ClientStatus::Connected);
         let packet = DisconnectPacket::new();
+        self.status = ClientStatus::Disconnecting;
         // Network connection will be closed soon.
-        self.send(packet)
+        self.send_packet(packet)?;
+        self.status = ClientStatus::Disconnected;
+        Ok(())
     }
 
     pub fn ping(&mut self) -> Result<(), Error> {
+        assert_eq!(self.status, ClientStatus::Connected);
         let packet = PingRequestPacket::new();
-        self.send(packet)
+        self.send_packet(packet)
     }
 
     fn on_message(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -172,6 +199,7 @@ impl ClientInnerV3 {
         let packet = ConnectAckPacket::decode(&mut ba)?;
         match packet.return_code() {
             ConnectReturnCode::Accepted => {
+                self.status = ClientStatus::Connected;
                 //self.on_connect();
             }
             _ => {
