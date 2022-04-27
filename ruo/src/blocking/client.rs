@@ -6,6 +6,7 @@ use codec::ProtocolLevel;
 use codec::QoS;
 use std::fmt;
 
+use super::{ClientInnerV3, ClientInnerV4, ClientInnerV5};
 use crate::connect_options::ConnectOptions;
 use crate::error::Error;
 
@@ -47,18 +48,30 @@ impl Client {
     /// Create a new mqtt client.
     ///
     /// No packet is sent to server before calling [`connect()`].
-    pub fn new(connect_options: ConnectOptions, protocol_level: ProtocolLevel) -> Self {
+    pub fn new(
+        connect_options: ConnectOptions,
+        protocol_level: ProtocolLevel,
+    ) -> Result<Self, Error> {
         let inner = match protocol_level {
-            ProtocolLevel::V31 => Inner::V3(ClientInnerV3::new(connect_options.clone())),
-            ProtocolLevel::V311 => Inner::V4(ClientInnerV4::new(connect_options.clone())),
-            ProtocolLevel::V5 => Inner::V5(ClientInnerV5::new(connect_options.clone())),
+            ProtocolLevel::V31 => {
+                let inner = ClientInnerV3::new(connect_options.clone())?;
+                Inner::V3(inner)
+            }
+            ProtocolLevel::V311 => {
+                let inner = ClientInnerV4::new(connect_options.clone())?;
+                Inner::V4(inner)
+            }
+            ProtocolLevel::V5 => {
+                let inner = ClientInnerV5::new(connect_options.clone())?;
+                Inner::V5(inner)
+            }
         };
-        Self {
+        Ok(Self {
             protocol_level,
             connect_options,
             status: ClientStatus::Initialized,
             inner,
-        }
+        })
     }
 
     /// Get mqtt connection options.

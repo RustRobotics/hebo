@@ -5,5 +5,9 @@
 //! Blocking client is used for testing only.
 
 pub mod client;
-mod client_inner;
 pub mod stream;
+
+mod client_inner_v3;
+use client_inner_v3::ClientInnerV3;
+type ClientInnerV4 = ClientInnerV3;
+type ClientInnerV5 = ClientInnerV3;

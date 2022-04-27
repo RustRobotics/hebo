@@ -9,73 +9,35 @@ use codec::v3::{
 };
 use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
 use std::collections::HashMap;
-use std::sync::mpsc::{self, Receiver, Sender};
 use std::time::Duration;
 
 use super::stream::Stream;
 use crate::connect_options::*;
 use crate::error::Error;
 
-#[derive(Debug, PartialEq)]
-pub enum ClientToInnerCmd {
-    Connect,
-    Publish(PublishPacket),
-    Subscribe(SubscribePacket),
-    Unsubscribe(UnsubscribePacket),
-    Disconnect,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum InnerToClientCmd {
-    OnConnect,
-    OnMessage(PublishPacket),
-    OnDisconnect,
-}
-
-#[derive(Debug, Clone, Copy, Hash, PartialEq)]
-pub enum ClientStatus {
-    Initialized,
-    Connecting,
-    Connected,
-    ConnectFailed,
-    Disconnecting,
-    Disconnected,
-}
-
-pub struct ClientInner {
-    client_id: String,
+pub struct ClientInnerV3 {
+    connect_options: ConnectOptions,
     stream: Stream,
-    status: ClientStatus,
     topics: HashMap<String, PacketId>,
     packet_id: PacketId,
     subscribing_packets: HashMap<PacketId, SubscribePacket>,
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
     publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
-
-    inner_sender: Sender<InnerToClientCmd>,
-    client_receiver: Receiver<ClientToInnerCmd>,
 }
 
-impl ClientInner {
-    pub fn new(
-        connect_options: &ConnectOptions,
-        inner_sender: Sender<InnerToClientCmd>,
-        client_receiver: Receiver<ClientToInnerCmd>,
-    ) -> Result<Self, Error> {
+impl ClientInnerV3 {
+    pub fn new(connect_options: ConnectOptions) -> Result<Self, Error> {
         let stream = Stream::new(connect_options.connect_type())?;
-        Ok(ClientInner {
-            client_id: connect_options.client_id().to_string(),
+        Ok(Self {
+            connect_options,
             stream,
-            status: ClientStatus::Initialized,
             topics: HashMap::new(),
             packet_id: PacketId::new(1),
             subscribing_packets: HashMap::new(),
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
-            inner_sender,
-            client_receiver,
         })
     }
 
@@ -84,12 +46,6 @@ impl ClientInner {
         let timeout = Duration::from_millis(1);
 
         loop {
-            if self.status == ClientStatus::Disconnected {
-                break;
-            }
-            if let Ok(cmd) = self.client_receiver.recv_timeout(timeout) {
-                self.handle_client_cmd(cmd);
-            }
             buf.resize(buf.capacity(), 0);
             if let Ok(n_recv) = self.stream.read_buf(&mut buf) {
                 if n_recv > 0 {
@@ -108,20 +64,10 @@ impl ClientInner {
     }
 
     fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
+        // TODO(Shaohua): Replace Vec<u8> with ByteArray.
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
         self.stream.write_all(&buf).map_err(|err| err.into())
-    }
-
-    fn handle_client_cmd(&mut self, cmd: ClientToInnerCmd) -> Result<(), Error> {
-        // TODO(Shaohua): Check client status first.
-        match cmd {
-            ClientToInnerCmd::Connect => self.do_connect(),
-            ClientToInnerCmd::Publish(packet) => self.do_publish(packet),
-            ClientToInnerCmd::Subscribe(packet) => self.do_subscribe(packet),
-            ClientToInnerCmd::Unsubscribe(packet) => self.do_unsubscribe(packet),
-            ClientToInnerCmd::Disconnect => self.do_disconnect(),
-        }
     }
 
     fn handle_session_packet(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
@@ -142,25 +88,22 @@ impl ClientInner {
         }
     }
 
-    fn do_connect(&mut self) -> Result<(), Error> {
-        log::info!(" inner do_connect() client id: {}", &self.client_id);
-        let conn_packet = ConnectPacket::new(&self.client_id)?;
+    pub fn connect(&mut self) -> Result<(), Error> {
+        let conn_packet = ConnectPacket::new(&self.connect_options.client_id())?;
         self.send(conn_packet)
     }
 
-    fn do_publish(&mut self, mut packet: PublishPacket) -> Result<(), Error> {
-        log::info!("inner do_publish: {:?}", packet.topic());
+    pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
+        let mut packet = PublishPacket::new(topic, qos, data)?;
+        let packet_id = self.next_packet_id();
+        packet.set_packet_id(packet_id);
         match packet.qos() {
             QoS::AtLeastOnce => {
-                let packet_id = self.next_packet_id();
-                packet.set_packet_id(packet_id);
                 // TODO(Shaohua): Tuning memory usage.
                 self.publishing_qos1_packets
                     .insert(packet_id, packet.clone());
             }
             QoS::ExactOnce => {
-                let packet_id = self.next_packet_id();
-                packet.set_packet_id(packet_id);
                 self.publishing_qos2_packets
                     .insert(packet_id, packet.clone());
             }
@@ -169,61 +112,32 @@ impl ClientInner {
         self.send(packet)
     }
 
-    fn do_subscribe(&mut self, mut packet: SubscribePacket) -> Result<(), Error> {
-        log::info!("inner do_subscribe: {:?}", packet.topics());
+    pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
         let packet_id = self.next_packet_id();
         // TODO(Shaohua): Support multiple topics.
         //self.topics.insert(packet.topic().to_string(), packet_id);
-        packet.set_packet_id(packet_id);
+        let packet = SubscribePacket::new(topic, qos, packet_id)?;
         self.subscribing_packets.insert(packet_id, packet.clone());
         self.send(packet)
     }
 
-    fn do_unsubscribe(&mut self, mut packet: UnsubscribePacket) -> Result<(), Error> {
-        log::info!("inner do_unsubscribe: {:?}", packet);
+    pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
         let packet_id = self.next_packet_id();
-        packet.set_packet_id(packet_id);
+        let packet = UnsubscribePacket::new(topic, packet_id)?;
         self.unsubscribing_packets.insert(packet_id, packet.clone());
         self.send(packet)
     }
 
-    fn do_disconnect(&mut self) -> Result<(), Error> {
-        log::info!("inner do_disconnect()");
-        // Send disconnect packet to broker.
-        if self.status == ClientStatus::Connected {
-            self.status = ClientStatus::Disconnecting;
-            let packet = DisconnectPacket::new();
-            self.send(packet)?;
-        } else {
-            // TODO(Shaohua): Return errors
-            return Ok(());
-        }
-
-        self.status = ClientStatus::Disconnected;
-        // Send disconnect packet to client.
-        self.inner_sender
-            .send(InnerToClientCmd::OnDisconnect)
-            .unwrap();
-
+    /// Send disconnect packet to broker.
+    pub fn disconnect(&mut self) -> Result<(), Error> {
+        let packet = DisconnectPacket::new();
         // Network connection will be closed soon.
-
-        Ok(())
+        self.send(packet)
     }
 
-    fn on_connect(&mut self) {
-        self.inner_sender.send(InnerToClientCmd::OnConnect).unwrap();
-    }
-
-    fn ping(&mut self) -> Result<(), Error> {
-        log::info!("ping()");
-        if self.status == ClientStatus::Connected {
-            log::info!("Send ping packet");
-            let packet = PingRequestPacket::new();
-            self.send(packet)
-        } else {
-            // TODO(Shaohua): Return Error
-            Ok(())
-        }
+    pub fn ping(&mut self) -> Result<(), Error> {
+        let packet = PingRequestPacket::new();
+        self.send(packet)
     }
 
     fn on_message(&mut self, buf: &[u8]) -> Result<(), Error> {
@@ -231,9 +145,6 @@ impl ClientInner {
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
         log::info!("on_message() packet: {:?}", packet);
-        self.inner_sender
-            .send(InnerToClientCmd::OnMessage(packet))
-            .unwrap();
         Ok(())
     }
 
@@ -244,17 +155,15 @@ impl ClientInner {
     }
 
     fn on_connect_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
-        log::info!("connect_ack()");
         let mut ba = ByteArray::new(buf);
         let packet = ConnectAckPacket::decode(&mut ba)?;
         match packet.return_code() {
             ConnectReturnCode::Accepted => {
-                self.status = ClientStatus::Connected;
-                self.on_connect();
+                //self.on_connect();
             }
             _ => {
                 log::warn!("Failed to connect to server, {:?}", packet.return_code());
-                self.status = ClientStatus::ConnectFailed;
+                // TODO(Shaohua): Returns error
             }
         }
         Ok(())
