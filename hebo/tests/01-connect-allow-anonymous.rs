@@ -2,6 +2,8 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+//! Test whether an anonymous connection is correctly denied.
+
 use hebo::error::Error;
 use std::thread::sleep;
 use std::time::Duration;
