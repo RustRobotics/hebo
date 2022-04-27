@@ -58,16 +58,20 @@ impl ClientInnerV3 {
         self.status
     }
 
-    fn read_stream(&mut self) -> Result<(), Error> {
+    fn read_stream(&mut self) -> Result<usize, Error> {
         if let Some(stream) = &mut self.stream {
             self.buffer.resize(self.buffer.capacity(), 0);
-            if let Ok(n_recv) = stream.read_buf(&mut self.buffer) {
-                return Ok(());
-            } else {
-                return Err(Error::new(
-                    ErrorKind::SocketError,
-                    "Failed to read bytes from socket",
-                ));
+            match stream.read_buf(&mut self.buffer) {
+                Ok(n_recv) => {
+                    log::info!("n_recv: {}", n_recv);
+                    return Ok(n_recv);
+                }
+                Err(error) => {
+                    return Err(Error::from_string(
+                        ErrorKind::SocketError,
+                        format!("Failed to read bytes from socket, err: {:?}", error),
+                    ));
+                }
             }
         } else {
             return Err(Error::new(
@@ -164,6 +168,7 @@ impl ClientInnerV3 {
                     }
                 }
             }
+
             t => {
                 return Err(Error::from_string(
                     ErrorKind::PacketError,
