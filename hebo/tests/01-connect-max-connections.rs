@@ -31,7 +31,7 @@ log_file = "/tmp/hebo-tests/hebo-1893.log"
 #[test]
 fn test_connect_max_connections() -> Result<(), Error> {
     let config = ServerConfig::new("/tmp/hebo-tests/01-connect-max-connections.toml", CONFIG)?;
-    let mut server = Server::start(config.filename())?;
+    let server = Server::start(config.filename())?;
     sleep(Duration::from_secs(5));
     server.terminate();
     Ok(())

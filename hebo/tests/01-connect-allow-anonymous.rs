@@ -87,7 +87,7 @@ fn test_conn_allow_anonymous_v4() -> Result<(), Error> {
         "/tmp/hebo-tests/01-connect-allow-anonymous-v4.toml",
         ALLOW_CONFIG_V4,
     )?;
-    let mut server = Server::start(config.filename())?;
+    let server = Server::start(config.filename())?;
     // TODO(Shaohua): Run ruo client
     sleep(Duration::from_secs(5));
     server.terminate();
@@ -100,7 +100,7 @@ fn test_conn_allow_anonymous_v5() -> Result<(), Error> {
         "/tmp/hebo-tests/01-connect-allow-anonymous-v5.toml",
         ALLOW_CONFIG_V5,
     )?;
-    let mut server = Server::start(config.filename())?;
+    let server = Server::start(config.filename())?;
     // TODO(Shaohua): Run ruo client
     sleep(Duration::from_secs(5));
     server.terminate();
@@ -113,7 +113,7 @@ fn test_conn_deny_anonymous_v4() -> Result<(), Error> {
         "/tmp/hebo-tests/01-connect-deny-anonymous-v4.toml",
         DENY_CONFIG_V4,
     )?;
-    let mut server = Server::start(config.filename())?;
+    let server = Server::start(config.filename())?;
     sleep(Duration::from_secs(5));
     server.terminate();
     Ok(())
@@ -125,7 +125,7 @@ fn test_conn_deny_anonymous_v5() -> Result<(), Error> {
         "/tmp/hebo-tests/01-connect-deny-anonymous-v5.toml",
         DENY_CONFIG_V5,
     )?;
-    let mut server = Server::start(config.filename())?;
+    let server = Server::start(config.filename())?;
     sleep(Duration::from_secs(5));
     server.terminate();
     Ok(())

@@ -859,6 +859,7 @@ dependencies = [
  "rand",
  "rcgen",
  "redis",
+ "ruo",
  "rustls-pemfile 1.0.0",
  "serde",
  "subprocess",
