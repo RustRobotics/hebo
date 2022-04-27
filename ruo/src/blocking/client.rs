@@ -6,26 +6,13 @@ use codec::ProtocolLevel;
 use codec::QoS;
 use std::fmt;
 
-use super::{ClientInnerV3, ClientInnerV4, ClientInnerV5};
+use super::{ClientInnerV3, ClientInnerV4, ClientInnerV5, ClientStatus};
 use crate::connect_options::ConnectOptions;
 use crate::error::Error;
-
-/// Mqtt connection status.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ClientStatus {
-    Initialized,
-    Connecting,
-    Connected,
-    ConnectFailed,
-    Disconnecting,
-    Disconnected,
-}
 
 /// Synchronize mqtt client.
 pub struct Client {
     protocol_level: ProtocolLevel,
-    connect_options: ConnectOptions,
-    status: ClientStatus,
     inner: Inner,
 }
 
@@ -38,8 +25,8 @@ enum Inner {
 impl fmt::Debug for Client {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Client")
-            .field("connect_options", &self.connect_options)
-            .field("status", &self.status)
+            .field("connect_options", self.connect_options())
+            .field("status", &self.status())
             .finish()
     }
 }
@@ -54,72 +41,84 @@ impl Client {
     ) -> Result<Self, Error> {
         let inner = match protocol_level {
             ProtocolLevel::V31 => {
-                let inner = ClientInnerV3::new(connect_options.clone())?;
+                let inner = ClientInnerV3::new(connect_options)?;
                 Inner::V3(inner)
             }
             ProtocolLevel::V311 => {
-                let inner = ClientInnerV4::new(connect_options.clone())?;
+                let inner = ClientInnerV4::new(connect_options)?;
                 Inner::V4(inner)
             }
             ProtocolLevel::V5 => {
-                let inner = ClientInnerV5::new(connect_options.clone())?;
+                let inner = ClientInnerV5::new(connect_options)?;
                 Inner::V5(inner)
             }
         };
         Ok(Self {
             protocol_level,
-            connect_options,
-            status: ClientStatus::Initialized,
             inner,
         })
     }
 
     /// Get mqtt connection options.
-    pub fn connect_option(&self) -> &ConnectOptions {
-        &self.connect_options
+    pub fn connect_options(&self) -> &ConnectOptions {
+        match &self.inner {
+            Inner::V3(inner) => inner.connect_options(),
+            Inner::V4(inner) => inner.connect_options(),
+            Inner::V5(inner) => inner.connect_options(),
+        }
     }
 
     /// Get current status.
     pub fn status(&self) -> ClientStatus {
-        self.status
+        match &self.inner {
+            Inner::V3(inner) => inner.status(),
+            Inner::V4(inner) => inner.status(),
+            Inner::V5(inner) => inner.status(),
+        }
     }
 
     /// Connect to server.
     pub fn connect(&mut self) -> Result<(), Error> {
-        assert_eq!(self.status, ClientStatus::Disconnected);
-        self.status = ClientStatus::Connecting;
-        //TODO(Shaohua):
-        Ok(())
+        match &mut self.inner {
+            Inner::V3(inner) => inner.connect(),
+            Inner::V4(inner) => inner.connect(),
+            Inner::V5(inner) => inner.connect(),
+        }
     }
 
     pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
-        assert_eq!(self.status, ClientStatus::Connected);
-        //TODO(Shaohua):
-        Ok(())
+        match &mut self.inner {
+            Inner::V3(inner) => inner.publish(topic, qos, data),
+            Inner::V4(inner) => inner.publish(topic, qos, data),
+            Inner::V5(inner) => inner.publish(topic, qos, data),
+        }
     }
 
     pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
-        assert_eq!(self.status, ClientStatus::Connected);
-        //TODO(Shaohua):
-        Ok(())
+        match &mut self.inner {
+            Inner::V3(inner) => inner.subscribe(topic, qos),
+            Inner::V4(inner) => inner.subscribe(topic, qos),
+            Inner::V5(inner) => inner.subscribe(topic, qos),
+        }
     }
 
     pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
-        assert_eq!(self.status, ClientStatus::Connected);
-        //TODO(Shaohua):
-        Ok(())
+        match &mut self.inner {
+            Inner::V3(inner) => inner.unsubscribe(topic),
+            Inner::V4(inner) => inner.unsubscribe(topic),
+            Inner::V5(inner) => inner.unsubscribe(topic),
+        }
     }
 
     pub fn wait_for_messages(&mut self) -> Result<Vec<u8>, Error> {
-        assert_eq!(self.status, ClientStatus::Connected);
         todo!()
     }
 
     pub fn disconnect(&mut self) -> Result<(), Error> {
-        assert_eq!(self.status, ClientStatus::Connected);
-        self.status = ClientStatus::Disconnecting;
-        //TODO(Shaohua):
-        self.status = ClientStatus::Disconnected;
-        Ok(())
+        match &mut self.inner {
+            Inner::V3(inner) => inner.disconnect(),
+            Inner::V4(inner) => inner.disconnect(),
+            Inner::V5(inner) => inner.disconnect(),
+        }
     }
 }

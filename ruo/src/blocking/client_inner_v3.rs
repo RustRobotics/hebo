@@ -12,11 +12,14 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use super::stream::Stream;
+use super::ClientStatus;
 use crate::connect_options::*;
 use crate::error::Error;
 
 pub struct ClientInnerV3 {
     connect_options: ConnectOptions,
+    status: ClientStatus,
+
     stream: Stream,
     topics: HashMap<String, PacketId>,
     packet_id: PacketId,
@@ -31,6 +34,8 @@ impl ClientInnerV3 {
         let stream = Stream::new(connect_options.connect_type())?;
         Ok(Self {
             connect_options,
+            status: ClientStatus::Disconnected,
+
             stream,
             topics: HashMap::new(),
             packet_id: PacketId::new(1),
@@ -39,6 +44,14 @@ impl ClientInnerV3 {
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
         })
+    }
+
+    pub fn connect_options(&self) -> &ConnectOptions {
+        &self.connect_options
+    }
+
+    pub fn status(&self) -> ClientStatus {
+        self.status
     }
 
     pub fn run_loop(&mut self) -> Result<(), Error> {

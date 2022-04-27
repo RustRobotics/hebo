@@ -5,7 +5,9 @@
 //! Blocking client is used for testing only.
 
 pub mod client;
+mod status;
 pub mod stream;
+pub use status::ClientStatus;
 
 mod client_inner_v3;
 use client_inner_v3::ClientInnerV3;
