@@ -19,6 +19,7 @@ fn main() -> Result<(), Error> {
     }));
     let mut client = Client::new(options, ProtocolLevel::V31);
     let is_connected = client.connect()?;
+    log::info!("is connected");
     assert!(is_connected);
     log::info!(
         "Connected to server, client id: {}",

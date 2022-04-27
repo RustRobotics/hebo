@@ -59,11 +59,11 @@ impl ClientInnerV3 {
     }
 
     fn read_stream(&mut self) -> Result<usize, Error> {
+        self.buffer.resize(self.buffer.capacity(), 0);
         if let Some(stream) = &mut self.stream {
-            self.buffer.resize(self.buffer.capacity(), 0);
             match stream.read_buf(&mut self.buffer) {
                 Ok(n_recv) => {
-                    log::info!("n_recv: {}", n_recv);
+                    self.buffer.resize(n_recv, 0);
                     return Ok(n_recv);
                 }
                 Err(error) => {
@@ -73,37 +73,6 @@ impl ClientInnerV3 {
                     ));
                 }
             }
-        } else {
-            return Err(Error::new(
-                ErrorKind::SocketError,
-                "Socket is uninitialized",
-            ));
-        }
-    }
-
-    fn _read_stream(&mut self) -> Result<(), Error> {
-        // TODO(Shaohua): Support large packets.
-        let mut buf = Vec::with_capacity(1024);
-        let timeout = Duration::from_millis(1);
-
-        if self.stream.is_some() {
-            let mut stream = self.stream.take().unwrap();
-            loop {
-                buf.resize(buf.capacity(), 0);
-                if let Ok(n_recv) = stream.read_buf(&mut buf) {
-                    if n_recv > 0 {
-                        if let Err(err) = self.handle_session_packet(&mut buf) {
-                            log::error!("err: {:?}", err);
-                        }
-                        buf.clear();
-                    } else if n_recv == 0 {
-                        log::warn!("n_recv is 0");
-                        break;
-                    }
-                }
-            }
-            self.stream = Some(stream);
-            return Ok(());
         } else {
             return Err(Error::new(
                 ErrorKind::SocketError,
@@ -150,13 +119,20 @@ impl ClientInnerV3 {
         let conn_packet = ConnectPacket::new(&self.connect_options.client_id())?;
         self.status = ClientStatus::Connecting;
         self.send_packet(conn_packet)?;
-        self.read_stream()?;
+        loop {
+            let n_recv = self.read_stream()?;
+            if n_recv > 0 {
+                break;
+            }
+        }
 
         let mut ba = ByteArray::new(&mut self.buffer);
         let fixed_header = FixedHeader::decode(&mut ba)?;
+        log::info!("got fixed header: {:?}", fixed_header);
         match fixed_header.packet_type() {
             PacketType::ConnectAck => {
                 let packet = ConnectAckPacket::decode(&mut ba)?;
+                log::info!("packet: {:?}", packet);
                 match packet.return_code() {
                     ConnectReturnCode::Accepted => {
                         self.status = ClientStatus::Connected;

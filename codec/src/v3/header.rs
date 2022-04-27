@@ -315,8 +315,6 @@ impl EncodePacket for FixedHeader {
         v.push(packet_type);
 
         self.remaining_length.encode(v)?;
-        println!("remaining length: {:?}", self.remaining_length);
-
         Ok(self.packet_type.len() + self.remaining_length.len())
     }
 }
