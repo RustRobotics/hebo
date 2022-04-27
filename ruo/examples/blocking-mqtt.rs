@@ -3,22 +3,9 @@
 // in the LICENSE file.
 
 use codec::QoS;
-use ruo::connect_options::{ConnectOptions, ConnectType, MqttConnect};
 use ruo::blocking::client::Client;
+use ruo::connect_options::{ConnectOptions, ConnectType, MqttConnect};
 use std::net::SocketAddr;
-
-fn on_connect(client: &mut Client) {
-    log::info!(
-        "[on_connect] client id: {}",
-        client.connect_option().client_id()
-    );
-
-    // self.subscribe("hello", QoS::AtMostOnce).await;
-    client.subscribe("hello", QoS::AtMostOnce).unwrap();
-    client
-        .publish("hello", QoS::AtMostOnce, b"Hello, world")
-        .unwrap();
-}
 
 fn main() {
     std::env::set_var("RUST_LOG", "info");
@@ -29,5 +16,15 @@ fn main() {
         address: SocketAddr::from(([127, 0, 0, 1], 1883)),
     }));
     let mut client = Client::new(options, Some(on_connect), None).unwrap();
-    client.start().unwrap();
+    let ret = client.connect();
+    assert!(ret.is_ok());
+    log::info!(
+        "Connected to server, client id: {}",
+        client.connect_option().client_id()
+    );
+
+    client.subscribe("hello", QoS::AtMostOnce).unwrap();
+    client
+        .publish("hello", QoS::AtMostOnce, b"Hello, world")
+        .unwrap();
 }
