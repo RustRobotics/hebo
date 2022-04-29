@@ -20,7 +20,7 @@ pub struct ClientInnerV3 {
     status: ClientStatus,
 
     stream: Option<Stream>,
-    topics: HashMap<String, PacketId>,
+    _topics: HashMap<String, PacketId>,
     packet_id: PacketId,
     subscribing_packets: HashMap<PacketId, SubscribePacket>,
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
@@ -38,7 +38,7 @@ impl ClientInnerV3 {
             status: ClientStatus::Disconnected,
 
             stream: None,
-            topics: HashMap::new(),
+            _topics: HashMap::new(),
             packet_id: PacketId::new(1),
             subscribing_packets: HashMap::new(),
             unsubscribing_packets: HashMap::new(),
@@ -267,6 +267,7 @@ impl ClientInnerV3 {
     }
 
     fn read_stream(&mut self, buffer: &mut Vec<u8>) -> Result<usize, Error> {
+        // TODO(Shaohua): Do not resize buffer.
         buffer.resize(buffer.capacity(), 0);
         if let Some(stream) = &mut self.stream {
             match stream.read_buf(buffer) {
