@@ -178,29 +178,40 @@ impl ClientInnerV3 {
             }
         }
 
-        let mut ba = ByteArray::new(&buffer);
-        let fixed_header = FixedHeader::decode(&mut ba)?;
-        match fixed_header.packet_type() {
-            PacketType::PublishAck => self.on_publish_ack(&buffer)?,
-            PacketType::SubscribeAck => self.on_subscribe_ack(&buffer)?,
-            PacketType::UnsubscribeAck => self.on_unsubscribe_ack(&buffer)?,
-            PacketType::PingResponse => self.on_ping_resp()?,
-            PacketType::Publish { .. } => {
-                let msg = self.on_publish_message(&buffer)?;
-                return Ok(Some(msg));
+        let mut offset: usize = 0;
+
+        loop {
+            let slice = &buffer[offset..];
+            let mut ba = ByteArray::new(slice);
+            let fixed_header = FixedHeader::decode(&mut ba)?;
+            ba.reset_offset();
+            match fixed_header.packet_type() {
+                PacketType::PublishAck => self.on_publish_ack(&mut ba)?,
+                PacketType::SubscribeAck => self.on_subscribe_ack(&mut ba)?,
+                PacketType::UnsubscribeAck => self.on_unsubscribe_ack(&mut ba)?,
+                PacketType::PingResponse => self.on_ping_resp(&mut ba)?,
+                PacketType::Publish { .. } => {
+                    let msg = self.on_publish_message(&mut ba)?;
+                    return Ok(Some(msg));
+                }
+                t => {
+                    log::error!("Unhandled msg: {:?}", t);
+                }
             }
-            t => {
-                log::error!("Unhandled msg: {:?}", t);
+
+            offset += ba.offset();
+            if offset >= buffer.len() {
+                break;
             }
         }
 
         Ok(None)
     }
 
-    fn on_publish_message(&mut self, buf: &[u8]) -> Result<PublishMessage, Error> {
+    fn on_publish_message(&mut self, ba: &mut ByteArray) -> Result<PublishMessage, Error> {
         log::info!("on_publish_message()");
-        let mut ba = ByteArray::new(buf);
-        let packet = PublishPacket::decode(&mut ba)?;
+        // TODO(Shaohua): Support QoS1 / QoS2.
+        let packet = PublishPacket::decode(ba)?;
         log::info!("on_publish_message() packet: {:?}", packet);
         Ok(PublishMessage {
             topic: packet.topic().to_owned(),
@@ -209,17 +220,17 @@ impl ClientInnerV3 {
         })
     }
 
-    fn on_ping_resp(&self) -> Result<(), Error> {
+    fn on_ping_resp(&self, ba: &mut ByteArray) -> Result<(), Error> {
         log::info!("on ping resp");
+        let _ping_req = PingRequestPacket::decode(ba)?;
         // TODO(Shaohua): Reset reconnect timer.
         Ok(())
     }
 
-    fn on_publish_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
+    fn on_publish_ack(&mut self, ba: &mut ByteArray) -> Result<(), Error> {
         log::info!("publish_ack()");
         // TODO(Shaohua): Support QoS2
-        let mut ba = ByteArray::new(buf);
-        let packet = PublishAckPacket::decode(&mut ba)?;
+        let packet = PublishAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
         if let Some(p) = self.publishing_qos1_packets.get(&packet_id) {
             log::info!("Topic `{}` publish confirmed!", p.topic());
@@ -230,11 +241,10 @@ impl ClientInnerV3 {
         Ok(())
     }
 
-    fn on_subscribe_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
+    fn on_subscribe_ack(&mut self, ba: &mut ByteArray) -> Result<(), Error> {
         log::info!("subscribe_ack()");
         // Parse packet_id and remove from vector.
-        let mut ba = ByteArray::new(buf);
-        let packet = SubscribeAckPacket::decode(&mut ba)?;
+        let packet = SubscribeAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
         if let Some(p) = self.subscribing_packets.get(&packet_id) {
             log::info!("Subscription {:?} confirmed!", p.topics());
@@ -245,10 +255,9 @@ impl ClientInnerV3 {
         Ok(())
     }
 
-    fn on_unsubscribe_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
+    fn on_unsubscribe_ack(&mut self, ba: &mut ByteArray) -> Result<(), Error> {
         log::info!("unsubscribe_ack()");
-        let mut ba = ByteArray::new(buf);
-        let packet = UnsubscribeAckPacket::decode(&mut ba)?;
+        let packet = UnsubscribeAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
         // TODO(Shaohua): Tuning
         if let Some(_p) = self.unsubscribing_packets.get(&packet_id) {
