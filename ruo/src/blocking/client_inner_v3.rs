@@ -15,6 +15,7 @@ use super::ClientStatus;
 use crate::connect_options::*;
 use crate::error::{Error, ErrorKind};
 
+/// MQTT Client for V3.1.
 pub struct ClientInnerV3 {
     connect_options: ConnectOptions,
     status: ClientStatus,
@@ -130,6 +131,7 @@ impl ClientInnerV3 {
         log::info!("got fixed header: {:?}", fixed_header);
         match fixed_header.packet_type() {
             PacketType::ConnectAck => {
+                ba.reset_offset();
                 let packet = ConnectAckPacket::decode(&mut ba)?;
                 log::info!("packet: {:?}", packet);
                 match packet.return_code() {
