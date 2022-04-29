@@ -80,4 +80,9 @@ impl<'a> ByteArray<'a> {
     pub fn reset_offset(&mut self) {
         self.offset = 0;
     }
+
+    /// Get current offset.
+    pub fn offset(&mut self) -> usize {
+        self.offset
+    }
 }

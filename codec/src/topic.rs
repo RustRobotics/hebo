@@ -252,7 +252,12 @@ impl PubTopic {
     }
 
     pub fn bytes(&self) -> usize {
+        // TODO(Shaohua): Add comments
         2 + self.0.len()
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 }
 
