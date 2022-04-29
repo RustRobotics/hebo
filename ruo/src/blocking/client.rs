@@ -6,7 +6,7 @@ use codec::ProtocolLevel;
 use codec::QoS;
 use std::fmt;
 
-use super::{ClientInnerV3, ClientInnerV4, ClientInnerV5, ClientStatus};
+use super::{ClientInnerV3, ClientInnerV4, ClientInnerV5, ClientStatus, PublishMessage};
 use crate::connect_options::ConnectOptions;
 use crate::error::Error;
 
@@ -97,8 +97,21 @@ impl Client {
         }
     }
 
-    pub fn wait_for_messages(&mut self) -> Result<Vec<u8>, Error> {
-        todo!()
+    /// Send ping packet to server explicitly.
+    pub fn ping(&mut self) -> Result<(), Error> {
+        match &mut self.inner {
+            Inner::V3(inner) => inner.ping(),
+            Inner::V4(inner) => inner.ping(),
+            Inner::V5(inner) => inner.ping(),
+        }
+    }
+
+    pub fn wait_for_message(&mut self) -> Result<Option<PublishMessage>, Error> {
+        match &mut self.inner {
+            Inner::V3(inner) => inner.wait_for_packet(),
+            Inner::V4(inner) => inner.wait_for_packet(),
+            Inner::V5(inner) => inner.wait_for_packet(),
+        }
     }
 
     /// Disconnect from server.
