@@ -287,7 +287,7 @@ impl FixedHeader {
     }
 
     pub fn remaining_length(&self) -> usize {
-        self.remaining_length.len()
+        self.remaining_length.value()
     }
 
     pub fn remaining_bytes(&self) -> usize {
@@ -334,5 +334,26 @@ mod tests {
         assert!(ret.is_ok());
         println!("buf size: {}", buf.len());
         assert_eq!(ret, Ok(2));
+    }
+
+    #[test]
+    fn test_decode() {
+        let buf = vec![
+            0x30, 0x13, 0x00, 0x05, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x48, 0x65, 0x6c, 0x6c, 0x6f,
+            0x2c, 0x20, 0x77, 0x6f, 0x72,
+        ];
+        let mut ba = ByteArray::new(&buf);
+        let fixed_header = FixedHeader::decode(&mut ba);
+        assert!(fixed_header.is_ok());
+        let fixed_header = fixed_header.unwrap();
+        assert_eq!(
+            fixed_header.packet_type(),
+            PacketType::Publish {
+                dup: false,
+                qos: QoS::AtMostOnce,
+                retain: false
+            }
+        );
+        assert_eq!(fixed_header.remaining_length(), 19);
     }
 }

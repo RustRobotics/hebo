@@ -188,6 +188,7 @@ impl DecodePacket for PublishPacket {
         }
 
         let topic = PubTopic::decode(ba)?;
+        log::info!("topic: {:?}", &topic);
 
         // Parse packet id.
         // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
@@ -205,6 +206,11 @@ impl DecodePacket for PublishPacket {
 
         // It is valid for a PUBLISH Packet to contain a zero length payload.
         if fixed_header.remaining_length() < topic.bytes() {
+            log::info!(
+                "remaining length: {}, topic bytes: {}",
+                fixed_header.remaining_length(),
+                topic.bytes()
+            );
             return Err(DecodeError::InvalidRemainingLength);
         }
         let mut msg_len = fixed_header.remaining_length() - topic.bytes();

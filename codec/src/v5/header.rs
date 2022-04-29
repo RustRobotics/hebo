@@ -289,7 +289,7 @@ impl FixedHeader {
     }
 
     pub fn remaining_length(&self) -> usize {
-        self.remaining_length.len()
+        self.remaining_length.value()
     }
 
     pub fn remaining_bytes(&self) -> usize {
