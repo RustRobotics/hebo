@@ -26,8 +26,6 @@ pub struct ClientInnerV3 {
     unsubscribing_packets: HashMap<PacketId, UnsubscribePacket>,
     publishing_qos1_packets: HashMap<PacketId, PublishPacket>,
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
-
-    buffer: Vec<u8>,
 }
 
 impl ClientInnerV3 {
@@ -46,9 +44,6 @@ impl ClientInnerV3 {
             unsubscribing_packets: HashMap::new(),
             publishing_qos1_packets: HashMap::new(),
             publishing_qos2_packets: HashMap::new(),
-
-            // TODO(Shaohua): Support large packets.
-            buffer: Vec::with_capacity(1024),
         }
     }
 
@@ -73,14 +68,19 @@ impl ClientInnerV3 {
         let conn_packet = ConnectPacket::new(&self.connect_options.client_id())?;
         self.status = ClientStatus::Connecting;
         self.send_packet(conn_packet)?;
+
+        // We read ConnectAck packet directly here,
+        // because the first packet shall be Connect Packet.
+        let mut buffer = Vec::with_capacity(128);
         loop {
-            let n_recv = self.read_stream()?;
+            // TODO(Shaohua): Enable blocking mode.
+            let n_recv = self.read_stream(&mut buffer)?;
             if n_recv > 0 {
                 break;
             }
         }
 
-        let mut ba = ByteArray::new(&mut self.buffer);
+        let mut ba = ByteArray::new(&mut buffer);
         let fixed_header = FixedHeader::decode(&mut ba)?;
         match fixed_header.packet_type() {
             PacketType::ConnectAck => {
@@ -167,15 +167,44 @@ impl ClientInnerV3 {
     }
 
     pub fn wait_for_packet(&mut self) -> Result<Option<PublishMessage>, Error> {
-        todo!()
+        // TODO(Shaohua): Support large packets.
+        let mut buffer = Vec::with_capacity(1024);
+        loop {
+            let n_recv = self.read_stream(&mut buffer)?;
+            if n_recv > 0 {
+                break;
+            }
+        }
+
+        let mut ba = ByteArray::new(&buffer);
+        let fixed_header = FixedHeader::decode(&mut ba)?;
+        match fixed_header.packet_type() {
+            PacketType::PublishAck => self.on_publish_ack(&buffer)?,
+            PacketType::SubscribeAck => self.on_subscribe_ack(&buffer)?,
+            PacketType::UnsubscribeAck => self.on_unsubscribe_ack(&buffer)?,
+            PacketType::PingResponse => self.on_ping_resp()?,
+            PacketType::Publish { .. } => {
+                let msg = self.on_publish_message(&buffer)?;
+                return Ok(Some(msg));
+            }
+            t => {
+                log::error!("Unhandled msg: {:?}", t);
+            }
+        }
+
+        Ok(None)
     }
 
-    fn on_message(&mut self, buf: &[u8]) -> Result<(), Error> {
-        log::info!("on_message()");
+    fn on_publish_message(&mut self, buf: &[u8]) -> Result<PublishMessage, Error> {
+        log::info!("on_publish_message()");
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
-        log::info!("on_message() packet: {:?}", packet);
-        Ok(())
+        log::info!("on_publish_message() packet: {:?}", packet);
+        Ok(PublishMessage {
+            topic: packet.topic().to_owned(),
+            qos: packet.qos(),
+            payload: packet.message().into(),
+        })
     }
 
     fn on_ping_resp(&self) -> Result<(), Error> {
@@ -186,6 +215,7 @@ impl ClientInnerV3 {
 
     fn on_publish_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
         log::info!("publish_ack()");
+        // TODO(Shaohua): Support QoS2
         let mut ba = ByteArray::new(buf);
         let packet = PublishAckPacket::decode(&mut ba)?;
         let packet_id = packet.packet_id();
@@ -236,12 +266,12 @@ impl ClientInnerV3 {
         self.packet_id
     }
 
-    fn read_stream(&mut self) -> Result<usize, Error> {
-        self.buffer.resize(self.buffer.capacity(), 0);
+    fn read_stream(&mut self, buffer: &mut Vec<u8>) -> Result<usize, Error> {
+        buffer.resize(buffer.capacity(), 0);
         if let Some(stream) = &mut self.stream {
-            match stream.read_buf(&mut self.buffer) {
+            match stream.read_buf(buffer) {
                 Ok(n_recv) => {
-                    self.buffer.resize(n_recv, 0);
+                    buffer.resize(n_recv, 0);
                     return Ok(n_recv);
                 }
                 Err(error) => {
@@ -256,23 +286,6 @@ impl ClientInnerV3 {
                 ErrorKind::SocketError,
                 "Socket is uninitialized",
             ));
-        }
-    }
-
-    fn handle_session_packet(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
-        let mut ba = ByteArray::new(buf);
-        let fixed_header = FixedHeader::decode(&mut ba)?;
-        log::info!("fixed header: {:?}", fixed_header);
-        match fixed_header.packet_type() {
-            PacketType::Publish { .. } => self.on_message(&buf),
-            PacketType::PublishAck => self.on_publish_ack(&buf),
-            PacketType::SubscribeAck => self.on_subscribe_ack(&buf),
-            PacketType::UnsubscribeAck => self.on_unsubscribe_ack(&buf),
-            PacketType::PingResponse => self.on_ping_resp(),
-            t => {
-                log::info!("Unhandled msg: {:?}", t);
-                Ok(())
-            }
         }
     }
 

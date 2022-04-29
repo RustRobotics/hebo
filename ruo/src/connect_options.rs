@@ -155,7 +155,7 @@ pub struct ConnectOptions {
 
 impl Default for ConnectOptions {
     fn default() -> Self {
-        let mut client_id = "ruo-".to_owned() + &random_string(8);
+        let client_id = "ruo-".to_owned() + &random_string(8);
         ConnectOptions {
             protocol_level: ProtocolLevel::V4,
             connect_type: ConnectType::Mqtt(MqttConnect {
