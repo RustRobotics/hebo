@@ -12,7 +12,6 @@ use crate::error::Error;
 
 /// Synchronize mqtt client.
 pub struct Client {
-    protocol_level: ProtocolLevel,
     inner: Inner,
 }
 
@@ -35,16 +34,13 @@ impl Client {
     /// Create a new mqtt client.
     ///
     /// No packet is sent to server before calling [`Self::connect()`].
-    pub fn new(connect_options: ConnectOptions, protocol_level: ProtocolLevel) -> Self {
-        let inner = match protocol_level {
+    pub fn new(connect_options: ConnectOptions) -> Self {
+        let inner = match connect_options.protocol_level() {
             ProtocolLevel::V3 => Inner::V3(ClientInnerV3::new(connect_options)),
             ProtocolLevel::V4 => Inner::V4(ClientInnerV4::new(connect_options)),
             ProtocolLevel::V5 => Inner::V5(ClientInnerV5::new(connect_options)),
         };
-        Self {
-            protocol_level,
-            inner,
-        }
+        Self { inner }
     }
 
     /// Get mqtt connection options.
