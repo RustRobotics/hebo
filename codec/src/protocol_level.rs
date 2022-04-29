@@ -13,8 +13,13 @@ use crate::{DecodeError, EncodeError, EncodePacket};
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ProtocolLevel {
-    V31 = 3,
-    V311 = 4,
+    /// MQTT 3.1
+    V3 = 3,
+
+    /// MQTT 3.1.1
+    V4 = 4,
+
+    /// MQTT 5.0
     V5 = 5,
 }
 
@@ -26,7 +31,7 @@ impl ProtocolLevel {
 
 impl Default for ProtocolLevel {
     fn default() -> Self {
-        ProtocolLevel::V311
+        ProtocolLevel::V4
     }
 }
 
@@ -35,8 +40,8 @@ impl TryFrom<u8> for ProtocolLevel {
 
     fn try_from(v: u8) -> Result<ProtocolLevel, Self::Error> {
         match v {
-            3 => Ok(ProtocolLevel::V31),
-            4 => Ok(ProtocolLevel::V311),
+            3 => Ok(ProtocolLevel::V3),
+            4 => Ok(ProtocolLevel::V4),
             5 => Ok(ProtocolLevel::V5),
 
             _ => Err(DecodeError::InvalidProtocolLevel),
