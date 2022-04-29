@@ -60,7 +60,7 @@ impl ClientInnerV3 {
     /// Connct to server.
     ///
     /// Returns Ok() if success.
-    pub fn connect(&mut self) -> Result<bool, Error> {
+    pub fn connect(&mut self) -> Result<(), Error> {
         // TODO(Shaohua): Do not return bool, return errors instead.
         assert_eq!(self.status, ClientStatus::Disconnected);
         let stream = Stream::new(self.connect_options.connect_type())?;
@@ -89,11 +89,13 @@ impl ClientInnerV3 {
                 match packet.return_code() {
                     ConnectReturnCode::Accepted => {
                         self.status = ClientStatus::Connected;
-                        return Ok(true);
+                        return Ok(());
                     }
                     _ => {
-                        log::warn!("Failed to connect to server, {:?}", packet.return_code());
-                        return Ok(false);
+                        return Err(Error::from_string(
+                            ErrorKind::AuthFailed,
+                            format!("return code: {:?}", packet.return_code()),
+                        ));
                     }
                 }
             }

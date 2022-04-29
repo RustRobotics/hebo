@@ -35,6 +35,9 @@ pub enum ErrorKind {
 
     /// Invalid connect status.
     InvalidConnectStatus,
+
+    /// Auth failed while connecting to server.
+    AuthFailed,
 }
 
 #[derive(Clone, Debug)]

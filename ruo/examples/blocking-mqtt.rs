@@ -13,9 +13,7 @@ fn main() -> Result<(), Error> {
     env_logger::init();
 
     let mut client = Client::new(ConnectOptions::default());
-    let is_connected = client.connect()?;
-    log::info!("is connected");
-    assert!(is_connected);
+    client.connect()?;
     log::info!(
         "Connected to server, client id: {}",
         client.connect_options().client_id()
@@ -23,6 +21,14 @@ fn main() -> Result<(), Error> {
 
     client.subscribe("hello", QoS::AtMostOnce)?;
     client.publish("hello", QoS::AtMostOnce, b"Hello, world")?;
+    loop {
+        if let Some(message) = client.wait_for_message()? {
+            log::info!("got message: {:?}", message);
+            break;
+        } else {
+            log::info!("No message");
+        }
+    }
 
     client.disconnect()?;
 
