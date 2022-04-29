@@ -37,8 +37,8 @@ impl Client {
     /// No packet is sent to server before calling [`Self::connect()`].
     pub fn new(connect_options: ConnectOptions, protocol_level: ProtocolLevel) -> Self {
         let inner = match protocol_level {
-            ProtocolLevel::V31 => Inner::V3(ClientInnerV3::new(connect_options)),
-            ProtocolLevel::V311 => Inner::V4(ClientInnerV4::new(connect_options)),
+            ProtocolLevel::V3 => Inner::V3(ClientInnerV3::new(connect_options)),
+            ProtocolLevel::V4 => Inner::V4(ClientInnerV4::new(connect_options)),
             ProtocolLevel::V5 => Inner::V5(ClientInnerV5::new(connect_options)),
         };
         Self {

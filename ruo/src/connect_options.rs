@@ -2,11 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use codec::utils::random_string;
+use codec::ProtocolLevel;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::time::Duration;
-
-use codec::utils::random_string;
 
 #[derive(Clone, Debug)]
 pub struct HttpProxy {
@@ -31,15 +31,11 @@ pub enum Proxy {
     Socks5(Socks5Proxy),
 }
 
-pub trait Authentication {}
-
 #[derive(Clone, Debug)]
 pub struct UsernameAuth {
     pub username: String,
     pub password: String,
 }
-
-impl Authentication for UsernameAuth {}
 
 #[derive(Clone, Debug)]
 pub struct SelfSignedTls {
@@ -113,82 +109,136 @@ pub enum ConnectType {
     Quic(QuicConnect),
 }
 
+/// Options for mqtt connection.
 #[derive(Clone, Debug)]
 pub struct ConnectOptions {
+    /// MQTT protocol version.
+    ///
+    /// Default is MQTT 3.1.1.
+    protocol_level: ProtocolLevel,
+
+    /// Specify connection protocol.
+    ///
+    /// Supported protocols are:
+    /// - TCP
+    /// - TCP over TLS
+    /// - WebSocket
+    /// - WebSocket over TLS
+    /// - Unix domain socket
+    /// - QUIC
+    ///
+    /// Default is raw TCP.
     connect_type: ConnectType,
+
+    /// Speicify client-id to used to connect to server.
+    ///
+    /// The server will reject connection with same client-id.
+    ///
+    /// Default value is randomly generated, and length is 8 chracters.
     client_id: String,
+
+    /// Specify keep alive duration of network connection.
+    ///
+    /// Default is 60 seconds.
     keep_alive: Duration,
+
+    /// Specify network connection timeout.
+    ///
+    /// Default is 10 seconds.
     connect_timeout: Duration,
+
+    /// Speicfy network proxy.
+    ///
+    /// Default is None.
     proxy: Proxy,
 }
 
 impl Default for ConnectOptions {
     fn default() -> Self {
         ConnectOptions {
+            protocol_level: ProtocolLevel::V4,
             connect_type: ConnectType::Mqtt(MqttConnect {
                 address: SocketAddr::from(([127, 0, 0, 1], 1883)),
             }),
             client_id: random_string(8),
             connect_timeout: Duration::from_secs(10),
-            keep_alive: Duration::from_secs(30),
+            keep_alive: Duration::from_secs(60),
             proxy: Proxy::None,
         }
     }
 }
 
 impl ConnectOptions {
+    /// Create a ConnectionObject object with default values.
     pub fn new() -> ConnectOptions {
         Self::default()
     }
 
+    /// Update mqtt protocol level.
+    pub fn set_protocol_level(&mut self, protocol_level: ProtocolLevel) -> &mut Self {
+        self.protocol_level = protocol_level;
+        self
+    }
+
+    /// Get current mqtt protocol level.
+    pub fn protocol_level(&self) -> ProtocolLevel {
+        self.protocol_level
+    }
+
+    /// Update connection type.
     pub fn set_connect_type(&mut self, connect_type: ConnectType) -> &mut Self {
         self.connect_type = connect_type;
         self
     }
 
+    /// Get current connection type.
     pub fn connect_type(&self) -> &ConnectType {
         &self.connect_type
     }
 
+    /// Update client id.
     pub fn set_client_id(&mut self, client_id: &str) -> &mut Self {
         self.client_id = client_id.to_string();
         self
     }
 
+    /// Get current client id.
     pub fn client_id(&self) -> &str {
         &self.client_id
     }
 
+    /// Update connection timeout duration.
     pub fn set_connect_timeout(&mut self, connect_timeout: Duration) -> &mut Self {
         self.connect_timeout = connect_timeout;
         self
     }
 
+    /// Get current connection timeout duration.
     pub fn connect_timeout(&self) -> &Duration {
         &self.connect_timeout
     }
 
+    /// Update keep alive value of network connection.
     pub fn set_keepalive(&mut self, keep_alive: Duration) -> &mut Self {
         self.keep_alive = keep_alive;
         self
     }
 
+    /// Get current value of network keep alive.
     pub fn keep_alive(&self) -> &Duration {
         &self.keep_alive
     }
 
+    /// Update network proxy settings.
     pub fn set_proxy(&mut self, proxy: Proxy) -> &mut Self {
         self.proxy = proxy;
         self
     }
 
+    /// Get current proxy value.
     pub fn proxy(&self) -> &Proxy {
         &self.proxy
     }
 
-    pub fn set_auth(&mut self) -> &mut Self {
-        self
-    }
-
-    pub fn auth(&self) {}
+    // TODO(Shaohua): Add authentication options
 }

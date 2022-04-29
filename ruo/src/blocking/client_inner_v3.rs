@@ -9,7 +9,6 @@ use codec::v3::{
 };
 use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
 use std::collections::HashMap;
-use std::time::Duration;
 
 use super::stream::Stream;
 use super::ClientStatus;
