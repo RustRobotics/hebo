@@ -1,6 +1,6 @@
 [package]
 name = "hebo_codec"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 edition = "2021"
 description = "Packet codec for MQTT protocol"
