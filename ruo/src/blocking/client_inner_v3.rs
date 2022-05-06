@@ -209,10 +209,8 @@ impl ClientInnerV3 {
     }
 
     fn on_publish_message(&mut self, ba: &mut ByteArray) -> Result<PublishMessage, Error> {
-        log::info!("on_publish_message()");
         // TODO(Shaohua): Support QoS1 / QoS2.
         let packet = PublishPacket::decode(ba)?;
-        log::info!("on_publish_message() packet: {:?}", packet);
         Ok(PublishMessage {
             topic: packet.topic().to_owned(),
             qos: packet.qos(),
