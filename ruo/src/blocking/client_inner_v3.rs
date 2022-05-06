@@ -228,7 +228,6 @@ impl ClientInnerV3 {
     }
 
     fn on_publish_ack(&mut self, ba: &mut ByteArray) -> Result<(), Error> {
-        log::info!("publish_ack()");
         // TODO(Shaohua): Support QoS2
         let packet = PublishAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
@@ -242,27 +241,19 @@ impl ClientInnerV3 {
     }
 
     fn on_subscribe_ack(&mut self, ba: &mut ByteArray) -> Result<(), Error> {
-        log::info!("subscribe_ack()");
-        // Parse packet_id and remove from vector.
+        // Parse packet_id and remove from cache.
         let packet = SubscribeAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
-        if let Some(p) = self.subscribing_packets.get(&packet_id) {
-            log::info!("Subscription {:?} confirmed!", p.topics());
-            self.subscribing_packets.remove(&packet.packet_id());
-        } else {
+        if let None = self.subscribing_packets.remove(&packet_id) {
             log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
         }
         Ok(())
     }
 
     fn on_unsubscribe_ack(&mut self, ba: &mut ByteArray) -> Result<(), Error> {
-        log::info!("unsubscribe_ack()");
         let packet = UnsubscribeAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
-        // TODO(Shaohua): Tuning
-        if let Some(_p) = self.unsubscribing_packets.get(&packet_id) {
-            self.unsubscribing_packets.remove(&packet.packet_id());
-        } else {
+        if let None = self.unsubscribing_packets.remove(&packet_id) {
             log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
         }
         Ok(())
