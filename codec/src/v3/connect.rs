@@ -107,7 +107,7 @@ pub struct ConnectPacket {
 impl ConnectPacket {
     pub fn new(client_id: &str) -> Result<ConnectPacket, EncodeError> {
         let protocol_name = StringData::from_str(PROTOCOL_NAME)?;
-        validate_client_id(client_id)?;
+        validate_client_id(client_id).map_err(|_err| EncodeError::InvalidClientId)?;
         let client_id = StringData::from_str(client_id)?;
         Ok(ConnectPacket {
             protocol_name,
@@ -145,7 +145,7 @@ impl ConnectPacket {
     }
 
     pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
-        validate_client_id(id)?;
+        validate_client_id(id).map_err(|_err| EncodeError::InvalidClientId)?;
         self.client_id = StringData::from_str(id)?;
         Ok(self)
     }
