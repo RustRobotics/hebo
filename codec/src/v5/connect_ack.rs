@@ -86,6 +86,7 @@ pub const CONNECT_REASONS: &[ReasonCode] = &[
     ReasonCode::ConnectionRateExceeded,
 ];
 
+/// Available properties for ConnectAck packets.
 pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
     PropertyType::SessionExpiryInterval,
     PropertyType::ReceiveMaximum,
@@ -107,6 +108,7 @@ pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl ConnectAckPacket {
+    /// Create a new ConnectAck packet.
     pub fn new(mut session_present: bool, reason_code: ReasonCode) -> ConnectAckPacket {
         // If a Server sends a CONNACK packet containing a non-zero Reason Code
         // it MUST set Session Present to 0 [MQTT-3.2.2-6].
@@ -120,6 +122,9 @@ impl ConnectAckPacket {
         }
     }
 
+    /// Update reason_code.
+    ///
+    /// Returns Error if `reason_code` is not in `CONNECT_REASONS` list.
     pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> Result<&mut Self, EncodeError> {
         if !CONNECT_REASONS.contains(&reason_code) {
             return Err(EncodeError::InvalidReasonCode);
@@ -131,23 +136,28 @@ impl ConnectAckPacket {
         Ok(self)
     }
 
+    /// Get current reason code.
     pub fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
+    /// Update session present flag.
     pub fn set_session_present(&mut self, present: bool) -> &mut Self {
         self.session_present = present;
         self
     }
 
+    /// Get current session present value.
     pub fn session_present(&self) -> bool {
         self.session_present
     }
 
+    /// Get a mutable reference to property list.
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
+    /// Get a reference to property list.
     pub fn properties(&self) -> &Properties {
         &self.properties
     }
