@@ -5,7 +5,10 @@
 pub mod client;
 pub mod connect_options;
 pub mod error;
+mod status;
 pub mod stream;
 
 #[cfg(feature = "blocking")]
 pub mod blocking;
+
+pub use status::ClientStatus;

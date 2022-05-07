@@ -6,10 +6,8 @@
 
 pub mod client;
 mod publish;
-mod status;
 mod stream;
 pub use publish::PublishMessage;
-pub use status::ClientStatus;
 pub use stream::Stream;
 
 mod client_inner_v3;
