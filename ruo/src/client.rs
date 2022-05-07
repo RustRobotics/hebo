@@ -2,11 +2,12 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use codec::ProtocolLevel;
+use codec::{ProtocolLevel, QoS};
 use std::fmt;
 use std::future::Future;
 
 use crate::connect_options::*;
+use crate::error::Error;
 use crate::{ClientInnerV3, ClientInnerV4, ClientInnerV5, ClientStatus};
 
 type FutureConnectCb = dyn Fn(&mut Client) -> dyn Future<Output = ()>;
@@ -64,6 +65,38 @@ impl Client {
             Inner::V3(inner) => inner.status(),
             Inner::V4(inner) => inner.status(),
             Inner::V5(inner) => inner.status(),
+        }
+    }
+
+    pub async fn connect(&mut self) -> Result<(), Error> {
+        match &mut self.inner {
+            Inner::V3(inner) => inner.connect().await,
+            Inner::V4(inner) => inner.connect().await,
+            Inner::V5(inner) => inner.connect().await,
+        }
+    }
+
+    pub async fn run_loop(&mut self) -> ! {
+        match &mut self.inner {
+            Inner::V3(inner) => inner.run_loop().await,
+            Inner::V4(inner) => inner.run_loop().await,
+            Inner::V5(inner) => inner.run_loop().await,
+        }
+    }
+
+    pub async fn publish(&mut self, topic: &str, qos: QoS, payload: &[u8]) -> Result<(), Error> {
+        match &mut self.inner {
+            Inner::V3(inner) => inner.publish(topic, qos, payload).await,
+            Inner::V4(inner) => inner.publish(topic, qos, payload).await,
+            Inner::V5(inner) => inner.publish(topic, qos, payload).await,
+        }
+    }
+
+    pub async fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
+        match &mut self.inner {
+            Inner::V3(inner) => inner.subscribe(topic, qos).await,
+            Inner::V4(inner) => inner.subscribe(topic, qos).await,
+            Inner::V5(inner) => inner.subscribe(topic, qos).await,
         }
     }
 }

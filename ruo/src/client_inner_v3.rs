@@ -283,8 +283,4 @@ impl ClientInnerV3 {
         }
         self.packet_id
     }
-
-    pub fn connect_option(&self) -> &ConnectOptions {
-        return &self.connect_options;
-    }
 }
