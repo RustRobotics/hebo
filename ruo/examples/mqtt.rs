@@ -3,33 +3,34 @@
 // in the LICENSE file.
 
 use codec::QoS;
-use ruo::blocking::client::Client;
-use ruo::connect_options::{ConnectOptions, ConnectType, MqttConnect};
+use ruo::client::Client;
+use ruo::connect_options::ConnectOptions;
 use ruo::error::Error;
-use std::net::SocketAddr;
 
-fn on_connect(client: &mut Client) {
+async fn on_connect(client: &mut Client) {
     log::info!(
         "[on_connect] client id: {}",
-        client.connect_option().client_id()
+        client.connect_options().client_id()
     );
 
-    // self.subscribe("hello", QoS::AtMostOnce).await;
-    client.subscribe("hello", QoS::AtMostOnce).unwrap();
+    client
+        .subscribe("hello", QoS::AtMostOnce)
+        .await
+        .expect("Failed to subscribe");
     client
         .publish("hello", QoS::AtMostOnce, b"Hello, world")
-        .unwrap();
+        .await
+        .expect("Failed to publish")
 }
 
-fn main() -> Result<(), Error> {
+#[tokio::main]
+async fn main() -> Result<(), Error> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    let mut options = ConnectOptions::new();
-    options.set_connect_type(ConnectType::Mqtt(MqttConnect {
-        address: SocketAddr::from(([127, 0, 0, 1], 1883)),
-    }));
-    let mut client: Client = Client::new(options, Some(on_connect), None);
-    client.init()?;
-    Ok(())
+    let options = ConnectOptions::new();
+    let mut client = Client::new(options);
+    //client.set_connect_callback(Box::new(on_connect));
+    client.connect().await.expect("Failed to start");
+    client.run_loop().await
 }
