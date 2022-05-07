@@ -10,10 +10,10 @@ use codec::v5::{
 use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
 use std::collections::HashMap;
 
-use super::{PublishMessage, Stream};
+use super::Stream;
 use crate::connect_options::*;
 use crate::error::{Error, ErrorKind};
-use crate::ClientStatus;
+use crate::{ClientStatus, PublishMessage};
 
 /// MQTT Client for V5.0.
 pub struct ClientInnerV5 {

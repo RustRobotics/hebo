@@ -6,10 +6,10 @@ use codec::ProtocolLevel;
 use codec::QoS;
 use std::fmt;
 
-use super::{ClientInnerV3, ClientInnerV4, ClientInnerV5, PublishMessage};
+use super::{ClientInnerV3, ClientInnerV4, ClientInnerV5};
 use crate::connect_options::ConnectOptions;
 use crate::error::Error;
-use crate::ClientStatus;
+use crate::{ClientStatus, PublishMessage};
 
 /// Synchronize mqtt client.
 pub struct Client {

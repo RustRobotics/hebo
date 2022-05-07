@@ -5,10 +5,12 @@
 pub mod client;
 pub mod connect_options;
 pub mod error;
+mod publish;
 mod status;
 pub mod stream;
 
 #[cfg(feature = "blocking")]
 pub mod blocking;
 
+pub use publish::PublishMessage;
 pub use status::ClientStatus;
