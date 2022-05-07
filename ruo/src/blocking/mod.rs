@@ -13,6 +13,7 @@ pub use status::ClientStatus;
 pub use stream::Stream;
 
 mod client_inner_v3;
+mod client_inner_v5;
 use client_inner_v3::ClientInnerV3;
 type ClientInnerV4 = ClientInnerV3;
-type ClientInnerV5 = ClientInnerV3;
+use client_inner_v5::ClientInnerV5;
