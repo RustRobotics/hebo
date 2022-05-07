@@ -34,7 +34,7 @@ pub enum ErrorKind {
     PidError,
 
     /// Invalid connect status.
-    InvalidConnectStatus,
+    InvalidClientStatus,
 
     /// Auth failed while connecting to server.
     AuthFailed,

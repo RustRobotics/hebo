@@ -14,3 +14,8 @@ pub mod blocking;
 
 pub use publish::PublishMessage;
 pub use status::ClientStatus;
+
+mod client_inner_v3;
+pub(crate) use client_inner_v3::ClientInnerV3;
+pub(crate) type ClientInnerV4 = ClientInnerV3;
+pub(crate) type ClientInnerV5 = ClientInnerV3;
