@@ -28,6 +28,14 @@ pub struct ClientInnerV3 {
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
 }
 
+impl Drop for ClientInnerV3 {
+    fn drop(&mut self) {
+        if self.status == ClientStatus::Connected {
+            let _ = self.disconnect();
+        }
+    }
+}
+
 impl ClientInnerV3 {
     pub fn new(connect_options: ConnectOptions) -> Self {
         Self {

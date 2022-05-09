@@ -30,7 +30,9 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    client.disconnect()?;
+    // If client.disconnect() is not called explicitly, it will be called in
+    // drop().
+    //client.disconnect()?;
 
     Ok(())
 }

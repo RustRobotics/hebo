@@ -29,6 +29,16 @@ pub struct ClientInnerV3 {
     publishing_qos2_packets: HashMap<PacketId, PublishPacket>,
 }
 
+impl Drop for ClientInnerV3 {
+    fn drop(&mut self) {
+        if self.status == ClientStatus::Connected {
+            // Send Disconnect packet to server.
+            // The server will close connection without sending any response packet any more.
+            let _ = self.disconnect();
+        }
+    }
+}
+
 impl ClientInnerV3 {
     /// Create a new client object.
     ///
