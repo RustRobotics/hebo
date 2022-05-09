@@ -4,12 +4,13 @@
 
 use serde::Deserialize;
 use std::net::{TcpListener, ToSocketAddrs};
+use std::os::unix::net::UnixListener;
 use std::path::{Path, PathBuf};
 
 use crate::error::{Error, ErrorKind};
 
 /// Binding protocol types.
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq)]
 pub enum Protocol {
     /// Raw Mqtt protocol, int TCP.
     #[serde(alias = "mqtt")]
@@ -256,26 +257,41 @@ impl Listener {
 
     pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
         if bind_address {
-            let _socket = TcpListener::bind(&self.address).map_err(|err| {
-                Error::from_string(
-                    ErrorKind::ConfigError,
-                    format!(
-                        "Failed to bind to address {} for listener, err: {:?}",
-                        &self.address, err
-                    ),
-                )
-            })?;
+            if self.protocol() == Protocol::Uds {
+                let listener = UnixListener::bind(&self.address).map_err(|err| {
+                    Error::from_string(
+                        ErrorKind::ConfigError,
+                        format!(
+                            "Failed to bind to unix domain socket path: {}, err: {:?}",
+                            &self.address, err
+                        ),
+                    )
+                })?;
+                drop(listener);
+            } else {
+                let _socket = TcpListener::bind(&self.address).map_err(|err| {
+                    Error::from_string(
+                        ErrorKind::ConfigError,
+                        format!(
+                            "Failed to bind to address {} for listener, err: {:?}",
+                            &self.address, err
+                        ),
+                    )
+                })?;
+            }
         } else {
-            let _ = self.address.to_socket_addrs().map_err(|err| {
-                Error::from_string(
-                    ErrorKind::ConfigError,
-                    format!(
-                        "Invalid socket address in config: {}, err: {:?}",
-                        &self.address, err
-                    ),
-                )
-            })?;
+            if self.protocol() == Protocol::Uds {
+                // TODO(Shaohua): Validate unix domain socket file.
+            } else {
+                let _ = self.address.to_socket_addrs().map_err(|err| {
+                    Error::from_string(
+                        ErrorKind::ConfigError,
+                        format!("Invalid socket address: {}, err: {:?}", &self.address, err),
+                    )
+                })?;
+            }
         }
+
         // TODO(Shaohua): Validate cert and key files.
         Ok(())
     }
