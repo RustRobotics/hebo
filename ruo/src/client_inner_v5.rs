@@ -178,16 +178,9 @@ impl ClientInnerV5 {
             let packet = DisconnectPacket::new();
             self.send(packet).await?;
         }
+        self.status = ClientStatus::Disconnected;
         self.on_disconnect();
         Ok(())
-    }
-
-    async fn on_connect(&mut self) -> Result<(), Error> {
-        log::info!("on_connect()");
-        Ok(())
-        //if let Some(ref cb) = self.connect_cb {
-        //(*cb)(self).await;
-        //}
     }
 
     async fn ping(&mut self) -> Result<(), Error> {
@@ -202,9 +195,12 @@ impl ClientInnerV5 {
         }
     }
 
-    fn on_disconnect(&mut self) {
-        self.status = ClientStatus::Disconnected;
+    async fn on_connect(&mut self) -> Result<(), Error> {
+        log::info!("on_connect()");
+        Ok(())
     }
+
+    fn on_disconnect(&mut self) {}
 
     async fn on_message(&self, buf: &[u8]) -> Result<(), Error> {
         log::info!("on_message()");
@@ -232,7 +228,7 @@ impl ClientInnerV5 {
             self.on_connect().await?;
         } else {
             log::warn!("Failed to connect to server, {:?}", packet.reason_code());
-            self.status = ClientStatus::ConnectFailed;
+            self.status = ClientStatus::Disconnected;
         }
         Ok(())
     }
