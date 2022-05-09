@@ -103,6 +103,7 @@ impl ClientInnerV3 {
                         return Ok(());
                     }
                     _ => {
+                        self.status = ClientStatus::Disconnected;
                         return Err(Error::from_string(
                             ErrorKind::AuthFailed,
                             format!("return code: {:?}", packet.return_code()),
@@ -112,6 +113,7 @@ impl ClientInnerV3 {
             }
 
             t => {
+                self.status = ClientStatus::Disconnected;
                 return Err(Error::from_string(
                     ErrorKind::PacketError,
                     format!("Expected connect packet, got: {:?}", t),
