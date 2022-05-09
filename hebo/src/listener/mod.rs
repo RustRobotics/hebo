@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::fs;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::commands::{
@@ -48,4 +49,13 @@ pub struct Listener {
 
     acl_sender: Sender<ListenerToAclCmd>,
     acl_receiver: Option<Receiver<AclToListenerCmd>>,
+}
+
+impl Drop for Listener {
+    fn drop(&mut self) {
+        if let Protocol::Uds(..) = &self.protocol {
+            // Remove unix domain socket file.
+            let _ = fs::remove_file(self.config.address());
+        }
+    }
 }
