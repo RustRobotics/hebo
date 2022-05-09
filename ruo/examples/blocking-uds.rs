@@ -4,7 +4,8 @@
 
 use codec::QoS;
 use ruo::blocking::client::Client;
-use ruo::connect_options::ConnectOptions;
+use ruo::connect_options::{ConnectOptions, ConnectType, UdsConnect};
+use std::path::PathBuf;
 
 use ruo::error::Error;
 
@@ -14,7 +15,7 @@ fn main() -> Result<(), Error> {
 
     let mut options = ConnectOptions::new();
     options.set_connect_type(ConnectType::Uds(UdsConnect {
-        sock_path: PathBuf::from("/tmp/hebo-uds.sock"),
+        sock_path: PathBuf::from("/tmp/hebo/uds.sock"),
     }));
     let mut client = Client::new(options);
     client.connect()?;
