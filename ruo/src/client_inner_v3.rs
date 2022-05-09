@@ -183,7 +183,7 @@ impl ClientInnerV3 {
         Ok(())
     }
 
-    async fn ping(&mut self) -> Result<(), Error> {
+    pub async fn ping(&mut self) -> Result<(), Error> {
         log::info!("ping()");
         if self.status == ClientStatus::Connected {
             log::info!("Send ping packet");

@@ -115,4 +115,13 @@ impl Client {
             Inner::V5(inner) => inner.unsubscribe(topic).await,
         }
     }
+
+    /// Send ping packet to server explicitly.
+    pub async fn ping(&mut self) -> Result<(), Error> {
+        match &mut self.inner {
+            Inner::V3(inner) => inner.ping().await,
+            Inner::V4(inner) => inner.ping().await,
+            Inner::V5(inner) => inner.ping().await,
+        }
+    }
 }
