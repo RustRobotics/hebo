@@ -18,7 +18,7 @@ use crate::ClientStatus;
 
 pub struct ClientInnerV5 {
     connect_options: ConnectOptions,
-    stream: Stream,
+    stream: Option<Stream>,
     status: ClientStatus,
     topics: HashMap<String, PacketId>,
     packet_id: PacketId,
@@ -40,7 +40,7 @@ impl ClientInnerV5 {
     pub fn new(connect_options: ConnectOptions) -> Self {
         Self {
             connect_options,
-            stream: Stream::None,
+            stream: None,
             status: ClientStatus::Disconnected,
             topics: HashMap::new(),
             packet_id: PacketId::new(1),
@@ -68,8 +68,12 @@ impl ClientInnerV5 {
         let mut timer = interval(*self.connect_options.keep_alive());
 
         loop {
+            let stream = self.stream.take();
+            let mut stream = stream.unwrap();
+
             tokio::select! {
-                Ok(n_recv) = self.stream.read_buf(&mut buf) => {
+                Ok(n_recv) = stream.read_buf(&mut buf) => {
+                    self.stream = Some(stream);
                     if n_recv > 0 {
                         if let Err(err) = self.handle_session_packet(&mut buf).await {
                             log::error!("err: {:?}", err);
@@ -107,11 +111,14 @@ impl ClientInnerV5 {
     async fn send<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
-        self.stream
-            .write(&buf)
-            .await
-            .map(drop)
-            .map_err(|err| err.into())
+        if let Some(stream) = &mut self.stream {
+            stream.write(&buf).await.map(drop).map_err(|err| err.into())
+        } else {
+            Err(Error::new(
+                ErrorKind::SocketError,
+                "Socket is uninitialized",
+            ))
+        }
     }
 
     pub async fn connect(&mut self) -> Result<(), Error> {
@@ -128,7 +135,8 @@ impl ClientInnerV5 {
             ));
         }
 
-        self.stream = Stream::connect(self.connect_options.connect_type()).await?;
+        let stream = Stream::connect(self.connect_options.connect_type()).await?;
+        self.stream = Some(stream);
         let conn_packet = ConnectPacket::new(self.connect_options.client_id())?;
         log::info!("send conn packet");
         self.send(conn_packet).await
