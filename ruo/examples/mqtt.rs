@@ -20,7 +20,11 @@ async fn on_connect(client: &mut Client) {
     client
         .publish("hello", QoS::AtMostOnce, b"Hello, world")
         .await
-        .expect("Failed to publish")
+        .expect("Failed to publish");
+    client
+        .unsubscribe("hello")
+        .await
+        .expect("Failed to unsubscribe")
 }
 
 #[tokio::main]

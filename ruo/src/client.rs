@@ -34,6 +34,9 @@ impl fmt::Debug for Client {
 }
 
 impl Client {
+    /// Create a new mqtt client.
+    ///
+    /// No packet is sent to server before calling [`Self::connect()`].
     pub fn new(connect_options: ConnectOptions) -> Client {
         let inner = match connect_options.protocol_level() {
             ProtocolLevel::V3 => Inner::V3(ClientInnerV3::new(connect_options)),
@@ -68,6 +71,7 @@ impl Client {
         }
     }
 
+    /// Connect to server.
     pub async fn connect(&mut self) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) => inner.connect().await,
@@ -76,6 +80,7 @@ impl Client {
         }
     }
 
+    /// Run inner infinite event loop.
     pub async fn run_loop(&mut self) -> ! {
         match &mut self.inner {
             Inner::V3(inner) => inner.run_loop().await,
@@ -84,6 +89,7 @@ impl Client {
         }
     }
 
+    /// Publish packet.
     pub async fn publish(&mut self, topic: &str, qos: QoS, payload: &[u8]) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) => inner.publish(topic, qos, payload).await,
@@ -92,11 +98,21 @@ impl Client {
         }
     }
 
+    /// Subscribe to topic.
     pub async fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) => inner.subscribe(topic, qos).await,
             Inner::V4(inner) => inner.subscribe(topic, qos).await,
             Inner::V5(inner) => inner.subscribe(topic, qos).await,
+        }
+    }
+
+    /// Unsubscribe specific topic or topic pattern.
+    pub async fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
+        match &mut self.inner {
+            Inner::V3(inner) => inner.unsubscribe(topic).await,
+            Inner::V4(inner) => inner.unsubscribe(topic).await,
+            Inner::V5(inner) => inner.unsubscribe(topic).await,
         }
     }
 }
