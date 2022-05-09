@@ -5,10 +5,17 @@
 /// Mqtt connection status.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ClientStatus {
-    Initialized,
+    /// The client sends a Connect packet to the server and waits for a reply packet.
     Connecting,
+
+    /// The client is connected to the server.
+    /// Publish/subscribe packets can be sent now.
     Connected,
-    ConnectFailed,
+
+    /// The client prepares to send Disconnect packets from the server.
+    /// No other packets shall be send any more.
     Disconnecting,
+
+    /// The client is disconnected from the server.
     Disconnected,
 }
