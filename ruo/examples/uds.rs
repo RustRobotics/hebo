@@ -31,7 +31,7 @@ async fn main() {
 
     let mut options = ConnectOptions::new();
     options.set_connect_type(ConnectType::Uds(UdsConnect {
-        sock_path: PathBuf::from("/tmp/hebo-uds.sock"),
+        sock_path: PathBuf::from("/tmp/hebo/uds.sock"),
     }));
     let mut client = Client::new(options);
     //client.set_connect_callback(Box::new(on_connect));
