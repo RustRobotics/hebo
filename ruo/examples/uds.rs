@@ -11,7 +11,7 @@ use std::path::PathBuf;
 async fn on_connect(client: &mut Client) {
     log::info!(
         "[on_connect] client id: {}",
-        client.connect_option().client_id()
+        client.connect_options().client_id()
     );
 
     client
