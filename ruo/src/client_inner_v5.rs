@@ -112,7 +112,7 @@ impl ClientInnerV5 {
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
         if let Some(stream) = &mut self.stream {
-            stream.write(&buf).await.map(drop).map_err(|err| err.into())
+            stream.write(&buf).await.map(drop)
         } else {
             Err(Error::new(
                 ErrorKind::SocketError,
