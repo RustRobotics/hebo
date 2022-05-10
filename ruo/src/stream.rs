@@ -26,6 +26,7 @@ pub enum Stream {
     Wss(WebSocketStream<TlsStream<TcpStream>>),
     Uds(UnixStream),
     Quic(quinn::NewConnection),
+    None,
 }
 
 impl fmt::Debug for Stream {
@@ -37,6 +38,7 @@ impl fmt::Debug for Stream {
             Self::Wss(..) => f.write_str("Wsx"),
             Self::Uds(..) => f.write_str("Uds"),
             Self::Quic(..) => f.write_str("Quic"),
+            Self::None => f.write_str("None"),
         }
     }
 }
@@ -195,6 +197,7 @@ impl Stream {
                     Ok(0)
                 }
             }
+            Stream::None => unreachable!(),
         }
     }
 
@@ -219,6 +222,7 @@ impl Stream {
                 send.finish().await?;
                 Ok(buf.len())
             }
+            Stream::None => unreachable!(),
         }
     }
 }
