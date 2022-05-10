@@ -2,11 +2,12 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use clap::Arg;
+use clap::{Arg, ArgMatches, Command};
 use std::path::Path;
 use tokio::runtime::Runtime;
 
 use super::ServerContext;
+use crate::auth::file_auth;
 use crate::config::Config;
 use crate::error::{Error, ErrorKind};
 use crate::log::init_log;
@@ -16,13 +17,51 @@ const OPT_CONFIG: &str = "config";
 const OPT_RELOAD: &str = "reload";
 const OPT_STOP: &str = "stop";
 const OPT_TEST: &str = "test";
+const SUBCMD_PASSWORD: &str = "password";
+const OPT_ADD: &str = "add";
+const OPT_UPDATE: &str = "update";
+const OPT_DELETE: &str = "delete";
+const OPT_PASSWORD_FILE: &str = "password_file";
 
-/// Entry point of server
-pub fn run_server() -> Result<(), Error> {
-    let matches = clap::Command::new("Hebo")
-        .version("0.1.0")
+fn get_cmdline() -> Command<'static> {
+    Command::new("Hebo")
+        .version("0.2.5")
         .author("Xu Shaohua <shaohua@biofan.org>")
         .about("High Performance MQTT Server")
+        .subcommand(
+            Command::new(SUBCMD_PASSWORD)
+                .about("Manages password files for hebo")
+                .arg(
+                    Arg::new(OPT_ADD)
+                        .short('a')
+                        .long(OPT_ADD)
+                        .takes_value(true)
+                        .value_name("username:passwd")
+                        .multiple_occurrences(true)
+                        .help("Add username:passwd pair. Or update if username already exists."),
+                )
+                .arg(
+                    Arg::new(OPT_DELETE)
+                        .short('d')
+                        .long(OPT_DELETE)
+                        .takes_value(true)
+                        .value_name("username")
+                        .multiple_occurrences(true)
+                        .help("Delete the username rather than adding/updating its password."),
+                )
+                .arg(
+                    Arg::new(OPT_UPDATE)
+                        .short('u')
+                        .long(OPT_UPDATE)
+                        .takes_value(false)
+                        .help("Update a plain text password file to use hashed passwords"),
+                )
+                .arg(
+                    Arg::new(OPT_PASSWORD_FILE)
+                        .required(true)
+                        .help("password_file will be crated if not exist"),
+                ),
+        )
         .arg(
             Arg::new(OPT_CONFIG)
                 .short('c')
@@ -52,7 +91,46 @@ pub fn run_server() -> Result<(), Error> {
                 .takes_value(false)
                 .help("Test config file and exit"),
         )
-        .get_matches();
+}
+
+fn handle_password_subcmd(matches: &ArgMatches) -> Result<(), Error> {
+    let password_file = if let Some(file) = matches.value_of(OPT_PASSWORD_FILE) {
+        file
+    } else {
+        return Err(Error::new(
+            ErrorKind::ParameterError,
+            "password_file is required",
+        ));
+    };
+
+    if matches.is_present(OPT_UPDATE) {
+        return file_auth::update_file_hash(password_file);
+    }
+
+    let add_users: Vec<&str> = if let Some(users) = matches.values_of(OPT_ADD) {
+        users.collect()
+    } else {
+        Vec::new()
+    };
+
+    let delete_users: Vec<&str> = if let Some(users) = matches.values_of(OPT_DELETE) {
+        users.collect()
+    } else {
+        Vec::new()
+    };
+
+    return file_auth::add_delete_users(password_file, &add_users, &delete_users);
+}
+
+/// Entry point of server
+pub fn handle_cmdline() -> Result<(), Error> {
+    let matches = get_cmdline().get_matches();
+    match matches.subcommand() {
+        Some((SUBCMD_PASSWORD, sub_matches)) => return handle_password_subcmd(sub_matches),
+        _ => {
+            // Do nothing
+        }
+    }
 
     let config_file = if let Some(config_file) = matches.value_of(OPT_CONFIG) {
         Some(config_file)

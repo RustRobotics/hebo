@@ -5,5 +5,5 @@
 use hebo::{server, Error};
 
 fn main() -> Result<(), Error> {
-    server::run::run_server()
+    server::run::handle_cmdline()
 }
