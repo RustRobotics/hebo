@@ -5,15 +5,19 @@
 use std::fmt;
 use std::io::{Read, Write};
 use std::net::TcpStream;
+#[cfg(unix)]
 use std::os::unix::net::UnixStream;
 use tungstenite::{Message, WebSocket};
 
-use crate::connect_options::{ConnectType, MqttConnect, UdsConnect, WsConnect};
+#[cfg(unix)]
+use crate::connect_options::UdsConnect;
+use crate::connect_options::{ConnectType, MqttConnect, WsConnect};
 use crate::error::Error;
 
 pub enum Stream {
     Mqtt(TcpStream),
     Ws(WebSocket<tungstenite::stream::MaybeTlsStream<TcpStream>>),
+    #[cfg(unix)]
     Uds(UnixStream),
 }
 
@@ -22,6 +26,7 @@ impl fmt::Debug for Stream {
         match self {
             Self::Mqtt(..) => f.write_str("Mqtt"),
             Self::Ws(..) => f.write_str("Ws"),
+            #[cfg(unix)]
             Self::Uds(..) => f.write_str("Uds"),
         }
     }
@@ -33,6 +38,7 @@ impl Drop for Stream {
         match self {
             Stream::Mqtt(stream) => drop(stream),
             Stream::Ws(stream) => drop(stream),
+            #[cfg(unix)]
             Stream::Uds(stream) => drop(stream),
         }
     }
@@ -43,6 +49,7 @@ impl Stream {
         match connect_type {
             ConnectType::Mqtt(mqtt_connect) => Stream::new_mqtt(mqtt_connect),
             ConnectType::Ws(ws_connect) => Stream::new_ws(ws_connect),
+            #[cfg(unix)]
             ConnectType::Uds(uds_connect) => Stream::new_uds(uds_connect),
             _ => todo!(),
         }
@@ -59,6 +66,7 @@ impl Stream {
         Ok(Stream::Ws(ws_stream))
     }
 
+    #[cfg(unix)]
     fn new_uds(uds_connect: &UdsConnect) -> Result<Stream, Error> {
         let uds_stream = UnixStream::connect(&uds_connect.sock_path)?;
         Ok(Stream::Uds(uds_stream))
@@ -79,6 +87,7 @@ impl Stream {
                 buf.extend(data);
                 Ok(data_len)
             }
+            #[cfg(unix)]
             Stream::Uds(uds_stream) => uds_stream.read(buf).map_err(|err| err.into()),
         }
     }
@@ -96,6 +105,7 @@ impl Stream {
                 Ok(buf.len())
             }
 
+            #[cfg(unix)]
             Stream::Uds(uds_stream) => {
                 uds_stream.write_all(buf)?;
                 Ok(buf.len())

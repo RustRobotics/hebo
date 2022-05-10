@@ -9,13 +9,17 @@ use std::io::BufReader;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpStream, UnixStream};
+use tokio::net::TcpStream;
+#[cfg(unix)]
+use tokio::net::UnixStream;
 use tokio_rustls::client::TlsStream;
 use tokio_rustls::rustls;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
+#[cfg(unix)]
+use crate::connect_options::UdsConnect;
 use crate::connect_options::{
-    ConnectType, MqttConnect, MqttsConnect, QuicConnect, TlsType, UdsConnect, WsConnect, WssConnect,
+    ConnectType, MqttConnect, MqttsConnect, QuicConnect, TlsType, WsConnect, WssConnect,
 };
 use crate::error::Error;
 
@@ -24,6 +28,7 @@ pub enum Stream {
     Mqtts(TlsStream<TcpStream>),
     Ws(WebSocketStream<TcpStream>),
     Wss(WebSocketStream<TlsStream<TcpStream>>),
+    #[cfg(unix)]
     Uds(UnixStream),
     Quic(quinn::NewConnection),
     None,
@@ -36,6 +41,7 @@ impl fmt::Debug for Stream {
             Self::Mqtts(..) => f.write_str("Mqtts"),
             Self::Ws(..) => f.write_str("Ws"),
             Self::Wss(..) => f.write_str("Wsx"),
+            #[cfg(unix)]
             Self::Uds(..) => f.write_str("Uds"),
             Self::Quic(..) => f.write_str("Quic"),
             Self::None => f.write_str("None"),
@@ -50,6 +56,7 @@ impl Stream {
             ConnectType::Mqtts(mqtts_connect) => Self::new_mqtts(mqtts_connect).await,
             ConnectType::Ws(ws_connect) => Self::new_ws(ws_connect).await,
             ConnectType::Wss(wss_connect) => Self::new_wss(wss_connect).await,
+            #[cfg(unix)]
             ConnectType::Uds(uds_connect) => Self::new_uds(uds_connect).await,
             ConnectType::Quic(quic_connect) => Self::new_quic(quic_connect).await,
         }
@@ -132,6 +139,7 @@ impl Stream {
         Ok(Stream::Wss(ws_stream))
     }
 
+    #[cfg(unix)]
     async fn new_uds(uds_connect: &UdsConnect) -> Result<Stream, Error> {
         let uds_stream = UnixStream::connect(&uds_connect.sock_path).await?;
         Ok(Stream::Uds(uds_stream))
@@ -189,6 +197,7 @@ impl Stream {
                     Ok(0)
                 }
             }
+            #[cfg(unix)]
             Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
             Stream::Quic(ref mut quic_connection) => {
                 if let Some(Ok(mut recv)) = quic_connection.uni_streams.next().await {
@@ -215,6 +224,7 @@ impl Stream {
                 wss_stream.send(msg).await?;
                 Ok(buf.len())
             }
+            #[cfg(unix)]
             Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
             Stream::Quic(quic_connection) => {
                 let mut send = quic_connection.connection.open_uni().await?;

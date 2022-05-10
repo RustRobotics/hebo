@@ -82,6 +82,7 @@ pub struct WssConnect {
 }
 
 /// Connect to unix domain socket server.
+#[cfg(unix)]
 #[derive(Clone, Debug)]
 pub struct UdsConnect {
     pub sock_path: PathBuf,
@@ -105,6 +106,7 @@ pub enum ConnectType {
     Mqtts(MqttsConnect),
     Ws(WsConnect),
     Wss(WssConnect),
+    #[cfg(unix)]
     Uds(UdsConnect),
     Quic(QuicConnect),
 }
