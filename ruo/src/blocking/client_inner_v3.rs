@@ -308,7 +308,7 @@ impl ClientInnerV3 {
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
         if let Some(stream) = &mut self.stream {
-            stream.write_all(&buf).map_err(|err| err.into())
+            stream.write_all(&buf).map(drop)
         } else {
             Err(Error::new(
                 ErrorKind::SocketError,
