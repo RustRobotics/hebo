@@ -31,7 +31,7 @@ log_file = "/tmp/hebo-tests/hebo-1894.log"
 "#;
 
 #[test]
-fn test_connect_max_keepalive() {
+fn test_connect_max_keepalive() -> Result<(), Error> {
     let config = ServerConfig::new("/tmp/hebo-tests/01-connect-max-keepalive.toml", CONFIG)?;
     let server = Server::start(config.filename())?;
     sleep(Duration::from_secs(5));

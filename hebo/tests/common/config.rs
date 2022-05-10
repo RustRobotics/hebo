@@ -4,7 +4,6 @@
 
 use hebo::error::{Error, ErrorKind};
 use std::fs;
-use std::io::Write;
 use std::path::Path;
 
 /// ServerConfig is used to save config string to local filesystem.
