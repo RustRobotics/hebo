@@ -11,10 +11,6 @@ publish = true
 name = "hebo"
 path = "src/bin/hebo.rs"
 
-[[bin]]
-name = "hebo-passwd"
-path = "src/bin/hebo_passwd.rs"
-
 [features]
 default = ["full"]
 
