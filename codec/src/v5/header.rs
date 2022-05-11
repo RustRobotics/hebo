@@ -98,9 +98,10 @@ impl From<PacketType> for u8 {
                 let retain = if retain { 0b0000_0001 } else { 0b0000_0000 };
                 dup | qos | retain
             }
-            PacketType::PublishRelease => 0b0000_0010,
-            PacketType::Subscribe => 0b0000_0010,
-            PacketType::Unsubscribe => 0b0000_0010,
+            PacketType::PublishRelease | PacketType::Subscribe | PacketType::Unsubscribe => {
+                // Reserved
+                0b0000_0010
+            }
             _ => 0b0000_0000,
         };
         (type_bits << 4) | flags_bits

@@ -25,6 +25,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 /// ```
 ///
 /// This packet does not contain variable header or payload.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct DisconnectPacket {
     reason_code: ReasonCode,
@@ -32,24 +33,32 @@ pub struct DisconnectPacket {
 }
 
 impl DisconnectPacket {
-    pub fn new() -> DisconnectPacket {
+    /// Create a disconnect packet with default value.
+    #[must_use]
+    pub fn new() -> Self {
         Self::default()
     }
 
+    /// Update reason code.
     pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> &mut Self {
         self.reason_code = reason_code;
         self
     }
 
-    pub fn reason_code(&self) -> ReasonCode {
+    /// Get current reason code.
+    #[must_use]
+    pub const fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
+    /// Get a mutable reference to property list.
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
-    pub fn properties(&self) -> &Properties {
+    /// Get a reference to property list.
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 }
@@ -108,7 +117,7 @@ impl Packet for DisconnectPacket {
 }
 
 impl DecodePacket for DisconnectPacket {
-    fn decode(ba: &mut ByteArray) -> Result<DisconnectPacket, DecodeError> {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::Disconnect {
             return Err(DecodeError::InvalidPacketType);

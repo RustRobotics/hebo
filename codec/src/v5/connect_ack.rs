@@ -39,6 +39,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 /// amount of time depends on the type of application and the communications infrastructure.
 ///
 /// This packet does not contain payload.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectAckPacket {
     /// Acknowledge flags is the first byte in variable header.
@@ -60,7 +61,7 @@ pub struct ConnectAckPacket {
     properties: Properties,
 }
 
-/// If the Server sends a ConnectAck packet with non-zero return code, it MUST
+/// If the Server sends a connect ack packet with non-zero return code, it MUST
 /// close the network connection.
 pub const CONNECT_REASONS: &[ReasonCode] = &[
     ReasonCode::Success,
@@ -86,7 +87,7 @@ pub const CONNECT_REASONS: &[ReasonCode] = &[
     ReasonCode::ConnectionRateExceeded,
 ];
 
-/// Available properties for ConnectAck packets.
+/// Available properties for connect ack packets.
 pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
     PropertyType::SessionExpiryInterval,
     PropertyType::ReceiveMaximum,
@@ -108,23 +109,26 @@ pub const CONNECT_ACK_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl ConnectAckPacket {
-    /// Create a new ConnectAck packet.
-    pub fn new(mut session_present: bool, reason_code: ReasonCode) -> ConnectAckPacket {
+    /// Create a new connect ack packet.
+    #[must_use]
+    pub fn new(mut session_present: bool, reason_code: ReasonCode) -> Self {
         // If a Server sends a CONNACK packet containing a non-zero Reason Code
         // it MUST set Session Present to 0 [MQTT-3.2.2-6].
         if reason_code != ReasonCode::Success {
             session_present = false;
         }
-        ConnectAckPacket {
+        Self {
             session_present,
             reason_code,
             properties: Properties::new(),
         }
     }
 
-    /// Update reason_code.
+    /// Update reason code.
     ///
-    /// Returns Error if `reason_code` is not in `CONNECT_REASONS` list.
+    /// # Errors
+    ///
+    /// Returns error if `reason_code` is not in `CONNECT_REASONS` list.
     pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> Result<&mut Self, EncodeError> {
         if !CONNECT_REASONS.contains(&reason_code) {
             return Err(EncodeError::InvalidReasonCode);
@@ -137,7 +141,8 @@ impl ConnectAckPacket {
     }
 
     /// Get current reason code.
-    pub fn reason_code(&self) -> ReasonCode {
+    #[must_use]
+    pub const fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
@@ -148,7 +153,8 @@ impl ConnectAckPacket {
     }
 
     /// Get current session present value.
-    pub fn session_present(&self) -> bool {
+    #[must_use]
+    pub const fn session_present(&self) -> bool {
         self.session_present
     }
 
@@ -158,7 +164,8 @@ impl ConnectAckPacket {
     }
 
     /// Get a reference to property list.
-    pub fn properties(&self) -> &Properties {
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 }
@@ -187,7 +194,7 @@ impl DecodePacket for ConnectAckPacket {
             return Err(DecodeError::InvalidPropertyType);
         }
 
-        Ok(ConnectAckPacket {
+        Ok(Self {
             session_present,
             reason_code,
             properties,

@@ -269,34 +269,46 @@ impl ConnectPacket {
         &mut self.properties
     }
 
+    #[must_use]
     pub fn properties(&self) -> &Properties {
         &self.properties
     }
 
-    pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
-        validate_client_id(id).map_err(|_err| EncodeError::InvalidClientId)?;
-        self.client_id = StringData::from_str(id)?;
+    /// Update client id.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `client_id` is invalid.
+    pub fn set_client_id(&mut self, client_id: &str) -> Result<&mut Self, EncodeError> {
+        validate_client_id(client_id).map_err(|_err| EncodeError::InvalidClientId)?;
+        self.client_id = StringData::from_str(client_id)?;
         Ok(self)
     }
 
+    /// Get current client id.
+    #[must_use]
     pub fn client_id(&self) -> &str {
         self.client_id.as_ref()
     }
 
+    /// Update username value.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `username` is out of range.
     pub fn set_username(&mut self, username: Option<&str>) -> Result<&mut Self, DecodeError> {
-        match username {
-            Some(username) => {
-                self.username = StringData::from_str(username)?;
-                self.connect_flags.set_username(true);
-            }
-            _ => {
-                self.connect_flags.set_username(false);
-                self.username = StringData::new();
-            }
+        if let Some(username) = username {
+            self.username = StringData::from_str(username)?;
+            self.connect_flags.set_username(true);
+        } else {
+            self.connect_flags.set_username(false);
+            self.username = StringData::new();
         }
         Ok(self)
     }
 
+    /// Get current username value.
+    #[must_use]
     pub fn username(&self) -> Option<&str> {
         if self.connect_flags.username() {
             Some(self.username.as_ref())
@@ -305,6 +317,11 @@ impl ConnectPacket {
         }
     }
 
+    /// Update password value.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `password` is out of range.
     pub fn set_password(&mut self, password: Option<&[u8]>) -> Result<&mut Self, EncodeError> {
         match password {
             Some(password) => {
@@ -319,6 +336,8 @@ impl ConnectPacket {
         Ok(self)
     }
 
+    /// Get current password value.
+    #[must_use]
     pub fn password(&self) -> Option<&[u8]> {
         if self.connect_flags.password() {
             Some(self.password.as_ref())
@@ -327,32 +346,48 @@ impl ConnectPacket {
         }
     }
 
+    /// Get a mutable reference to will property list.
     pub fn will_properties_mut(&mut self) -> &mut Properties {
         &mut self.will_properties
     }
 
-    pub fn will_properties(&self) -> &Properties {
+    /// Get a reference to will property list.
+    #[must_use]
+    pub const fn will_properties(&self) -> &Properties {
         &self.will_properties
     }
 
+    /// Update will topic.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
-        if !topic.is_empty() {
-            self.will_topic = Some(PubTopic::new(topic)?);
-        } else {
+        if topic.is_empty() {
             self.will_topic = None;
+        } else {
+            self.will_topic = Some(PubTopic::new(topic)?);
         }
         Ok(self)
     }
 
+    /// Get current will topic.
     pub fn will_topic(&self) -> Option<&str> {
         self.will_topic.as_ref().map(AsRef::as_ref)
     }
 
+    /// Update will message bytes.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `message` is out of range.
     pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, EncodeError> {
         self.will_message = BinaryData::from_slice(message)?;
         Ok(self)
     }
 
+    /// Get will message bytes.
+    #[must_use]
     pub fn will_message(&self) -> &[u8] {
         self.will_message.as_ref()
     }
@@ -512,15 +547,15 @@ impl DecodePacket for ConnectPacket {
             return Err(DecodeError::InvalidPropertyType);
         }
 
-        Ok(ConnectPacket {
+        Ok(Self {
             protocol_name,
             protocol_level,
-            keep_alive,
             connect_flags,
+            keep_alive,
             properties,
             client_id,
-            will_topic,
             will_properties,
+            will_topic,
             will_message,
             username,
             password,
