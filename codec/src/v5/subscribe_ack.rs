@@ -152,7 +152,7 @@ impl DecodePacket for SubscribeAckPacket {
                 return Err(DecodeError::InvalidReasonCode);
             }
             reasons.push(reason);
-            remaining_length += reason.bytes();
+            remaining_length += ReasonCode::bytes();
         }
 
         Ok(Self {
@@ -168,7 +168,7 @@ impl EncodePacket for SubscribeAckPacket {
         let old_len = buf.len();
         let remaining_length = self.packet_id.bytes()
             + self.properties.bytes()
-            + self.reasons.len() * ReasonCode::const_bytes();
+            + self.reasons.len() * ReasonCode::bytes();
         let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;

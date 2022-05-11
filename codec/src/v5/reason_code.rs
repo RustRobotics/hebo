@@ -423,6 +423,6 @@ impl DecodePacket for ReasonCode {
 impl EncodePacket for ReasonCode {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         buf.push(*self as u8);
-        Ok(self.bytes())
+        Ok(Self::bytes())
     }
 }

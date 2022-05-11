@@ -258,7 +258,7 @@ impl DecodePacket for SubscribeTopic {
 /// to an existing Subscription's Topic Filter then it must completely replace existing
 /// Subscription with a new Subscription. The Topic Filter in the new Subscription will
 /// be identical to the previous Subscription, also `QoS` may be different. Any existing
-/// retained message will be re-sent to the new Subscription.
+/// retained message will be re-sent to the new Subscrption.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct SubscribePacket {
