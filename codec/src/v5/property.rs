@@ -50,6 +50,7 @@ pub fn check_property_type_list(
     Ok(())
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PropertyType {
@@ -83,7 +84,9 @@ pub enum PropertyType {
 }
 
 impl PropertyType {
-    pub const fn const_bytes() -> usize {
+    /// Get byte length used in packet.
+    #[must_use]
+    pub const fn bytes() -> usize {
         1
     }
 }
@@ -91,7 +94,7 @@ impl PropertyType {
 impl TryFrom<u8> for PropertyType {
     type Error = DecodeError;
 
-    fn try_from(v: u8) -> Result<PropertyType, Self::Error> {
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
             0x01 => Ok(Self::PayloadFormatIndicator),
             0x02 => Ok(Self::MessageExpiryInterval),
@@ -614,7 +617,9 @@ pub enum Property {
 }
 
 impl Property {
-    pub fn property_type(&self) -> PropertyType {
+    /// Get type of the property.
+    #[must_use]
+    pub const fn property_type(&self) -> PropertyType {
         match self {
             Self::PayloadFormatIndicator(_) => PropertyType::PayloadFormatIndicator,
             Self::MessageExpiryInterval(_) => PropertyType::MessageExpiryInterval,
@@ -648,6 +653,9 @@ impl Property {
         }
     }
 
+    /// Get byte length used in packets.
+    #[allow(clippy::match_same_arms)]
+    #[must_use]
     pub fn bytes(&self) -> usize {
         let value_bytes = match self {
             Self::AssignedClientIdentifier(value) => value.bytes(),
@@ -679,48 +687,58 @@ impl Property {
             Self::WillDelayInterval(value) => value.bytes(),
         };
 
-        PropertyType::const_bytes() + value_bytes
+        PropertyType::bytes() + value_bytes
     }
 }
 
 impl Property {
-    /// The Client uses this value to limit the number of QoS 1 and QoS 2 publications that
-    /// it is willing to process concurrently. There is no mechanism to limit
-    /// the QoS 0 publications that the Server might try to send.
+    /// The Client uses this value to limit the number of `QoS` 1 and `QoS` 2 publications that
+    /// it is willing to process concurrently.
+    ///
+    /// There is no mechanism to limit the `QoS` 0 publications that the Server might try to send.
+    #[must_use]
     pub const fn default_receive_maximum() -> u16 {
         u16::MAX
     }
 
+    #[must_use]
     pub const fn default_topic_alias_maximum() -> u16 {
         0
     }
 
+    #[must_use]
     pub const fn default_request_respones_information() -> bool {
         false
     }
 
+    #[must_use]
     pub const fn default_request_problem_information() -> bool {
         true
     }
 
+    #[must_use]
     pub const fn default_will_delay_interval() -> u32 {
         0
     }
 
+    #[must_use]
     pub const fn default_wildcard_subscription_available() -> bool {
         true
     }
 
+    #[must_use]
     pub const fn default_subscription_identifier_available() -> bool {
         true
     }
 
+    #[must_use]
     pub const fn default_shared_subscription_available() -> bool {
         true
     }
 }
 
 impl DecodePacket for Property {
+    #[allow(clippy::too_many_lines)]
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let property_type_byte = ba.read_byte()?;
         let property_type = PropertyType::try_from(property_type_byte)?;
@@ -838,6 +856,7 @@ impl DecodePacket for Property {
 }
 
 impl EncodePacket for Property {
+    #[allow(clippy::match_same_arms)]
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let property_type_byte = self.property_type() as u8;
         buf.push(property_type_byte);
@@ -870,7 +889,7 @@ impl EncodePacket for Property {
             Self::WildcardSubscriptionAvailable(available) => available.encode(buf)?,
             Self::WillDelayInterval(interval) => interval.encode(buf)?,
         };
-        Ok(PropertyType::const_bytes() + value_bytes)
+        Ok(PropertyType::bytes() + value_bytes)
     }
 }
 
@@ -881,31 +900,43 @@ pub struct Properties {
 }
 
 impl Properties {
+    /// Create a new property list with default values.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Get byte length of property list.
+    #[must_use]
     pub fn bytes(&self) -> usize {
-        self.len.bytes() + self.props.iter().map(|p| p.bytes()).sum::<usize>()
+        self.len.bytes() + self.props.iter().map(Property::bytes).sum::<usize>()
     }
 
+    /// Get length of property list.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.len.value()
     }
 
+    /// Check whether property list is empty.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len.value() == 0
     }
 
+    /// Get a reference to property list.
+    #[must_use]
     pub fn props(&self) -> &[Property] {
         &self.props
     }
 
+    /// Clear property list.
     pub fn clear(&mut self) {
         self.props.clear();
         self.len = VarInt::new();
     }
 
+    /// Removes the last property from list and returns it, or `None` if it is empty.
     pub fn pop(&mut self) -> Option<Property> {
         if let Some(prop) = self.props.pop() {
             self.len.unchecked_sub(1);
@@ -915,18 +946,33 @@ impl Properties {
         }
     }
 
+    /// Push a property to the back of the list.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if list is already full.
     pub fn push(&mut self, v: Property) -> Result<(), EncodeError> {
         self.len.add(1)?;
         self.props.push(v);
         Ok(())
     }
 
+    /// Insert a property to speicify `index` of list.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if list is already full.
     pub fn insert(&mut self, index: usize, prop: Property) -> Result<(), EncodeError> {
         self.len.add(1)?;
         self.props.insert(index, prop);
         Ok(())
     }
 
+    /// Remove and returns the property from list.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if list is already empty.
     pub fn remove(&mut self, index: usize) -> Result<Property, EncodeError> {
         self.len.sub(1)?;
         Ok(self.props.remove(index))

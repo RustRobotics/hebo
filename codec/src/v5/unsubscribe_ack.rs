@@ -6,7 +6,7 @@ use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
-/// UnsubscribeAck packet is sent by the Server to the Client to confirm receipt of an
+/// `UnsubscribeAck` packet is sent by the Server to the Client to confirm receipt of an
 /// Unsubscribe packet.
 ///
 /// Basic struct of packet:
@@ -26,6 +26,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Pac
 /// ```
 ///
 /// Note that this packet does not contain payload message.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct UnsubscribeAckPacket {
     /// `packet_id` field is read from Unsubscribe packet.
@@ -39,6 +40,8 @@ pub struct UnsubscribeAckPacket {
 }
 
 impl UnsubscribeAckPacket {
+    /// Create a new unsubscribe ack packet which contains one reason code.
+    #[must_use]
     pub fn new(packet_id: PacketId, reason: ReasonCode) -> Self {
         Self {
             packet_id,
@@ -47,6 +50,8 @@ impl UnsubscribeAckPacket {
         }
     }
 
+    /// Create a new unsubscribe ack packet which contains multiple reasons.
+    #[must_use]
     pub fn with_vec(packet_id: PacketId, reasons: Vec<ReasonCode>) -> Self {
         Self {
             packet_id,
@@ -55,19 +60,25 @@ impl UnsubscribeAckPacket {
         }
     }
 
+    /// Update packet id.
     pub fn set_packet_id(&mut self, packet_id: PacketId) {
         self.packet_id = packet_id;
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Get a mutable reference to property list.
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
-    pub fn properties(&self) -> &Properties {
+    /// Get a reference to property list.
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 
@@ -75,6 +86,7 @@ impl UnsubscribeAckPacket {
         &mut self.reasons
     }
 
+    #[must_use]
     pub fn reasons(&self) -> &[ReasonCode] {
         &self.reasons
     }
@@ -104,7 +116,7 @@ pub const UNSUBSCRIBE_ACK_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl DecodePacket for UnsubscribeAckPacket {
-    fn decode(ba: &mut ByteArray) -> Result<UnsubscribeAckPacket, DecodeError> {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::UnsubscribeAck {
             return Err(DecodeError::InvalidPacketType);
@@ -140,7 +152,7 @@ impl DecodePacket for UnsubscribeAckPacket {
             remaining_length += reason.bytes();
         }
 
-        Ok(UnsubscribeAckPacket {
+        Ok(Self {
             packet_id,
             properties,
             reasons,

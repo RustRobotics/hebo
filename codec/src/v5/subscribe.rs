@@ -42,6 +42,7 @@ impl TryFrom<u8> for RetainHandling {
 }
 
 /// Topic/QoS pair.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SubscribeTopic {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
@@ -85,6 +86,11 @@ pub struct SubscribeTopic {
 }
 
 impl SubscribeTopic {
+    /// Create a new subscribe topic.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn new(topic: &str, qos: QoS) -> Result<Self, EncodeError> {
         let topic = SubTopic::new(topic)?;
         Ok(Self {
@@ -94,48 +100,67 @@ impl SubscribeTopic {
         })
     }
 
+    /// Update topic pattern.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn set_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
         self.topic = SubTopic::new(topic)?;
         Ok(self)
     }
 
+    /// Get current topic pattern.
+    #[must_use]
     pub fn topic(&self) -> &str {
         self.topic.as_ref()
     }
 
+    /// Update `qos` value.
     pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
         self.qos = qos;
         self
     }
 
-    pub fn qos(&self) -> QoS {
+    /// Get current `QoS`.
+    #[must_use]
+    pub const fn qos(&self) -> QoS {
         self.qos
     }
 
+    /// Set `no_local` flag.
     pub fn set_no_local(&mut self, no_local: bool) -> &mut Self {
         self.no_local = no_local;
         self
     }
 
-    pub fn no_local(&self) -> bool {
+    /// Get `no_local` flag.
+    #[must_use]
+    pub const fn no_local(&self) -> bool {
         self.no_local
     }
 
+    /// Update `retain_as_published` flag.
     pub fn set_retain_as_published(&mut self, retain_as_published: bool) -> &mut Self {
         self.retain_as_published = retain_as_published;
         self
     }
 
-    pub fn retain_as_published(&self) -> bool {
+    /// Get `retain_as_published` flag.
+    #[must_use]
+    pub const fn retain_as_published(&self) -> bool {
         self.retain_as_published
     }
 
+    /// Update `retain_handling` flag.
     pub fn set_retain_handling(&mut self, retain_handling: RetainHandling) -> &mut Self {
         self.retain_handling = retain_handling;
         self
     }
 
-    pub fn retain_handling(&self) -> RetainHandling {
+    /// Get `retain_handling` flag.
+    #[must_use]
+    pub const fn retain_handling(&self) -> RetainHandling {
         self.retain_handling
     }
 
@@ -194,7 +219,7 @@ impl DecodePacket for SubscribeTopic {
 }
 
 /// Subscribe packet is sent from the Client to the Server to subscribe one or more topics.
-/// This packet also specifies the maximum QoS with which the Server can send Application
+/// This packet also specifies the maximum `QoS` with which the Server can send Application
 /// message to the Client.
 ///
 /// Basic struct of this packet:
@@ -227,13 +252,14 @@ impl DecodePacket for SubscribeTopic {
 /// +----------------------------+
 /// ```
 ///
-/// Each topic name is followed by associated QoS flag.
+/// Each topic name is followed by associated `QoS` flag.
 ///
 /// If a Server receives a Subscribe packet containing a Topic Filter that is identical
 /// to an existing Subscription's Topic Filter then it must completely replace existing
 /// Subscription with a new Subscription. The Topic Filter in the new Subscription will
-/// be identical to the previous Subscription, also QoS may be different. Any existing
-/// retained message will be re-sent to the new Subscrption.
+/// be identical to the previous Subscription, also `QoS` may be different. Any existing
+/// retained message will be re-sent to the new Subscription.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct SubscribePacket {
     /// `packet_id` is used by the Server to reply SubscribeAckPacket to the client.
@@ -259,49 +285,64 @@ pub const SUBSCRIBE_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl SubscribePacket {
-    pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> Result<SubscribePacket, EncodeError> {
+    /// Create a new subscribe packet.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` pattern is invalid.
+    pub fn new(topic: &str, qos: QoS, packet_id: PacketId) -> Result<Self, EncodeError> {
         let topic = SubscribeTopic::new(topic, qos)?;
-        Ok(SubscribePacket {
+        Ok(Self {
             packet_id,
             properties: Properties::new(),
             topics: vec![topic],
         })
     }
 
+    /// Update packet id.
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Get a mutable reference to property list.
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
-    pub fn properties(&self) -> &Properties {
+    /// Get a reference to property list.
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 
+    /// Update topic patterns.
     pub fn set_topics(&mut self, topics: &[SubscribeTopic]) -> &mut Self {
         self.topics.clear();
         self.topics.extend_from_slice(topics);
         self
     }
 
+    /// Get a reference to topic patterns.
+    #[must_use]
     pub fn topics(&self) -> &[SubscribeTopic] {
         &self.topics
     }
 
+    /// Get a mutable reference to topic patterns.
     pub fn mut_topics(&mut self) -> &mut Vec<SubscribeTopic> {
         &mut self.topics
     }
 }
 
 impl DecodePacket for SubscribePacket {
-    fn decode(ba: &mut ByteArray) -> Result<SubscribePacket, DecodeError> {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::Subscribe {
             return Err(DecodeError::InvalidPacketType);
@@ -350,7 +391,7 @@ impl DecodePacket for SubscribePacket {
             return Err(DecodeError::EmptyTopicFilter);
         }
 
-        Ok(SubscribePacket {
+        Ok(Self {
             packet_id,
             properties,
             topics,

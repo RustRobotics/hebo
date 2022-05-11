@@ -10,7 +10,7 @@ use crate::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic, QoS,
 };
 
-/// PublishPacket is used to transport application messages from the Client to the Server,
+/// `PublishPacket` is used to transport application messages from the Client to the Server,
 /// or from the Server to the Client.
 ///
 /// Basic structure of packet:
@@ -35,12 +35,13 @@ use crate::{
 /// +-----------------------+
 /// ```
 ///
-/// Note that `packet_id` only appears in QoS 1 and QoS 2 packets.
+/// Note that `packet_id` only appears in `QoS` 1 and `QoS` 2 packets.
 ///
-/// Response of PublischPacket:
-/// * QoS 0, no response
-/// * QoS 1, PublishAckPacket
-/// * QoS 2, PublishRecPacket
+/// Response of `PublischPacket`:
+/// - `QoS` 0, no response
+/// - `QoS` 1, `PublishAckPacket`
+/// - `QoS` 2, `PublishReceivedPacket`
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PublishPacket {
     /// If the DUP flag is set to 0, it indicates that this is the first occasion that
@@ -150,6 +151,7 @@ pub struct PublishPacket {
     msg: Vec<u8>,
 }
 
+/// Properties available in publish packets.
 pub const PUBLISH_PROPERTIES: &[PropertyType] = &[
     // A Server MUST send the Payload Format Indicator unaltered to all subscribers
     // receiving the Application Message [MQTT-3.3.2-4].
@@ -202,10 +204,15 @@ pub const PUBLISH_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl PublishPacket {
-    pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> Result<PublishPacket, EncodeError> {
+    /// Create a new publish packet.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
+    pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> Result<Self, EncodeError> {
         let topic = PubTopic::new(topic)?;
         let msg = msg.to_vec();
-        Ok(PublishPacket {
+        Ok(Self {
             qos,
             dup: false,
             retain: false,
@@ -216,19 +223,28 @@ impl PublishPacket {
         })
     }
 
+    /// Append bytes to messages.
     pub fn append(&mut self, msg_parts: &[u8]) {
         self.msg.extend_from_slice(msg_parts);
     }
 
+    /// Update `retian` flag.
     pub fn set_retain(&mut self, retain: bool) -> &mut Self {
         self.retain = retain;
         self
     }
 
-    pub fn retain(&self) -> bool {
+    /// Get current `retain` flag.
+    #[must_use]
+    pub const fn retain(&self) -> bool {
         self.retain
     }
 
+    /// Update `dup` flag.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `dup` flag is set in `QoS` 0 packet.
     pub fn set_dup(&mut self, dup: bool) -> Result<&mut Self, EncodeError> {
         // The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
         if dup && self.qos == QoS::AtMostOnce {
@@ -238,10 +254,13 @@ impl PublishPacket {
         Ok(self)
     }
 
-    pub fn dup(&self) -> bool {
+    /// Get current `dup` flag.
+    #[must_use]
+    pub const fn dup(&self) -> bool {
         self.dup
     }
 
+    /// Update `qos` value.
     pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
         if qos == QoS::AtMostOnce {
             self.packet_id = PacketId::new(0);
@@ -250,37 +269,55 @@ impl PublishPacket {
         self
     }
 
-    pub fn qos(&self) -> QoS {
+    /// Get current `qos` value.
+    #[must_use]
+    pub const fn qos(&self) -> QoS {
         self.qos
     }
 
-    /// The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
+    /// Update packet id.
+    ///
+    /// The packet id field is only present in publish packets where the `QoS` level is 1 or 2.
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Update topic value.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn set_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
         self.topic = PubTopic::new(topic)?;
         Ok(self)
     }
 
+    /// Get current topic.
+    #[must_use]
     pub fn topic(&self) -> &str {
         self.topic.as_ref()
     }
 
+    /// Get a mutable reference to property list.
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
-    pub fn properties(&self) -> &Properties {
+    /// Get a reference to property list.
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 
+    /// Get a reference to message payload.
+    #[must_use]
     pub fn message(&self) -> &[u8] {
         &self.msg
     }
@@ -315,7 +352,9 @@ impl DecodePacket for PublishPacket {
         //
         // A PUBLISH packet MUST NOT contain a Packet Identifier if its QoS value is
         // set to 0 [MQTT-2.2.1-2].
-        let packet_id = if qos != QoS::AtMostOnce {
+        let packet_id = if qos == QoS::AtMostOnce {
+            PacketId::new(0)
+        } else {
             let packet_id = PacketId::decode(ba)?;
             // Each time a Client sends a new SUBSCRIBE, UNSUBSCRIBE,or PUBLISH (where QoS > 0)
             // MQTT Control Packet it MUST assign it a non-zero Packet Identifier
@@ -324,8 +363,6 @@ impl DecodePacket for PublishPacket {
                 return Err(DecodeError::InvalidPacketId);
             }
             packet_id
-        } else {
-            PacketId::new(0)
         };
 
         let properties = Properties::decode(ba)?;
@@ -354,10 +391,10 @@ impl DecodePacket for PublishPacket {
 
         let msg = ba.read_bytes(msg_len)?;
         let msg = msg.to_vec();
-        Ok(PublishPacket {
+        Ok(Self {
+            dup,
             qos,
             retain,
-            dup,
             topic,
             packet_id,
             properties,
@@ -370,6 +407,7 @@ impl EncodePacket for PublishPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
+        // TODO(Shaohua): Add properties.bytes()
         let mut remaining_length = self.topic.bytes()
             //+ self.properties.bytes()
             + self.msg.len();

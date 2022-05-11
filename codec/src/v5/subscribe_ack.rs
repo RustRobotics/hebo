@@ -26,6 +26,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Pac
 /// | Ack N ...                 |
 /// +---------------------------+
 /// ```
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SubscribeAckPacket {
     /// `packet_id` field is identical in Subscribe packet.
@@ -57,6 +58,7 @@ pub const SUBSCRIBE_REASONS: &[ReasonCode] = &[
     ReasonCode::WildcardSubscriptionsNotSupported,
 ];
 
+/// Properties available in subscribe ack packet.
 pub const SUBSCRIBE_ACK_PROPERTIES: &[PropertyType] = &[
     // The Server MUST NOT send this Property if it would increase the size of
     // the SUBACK packet beyond the Maximum Packet Size specified by the Client [MQTT-3.9.2-1].
@@ -67,6 +69,8 @@ pub const SUBSCRIBE_ACK_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl SubscribeAckPacket {
+    /// Create a new subscribe ack packet.
+    #[must_use]
     pub fn new(packet_id: PacketId, reason: ReasonCode) -> Self {
         Self {
             packet_id,
@@ -75,6 +79,8 @@ impl SubscribeAckPacket {
         }
     }
 
+    /// Create a new subscribe ack packet with reason code list.
+    #[must_use]
     pub fn with_vec(packet_id: PacketId, reasons: Vec<ReasonCode>) -> Self {
         Self {
             packet_id,
@@ -83,27 +89,36 @@ impl SubscribeAckPacket {
         }
     }
 
+    /// Update packet id.
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Get a mutable reference to property list.
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
-    pub fn properties(&self) -> &Properties {
+    /// Get a reference to property list.
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 
+    /// Get a mutable reference to reason code list.
     pub fn reasons_mut(&mut self) -> &mut Vec<ReasonCode> {
         &mut self.reasons
     }
 
+    /// Get a reference to reason code list.
+    #[must_use]
     pub fn reasons(&self) -> &[ReasonCode] {
         &self.reasons
     }
@@ -140,7 +155,7 @@ impl DecodePacket for SubscribeAckPacket {
             remaining_length += reason.bytes();
         }
 
-        Ok(SubscribeAckPacket {
+        Ok(Self {
             packet_id,
             properties,
             reasons,

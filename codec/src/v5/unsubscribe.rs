@@ -8,7 +8,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Pac
 
 /// The Client request to unsubscribe topics from the Server.
 /// When the Server receives this packet, no more Publish packet will be sent to the Client.
-/// Unfinished QoS 1 and QoS 2 packets will be delivered as usual.
+/// Unfinished `QoS` 1 and `QoS` 2 packets will be delivered as usual.
 ///
 /// Basic packet struct:
 /// ```txt
@@ -37,9 +37,10 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Pac
 /// | Topic N ...             |
 /// +-------------------------+
 /// ```
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct UnsubscribePacket {
-    /// Used in UnsubscribeAck packet.
+    /// Packet id is used in unsubscribe ack packet.
     packet_id: PacketId,
 
     properties: Properties,
@@ -51,51 +52,77 @@ pub struct UnsubscribePacket {
 }
 
 impl UnsubscribePacket {
+    /// Create a new unsubscribe packet which only contains one topic pattern.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn new(topic: &str, packet_id: PacketId) -> Result<Self, EncodeError> {
         let topic = SubTopic::new(topic)?;
-        Ok(UnsubscribePacket {
+        Ok(Self {
             packet_id,
             properties: Properties::new(),
             topics: vec![topic],
         })
     }
 
+    /// Create a new unsubscribe packet which contains multiple topic patterns.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topics` are invalid.
     pub fn with_topics(topics: &[&str], packet_id: PacketId) -> Result<Self, EncodeError> {
         let mut topics_result = Vec::with_capacity(topics.len());
         for topic in topics {
             let topic = SubTopic::new(topic)?;
             topics_result.push(topic);
         }
-        Ok(UnsubscribePacket {
+        Ok(Self {
             packet_id,
             properties: Properties::new(),
             topics: topics_result,
         })
     }
 
+    /// Update packet id.
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Get a mutable reference to property list.
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
-    pub fn properties(&self) -> &Properties {
+    /// Get a reference to property list.
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 
+    /// Add `topic` pattern to subscribed topic list.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if topic pattern is invalid.
     pub fn add_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
         let topic = SubTopic::new(topic)?;
         self.topics.push(topic);
         Ok(self)
     }
 
+    /// Set `topics` as unsubscribed topic patterns.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if topic pattern is invalid.
     pub fn set_topics(&mut self, topics: &[&str]) -> Result<&mut Self, EncodeError> {
         self.topics.clear();
         for topic in topics {
@@ -105,19 +132,23 @@ impl UnsubscribePacket {
         Ok(self)
     }
 
+    /// Get a reference to unsubscribed topic patterns.
+    #[must_use]
     pub fn topics(&self) -> &[SubTopic] {
         &self.topics
     }
 
+    /// Get a mutable references to unsubscribed topic patterns.
     pub fn mut_topics(&mut self) -> &mut Vec<SubTopic> {
         &mut self.topics
     }
 }
 
+/// Properties can be used in `UnsubscribePacket`.
 pub const UNSUBSCRIBE_PROPERTIES: &[PropertyType] = &[PropertyType::UserProperty];
 
 impl DecodePacket for UnsubscribePacket {
-    fn decode(ba: &mut ByteArray) -> Result<UnsubscribePacket, DecodeError> {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::Unsubscribe {
             return Err(DecodeError::InvalidPacketType);
@@ -152,7 +183,7 @@ impl DecodePacket for UnsubscribePacket {
             return Err(DecodeError::EmptyTopicFilter);
         }
 
-        Ok(UnsubscribePacket {
+        Ok(Self {
             packet_id,
             properties,
             topics,

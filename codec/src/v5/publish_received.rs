@@ -6,8 +6,8 @@ use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
-/// Response to a Publish packet with QoS 2. It is the second packet of the QoS 2 protocol
-/// exchange.
+/// Response to a Publish packet with `QoS` 2. It is the second packet of the `QoS` 2
+/// protocol exchange.
 ///
 /// Packet structre is:
 /// ```txt
@@ -28,6 +28,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Pac
 /// ```
 ///
 /// This packet does not contain payload part.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PublishReceivedPacket {
     packet_id: PacketId,
@@ -49,6 +50,7 @@ pub const PUBLISH_RECEIVED_REASONS: &[ReasonCode] = &[
     ReasonCode::PayloadFormatInvalid,
 ];
 
+/// Properties available in publish received packet.
 pub const PUBLISH_RECEIVED_PROPERTIES: &[PropertyType] = &[
     // The sender MUST NOT send this property if it would increase the size of the PUBREC packet
     // beyond the Maximum Packet Size specified by the receiver [MQTT-3.5.2-2].
@@ -59,6 +61,8 @@ pub const PUBLISH_RECEIVED_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl PublishReceivedPacket {
+    /// Create a new publish received packet with specify `packet_id`.
+    #[must_use]
     pub fn new(packet_id: PacketId) -> Self {
         Self {
             packet_id,
@@ -66,28 +70,37 @@ impl PublishReceivedPacket {
         }
     }
 
+    /// Update packet id.
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Update reason code.
     pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> &mut Self {
         self.reason_code = reason_code;
         self
     }
 
-    pub fn reason_code(&self) -> ReasonCode {
+    /// Get current reason code.
+    #[must_use]
+    pub const fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
-    pub fn properties(&self) -> &Properties {
+    /// Get a reference to property list.
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 
+    /// Get a mutable reference to property list.
     pub fn mut_properties(&mut self) -> &mut Properties {
         &mut self.properties
     }
@@ -159,7 +172,7 @@ impl DecodePacket for PublishReceivedPacket {
         } else {
             Properties::new()
         };
-        Ok(PublishReceivedPacket {
+        Ok(Self {
             packet_id,
             reason_code,
             properties,

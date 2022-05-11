@@ -6,8 +6,9 @@ use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
-/// Response to a Publish packet with QoS 2. It is the fourth and final packet of
-/// the QoS 2 protocol exchange.
+/// Response to a Publish packet with `QoS` 2.
+///
+/// It is the fourth and final packet of the `QoS` 2 protocol exchange.
 ///
 /// Packet structre is:
 /// ```txt
@@ -28,6 +29,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Pac
 /// ```
 ///
 /// This packet does not contain payload part.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PublishCompletePacket {
     packet_id: PacketId,
@@ -36,6 +38,8 @@ pub struct PublishCompletePacket {
 }
 
 impl PublishCompletePacket {
+    /// Create a new publish complete packet with specify `packet_id`.
+    #[must_use]
     pub fn new(packet_id: PacketId) -> Self {
         Self {
             packet_id,
@@ -43,28 +47,37 @@ impl PublishCompletePacket {
         }
     }
 
+    /// Update packet id.
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Update reason code.
     pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> &mut Self {
         self.reason_code = reason_code;
         self
     }
 
-    pub fn reason_code(&self) -> ReasonCode {
+    /// Get current reason code.
+    #[must_use]
+    pub const fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
-    pub fn properties(&self) -> &Properties {
+    /// Get a reference to property list.
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 
+    /// Get a mutable reference to property list.
     pub fn mut_properties(&mut self) -> &mut Properties {
         &mut self.properties
     }
@@ -142,7 +155,7 @@ impl DecodePacket for PublishCompletePacket {
         } else {
             Properties::new()
         };
-        Ok(PublishCompletePacket {
+        Ok(Self {
             packet_id,
             reason_code,
             properties,
