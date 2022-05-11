@@ -398,10 +398,9 @@ impl TryFrom<u8> for ReasonCode {
 }
 
 impl ReasonCode {
-    pub fn bytes(&self) -> usize {
-        1
-    }
-    pub fn const_bytes() -> usize {
+    /// Get byte length used in packet to represent reason code.
+    #[must_use]
+    pub const fn bytes() -> usize {
         1
     }
 }
@@ -417,6 +416,6 @@ impl DecodePacket for ReasonCode {
 impl EncodePacket for ReasonCode {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         buf.push(*self as u8);
-        Ok(self.bytes())
+        Ok(Self::bytes())
     }
 }

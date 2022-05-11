@@ -199,7 +199,7 @@ impl EncodePacket for ConnectAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let remaining_length = 1 + self.reason_code.bytes() + self.properties.bytes();
+        let remaining_length = 1 + ReasonCode::bytes() + self.properties.bytes();
         let fixed_header = FixedHeader::new(PacketType::ConnectAck, remaining_length)?;
         fixed_header.encode(buf)?;
 

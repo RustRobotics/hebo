@@ -99,7 +99,7 @@ impl EncodePacket for PublishReceivedPacket {
 
         let mut packet_bytes = self.packet_id.bytes();
         if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
-            packet_bytes += self.reason_code.bytes();
+            packet_bytes += ReasonCode::bytes();
         }
         if !self.properties.is_empty() {
             packet_bytes += self.properties.bytes();
@@ -134,7 +134,7 @@ impl DecodePacket for PublishReceivedPacket {
         }
         let packet_id = PacketId::decode(ba)?;
         let remaining_length = fixed_header.remaining_length() - packet_id.bytes();
-        let reason_code = if remaining_length >= ReasonCode::const_bytes() {
+        let reason_code = if remaining_length >= ReasonCode::bytes() {
             ReasonCode::decode(ba)?
         } else {
             ReasonCode::default()
@@ -144,7 +144,7 @@ impl DecodePacket for PublishReceivedPacket {
             return Err(DecodeError::InvalidReasonCode);
         }
 
-        let properties = if remaining_length > ReasonCode::const_bytes() {
+        let properties = if remaining_length > ReasonCode::bytes() {
             let properties = Properties::decode(ba)?;
             if let Err(property_type) =
                 check_property_type_list(properties.props(), PUBLISH_RECEIVED_PROPERTIES)
