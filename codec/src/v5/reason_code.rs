@@ -399,15 +399,8 @@ impl TryFrom<u8> for ReasonCode {
 
 impl ReasonCode {
     /// Get byte length used in packet.
-    #[allow(clippy::unused_self)]
     #[must_use]
-    pub const fn bytes(&self) -> usize {
-        1
-    }
-
-    /// Get byte length used in packet.
-    #[must_use]
-    pub const fn const_bytes() -> usize {
+    pub const fn bytes() -> usize {
         1
     }
 }
