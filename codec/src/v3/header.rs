@@ -333,7 +333,7 @@ mod tests {
         let ret = fixed_header.encode(&mut buf);
         assert!(ret.is_ok());
         println!("buf size: {}", buf.len());
-        assert_eq!(ret, Ok(2));
+        assert_eq!(ret.unwrap(), 2);
     }
 
     #[test]

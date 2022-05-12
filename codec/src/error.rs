@@ -2,11 +2,14 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+use std::io;
+
 use super::byte_array::ByteArrayError;
 use super::topic::TopicError;
 use super::utils::StringError;
 
-#[derive(Debug, PartialEq)]
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug)]
 pub enum DecodeError {
     /// ClientId is empty or its length exceeds 23.
     /// Or contains invalid characters.
@@ -73,7 +76,8 @@ pub enum DecodeError {
     OtherErrors,
 }
 
-#[derive(Debug, PartialEq)]
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug)]
 pub enum EncodeError {
     InvalidData,
 
@@ -81,7 +85,7 @@ pub enum EncodeError {
     /// Or contains invalid characters.
     InvalidClientId,
 
-    IoError,
+    IoError(io::Error),
 
     InvalidPacketType,
 
@@ -105,41 +109,41 @@ pub enum EncodeError {
     InvalidReasonCode,
 }
 
-impl From<std::io::Error> for EncodeError {
-    fn from(_e: std::io::Error) -> EncodeError {
-        EncodeError::IoError
+impl From<io::Error> for EncodeError {
+    fn from(err: io::Error) -> Self {
+        Self::IoError(err)
     }
 }
 
 impl From<StringError> for EncodeError {
-    fn from(e: StringError) -> EncodeError {
-        EncodeError::InvalidString(e)
+    fn from(err: StringError) -> Self {
+        Self::InvalidString(err)
     }
 }
 
 impl From<StringError> for DecodeError {
-    fn from(e: StringError) -> DecodeError {
-        DecodeError::InvalidString(e)
+    fn from(err: StringError) -> Self {
+        Self::InvalidString(err)
     }
 }
 
 impl From<TopicError> for EncodeError {
-    fn from(e: TopicError) -> EncodeError {
-        EncodeError::InvalidTopic(e)
+    fn from(err: TopicError) -> Self {
+        Self::InvalidTopic(err)
     }
 }
 
 impl From<TopicError> for DecodeError {
-    fn from(e: TopicError) -> DecodeError {
-        DecodeError::InvalidTopic(e)
+    fn from(err: TopicError) -> Self {
+        Self::InvalidTopic(err)
     }
 }
 
 impl From<ByteArrayError> for DecodeError {
-    fn from(e: ByteArrayError) -> DecodeError {
-        match e {
-            ByteArrayError::OutOfRangeError => DecodeError::OutOfRangeError,
-            ByteArrayError::InvalidString(e) => DecodeError::InvalidString(e),
+    fn from(err: ByteArrayError) -> Self {
+        match err {
+            ByteArrayError::OutOfRangeError => Self::OutOfRangeError,
+            ByteArrayError::InvalidString(err) => Self::InvalidString(err),
         }
     }
 }
