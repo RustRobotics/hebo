@@ -7,14 +7,24 @@ use std::convert::TryFrom;
 
 use super::{ByteArray, DecodeError, EncodeError};
 
-pub const PROTOCOL_NAME: &'static str = "MQTT";
+pub const PROTOCOL_NAME: &str = "MQTT";
 
 /// Convert native data types to network byte stream.
 pub trait EncodePacket {
+    /// Encode packets into byte array.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if packet state is invalid of buffer capacity is insufficient.
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError>;
 }
 
 pub trait DecodePacket: Sized {
+    /// Decode byte array into a mqtt packet.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if byte array size or packet state is invalid.
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError>;
 }
 
@@ -32,11 +42,9 @@ pub enum QoS {
 }
 
 impl QoS {
-    pub fn bytes(&self) -> usize {
-        1
-    }
-
-    pub const fn const_bytes() -> usize {
+    /// Byte length used in packet.
+    #[must_use]
+    pub const fn bytes() -> usize {
         1
     }
 }
@@ -63,7 +71,7 @@ impl TryFrom<u8> for QoS {
 impl EncodePacket for QoS {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         v.push(*self as u8);
-        Ok(self.bytes())
+        Ok(Self::bytes())
     }
 }
 

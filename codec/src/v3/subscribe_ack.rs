@@ -99,7 +99,7 @@ impl DecodePacket for SubscribeAckPacket {
 
         while remaining_length < fixed_header.remaining_length() {
             let payload = ba.read_byte()?;
-            remaining_length += QoS::const_bytes();
+            remaining_length += QoS::bytes();
             match payload & 0b1000_0011 {
                 0b1000_0000 => acknowledgements.push(SubscribeAck::Failed),
                 0b0000_0010 => acknowledgements.push(SubscribeAck::QoS(QoS::ExactOnce)),
@@ -120,8 +120,7 @@ impl DecodePacket for SubscribeAckPacket {
 impl EncodePacket for SubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let remaining_length =
-            self.packet_id.bytes() + QoS::const_bytes() * self.acknowledgements.len();
+        let remaining_length = self.packet_id.bytes() + QoS::bytes() * self.acknowledgements.len();
         let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;

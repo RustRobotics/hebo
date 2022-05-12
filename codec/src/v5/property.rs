@@ -664,7 +664,7 @@ impl Property {
             Self::ContentType(value) => value.bytes(),
             Self::CorrelationData(value) => value.bytes(),
             Self::MaximumPacketSize(value) => value.bytes(),
-            Self::MaximumQoS(value) => value.bytes(),
+            Self::MaximumQoS(..) => QoS::bytes(),
             Self::MessageExpiryInterval(value) => value.bytes(),
             Self::PayloadFormatIndicator(value) => value.bytes(),
             Self::ReasonString(value) => value.bytes(),
