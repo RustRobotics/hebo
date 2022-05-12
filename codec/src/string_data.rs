@@ -61,23 +61,35 @@ use crate::{
 pub struct StringData(String);
 
 impl StringData {
-    pub fn new() -> Self {
+    /// Create an empty string data.
+    #[must_use]
+    pub const fn new() -> Self {
         Self(String::new())
     }
 
-    pub fn from_str(data: &str) -> Result<Self, StringError> {
-        validate_utf8_string(data)?;
-        Ok(Self(data.to_string()))
+    /// Convert string slice into string data.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if string slice is too large.
+    pub fn from(s: &str) -> Result<Self, StringError> {
+        validate_utf8_string(s)?;
+        Ok(Self(s.to_string()))
     }
 
+    /// Get byte length in packet.
+    #[must_use]
     pub fn bytes(&self) -> usize {
         2 + self.0.len()
     }
 
+    /// Returns true if string data is empty.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    /// Clear string.
     pub fn clear(&mut self) {
         self.0.clear();
     }
@@ -105,7 +117,9 @@ impl DecodePacket for StringData {
 
 impl EncodePacket for StringData {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        buf.write_u16::<BigEndian>(self.0.len() as u16)?;
+        #[allow(clippy::cast_possible_truncation)]
+        let len = self.0.len() as u16;
+        buf.write_u16::<BigEndian>(len)?;
         buf.write_all(self.0.as_bytes())?;
         Ok(self.bytes())
     }
