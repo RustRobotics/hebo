@@ -51,7 +51,7 @@ impl QoS {
 
 impl Default for QoS {
     fn default() -> Self {
-        QoS::AtMostOnce
+        Self::AtMostOnce
     }
 }
 
