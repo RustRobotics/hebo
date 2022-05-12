@@ -404,7 +404,7 @@ impl EncodePacket for ConnectPacket {
         let old_len = v.len();
 
         let mut remaining_length = self.protocol_name.bytes()
-            + self.protocol_level.bytes()
+            + ProtocolLevel::bytes()
             + ConnectFlags::bytes()
             + self.keep_alive.bytes()
             + self.client_id.bytes();

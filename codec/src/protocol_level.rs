@@ -24,25 +24,28 @@ pub enum ProtocolLevel {
 }
 
 impl ProtocolLevel {
-    pub fn bytes(&self) -> usize {
+    /// Get byte length in packet.
+    #[must_use]
+    #[inline]
+    pub const fn bytes() -> usize {
         1
     }
 }
 
 impl Default for ProtocolLevel {
     fn default() -> Self {
-        ProtocolLevel::V4
+        Self::V4
     }
 }
 
 impl TryFrom<u8> for ProtocolLevel {
     type Error = DecodeError;
 
-    fn try_from(v: u8) -> Result<ProtocolLevel, Self::Error> {
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
         match v {
-            3 => Ok(ProtocolLevel::V3),
-            4 => Ok(ProtocolLevel::V4),
-            5 => Ok(ProtocolLevel::V5),
+            3 => Ok(Self::V3),
+            4 => Ok(Self::V4),
+            5 => Ok(Self::V5),
 
             _ => Err(DecodeError::InvalidProtocolLevel),
         }
@@ -52,6 +55,6 @@ impl TryFrom<u8> for ProtocolLevel {
 impl EncodePacket for ProtocolLevel {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         v.push(*self as u8);
-        Ok(1)
+        Ok(Self::bytes())
     }
 }
