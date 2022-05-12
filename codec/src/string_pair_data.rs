@@ -34,20 +34,31 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Str
 pub struct StringPairData(StringData, StringData);
 
 impl StringPairData {
+    /// Create a new string pair.
+    ///
+    /// # Errors
+    ///
+    /// Returns errors if key or value is too large.
     pub fn new(key: &str, value: &str) -> Result<Self, EncodeError> {
         let key = StringData::from(key)?;
         let value = StringData::from(value)?;
         Ok(Self(key, value))
     }
 
-    pub fn key(&self) -> &StringData {
+    /// Get key in pair.
+    #[must_use]
+    pub const fn key(&self) -> &StringData {
         &self.0
     }
 
-    pub fn value(&self) -> &StringData {
+    /// Get string value in pari.
+    #[must_use]
+    pub const fn value(&self) -> &StringData {
         &self.1
     }
 
+    /// Get byte length in packet.
+    #[must_use]
     pub fn bytes(&self) -> usize {
         self.0.bytes() + self.1.bytes()
     }
