@@ -4,24 +4,26 @@
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
-/// BoolData represents one byte value with two states.
+/// `BoolData` represents one byte value with two states.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct BoolData(bool);
 
 impl BoolData {
-    pub fn new(value: bool) -> Self {
+    /// Create a new bool data.
+    #[must_use]
+    pub const fn new(value: bool) -> Self {
         Self(value)
     }
 
-    pub fn value(&self) -> bool {
+    /// Get inner boolean value.
+    #[must_use]
+    pub const fn value(&self) -> bool {
         self.0
     }
 
-    pub fn bytes(&self) -> usize {
-        1
-    }
-
-    pub const fn const_bytes() -> usize {
+    /// Get byte length in packet.
+    #[must_use]
+    pub const fn bytes() -> usize {
         1
     }
 }
@@ -41,6 +43,6 @@ impl EncodePacket for BoolData {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let byte = if self.0 { 0x01 } else { 0x00 };
         buf.push(byte);
-        Ok(self.bytes())
+        Ok(Self::bytes())
     }
 }
