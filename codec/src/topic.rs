@@ -3,19 +3,20 @@
 // in the LICENSE file.
 
 use byteorder::{BigEndian, WriteBytesExt};
+use std::hash::{Hash, Hasher};
 use std::io::Write;
 
 use crate::QoS;
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
 // TODO(Shaohua): Simplify topic structs.
-
-#[derive(Debug, Default, Clone, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, Clone, Eq, PartialOrd, Ord)]
 pub struct Topic {
     topic: String,
     parts: Vec<TopicPart>,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq)]
 pub enum TopicError {
     EmptyTopic,
@@ -30,61 +31,87 @@ impl PartialEq for Topic {
     }
 }
 
+impl Hash for Topic {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.topic.hash(state);
+    }
+}
+
 impl Topic {
     // TODO(Shaohua): Replace with `std::str::FromStr` trait.
-    pub fn parse(s: &str) -> Result<Topic, TopicError> {
-        let parts = Topic::parse_parts(s)?;
-        Ok(Topic {
+
+    /// Parse topic from string slice.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if string contains invalid chars or too large.
+    pub fn parse(s: &str) -> Result<Self, TopicError> {
+        let parts = Self::parse_parts(s)?;
+        Ok(Self {
             topic: s.to_string(),
             parts,
         })
     }
 
     fn parse_parts(s: &str) -> Result<Vec<TopicPart>, TopicError> {
-        s.split('/').map(|part| TopicPart::parse(part)).collect()
+        s.split('/').map(TopicPart::parse).collect()
     }
 
+    /// Returns true if this topic matches string slice.
+    #[must_use]
     pub fn is_match(&self, s: &str) -> bool {
         for (index, part) in s.split('/').into_iter().enumerate() {
-            if self.parts.len() - 1 < index {
-                return false;
-            }
-            match self.parts[index] {
-                TopicPart::Empty => return false,
-                TopicPart::Normal(ref s_part) => {
+            match self.parts.get(index) {
+                None | Some(TopicPart::Empty) => return false,
+                Some(TopicPart::Normal(ref s_part) | TopicPart::Internal(ref s_part)) => {
                     if s_part != part {
                         return false;
                     }
                 }
-                TopicPart::Internal(ref s_part) => {
-                    if s_part != part {
-                        return false;
-                    }
-                }
-                TopicPart::SingleWildcard => {
+                Some(TopicPart::SingleWildcard) => {
                     // Continue
                 }
-                TopicPart::MultiWildcard => return true,
+                Some(TopicPart::MultiWildcard) => return true,
             }
         }
         true
     }
 
-    pub fn topic(&self) -> &String {
+    /// Used as a string slice.
+    #[must_use]
+    pub const fn topic(&self) -> &String {
         &self.topic
     }
 
+    /// Get topic length.
+    #[must_use]
     pub fn len(&self) -> usize {
         self.topic.len()
     }
 
+    /// Returns true if topic is empty.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.topic.is_empty()
+    }
+
+    /// Used as byte slice.
+    #[must_use]
     pub fn as_bytes(&self) -> &[u8] {
         self.topic.as_bytes()
     }
 }
 
 /// Validate topic filter.
+///
 /// Rules are defined in `MQTT chapter-4.7 Topic Name and Filters`
+///
+/// # Errors
+///
+/// Returns error if topic string contains invalid chars or too large.
+///
+/// # Examples
+///
 /// ```
 /// use hebo_codec::topic;
 /// let name = "sport/tennis/player/#";
@@ -105,6 +132,7 @@ impl Topic {
 /// let name = "sport+";
 /// assert!(topic::validate_sub_topic(name).is_err());
 /// ```
+#[allow(clippy::module_name_repetitions)]
 pub fn validate_sub_topic(topic: &str) -> Result<(), TopicError> {
     if topic.is_empty() {
         return Err(TopicError::EmptyTopic);
@@ -136,6 +164,13 @@ pub fn validate_sub_topic(topic: &str) -> Result<(), TopicError> {
 }
 
 /// Check whether topic name contains wildchard characters or not.
+///
+/// # Errors
+///
+/// Returns error if topic string contains invalid characters or too large.
+///
+/// # Examples
+///
 /// ```
 /// use hebo_codec::topic;
 /// let name = "sport/tennis/player/#";
@@ -144,6 +179,7 @@ pub fn validate_sub_topic(topic: &str) -> Result<(), TopicError> {
 /// let name = "sport/tennis/player/ranking";
 /// assert!(topic::validate_pub_topic(name).is_ok());
 /// ```
+#[allow(clippy::module_name_repetitions)]
 pub fn validate_pub_topic(topic: &str) -> Result<(), TopicError> {
     if topic.is_empty() {
         return Err(TopicError::EmptyTopic);
@@ -160,6 +196,7 @@ pub fn validate_pub_topic(topic: &str) -> Result<(), TopicError> {
 }
 
 // TODO(Shaohua): Impl internal reference to `topic` String.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TopicPart {
     /// Special internal part, like `$SYS`.
@@ -185,22 +222,29 @@ impl TopicPart {
         s.contains(|c| c == '#' || c == '+')
     }
 
+    /// Returns true if topic is used in broker inner only.
+    #[must_use]
     fn is_internal(s: &str) -> bool {
         s.starts_with('$')
     }
 
+    /// Parse topic parts.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if string slice contains invalid chars.
     fn parse(s: &str) -> Result<Self, TopicError> {
         match s {
-            "" => Ok(TopicPart::Empty),
-            "+" => Ok(TopicPart::SingleWildcard),
-            "#" => Ok(TopicPart::MultiWildcard),
+            "" => Ok(Self::Empty),
+            "+" => Ok(Self::SingleWildcard),
+            "#" => Ok(Self::MultiWildcard),
             _ => {
-                if TopicPart::has_wildcard(s) {
+                if Self::has_wildcard(s) {
                     Err(TopicError::ContainsWildChar)
-                } else if TopicPart::is_internal(s) {
-                    Ok(TopicPart::Internal(s.to_string()))
+                } else if Self::is_internal(s) {
+                    Ok(Self::Internal(s.to_string()))
                 } else {
-                    Ok(TopicPart::Normal(s.to_string()))
+                    Ok(Self::Normal(s.to_string()))
                 }
             }
         }
@@ -209,7 +253,7 @@ impl TopicPart {
 
 impl Default for TopicPart {
     fn default() -> Self {
-        TopicPart::Empty
+        Self::Empty
     }
 }
 
@@ -224,40 +268,56 @@ pub struct SubscribePattern {
 }
 
 impl SubscribePattern {
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn parse(topic: &str, qos: QoS) -> Result<Self, TopicError> {
         let topic = Topic::parse(topic)?;
         Ok(Self { topic, qos })
     }
 
-    pub fn new(topic: Topic, qos: QoS) -> Self {
+    /// Create a new subscription topic pattern.
+    #[must_use]
+    #[inline]
+    pub const fn new(topic: Topic, qos: QoS) -> Self {
         Self { topic, qos }
     }
 
-    pub fn topic(&self) -> &Topic {
+    /// Get topic value.
+    #[must_use]
+    #[inline]
+    pub const fn topic(&self) -> &Topic {
         &self.topic
     }
 
-    pub fn qos(&self) -> QoS {
+    /// Get current `QoS` value.
+    #[must_use]
+    #[inline]
+    pub const fn qos(&self) -> QoS {
         self.qos
     }
 }
 
+/// Topic used in publish packet.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PubTopic(String);
 
 impl PubTopic {
+    /// Create a new publish topic.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn new(topic: &str) -> Result<Self, TopicError> {
         validate_pub_topic(topic)?;
         Ok(Self(topic.to_string()))
     }
 
+    /// Get byte length in packet.
+    #[must_use]
     pub fn bytes(&self) -> usize {
-        // TODO(Shaohua): Add comments
         2 + self.0.len()
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
     }
 }
 
@@ -278,21 +338,32 @@ impl DecodePacket for PubTopic {
 
 impl EncodePacket for PubTopic {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        buf.write_u16::<BigEndian>(self.0.len() as u16)?;
+        #[allow(clippy::cast_possible_truncation)]
+        let len = self.0.len() as u16;
+        buf.write_u16::<BigEndian>(len)?;
         buf.write_all(self.0.as_bytes())?;
         Ok(self.bytes())
     }
 }
 
+/// Topic pattern used in subscribe/unsubscribe packet.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SubTopic(String);
 
 impl SubTopic {
+    /// Create a new subscription topic.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` pattern is invalid.
     pub fn new(topic: &str) -> Result<Self, TopicError> {
         validate_sub_topic(topic)?;
         Ok(Self(topic.to_string()))
     }
 
+    /// Get byte length in packet.
+    #[must_use]
     pub fn bytes(&self) -> usize {
         2 + self.0.len()
     }
@@ -315,7 +386,9 @@ impl DecodePacket for SubTopic {
 
 impl EncodePacket for SubTopic {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        buf.write_u16::<BigEndian>(self.0.len() as u16)?;
+        #[allow(clippy::cast_possible_truncation)]
+        let len = self.0.len() as u16;
+        buf.write_u16::<BigEndian>(len)?;
         buf.write_all(self.0.as_bytes())?;
         Ok(self.bytes())
     }
