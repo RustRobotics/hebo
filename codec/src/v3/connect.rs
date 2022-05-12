@@ -208,7 +208,7 @@ impl EncodePacket for ConnectPacket {
 
         let mut remaining_length = self.protocol_name.bytes()
             + self.protocol_level.bytes()
-            + self.connect_flags.bytes()
+            + ConnectFlags::bytes()
             + self.keep_alive.bytes()
             + self.client_id.bytes();
 
@@ -220,10 +220,10 @@ impl EncodePacket for ConnectPacket {
             }
             remaining_length += self.will_message.bytes();
         }
-        if self.connect_flags.username() {
+        if self.connect_flags.has_username() {
             remaining_length += self.username.bytes();
         }
-        if self.connect_flags.password() {
+        if self.connect_flags.has_password() {
             remaining_length += self.password.bytes();
         }
 
@@ -247,10 +247,10 @@ impl EncodePacket for ConnectPacket {
 
             self.will_message.encode(v)?;
         }
-        if self.connect_flags.username() {
+        if self.connect_flags.has_username() {
             self.username.encode(v)?;
         }
-        if self.connect_flags.password() {
+        if self.connect_flags.has_password() {
             self.password.encode(v)?;
         }
 
@@ -294,7 +294,7 @@ impl DecodePacket for ConnectPacket {
         }
 
         // If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].
-        if !connect_flags.username() && connect_flags.password() {
+        if !connect_flags.has_username() && connect_flags.has_password() {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
@@ -328,13 +328,13 @@ impl DecodePacket for ConnectPacket {
             BinaryData::new()
         };
 
-        let username = if connect_flags.username() {
+        let username = if connect_flags.has_username() {
             StringData::decode(ba)?
         } else {
             StringData::new()
         };
 
-        let password = if connect_flags.password() {
+        let password = if connect_flags.has_password() {
             BinaryData::decode(ba)?
         } else {
             BinaryData::new()

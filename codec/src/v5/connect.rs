@@ -299,9 +299,9 @@ impl ConnectPacket {
     pub fn set_username(&mut self, username: Option<&str>) -> Result<&mut Self, DecodeError> {
         if let Some(username) = username {
             self.username = StringData::from_str(username)?;
-            self.connect_flags.set_username(true);
+            self.connect_flags.set_has_username(true);
         } else {
-            self.connect_flags.set_username(false);
+            self.connect_flags.set_has_username(false);
             self.username = StringData::new();
         }
         Ok(self)
@@ -310,7 +310,7 @@ impl ConnectPacket {
     /// Get current username value.
     #[must_use]
     pub fn username(&self) -> Option<&str> {
-        if self.connect_flags.username() {
+        if self.connect_flags.has_username() {
             Some(self.username.as_ref())
         } else {
             None
@@ -325,11 +325,11 @@ impl ConnectPacket {
     pub fn set_password(&mut self, password: Option<&[u8]>) -> Result<&mut Self, EncodeError> {
         match password {
             Some(password) => {
-                self.connect_flags.set_password(true);
+                self.connect_flags.set_has_password(true);
                 self.password = BinaryData::from_slice(password)?;
             }
             None => {
-                self.connect_flags.set_password(false);
+                self.connect_flags.set_has_password(false);
                 self.password.clear();
             }
         }
@@ -339,7 +339,7 @@ impl ConnectPacket {
     /// Get current password value.
     #[must_use]
     pub fn password(&self) -> Option<&[u8]> {
-        if self.connect_flags.password() {
+        if self.connect_flags.has_password() {
             Some(self.password.as_ref())
         } else {
             None
@@ -405,7 +405,7 @@ impl EncodePacket for ConnectPacket {
 
         let mut remaining_length = self.protocol_name.bytes()
             + self.protocol_level.bytes()
-            + self.connect_flags.bytes()
+            + ConnectFlags::bytes()
             + self.keep_alive.bytes()
             + self.client_id.bytes();
 
@@ -417,10 +417,10 @@ impl EncodePacket for ConnectPacket {
             }
             remaining_length += self.will_message.bytes();
         }
-        if self.connect_flags.username() {
+        if self.connect_flags.has_username() {
             remaining_length += self.username.bytes();
         }
-        if self.connect_flags.password() {
+        if self.connect_flags.has_password() {
             remaining_length += self.password.bytes();
         }
 
@@ -445,10 +445,10 @@ impl EncodePacket for ConnectPacket {
 
             self.will_message.encode(v)?;
         }
-        if self.connect_flags.username() {
+        if self.connect_flags.has_username() {
             self.username.encode(v)?;
         }
-        if self.connect_flags.password() {
+        if self.connect_flags.has_password() {
             self.password.encode(v)?;
         }
 
@@ -490,7 +490,7 @@ impl DecodePacket for ConnectPacket {
         }
 
         // If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].
-        if !connect_flags.username() && connect_flags.password() {
+        if !connect_flags.has_username() && connect_flags.has_password() {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
@@ -514,13 +514,13 @@ impl DecodePacket for ConnectPacket {
             BinaryData::new()
         };
 
-        let username = if connect_flags.username() {
+        let username = if connect_flags.has_username() {
             StringData::decode(ba)?
         } else {
             StringData::new()
         };
 
-        let password = if connect_flags.password() {
+        let password = if connect_flags.has_password() {
             BinaryData::decode(ba)?
         } else {
             BinaryData::new()

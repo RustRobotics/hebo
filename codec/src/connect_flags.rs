@@ -13,16 +13,18 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS
 /// | Username Flag | Password Flag | Will Retain | Will QoS | Will Flag | Clean Session | Reserved |
 /// +---------------+---------------+-------------+----------+-----------+---------------+----------+
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(clippy::struct_excessive_bools)]
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConnectFlags {
-    /// `username` field specifies whether `username` shall be presented in the Payload.
-    username: bool,
+    /// `username` field specifies whether `username` shall be presented in the payload.
+    has_username: bool,
 
-    /// `password` field specifies whether `password` shall be presented in the Payload.
+    /// `password` field specifies whether `password` shall be presented in the payload.
     /// If `username` field is false, then this field shall be false too.
-    password: bool,
+    has_password: bool,
 
-    /// `retain` field specifies if the Will Message is to be Retained when it is published.
+    /// `retain` field specifies if the Will Message is to be retained when it is published.
     /// If the `will` field is false, then the `retain` field msut be false.
     will_retain: bool,
 
@@ -42,8 +44,8 @@ pub struct ConnectFlags {
 
     /// To control how to handle Session State.
     /// If `clean_sessions` is true, the Client and Server must discard any previous Session State
-    /// and start a new once until end of Disconnect. So that State data cannot be reused in subsequent
-    /// connections.
+    /// and start a new once until end of Disconnect. So that State data
+    /// cannot be reused in subsequent connections.
     ///
     /// Client side of Session State consists of:
     /// * QoS 1 and QoS 2 messages which have been sent to server but not be acknowledged yet.
@@ -51,53 +53,75 @@ pub struct ConnectFlags {
     ///
     /// Server side of Session State consists of:
     /// * Client subscriptions
-    /// * QoS 1 and QoS 2 messages which have been sent to subscribed Clients, but have not been acknowledged yet.
-    /// * QoS 1 and QoS 2 messages pending transmission to the Client.
-    /// * QoS 2 messages which have been received from the Clients, but have not been fully acknowledged yet.
+    /// * `QoS` 1 and `QoS` 2 messages which have been sent to subscribed Clients,
+    /// but have not been acknowledged yet.
+    /// * `QoS` 1 and `QoS` 2 messages pending transmission to the Client.
+    /// * `QoS` 2 messages which have been received from the Clients,
+    /// but have not been fully acknowledged yet.
     clean_session: bool,
 }
 
 impl ConnectFlags {
-    pub fn bytes(&self) -> usize {
+    /// Get byte length in packet.
+    #[must_use]
+    #[inline]
+    pub const fn bytes() -> usize {
         1
     }
 
-    pub fn set_username(&mut self, username: bool) -> &mut Self {
-        self.username = username;
+    /// Update `has_username` flag.
+    pub fn set_has_username(&mut self, has_username: bool) -> &mut Self {
+        self.has_username = has_username;
         self
     }
 
-    pub fn username(&self) -> bool {
-        self.username
+    /// Get current `has_username` flag.
+    #[must_use]
+    #[inline]
+    pub const fn has_username(&self) -> bool {
+        self.has_username
     }
 
-    pub fn set_password(&mut self, password: bool) -> &mut Self {
-        self.password = password;
+    /// Update `has_password` flag.
+    pub fn set_has_password(&mut self, has_password: bool) -> &mut Self {
+        self.has_password = has_password;
         self
     }
 
-    pub fn password(&self) -> bool {
-        self.password
+    /// Get current `has_password` flag.
+    #[must_use]
+    #[inline]
+    pub const fn has_password(&self) -> bool {
+        self.has_password
     }
 
+    /// Update will-retain flag.
     pub fn set_will_retain(&mut self, will_retain: bool) -> &mut Self {
         self.will_retain = will_retain;
         self
     }
 
-    pub fn will_retain(&self) -> bool {
+    /// Get will-retain flag.
+    #[must_use]
+    #[inline]
+    pub const fn will_retain(&self) -> bool {
         self.will_retain
     }
 
+    /// Update will-qos.
     pub fn set_will_qos(&mut self, qos: QoS) -> &mut Self {
         self.will_qos = qos;
         self
     }
 
-    pub fn will_qos(&self) -> QoS {
+    /// Get current will-qos.
+    #[must_use]
+    #[inline]
+    pub const fn will_qos(&self) -> QoS {
         self.will_qos
     }
 
+    /// Update will flag.
     pub fn set_will(&mut self, will: bool) -> &mut Self {
         if !will {
             self.will_qos = QoS::AtMostOnce;
@@ -107,25 +131,32 @@ impl ConnectFlags {
         self
     }
 
-    pub fn will(&self) -> bool {
+    /// Get current will flag.
+    #[must_use]
+    #[inline]
+    pub const fn will(&self) -> bool {
         self.will
     }
 
+    /// Update clean-session flag.
     pub fn set_clean_session(&mut self, clean_session: bool) -> &mut Self {
         self.clean_session = clean_session;
         self
     }
 
-    pub fn clean_session(&self) -> bool {
+    /// Get clean-session flag.
+    #[must_use]
+    #[inline]
+    pub const fn clean_session(&self) -> bool {
         self.clean_session
     }
 }
 
 impl Default for ConnectFlags {
     fn default() -> Self {
-        ConnectFlags {
-            username: false,
-            password: false,
+        Self {
+            has_username: false,
+            has_password: false,
             will_retain: false,
             will_qos: QoS::AtMostOnce,
             will: false,
@@ -137,12 +168,12 @@ impl Default for ConnectFlags {
 impl EncodePacket for ConnectFlags {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let flags = {
-            let username = if self.username {
+            let has_username = if self.has_username {
                 0b1000_0000
             } else {
                 0b0000_0000
             };
-            let password = if self.password {
+            let has_password = if self.has_password {
                 0b0100_0000
             } else {
                 0b0000_0000
@@ -167,7 +198,7 @@ impl EncodePacket for ConnectFlags {
                 0b0000_0000
             };
 
-            username | password | will_retian | will_qos | will | clean_session
+            has_username | has_password | will_retian | will_qos | will | clean_session
         };
         v.push(flags);
 
@@ -178,8 +209,8 @@ impl EncodePacket for ConnectFlags {
 impl DecodePacket for ConnectFlags {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let flags = ba.read_byte()?;
-        let username = flags & 0b1000_0000 == 0b1000_0000;
-        let password = flags & 0b0100_0000 == 0b0100_0000;
+        let has_username = flags & 0b1000_0000 == 0b1000_0000;
+        let has_password = flags & 0b0100_0000 == 0b0100_0000;
         let will_retain = flags & 0b0010_0000 == 0b0010_0000;
         let will_qos = QoS::try_from((flags & 0b0001_1000) >> 3)?;
         let will = flags & 0b0000_0100 == 0b0000_0100;
@@ -193,13 +224,13 @@ impl DecodePacket for ConnectFlags {
         }
 
         // If the User Name Flag is set to 0, the Password Flag MUST be set to 0. [MQTT-3.1.2-22]
-        if !username && password {
+        if !has_username && has_password {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
-        Ok(ConnectFlags {
-            username,
-            password,
+        Ok(Self {
+            has_username,
+            has_password,
             will_retain,
             will_qos,
             will,
