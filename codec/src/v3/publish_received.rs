@@ -5,8 +5,9 @@
 use super::{FixedHeader, Packet, PacketType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
-/// Response to a Publish packet with QoS 2. It is the second packet of the QoS 2 protocol
-/// exchange.
+/// Response to a Publish packet with `QoS` 2.
+///
+/// It is the second packet of the `QoS` 2 protocol exchange.
 ///
 /// Packet structre is:
 /// ```txt
@@ -21,17 +22,22 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Pac
 /// ```
 ///
 /// This packet does not contain payload part.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PublishReceivedPacket {
     packet_id: PacketId,
 }
 
 impl PublishReceivedPacket {
-    pub fn new(packet_id: PacketId) -> Self {
+    /// Create a new publish received packet with `packet_id`.
+    #[must_use]
+    pub const fn new(packet_id: PacketId) -> Self {
         Self { packet_id }
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 }
@@ -62,7 +68,7 @@ impl DecodePacket for PublishReceivedPacket {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             let packet_id = PacketId::decode(ba)?;
-            Ok(PublishReceivedPacket { packet_id })
+            Ok(Self { packet_id })
         }
     }
 }
