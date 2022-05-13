@@ -10,7 +10,7 @@ use crate::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic, QoS,
 };
 
-/// PublishPacket is used to transport application messages from the Client to the Server,
+/// `PublishPacket` is used to transport application messages from the Client to the Server,
 /// or from the Server to the Client.
 ///
 /// Basic structure of packet:
@@ -33,12 +33,13 @@ use crate::{
 /// +-----------------------+
 /// ```
 ///
-/// Note that `packet_id` only appears in QoS 1 and QoS 2 packets.
+/// Note that `packet_id` only appears in `QoS` 1 and `QoS` 2 packets.
 ///
-/// Response of PublischPacket:
-/// * QoS 0, no response
-/// * QoS 1, PublishAckPacket
-/// * QoS 2, PublishRecPacket
+/// Response of `PublischPacket`:
+/// * `QoS` 0, no response
+/// * `QoS` 1, `PublishAckPacket`
+/// * `QoS` 2, `PublishRecPacket`
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PublishPacket {
     /// If dup field is false, it indicates that this is the first time to send this packet.
@@ -82,15 +83,20 @@ pub struct PublishPacket {
     packet_id: PacketId,
 
     /// Payload contains `msg` field.
-    /// TODO(Shaohua): Replace with Bytes or Vec<u8>, BytewMut is useless.
+    // TODO(Shaohua): Replace with Bytes or Vec<u8>, BytewMut is useless.
     msg: BytesMut,
 }
 
 impl PublishPacket {
-    // TODO(Shaohua): No need to copy topic and msg
-    pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> Result<PublishPacket, EncodeError> {
+    /// Create a new publish packet.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
+    pub fn new(topic: &str, qos: QoS, msg: &[u8]) -> Result<Self, EncodeError> {
+        // TODO(Shaohua): No need to copy topic and msg
         let topic = PubTopic::new(topic)?;
-        Ok(PublishPacket {
+        Ok(Self {
             qos,
             dup: false,
             retain: false,
@@ -104,15 +110,23 @@ impl PublishPacket {
         self.msg.extend_from_slice(msg_parts);
     }
 
+    /// Update `retain` flag.
     pub fn set_retain(&mut self, retain: bool) -> &mut Self {
         self.retain = retain;
         self
     }
 
-    pub fn retain(&self) -> bool {
+    /// Get current `retain` flag.
+    #[must_use]
+    pub const fn retain(&self) -> bool {
         self.retain
     }
 
+    /// Update `dup` flag.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `dup` is set in `QoS` 0 packet.
     pub fn set_dup(&mut self, dup: bool) -> Result<&mut Self, EncodeError> {
         // The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
         if dup && self.qos == QoS::AtMostOnce {
@@ -122,10 +136,13 @@ impl PublishPacket {
         Ok(self)
     }
 
-    pub fn dup(&self) -> bool {
+    /// Get current `dup` flag.
+    #[must_use]
+    pub const fn dup(&self) -> bool {
         self.dup
     }
 
+    /// Update `QoS` value.
     pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
         if qos == QoS::AtMostOnce {
             self.packet_id = PacketId::new(0);
@@ -134,29 +151,40 @@ impl PublishPacket {
         self
     }
 
-    pub fn qos(&self) -> QoS {
+    /// Get current `QoS`.
+    #[must_use]
+    pub const fn qos(&self) -> QoS {
         self.qos
     }
 
-    /// The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
+    /// The Packet Identifier field is only present in PUBLISH Packets where the `QoS` level is 1 or 2.
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Update topic.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn set_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
         self.topic = PubTopic::new(topic)?;
         Ok(self)
     }
 
+    /// Get current topic.
+    #[must_use]
     pub fn topic(&self) -> &str {
         self.topic.as_ref()
     }
 
+    #[must_use]
     pub fn message(&self) -> &[u8] {
         &self.msg
     }
@@ -192,7 +220,9 @@ impl DecodePacket for PublishPacket {
 
         // Parse packet id.
         // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
-        let packet_id = if qos != QoS::AtMostOnce {
+        let packet_id = if qos == QoS::AtMostOnce {
+            PacketId::new(0)
+        } else {
             let packet_id = PacketId::decode(ba)?;
             if packet_id.value() == 0 {
                 // SUBSCRIBE, UNSUBSCRIBE, and PUBLISH (in cases where QoS > 0) Control Packets
@@ -200,8 +230,6 @@ impl DecodePacket for PublishPacket {
                 return Err(DecodeError::InvalidPacketId);
             }
             packet_id
-        } else {
-            PacketId::new(0)
         };
 
         // It is valid for a PUBLISH Packet to contain a zero length payload.
@@ -224,10 +252,10 @@ impl DecodePacket for PublishPacket {
         }
 
         let msg = BytesMut::from(ba.read_bytes(msg_len)?);
-        Ok(PublishPacket {
+        Ok(Self {
+            dup,
             qos,
             retain,
-            dup,
             topic,
             packet_id,
             msg,
