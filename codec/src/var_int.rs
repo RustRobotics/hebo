@@ -18,15 +18,21 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 pub struct VarInt(usize);
 
 /// 256MB
-pub const MAX_PACKET_LEN: usize = 0x7f_ff_ff_ff;
+pub const MAX_PACKET_LEN: usize = 0x7fff_ffff;
 
 impl VarInt {
     /// Returns an empty var int object.
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self(0)
     }
 
-    pub fn from(len: usize) -> Result<Self, EncodeError> {
+    /// Convert usize value into `VarInt`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `len` is too large.
+    pub const fn from(len: usize) -> Result<Self, EncodeError> {
         if len as usize > MAX_PACKET_LEN {
             return Err(EncodeError::InvalidVarInt);
         }
@@ -34,23 +40,36 @@ impl VarInt {
     }
 
     /// Returns number of bytes of this var int object consums.
-    pub fn len(&self) -> usize {
+    #[must_use]
+    pub const fn len(&self) -> usize {
         self.bytes()
     }
 
+    /// Returns true if var int is zero.
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
+
     /// Returns integer value this var int object presents.
-    pub fn value(&self) -> usize {
+    #[must_use]
+    pub const fn value(&self) -> usize {
         self.0
     }
 
     pub fn unchecked_add(&mut self, v: usize) {
-        self.0 += v
+        self.0 += v;
     }
 
     pub fn unchecked_sub(&mut self, v: usize) {
-        self.0 -= v
+        self.0 -= v;
     }
 
+    /// Add value `v` with current value.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if result is overflow.
     pub fn add(&mut self, v: usize) -> Result<(), EncodeError> {
         let new_len = self.0 + v;
         if new_len as usize > MAX_PACKET_LEN {
@@ -60,6 +79,10 @@ impl VarInt {
         Ok(())
     }
 
+    /// Substract value `v` from current value.
+    /// # Errors
+    ///
+    /// Returns error if result is underflow.
     pub fn sub(&mut self, v: usize) -> Result<(), EncodeError> {
         if self.0 < v {
             return Err(EncodeError::InvalidVarInt);
@@ -69,21 +92,17 @@ impl VarInt {
     }
 
     /// Returns number of bytes of this var int object consums.
-    pub fn bytes(&self) -> usize {
-        if self.0 > 0x7f_ff_ff {
-            3
-        } else if self.0 > 0x7f_ff {
+    #[must_use]
+    pub const fn bytes(&self) -> usize {
+        if self.0 > 0x007f_ffff {
+            4
+        } else if self.0 > 0x7fff {
             3
         } else if self.0 > 0x7f {
             2
         } else {
             1
         }
-    }
-
-    /// Returns true if var int is zero.
-    pub fn is_empty(&self) -> bool {
-        self.0 == 0
     }
 }
 
@@ -114,7 +133,7 @@ impl DecodePacket for VarInt {
             }
         }
 
-        Ok(VarInt(remaining_length))
+        Ok(Self(remaining_length))
     }
 }
 
@@ -134,6 +153,7 @@ impl EncodePacket for VarInt {
             if n > 0 {
                 m |= 128;
             }
+            #[allow(clippy::cast_possible_truncation)]
             buf.push(m as u8);
         }
         Ok(count)
