@@ -6,8 +6,9 @@ use super::{FixedHeader, Packet, PacketType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic};
 
 /// The Client request to unsubscribe topics from the Server.
+///
 /// When the Server receives this packet, no more Publish packet will be sent to the Client.
-/// Unfinished QoS 1 and QoS 2 packets will be delivered as usual.
+/// Unfinished `QoS` 1 and `QoS` 2 packets will be delivered as usual.
 ///
 /// Basic packet struct:
 /// ```txt
@@ -34,53 +35,78 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Pac
 /// | Topic N ...             |
 /// +-------------------------+
 /// ```
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct UnsubscribePacket {
     /// Used in UnsubscribeAck packet.
     packet_id: PacketId,
 
     /// Topic filters to be unsubscribed.
+    ///
     /// Note that these strings must exactly identical to the topic filters used in
     /// Subscribe packets.
     topics: Vec<SubTopic>,
 }
 
 impl UnsubscribePacket {
+    /// Create a new unsubscribe packet.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn new(topic: &str, packet_id: PacketId) -> Result<Self, EncodeError> {
         let topic = SubTopic::new(topic)?;
-        Ok(UnsubscribePacket {
+        Ok(Self {
             packet_id,
             topics: vec![topic],
         })
     }
 
+    /// Create a new unsubscribe packet with multiple `topics`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if some topic is invalid.
     pub fn with_topics(topics: &[&str], packet_id: PacketId) -> Result<Self, EncodeError> {
         let mut topics_result = Vec::with_capacity(topics.len());
         for topic in topics {
             let topic = SubTopic::new(topic)?;
             topics_result.push(topic);
         }
-        Ok(UnsubscribePacket {
+        Ok(Self {
             packet_id,
             topics: topics_result,
         })
     }
 
+    /// Update packet id.
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Add `topic` to topic list.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn add_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
         let topic = SubTopic::new(topic)?;
         self.topics.push(topic);
         Ok(self)
     }
 
+    /// Updae topic list.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if some topic is invalid.
     pub fn set_topics(&mut self, topics: &[&str]) -> Result<&mut Self, EncodeError> {
         self.topics.clear();
         for topic in topics {
@@ -90,17 +116,20 @@ impl UnsubscribePacket {
         Ok(self)
     }
 
+    /// Get a reference to topic list.
+    #[must_use]
     pub fn topics(&self) -> &[SubTopic] {
         &self.topics
     }
 
+    /// Get a mutable reference to topic list.
     pub fn mut_topics(&mut self) -> &mut Vec<SubTopic> {
         &mut self.topics
     }
 }
 
 impl DecodePacket for UnsubscribePacket {
-    fn decode(ba: &mut ByteArray) -> Result<UnsubscribePacket, DecodeError> {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::Unsubscribe {
             return Err(DecodeError::InvalidPacketType);
@@ -127,7 +156,7 @@ impl DecodePacket for UnsubscribePacket {
             return Err(DecodeError::EmptyTopicFilter);
         }
 
-        Ok(UnsubscribePacket { packet_id, topics })
+        Ok(Self { packet_id, topics })
     }
 }
 
