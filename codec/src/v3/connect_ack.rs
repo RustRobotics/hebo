@@ -168,6 +168,6 @@ mod tests {
         let packet = ConnectAckPacket::decode(&mut ba);
         assert!(packet.is_ok());
         let packet = packet.unwrap();
-        assert_eq!(packet.session_present, false);
+        assert!(!packet.session_present);
     }
 }
