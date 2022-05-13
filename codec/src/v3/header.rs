@@ -56,15 +56,17 @@ pub enum PacketType {
 }
 
 impl PacketType {
+    /// Get byte length in packet.
+    #[must_use]
     #[inline]
-    pub fn len(&self) -> usize {
+    pub const fn bytes() -> usize {
         1
     }
 }
 
-impl Into<u8> for PacketType {
-    fn into(self) -> u8 {
-        let type_bits = match self {
+impl From<PacketType> for u8 {
+    fn from(packet_type: PacketType) -> Self {
+        let type_bits = match packet_type {
             PacketType::Connect => 1,
             PacketType::ConnectAck => 2,
             PacketType::Publish { .. } => 3,
@@ -81,7 +83,7 @@ impl Into<u8> for PacketType {
             PacketType::Disconnect => 14,
         };
 
-        let flags_bits = match self {
+        let flags_bits = match packet_type {
             PacketType::Publish { dup, qos, retain } => {
                 let dup = if dup { 0b0000_1000 } else { 0b0000_0000 };
                 let qos = match qos {
@@ -96,9 +98,9 @@ impl Into<u8> for PacketType {
             // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
             // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
             // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
-            PacketType::PublishRelease => 0b0000_0010,
-            PacketType::Subscribe => 0b0000_0010,
-            PacketType::Unsubscribe => 0b0000_0010,
+            PacketType::PublishRelease | PacketType::Subscribe | PacketType::Unsubscribe => {
+                0b0000_0010
+            }
             _ => 0b0000_0000,
         };
         (type_bits << 4) | flags_bits
@@ -108,7 +110,9 @@ impl Into<u8> for PacketType {
 impl TryFrom<u8> for PacketType {
     type Error = DecodeError;
 
-    fn try_from(v: u8) -> Result<PacketType, Self::Error> {
+    #[allow(clippy::cognitive_complexity)]
+    #[allow(clippy::too_many_lines)]
+    fn try_from(v: u8) -> Result<Self, Self::Error> {
         let type_bits = (v & 0b1111_0000) >> 4;
         let flag = v & 0b0000_1111;
         // Where a flag bit is marked as “Reserved” in Table 2.2 - Flag Bits,
@@ -119,19 +123,19 @@ impl TryFrom<u8> for PacketType {
             1 => {
                 // The Server MUST validate that the reserved flag in the CONNECT Control
                 // Packet is set to zero and disconnect the Client if it is not zero. [MQTT-3.1.2-3]
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::Connect)
+                } else {
                     log::error!("header: Got packet flag in Connect: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::Connect)
                 }
             }
             2 => {
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::ConnectAck)
+                } else {
                     log::error!("header: Got packet flag in ConnectAck: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::ConnectAck)
                 }
             }
             3 => {
@@ -145,105 +149,105 @@ impl TryFrom<u8> for PacketType {
                     _ => return Err(DecodeError::InvalidQoS),
                 };
 
-                Ok(PacketType::Publish { dup, retain, qos })
+                Ok(Self::Publish { dup, retain, qos })
             }
             4 => {
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::PublishAck)
+                } else {
                     log::error!("header: Got packet flag in PublishAck: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::PublishAck)
                 }
             }
             5 => {
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::PublishReceived)
+                } else {
                     log::error!("header: Got packet flag in PublishReceived: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::PublishReceived)
                 }
             }
             6 => {
                 // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
                 // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
                 // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
-                if flag != 0b0000_0010 {
+                if flag == 0b0000_0010 {
+                    Ok(Self::PublishRelease)
+                } else {
                     log::error!("header: Got packet flag in PublishRelease: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::PublishRelease)
                 }
             }
             7 => {
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::PublishComplete)
+                } else {
                     log::error!("header: Got packet flag in PublishComplete: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::PublishComplete)
                 }
             }
             8 => {
                 // Bits 3,2,1 and 0 of the fixed header of the SUBSCRIBE Control Packet are reserved
                 // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
                 // any other value as malformed and close the Network Connection [MQTT-3.8.1-1].
-                if flag != 0b0000_0010 {
+                if flag == 0b0000_0010 {
+                    Ok(Self::Subscribe)
+                } else {
                     log::error!("header: Got packet flag in Subscribe: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::Subscribe)
                 }
             }
             9 => {
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::SubscribeAck)
+                } else {
                     log::error!("header: Got packet flag in Subscribe: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::SubscribeAck)
                 }
             }
             10 => {
                 // Bits 3,2,1 and 0 of the fixed header of the UNSUBSCRIBE Control Packet are reserved
                 // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
                 // any other value as malformed and close the Network Connection [MQTT-3.10.1-1].
-                if flag != 0b0000_0010 {
+                if flag == 0b0000_0010 {
+                    Ok(Self::Unsubscribe)
+                } else {
                     log::error!("header: Got packet flag in Unsubscribe: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::Unsubscribe)
                 }
             }
             11 => {
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::UnsubscribeAck)
+                } else {
                     log::error!("header: Got packet flag in UnsubscribeAck: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::UnsubscribeAck)
                 }
             }
             12 => {
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::PingRequest)
+                } else {
                     log::error!("header: Got packet flag in PingRequest: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::PingRequest)
                 }
             }
             13 => {
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::PingResponse)
+                } else {
                     log::error!("header: Got packet flag in PingResponse: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::PingResponse)
                 }
             }
             14 => {
                 // The Server MUST validate that reserved bits are set to zero and disconnect the Client
                 // if they are not zero [MQTT-3.14.1-1].
-                if flag != 0b0000_0000 {
+                if flag == 0b0000_0000 {
+                    Ok(Self::Disconnect)
+                } else {
                     log::error!("header: Got packet flag in Disconnect: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
-                } else {
-                    Ok(PacketType::Disconnect)
                 }
             }
             t => {
@@ -256,7 +260,7 @@ impl TryFrom<u8> for PacketType {
 
 impl Default for PacketType {
     fn default() -> Self {
-        PacketType::Connect
+        Self::Connect
     }
 }
 
@@ -267,6 +271,7 @@ impl Default for PacketType {
 /// +-------+-------+
 /// | Remaining Len |
 /// +-------+-------+
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct FixedHeader {
     packet_type: PacketType,
@@ -274,6 +279,11 @@ pub struct FixedHeader {
 }
 
 impl FixedHeader {
+    /// Create a new fixed header.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `remaining_length` is invalid.
     pub fn new(packet_type: PacketType, remaining_length: usize) -> Result<Self, EncodeError> {
         let remaining_length = VarInt::from(remaining_length)?;
         Ok(Self {
@@ -282,14 +292,20 @@ impl FixedHeader {
         })
     }
 
-    pub fn packet_type(&self) -> PacketType {
+    /// Get current packet type.
+    #[must_use]
+    pub const fn packet_type(&self) -> PacketType {
         self.packet_type
     }
 
+    /// Get remaining length.
+    #[must_use]
     pub fn remaining_length(&self) -> usize {
         self.remaining_length.value()
     }
 
+    /// Get remaining bytes.
+    #[must_use]
     pub fn remaining_bytes(&self) -> usize {
         self.remaining_length.bytes()
     }
@@ -302,7 +318,7 @@ impl DecodePacket for FixedHeader {
         let packet_type = PacketType::try_from(flag)?;
         let remaining_length = VarInt::decode(ba)?;
 
-        Ok(FixedHeader {
+        Ok(Self {
             packet_type,
             remaining_length,
         })
@@ -315,7 +331,8 @@ impl EncodePacket for FixedHeader {
         v.push(packet_type);
 
         self.remaining_length.encode(v)?;
-        Ok(self.packet_type.len() + self.remaining_length.len())
+        // TODO(Shaohua): Replace remaining_length.len() with remaining_length.bytes()
+        Ok(PacketType::bytes() + self.remaining_length.len())
     }
 }
 
