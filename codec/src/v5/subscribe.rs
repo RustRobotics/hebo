@@ -375,7 +375,7 @@ impl DecodePacket for SubscribePacket {
             return Err(DecodeError::InvalidPropertyType);
         }
 
-        let mut remaining_length = packet_id.bytes() + properties.bytes();
+        let mut remaining_length = PacketId::bytes() + properties.bytes();
         let mut topics = Vec::new();
 
         // Parse topic/qos list.
@@ -403,7 +403,7 @@ impl EncodePacket for SubscribePacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let mut remaining_length = self.packet_id.bytes();
+        let mut remaining_length = PacketId::bytes();
         for topic in &self.topics {
             remaining_length += topic.bytes();
         }

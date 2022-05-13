@@ -170,7 +170,7 @@ impl DecodePacket for UnsubscribePacket {
             return Err(DecodeError::InvalidPropertyType);
         }
 
-        let mut remaining_length = packet_id.bytes() + properties.bytes();
+        let mut remaining_length = PacketId::bytes() + properties.bytes();
         let mut topics = Vec::new();
         while remaining_length < fixed_header.remaining_length() {
             let topic = SubTopic::decode(ba)?;
@@ -194,7 +194,7 @@ impl DecodePacket for UnsubscribePacket {
 impl EncodePacket for UnsubscribePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
-        let mut remaining_length: usize = self.packet_id.bytes() + self.properties.bytes();
+        let mut remaining_length: usize = PacketId::bytes() + self.properties.bytes();
         for topic in &self.topics {
             remaining_length += topic.bytes();
         }

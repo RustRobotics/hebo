@@ -381,12 +381,12 @@ impl DecodePacket for PublishPacket {
         }
         let mut msg_len = fixed_header.remaining_length() - topic.bytes();
         if qos != QoS::AtMostOnce {
-            if msg_len < packet_id.bytes() {
+            if msg_len < PacketId::bytes() {
                 return Err(DecodeError::InvalidRemainingLength);
             }
 
             // Packet identifier is presesnt in QoS1/QoS2 packets.
-            msg_len -= packet_id.bytes();
+            msg_len -= PacketId::bytes();
         }
 
         let msg = ba.read_bytes(msg_len)?;
@@ -412,7 +412,7 @@ impl EncodePacket for PublishPacket {
             //+ self.properties.bytes()
             + self.msg.len();
         if self.qos != QoS::AtMostOnce {
-            remaining_length += self.packet_id.bytes();
+            remaining_length += PacketId::bytes();
         }
 
         let packet_type = PacketType::Publish {

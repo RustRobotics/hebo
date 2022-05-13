@@ -47,7 +47,7 @@ impl DecodePacket for UnsubscribeAckPacket {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::UnsubscribeAck {
             Err(DecodeError::InvalidPacketType)
-        } else if fixed_header.remaining_length() != PacketId::const_bytes() {
+        } else if fixed_header.remaining_length() != PacketId::bytes() {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             let packet_id = PacketId::decode(ba)?;
@@ -60,7 +60,7 @@ impl EncodePacket for UnsubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let fixed_header = FixedHeader::new(PacketType::UnsubscribeAck, self.packet_id.bytes())?;
+        let fixed_header = FixedHeader::new(PacketType::UnsubscribeAck, PacketId::bytes())?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;
         Ok(buf.len() - old_len)

@@ -107,7 +107,7 @@ impl DecodePacket for SubscribeAckPacket {
         let packet_id = PacketId::decode(ba)?;
 
         let mut acknowledgements = Vec::new();
-        let mut remaining_length = packet_id.bytes();
+        let mut remaining_length = PacketId::bytes();
 
         while remaining_length < fixed_header.remaining_length() {
             let payload = ba.read_byte()?;
@@ -132,7 +132,7 @@ impl DecodePacket for SubscribeAckPacket {
 impl EncodePacket for SubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let remaining_length = self.packet_id.bytes() + QoS::bytes() * self.acknowledgements.len();
+        let remaining_length = PacketId::bytes() + QoS::bytes() * self.acknowledgements.len();
         let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;

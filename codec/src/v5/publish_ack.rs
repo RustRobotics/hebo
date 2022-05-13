@@ -119,7 +119,7 @@ impl EncodePacket for PublishAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let mut packet_bytes = self.packet_id.bytes();
+        let mut packet_bytes = PacketId::bytes();
         if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
             packet_bytes += ReasonCode::bytes();
         }
@@ -152,11 +152,11 @@ impl DecodePacket for PublishAckPacket {
         if fixed_header.packet_type() != PacketType::PublishAck {
             return Err(DecodeError::InvalidPacketType);
         }
-        if fixed_header.remaining_length() < PacketId::const_bytes() {
+        if fixed_header.remaining_length() < PacketId::bytes() {
             return Err(DecodeError::InvalidRemainingLength);
         }
         let packet_id = PacketId::decode(ba)?;
-        let remaining_length = fixed_header.remaining_length() - packet_id.bytes();
+        let remaining_length = fixed_header.remaining_length() - PacketId::bytes();
         let reason_code = if remaining_length >= ReasonCode::bytes() {
             ReasonCode::decode(ba)?
         } else {

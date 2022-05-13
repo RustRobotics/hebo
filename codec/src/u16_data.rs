@@ -10,24 +10,27 @@ use std::ops;
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
-/// U16Data represents a two bytes integer.
+/// `U16Data` represents a two bytes integer.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct U16Data(u16);
 
 impl U16Data {
-    pub fn new(value: u16) -> Self {
+    /// Create a new `U16Data`.
+    #[must_use]
+    pub const fn new(value: u16) -> Self {
         Self(value)
     }
 
+    /// Get inner u16 value.
+    #[must_use]
     pub const fn value(&self) -> u16 {
         self.0
     }
 
-    pub const fn bytes(&self) -> usize {
-        2
-    }
-
-    pub const fn const_bytes() -> usize {
+    /// Get byte length in packet.
+    #[must_use]
+    #[inline]
+    pub const fn bytes() -> usize {
         2
     }
 }
@@ -48,7 +51,7 @@ impl DecodePacket for U16Data {
 impl EncodePacket for U16Data {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         buf.write_u16::<BigEndian>(self.0)?;
-        Ok(self.bytes())
+        Ok(Self::bytes())
     }
 }
 

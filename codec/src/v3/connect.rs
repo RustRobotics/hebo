@@ -209,7 +209,7 @@ impl EncodePacket for ConnectPacket {
         let mut remaining_length = self.protocol_name.bytes()
             + ProtocolLevel::bytes()
             + ConnectFlags::bytes()
-            + self.keep_alive.bytes()
+            + U16Data::bytes()  // keep_alive
             + self.client_id.bytes();
 
         // Check username/password/topic/message.

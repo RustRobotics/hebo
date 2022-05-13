@@ -144,7 +144,7 @@ impl DecodePacket for SubscribeAckPacket {
         }
 
         let mut reasons = Vec::new();
-        let mut remaining_length = packet_id.bytes() + properties.bytes();
+        let mut remaining_length = PacketId::bytes() + properties.bytes();
 
         while remaining_length < fixed_header.remaining_length() {
             let reason = ReasonCode::decode(ba)?;
@@ -166,9 +166,8 @@ impl DecodePacket for SubscribeAckPacket {
 impl EncodePacket for SubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let remaining_length = self.packet_id.bytes()
-            + self.properties.bytes()
-            + self.reasons.len() * ReasonCode::bytes();
+        let remaining_length =
+            PacketId::bytes() + self.properties.bytes() + self.reasons.len() * ReasonCode::bytes();
         let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;

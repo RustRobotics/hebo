@@ -188,7 +188,7 @@ impl DecodePacket for SubscribePacket {
         }
 
         let mut topics = Vec::new();
-        let mut remaining_length = packet_id.bytes();
+        let mut remaining_length = PacketId::bytes();
 
         // Parse topic/qos list.
         while remaining_length < fixed_header.remaining_length() {
@@ -211,7 +211,7 @@ impl EncodePacket for SubscribePacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let mut remaining_length = self.packet_id.bytes();
+        let mut remaining_length = PacketId::bytes();
         for topic in &self.topics {
             remaining_length += topic.bytes();
         }
