@@ -18,7 +18,7 @@ pub enum SubscribeAck {
 
 impl Default for SubscribeAck {
     fn default() -> Self {
-        SubscribeAck::Failed
+        Self::Failed
     }
 }
 
@@ -40,17 +40,21 @@ impl Default for SubscribeAck {
 /// | Ack N ...                 |
 /// +---------------------------+
 /// ```
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SubscribeAckPacket {
     /// `packet_id` field is identical in Subscribe packet.
     packet_id: PacketId,
 
     /// A list of acknowledgement to subscribed topics.
+    ///
     /// The order of acknowledgement match the order of topic in Subscribe packet.
     acknowledgements: Vec<SubscribeAck>,
 }
 
 impl SubscribeAckPacket {
+    /// Create a subscribe ack packet with `ack`.
+    #[must_use]
     pub fn new(packet_id: PacketId, ack: SubscribeAck) -> Self {
         Self {
             packet_id,
@@ -58,6 +62,8 @@ impl SubscribeAckPacket {
         }
     }
 
+    /// Create a subscribe ack packet with multiple `acknowledgements`.
+    #[must_use]
     pub fn with_vec(packet_id: PacketId, acknowledgements: Vec<SubscribeAck>) -> Self {
         Self {
             packet_id,
@@ -65,21 +71,27 @@ impl SubscribeAckPacket {
         }
     }
 
+    /// Update packet id.
     pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    /// Get current packet id.
+    #[must_use]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 
+    /// Update acknowledgement list.
     pub fn set_ack(&mut self, ack: &[SubscribeAck]) -> &mut Self {
         self.acknowledgements.clear();
         self.acknowledgements.extend(ack);
         self
     }
 
+    /// Get current acknowledgements.
+    #[must_use]
     pub fn acknowledgements(&self) -> &[SubscribeAck] {
         &self.acknowledgements
     }
@@ -110,7 +122,7 @@ impl DecodePacket for SubscribeAckPacket {
             }
         }
 
-        Ok(SubscribeAckPacket {
+        Ok(Self {
             packet_id,
             acknowledgements,
         })
