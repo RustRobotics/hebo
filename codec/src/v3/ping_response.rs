@@ -5,17 +5,19 @@
 use super::{FixedHeader, Packet, PacketType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
-/// The PingResponse packet is sent to a Client from the Server to reply to PingRequest packet.
+/// The `PingResponse` packet is sent to a Client from the Server to reply to `PingRequest` packet.
 ///
 /// This ping request/response mechanism is used to keep alive.
 ///
 /// Note that this packet does not contain variable header or payload.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PingResponsePacket();
 
 impl PingResponsePacket {
-    pub fn new() -> PingResponsePacket {
-        PingResponsePacket()
+    #[must_use]
+    pub const fn new() -> Self {
+        Self()
     }
 }
 
@@ -41,7 +43,7 @@ impl DecodePacket for PingResponsePacket {
         } else if fixed_header.remaining_length() != 0 {
             Err(DecodeError::InvalidRemainingLength)
         } else {
-            Ok(PingResponsePacket())
+            Ok(Self())
         }
     }
 }

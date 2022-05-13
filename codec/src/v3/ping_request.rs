@@ -5,18 +5,20 @@
 use super::{FixedHeader, Packet, PacketType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
-/// The PingRequest packet is sent to the Server from a Client. It is used to:
+/// The `PingRequest` packet is sent to the Server from a Client. It is used to:
 /// 1. Notify the Server that this Client is still alive.
 /// 2. To check if the Server is alive.
 /// 3. To check the network connection is ok.
 ///
 /// This packet does not contain variable header or payload.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PingRequestPacket();
 
 impl PingRequestPacket {
-    pub fn new() -> PingRequestPacket {
-        PingRequestPacket()
+    #[must_use]
+    pub const fn new() -> Self {
+        Self()
     }
 }
 
@@ -42,7 +44,7 @@ impl DecodePacket for PingRequestPacket {
         } else if fixed_header.remaining_length() != 0 {
             Err(DecodeError::InvalidRemainingLength)
         } else {
-            Ok(PingRequestPacket())
+            Ok(Self())
         }
     }
 }
