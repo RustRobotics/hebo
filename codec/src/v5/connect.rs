@@ -15,12 +15,13 @@ use crate::{
 };
 
 /// `ConnectPacket` consists of three parts:
-/// * FixedHeader
-/// * VariableHeader
-/// * Payload
+/// * `FixedHeader`
+/// * `VariableHeader`
+/// * `Payload`
+///
 /// Note that fixed header part is same in all packets so that we just ignore it.
 ///
-/// Basic struct of ConnectPacket is as below:
+/// Basic struct of `ConnectPacket` is as below:
 /// ```txt
 ///  7                          0
 /// +----------------------------+
@@ -76,6 +77,7 @@ use crate::{
 /// whose presence is determined by the flags in the Variable Header. These fields,
 /// if present, MUST appear in the order Client Identifier, Will Properties, Will Topic,
 /// Will Payload, User Name, Password [MQTT-3.1.3-1].
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
@@ -177,6 +179,7 @@ pub struct ConnectPacket {
     password: BinaryData,
 }
 
+/// Properties available in connect packet.
 pub const CONNECT_PROPERTIES: &[PropertyType] = &[
     PropertyType::SessionExpiryInterval,
     PropertyType::ReceiveMaximum,
@@ -188,6 +191,7 @@ pub const CONNECT_PROPERTIES: &[PropertyType] = &[
     PropertyType::AuthenticationData,
 ];
 
+/// Properties available in connect-will.
 pub const CONNECT_WILL_PROPERTIES: &[PropertyType] = &[
     PropertyType::WillDelayInterval,
     PropertyType::PayloadFormatIndicator,
@@ -199,78 +203,103 @@ pub const CONNECT_WILL_PROPERTIES: &[PropertyType] = &[
 ];
 
 impl ConnectPacket {
-    pub fn new(client_id: &str) -> Result<ConnectPacket, EncodeError> {
+    /// Create a new connect packet.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `client_id` is invalid.
+    pub fn new(client_id: &str) -> Result<Self, EncodeError> {
         let protocol_name = StringData::from(PROTOCOL_NAME)?;
         validate_client_id(client_id).map_err(|_err| EncodeError::InvalidClientId)?;
         let client_id = StringData::from(client_id)?;
-        Ok(ConnectPacket {
+        Ok(Self {
             protocol_name,
             keep_alive: U16Data::new(60),
             client_id,
-            ..ConnectPacket::default()
+            ..Self::default()
         })
     }
 
+    /// Update protocol level.
     pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> &mut Self {
         self.protocol_level = level;
         self
     }
 
-    pub fn protocol_level(&self) -> ProtocolLevel {
+    /// Get current mqtt protocol level.
+    #[must_use]
+    pub const fn protocol_level(&self) -> ProtocolLevel {
         self.protocol_level
     }
 
+    /// Update keep-alive value.
     pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
         self.keep_alive = U16Data::new(keep_alive);
         self
     }
 
-    pub fn keep_alive(&self) -> u16 {
+    /// Get current keep-alive value.
+    #[must_use]
+    pub const fn keep_alive(&self) -> u16 {
         self.keep_alive.value()
     }
 
+    /// Update will-retain flag.
     pub fn set_will_retain(&mut self, will_retain: bool) -> &mut Self {
         self.connect_flags.set_will_retain(will_retain);
         self
     }
 
-    pub fn will_retain(&self) -> bool {
+    /// Get current will-retain flag.
+    #[must_use]
+    pub const fn will_retain(&self) -> bool {
         self.connect_flags.will_retain()
     }
 
+    /// Update will-qos value.
     pub fn set_will_qos(&mut self, qos: QoS) -> &mut Self {
         self.connect_flags.set_will_qos(qos);
         self
     }
 
-    pub fn will_qos(&self) -> QoS {
+    /// Get current will-qos value.
+    #[must_use]
+    pub const fn will_qos(&self) -> QoS {
         self.connect_flags.will_qos()
     }
 
+    /// Update will flag.
     pub fn set_will(&mut self, will: bool) -> &mut Self {
         self.connect_flags.set_will(will);
         self
     }
 
-    pub fn will(&self) -> bool {
+    /// Get current will flag.
+    #[must_use]
+    pub const fn will(&self) -> bool {
         self.connect_flags.will()
     }
 
+    /// Update clean-session flag.
     pub fn set_clean_session(&mut self, clean_session: bool) -> &mut Self {
         self.connect_flags.set_clean_session(clean_session);
         self
     }
 
-    pub fn clean_session(&self) -> bool {
+    /// Get clean-session flag.
+    #[must_use]
+    pub const fn clean_session(&self) -> bool {
         self.connect_flags.clean_session()
     }
 
+    /// Get a mutable reference to property list.
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
+    /// Get a reference to property list.
     #[must_use]
-    pub fn properties(&self) -> &Properties {
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 

@@ -19,7 +19,7 @@ impl U16Data {
         Self(value)
     }
 
-    pub fn value(&self) -> u16 {
+    pub const fn value(&self) -> u16 {
         self.0
     }
 
