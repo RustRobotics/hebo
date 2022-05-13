@@ -11,6 +11,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 ///
 /// It is a Protocol Error for the Client or Server to send an AUTH packet if the CONNECT packet
 /// did not contain the same Authentication Method.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct AuthPacket {
     reason_code: ReasonCode,
@@ -18,24 +19,32 @@ pub struct AuthPacket {
 }
 
 impl AuthPacket {
+    /// Create a new auth packet with default values.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Update reason code.
     pub fn set_reason_code(&mut self, code: ReasonCode) -> &mut Self {
         self.reason_code = code;
         self
     }
 
-    pub fn reason_code(&self) -> ReasonCode {
+    /// Get reason code.
+    #[must_use]
+    pub const fn reason_code(&self) -> ReasonCode {
         self.reason_code
     }
 
+    /// Get a mutable reference to property list.
     pub fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
-    pub fn properties(&self) -> &Properties {
+    /// Get a reference to property list.
+    #[must_use]
+    pub const fn properties(&self) -> &Properties {
         &self.properties
     }
 }
@@ -89,7 +98,7 @@ impl DecodePacket for AuthPacket {
             return Err(DecodeError::InvalidPacketType);
         }
         if fixed_header.remaining_length() == 0 {
-            return Ok(AuthPacket::default());
+            return Ok(Self::default());
         }
 
         let reason_code = ReasonCode::decode(ba)?;
