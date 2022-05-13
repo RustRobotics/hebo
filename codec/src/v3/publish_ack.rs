@@ -5,7 +5,7 @@
 use super::{FixedHeader, Packet, PacketType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
 
-/// Acknowledge packet for Publish message in QoS 1.
+/// Acknowledge packet for Publish message in `QoS` 1.
 ///
 /// Basic packet structure:
 /// ```txt
@@ -20,17 +20,21 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, Pac
 /// ```
 ///
 /// This type of packet does not contain payload.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PublishAckPacket {
     packet_id: PacketId,
 }
 
 impl PublishAckPacket {
-    pub fn new(packet_id: PacketId) -> Self {
+    #[must_use]
+    pub const fn new(packet_id: PacketId) -> Self {
         Self { packet_id }
     }
 
-    pub fn packet_id(&self) -> PacketId {
+    #[must_use]
+    #[inline]
+    pub const fn packet_id(&self) -> PacketId {
         self.packet_id
     }
 }
@@ -61,7 +65,7 @@ impl DecodePacket for PublishAckPacket {
             Err(DecodeError::InvalidRemainingLength)
         } else {
             let packet_id = PacketId::decode(ba)?;
-            Ok(PublishAckPacket { packet_id })
+            Ok(Self { packet_id })
         }
     }
 }
