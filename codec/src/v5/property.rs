@@ -663,9 +663,9 @@ impl Property {
             Self::AuthenticationMethod(value) => value.bytes(),
             Self::ContentType(value) => value.bytes(),
             Self::CorrelationData(value) => value.bytes(),
-            Self::MaximumPacketSize(value) => value.bytes(),
+            Self::MaximumPacketSize(..) => U32Data::bytes(),
             Self::MaximumQoS(..) => QoS::bytes(),
-            Self::MessageExpiryInterval(value) => value.bytes(),
+            Self::MessageExpiryInterval(..) => U32Data::bytes(),
             Self::PayloadFormatIndicator(..) => BoolData::bytes(),
             Self::ReasonString(value) => value.bytes(),
             Self::ReceiveMaximum(..) => U16Data::bytes(),
@@ -676,7 +676,7 @@ impl Property {
             Self::RetainAvailable(..) => BoolData::bytes(),
             Self::ServerKeepAlive(..) => U16Data::bytes(),
             Self::ServerReference(value) => value.bytes(),
-            Self::SessionExpiryInterval(value) => value.bytes(),
+            Self::SessionExpiryInterval(..) => U32Data::bytes(),
             Self::SharedSubscriptionAvailable(..) => BoolData::bytes(),
             Self::SubscriptionIdentifier(value) => value.bytes(),
             Self::SubscriptionIdentifierAvailable(..) => BoolData::bytes(),
@@ -684,7 +684,7 @@ impl Property {
             Self::TopicAliasMaximum(..) => U16Data::bytes(),
             Self::UserProperty(value) => value.bytes(),
             Self::WildcardSubscriptionAvailable(..) => BoolData::bytes(),
-            Self::WillDelayInterval(value) => value.bytes(),
+            Self::WillDelayInterval(..) => U32Data::bytes(),
         };
 
         PropertyType::bytes() + value_bytes

@@ -7,24 +7,25 @@ use std::fmt;
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
-/// U32Data represents a four bytes integer.
+/// `U32Data` represents a four bytes integer.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct U32Data(u32);
 
 impl U32Data {
-    pub fn new(value: u32) -> Self {
+    #[must_use]
+    pub const fn new(value: u32) -> Self {
         Self(value)
     }
 
-    pub fn value(&self) -> u32 {
+    /// Get u32 value.
+    #[must_use]
+    pub const fn value(&self) -> u32 {
         self.0
     }
 
-    pub const fn bytes(&self) -> usize {
-        4
-    }
-
-    pub const fn const_bytes() -> usize {
+    /// Get byte length in packet.
+    #[must_use]
+    pub const fn bytes() -> usize {
         4
     }
 }
@@ -45,6 +46,6 @@ impl DecodePacket for U32Data {
 impl EncodePacket for U32Data {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         buf.write_u32::<BigEndian>(self.0)?;
-        Ok(self.bytes())
+        Ok(Self::bytes())
     }
 }
