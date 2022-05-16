@@ -2,6 +2,8 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+#![allow(clippy::module_name_repetitions)]
+
 use std::net::UdpSocket;
 use std::os::unix::io::{AsRawFd, RawFd};
 use tokio::net::TcpListener;
@@ -11,12 +13,14 @@ use crate::error::{Error, ErrorKind};
 fn bind_device(socket_fd: RawFd, device: &str) -> Result<(), Error> {
     if !device.is_empty() {
         unsafe {
+            #[allow(clippy::cast_possible_truncation)]
+            let socket_len = device.len() as nc::socklen_t;
             nc::setsockopt(
                 socket_fd,
                 nc::SOL_SOCKET,
                 nc::SO_BINDTODEVICE,
                 device.as_ptr() as usize,
-                device.len() as nc::socklen_t,
+                socket_len,
             )
             .map_err(|errno| {
                 Error::from_string(
@@ -42,31 +46,33 @@ fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
     // For the others, just a boolean value for enable and disable.
     #[cfg(not(target_os = "linux"))]
     let queue_len: i32 = 1;
-    let queue_len_ptr = &queue_len as *const i32 as usize;
+    let queue_len_ptr = std::ptr::addr_of!(queue_len) as usize;
 
     // TODO(Shaohua): Replace with nc::TCP_FASTOPEN in new version.
     const TCP_FASTOPEN: i32 = 23;
 
     unsafe {
-        nc::setsockopt(
-            socket_fd,
-            nc::IPPROTO_TCP,
-            TCP_FASTOPEN,
-            queue_len_ptr,
-            std::mem::size_of_val(&queue_len) as u32,
+        #[allow(clippy::cast_possible_truncation)]
+        let len = std::mem::size_of_val(&queue_len) as u32;
+        nc::setsockopt(socket_fd, nc::IPPROTO_TCP, TCP_FASTOPEN, queue_len_ptr, len).map_err(
+            |errno| {
+                Error::from_string(
+                    ErrorKind::KernelError,
+                    format!(
+                        "Failed to enable socket fast open, got err: {}",
+                        nc::strerror(errno)
+                    ),
+                )
+            },
         )
-        .map_err(|errno| {
-            Error::from_string(
-                ErrorKind::KernelError,
-                format!(
-                    "Failed to enable socket fast open, got err: {}",
-                    nc::strerror(errno)
-                ),
-            )
-        })
     }
 }
 
+/// Create a new tcp server socket at `address` and binds to `device`.
+///
+/// # Errors
+///
+/// Returns error if socket `address` is invalid or failed to bind to specific `device`.
 pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener, Error> {
     let listener = TcpListener::bind(address).await?;
     let socket_fd: RawFd = listener.as_raw_fd();
@@ -80,6 +86,11 @@ pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener
     Ok(listener)
 }
 
+/// Create a new udp socket at `address` and binds to `device`.
+///
+/// # Errors
+///
+/// Returns error if socket `address` is invalid or failed to bind to specific `device`.
 pub fn new_udp_socket(address: &str, device: &str) -> Result<UdpSocket, Error> {
     let socket = UdpSocket::bind(address)?;
     let socket_fd: RawFd = socket.as_raw_fd();
