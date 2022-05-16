@@ -11,7 +11,7 @@ use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
 use std::collections::HashMap;
 use tokio::time::interval;
 
-use crate::connect_options::*;
+use crate::connect_options::ConnectOptions;
 use crate::error::{Error, ErrorKind};
 use crate::stream::Stream;
 use crate::ClientStatus;
@@ -31,7 +31,8 @@ pub struct ClientInnerV5 {
 impl Drop for ClientInnerV5 {
     fn drop(&mut self) {
         if self.status == ClientStatus::Connected {
-            let _ = self.disconnect();
+            // No need to catch errors.
+            let _ret = self.disconnect();
         }
     }
 }
@@ -51,11 +52,13 @@ impl ClientInnerV5 {
         }
     }
 
-    pub fn status(&self) -> ClientStatus {
+    /// Get current client connection status.
+    pub const fn status(&self) -> ClientStatus {
         self.status
     }
 
-    pub fn connect_options(&self) -> &ConnectOptions {
+    /// Get client connection options.
+    pub const fn connect_options(&self) -> &ConnectOptions {
         &self.connect_options
     }
 
@@ -87,15 +90,15 @@ impl ClientInnerV5 {
         }
     }
 
-    async fn handle_session_packet(&mut self, buf: &mut Vec<u8>) -> Result<(), Error> {
+    async fn handle_session_packet(&mut self, buf: &mut [u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let fixed_header = FixedHeader::decode(&mut ba)?;
         match fixed_header.packet_type() {
-            PacketType::ConnectAck => self.connect_ack(&buf).await,
-            PacketType::Publish { .. } => self.on_message(&buf).await,
-            PacketType::PublishAck => self.publish_ack(&buf),
-            PacketType::SubscribeAck => self.subscribe_ack(&buf),
-            PacketType::UnsubscribeAck => self.unsubscribe_ack(&buf),
+            PacketType::ConnectAck => self.connect_ack(buf).await,
+            PacketType::Publish { .. } => self.on_message(buf).await,
+            PacketType::PublishAck => self.publish_ack(buf),
+            PacketType::SubscribeAck => self.subscribe_ack(buf),
+            PacketType::UnsubscribeAck => self.unsubscribe_ack(buf),
             PacketType::PingResponse => self.on_ping_resp().await,
             t => {
                 log::info!("Unhandled msg: {:?}", t);
@@ -152,7 +155,7 @@ impl ClientInnerV5 {
                 self.publishing_qos2_packets
                     .insert(packet_id, packet.clone());
             }
-            _ => (),
+            QoS::AtMostOnce => (),
         }
         self.send(packet).await
     }
@@ -202,7 +205,9 @@ impl ClientInnerV5 {
         Ok(())
     }
 
-    fn on_disconnect(&mut self) {}
+    fn on_disconnect(&mut self) {
+        todo!()
+    }
 
     async fn on_message(&self, buf: &[u8]) -> Result<(), Error> {
         log::info!("on_message()");
@@ -249,7 +254,7 @@ impl ClientInnerV5 {
         Ok(())
     }
 
-    /// Parse packet_id and remove from vector.
+    /// Parse `packet_id` and remove from vector.
     fn subscribe_ack(&mut self, buf: &[u8]) -> Result<(), Error> {
         log::info!("subscribe_ack()");
         let mut ba = ByteArray::new(buf);
