@@ -14,16 +14,21 @@ use crate::error::Error;
 #[derive(Debug)]
 pub enum Stream {
     Mqtt(TcpStream),
-    Mqtts(TlsStream<TcpStream>),
-    Ws(WebSocketStream<TcpStream>),
-    Wss(WebSocketStream<TlsStream<TcpStream>>),
+    Mqtts(Box<TlsStream<TcpStream>>),
+    Ws(Box<WebSocketStream<TcpStream>>),
+    Wss(Box<WebSocketStream<TlsStream<TcpStream>>>),
     Uds(UnixStream),
     Quic(quinn::NewConnection),
 }
 
 impl Stream {
-    // TODO(Shaohua): Replace with bytes::BufMute
+    /// Read from stream.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if stream/socket gets error.
     pub async fn read_buf(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
+        // TODO(Shaohua): Replace with bytes::BufMute
         match self {
             Stream::Mqtt(ref mut tcp_stream) => Ok(tcp_stream.read_buf(buf).await?),
             Stream::Mqtts(ref mut tls_stream) => Ok(tls_stream.read_buf(buf).await?),
@@ -60,6 +65,11 @@ impl Stream {
         }
     }
 
+    /// Write buffer to stream.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if socket/stream gets error.
     pub async fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
         match self {
             Stream::Mqtt(tcp_stream) => Ok(tcp_stream.write(buf).await?),

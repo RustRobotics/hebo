@@ -257,7 +257,7 @@ impl Listener {
             Protocol::Mqtts(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let tls_stream = acceptor.accept(tcp_stream).await?;
-                return Ok(Stream::Mqtts(tls_stream));
+                return Ok(Stream::Mqtts(Box::new(tls_stream)));
             }
             Protocol::Ws(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
@@ -266,7 +266,7 @@ impl Listener {
                 } else {
                     tokio_tungstenite::accept_hdr_async(tcp_stream, check_ws_path).await?
                 };
-                return Ok(Stream::Ws(ws_stream));
+                return Ok(Stream::Ws(Box::new(ws_stream)));
             }
             Protocol::Wss(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
@@ -276,7 +276,7 @@ impl Listener {
                 } else {
                     tokio_tungstenite::accept_hdr_async(tls_stream, check_ws_path).await?
                 };
-                return Ok(Stream::Wss(ws_stream));
+                return Ok(Stream::Wss(Box::new(ws_stream)));
             }
             Protocol::Uds(listener) => {
                 let (uds_stream, _address) = listener.accept().await?;
