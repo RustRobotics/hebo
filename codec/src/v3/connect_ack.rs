@@ -5,7 +5,7 @@
 use super::{FixedHeader, Packet, PacketType};
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 
-/// If the Server sends a ConnectAck packet with non-zero return code, it MUST
+/// If the Server sends a `ConnectAck` packet with non-zero return code, it MUST
 /// close the network connection.
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -33,27 +33,27 @@ pub enum ConnectReturnCode {
 }
 
 impl Default for ConnectReturnCode {
-    fn default() -> ConnectReturnCode {
-        ConnectReturnCode::Accepted
+    fn default() -> Self {
+        Self::Accepted
     }
 }
 
 impl From<u8> for ConnectReturnCode {
-    fn from(v: u8) -> ConnectReturnCode {
+    fn from(v: u8) -> Self {
         match v {
-            0 => ConnectReturnCode::Accepted,
-            1 => ConnectReturnCode::UnacceptedProtocol,
-            2 => ConnectReturnCode::IdentifierRejected,
-            3 => ConnectReturnCode::ServerUnavailable,
-            4 => ConnectReturnCode::MalformedUsernamePassword,
-            5 => ConnectReturnCode::Unauthorized,
-            _ => ConnectReturnCode::Reserved,
+            0 => Self::Accepted,
+            1 => Self::UnacceptedProtocol,
+            2 => Self::IdentifierRejected,
+            3 => Self::ServerUnavailable,
+            4 => Self::MalformedUsernamePassword,
+            5 => Self::Unauthorized,
+            _ => Self::Reserved,
         }
     }
 }
 
-/// The first packet sent to the Client from the Server must be ConnectAckPacket.
-/// If the Client does not receive ConnectAckPacket in a reasonable time, it MUST
+/// The first packet sent to the Client from the Server must be `ConnectAckPacket`.
+/// If the Client does not receive `ConnectAckPacket` in a reasonable time, it MUST
 /// close the network connection.
 ///
 /// Basic packet structure:
@@ -70,6 +70,7 @@ impl From<u8> for ConnectReturnCode {
 /// ```
 ///
 /// This packet does not contain payload.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectAckPacket {
     /// Acknowledge flags is the first byte in variable header.
@@ -90,33 +91,40 @@ pub struct ConnectAckPacket {
 }
 
 impl ConnectAckPacket {
-    pub fn new(mut session_present: bool, return_code: ConnectReturnCode) -> ConnectAckPacket {
+    #[must_use]
+    pub fn new(mut session_present: bool, return_code: ConnectReturnCode) -> Self {
         // If a server sends a CONNACK packet containing a non-zero return code it MUST
         // set Session Present to 0. [MQTT-3.2.2-4]
         if return_code != ConnectReturnCode::Accepted {
             session_present = false;
         }
-        ConnectAckPacket {
+        Self {
             session_present,
             return_code,
         }
     }
 
+    /// Update return code.
     pub fn set_return_code(&mut self, code: ConnectReturnCode) -> &mut Self {
         self.return_code = code;
         self
     }
 
-    pub fn return_code(&self) -> ConnectReturnCode {
+    /// Get current return code.
+    #[must_use]
+    pub const fn return_code(&self) -> ConnectReturnCode {
         self.return_code
     }
 
+    /// Update session-present flag.
     pub fn set_session_present(&mut self, present: bool) -> &mut Self {
         self.session_present = present;
         self
     }
 
-    pub fn session_present(&self) -> bool {
+    /// Get current session-present flag.
+    #[must_use]
+    pub const fn session_present(&self) -> bool {
         self.session_present
     }
 }
@@ -130,7 +138,7 @@ impl DecodePacket for ConnectAckPacket {
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
         let return_code = ConnectReturnCode::from(ba.read_byte()?);
 
-        Ok(ConnectAckPacket {
+        Ok(Self {
             session_present,
             return_code,
         })
