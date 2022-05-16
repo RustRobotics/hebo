@@ -14,11 +14,13 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 /// associated with current connection.
 ///
 /// This packet does not contain variable header or payload.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct DisconnectPacket {}
 
 impl DisconnectPacket {
-    pub fn new() -> DisconnectPacket {
+    #[must_use]
+    pub fn new() -> Self {
         Self::default()
     }
 }
@@ -38,14 +40,14 @@ impl Packet for DisconnectPacket {
 }
 
 impl DecodePacket for DisconnectPacket {
-    fn decode(ba: &mut ByteArray) -> Result<DisconnectPacket, DecodeError> {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::Disconnect {
             Err(DecodeError::InvalidPacketType)
         } else if fixed_header.remaining_length() != 0 {
             Err(DecodeError::InvalidRemainingLength)
         } else {
-            Ok(DisconnectPacket {})
+            Ok(Self {})
         }
     }
 }

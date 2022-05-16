@@ -169,12 +169,12 @@ mod tests {
         let mut buf = Vec::with_capacity(4);
 
         let remaining_len = VarInt(126);
-        let _ = remaining_len.encode(&mut buf);
+        let _used = remaining_len.encode(&mut buf);
         assert_eq!(&buf, &[0x7e]);
         buf.clear();
 
         let remaining_len = VarInt(146);
-        let _ = remaining_len.encode(&mut buf);
+        let _used = remaining_len.encode(&mut buf);
         assert_eq!(&buf, &[0x92, 0x01]);
         buf.clear();
 

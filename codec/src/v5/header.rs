@@ -301,12 +301,12 @@ impl FixedHeader {
     }
 
     #[must_use]
-    pub fn remaining_length(&self) -> usize {
+    pub const fn remaining_length(&self) -> usize {
         self.remaining_length.value()
     }
 
     #[must_use]
-    pub fn remaining_bytes(&self) -> usize {
+    pub const fn remaining_bytes(&self) -> usize {
         self.remaining_length.bytes()
     }
 }
