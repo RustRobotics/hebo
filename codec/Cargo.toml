@@ -1,6 +1,6 @@
 [package]
 name = "hebo_codec"
-version = "0.1.3"
+version = "0.1.4"
 authors = [
   "Xu Shaohua <shaohua@biofan.org>"
 ]
@@ -12,11 +12,9 @@ categories = [
 keywords = [
   "broker",
   "codec",
-  "distributed",
   "hebo",
   "mqtt",
   "qos",
-  "ruo",
 ]
 repository = "https://github.com/HeboProject/hebo"
 homepage = "https://github.com/HeboProject/hebo/tree/main/codec"
