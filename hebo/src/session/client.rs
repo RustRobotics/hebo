@@ -41,13 +41,13 @@ impl Session {
         self.reset_instant();
 
         match fixed_header.packet_type() {
-            PacketType::Connect => self.on_client_connect(&buf).await,
-            PacketType::PingRequest => self.on_client_ping(&buf).await,
-            PacketType::Publish { .. } => self.on_client_publish(&buf).await,
-            PacketType::PublishRelease { .. } => self.on_client_publish_release(&buf).await,
-            PacketType::Subscribe => self.on_client_subscribe(&buf).await,
-            PacketType::Unsubscribe => self.on_client_unsubscribe(&buf).await,
-            PacketType::Disconnect => self.on_client_disconnect(&buf).await,
+            PacketType::Connect => self.on_client_connect(buf).await,
+            PacketType::PingRequest => self.on_client_ping(buf).await,
+            PacketType::Publish { .. } => self.on_client_publish(buf).await,
+            PacketType::PublishRelease { .. } => self.on_client_publish_release(buf).await,
+            PacketType::Subscribe => self.on_client_subscribe(buf).await,
+            PacketType::Unsubscribe => self.on_client_unsubscribe(buf).await,
+            PacketType::Disconnect => self.on_client_disconnect(buf).await,
             t => {
                 log::warn!("Unhandled msg: {:?}", t);
                 Ok(())
@@ -128,7 +128,7 @@ impl Session {
             if self.config.allow_empty_client_id() {
                 let new_client_id = random_client_id();
                 // No need to catch errors as client id is always valid.
-                let _ = packet.set_client_id(&new_client_id);
+                let _ret = packet.set_client_id(&new_client_id);
             } else {
                 return self.reject_client_id().await;
             }
@@ -142,8 +142,10 @@ impl Session {
         // it MUST disconnect the Network Connection to the Client as if the network
         // had failed [MQTT-3.1.2-24].
         if packet.keep_alive() > 0 {
-            self.config
-                .set_keep_alive((packet.keep_alive() as f64 * 1.5) as u64);
+            #[allow(clippy::cast_possible_truncation)]
+            #[allow(clippy::cast_sign_loss)]
+            let keep_alive = (f64::from(packet.keep_alive()) * 1.5) as u64;
+            self.config.set_keep_alive(keep_alive);
         }
 
         // From [MQTT-3.1.3-8].
@@ -219,17 +221,17 @@ impl Session {
             },
         };
 
-        if !self.pub_recv_packets.contains(&packet.packet_id()) {
+        if self.pub_recv_packets.contains(&packet.packet_id()) {
+            // Remove packet_id from cache then send complete packet.
+            self.pub_recv_packets.remove(&packet.packet_id());
+            let ack_packet = PublishCompletePacket::new(packet.packet_id());
+            self.send(ack_packet).await
+        } else {
             log::error!(
                 "session: Failed to remove {} from pub_recv_packets",
                 packet.packet_id()
             );
             Ok(())
-        } else {
-            // Remove packet_id from cache then send complete packet.
-            self.pub_recv_packets.remove(&packet.packet_id());
-            let ack_packet = PublishCompletePacket::new(packet.packet_id());
-            self.send(ack_packet).await
         }
     }
 

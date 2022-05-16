@@ -11,7 +11,8 @@ pub struct SessionConfig {
 }
 
 impl SessionConfig {
-    pub fn new(
+    #[must_use]
+    pub const fn new(
         keep_alive: u64,
         connect_timeout: u64,
         allow_empty_client_id: bool,
@@ -30,22 +31,26 @@ impl SessionConfig {
     }
 
     #[inline]
-    pub fn keep_alive(&self) -> u64 {
+    #[must_use]
+    pub const fn keep_alive(&self) -> u64 {
         self.keep_alive
     }
 
     #[inline]
-    pub fn connect_timeout(&self) -> u64 {
+    #[must_use]
+    pub const fn connect_timeout(&self) -> u64 {
         self.connect_timeout
     }
 
     #[inline]
-    pub fn allow_empty_client_id(&self) -> bool {
+    #[must_use]
+    pub const fn allow_empty_client_id(&self) -> bool {
         self.allow_empty_client_id
     }
 
     #[inline]
-    pub fn max_inflight_messages(&self) -> usize {
+    #[must_use]
+    pub const fn max_inflight_messages(&self) -> usize {
         self.max_inflight_messages
     }
 }

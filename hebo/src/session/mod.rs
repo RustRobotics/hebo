@@ -2,6 +2,8 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+#![allow(clippy::module_name_repetitions)]
+
 use codec::{
     v3::{DisconnectPacket, Packet, PacketType},
     EncodePacket, PacketId,
@@ -32,10 +34,9 @@ pub enum Status {
     Disconnected,
 }
 
-/// ConnectionContext represents a client connection.
+/// `ConnectionContext` represents a client connection.
 ///
 /// All the status of this client is maintained in this struct.
-// TODO(Shaohua): Handle Will Message
 #[derive(Debug)]
 pub struct Session {
     id: SessionId,
@@ -44,6 +45,7 @@ pub struct Session {
 
     status: Status,
     client_id: String,
+    // TODO(Shaohua): Handle Will Message
     // TODO(Shaohua): Add session flag
     instant: Instant,
     clean_session: bool,
@@ -61,8 +63,8 @@ impl Session {
         stream: Stream,
         sender: Sender<SessionToListenerCmd>,
         receiver: Receiver<ListenerToSessionCmd>,
-    ) -> Session {
-        Session {
+    ) -> Self {
+        Self {
             id,
             config,
             stream,

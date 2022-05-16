@@ -10,10 +10,12 @@ pub struct CachedSession {
 }
 
 impl CachedSession {
-    pub fn new(client_id: String) -> Self {
+    #[must_use]
+    pub const fn new(client_id: String) -> Self {
         Self { client_id }
     }
 
+    #[must_use]
     pub fn client_id(&self) -> &str {
         &self.client_id
     }
