@@ -14,12 +14,12 @@ use crate::{
 };
 
 /// `ConnectPacket` consists of three parts:
-/// * FixedHeader
-/// * VariableHeader
-/// * Payload
+/// * `FixedHeader`
+/// * `VariableHeader`
+/// * `Payload`
 /// Note that fixed header part is same in all packets so that we just ignore it.
 ///
-/// Basic struct of ConnectPacket is as below:
+/// Basic struct of `ConnectPacket` is as below:
 /// ```txt
 ///  7                          0
 /// +----------------------------+
@@ -59,6 +59,7 @@ use crate::{
 /// | Password bytes ...         |
 /// +----------------------------+
 /// ```
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
@@ -105,96 +106,144 @@ pub struct ConnectPacket {
 }
 
 impl ConnectPacket {
-    pub fn new(client_id: &str) -> Result<ConnectPacket, EncodeError> {
+    /// Create a new connect packet with `client_id`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `client_id` is invalid.
+    pub fn new(client_id: &str) -> Result<Self, EncodeError> {
         let protocol_name = StringData::from(PROTOCOL_NAME)?;
         validate_client_id(client_id).map_err(|_err| EncodeError::InvalidClientId)?;
         let client_id = StringData::from(client_id)?;
-        Ok(ConnectPacket {
+        Ok(Self {
             protocol_name,
             keep_alive: U16Data::new(60),
             client_id,
-            ..ConnectPacket::default()
+            ..Self::default()
         })
     }
 
+    /// Update protocol level.
     pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> &Self {
         self.protocol_level = level;
         self
     }
 
-    pub fn protocol_level(&self) -> ProtocolLevel {
+    /// Get current protocol level.
+    #[must_use]
+    #[inline]
+    pub const fn protocol_level(&self) -> ProtocolLevel {
         self.protocol_level
     }
 
+    /// Update connect flags
     pub fn set_connect_flags(&mut self, flags: ConnectFlags) -> &Self {
         self.connect_flags = flags;
         self
     }
 
-    pub fn connect_flags(&self) -> &ConnectFlags {
+    /// Get current connect flags.
+    #[must_use]
+    #[inline]
+    pub const fn connect_flags(&self) -> &ConnectFlags {
         &self.connect_flags
     }
 
+    /// Update keep alive value in milliseconds.
     pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
         self.keep_alive = U16Data::new(keep_alive);
         self
     }
 
-    pub fn keep_alive(&self) -> u16 {
+    /// Get current keep alive value.
+    #[must_use]
+    #[inline]
+    pub const fn keep_alive(&self) -> u16 {
+        // TODO(Shaohua): Returns a duration
         self.keep_alive.value()
     }
 
-    pub fn set_client_id(&mut self, id: &str) -> Result<&mut Self, EncodeError> {
-        validate_client_id(id).map_err(|_err| EncodeError::InvalidClientId)?;
-        self.client_id = StringData::from(id)?;
+    /// Update client id.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `client_id` is invalid.
+    pub fn set_client_id(&mut self, client_id: &str) -> Result<&mut Self, EncodeError> {
+        validate_client_id(client_id).map_err(|_err| EncodeError::InvalidClientId)?;
+        self.client_id = StringData::from(client_id)?;
         Ok(self)
     }
 
+    /// Get current client id.
+    #[must_use]
     pub fn client_id(&self) -> &str {
         self.client_id.as_ref()
     }
 
-    pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
-        self.connect_flags.set_will_qos(qos);
-        self
-    }
-
+    /// Update username value.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `username` contains invalid chars or too long.
     pub fn set_username(&mut self, username: &str) -> Result<&mut Self, EncodeError> {
         self.username = StringData::from(username)?;
         Ok(self)
     }
 
+    /// Get current username value.
+    #[must_use]
     pub fn username(&self) -> &str {
         self.username.as_ref()
     }
 
+    /// Update password value.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `password` is too long.
     pub fn set_password(&mut self, password: &[u8]) -> Result<&mut Self, EncodeError> {
         self.password = BinaryData::from_slice(password)?;
         Ok(self)
     }
 
+    /// Get current password value.
+    #[must_use]
     pub fn password(&self) -> &[u8] {
         self.password.as_ref()
     }
 
+    /// Update will-topic.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `topic` is invalid.
     pub fn set_will_topic(&mut self, topic: &str) -> Result<&mut Self, EncodeError> {
-        if !topic.is_empty() {
-            self.will_topic = Some(PubTopic::new(topic)?);
-        } else {
+        if topic.is_empty() {
             self.will_topic = None;
+        } else {
+            self.will_topic = Some(PubTopic::new(topic)?);
         }
         Ok(self)
     }
 
+    /// Get current will-topic value.
+    #[must_use]
     pub fn will_topic(&self) -> Option<&str> {
         self.will_topic.as_ref().map(AsRef::as_ref)
     }
 
+    /// Update will-message.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `message` is too long.
     pub fn set_will_message(&mut self, message: &[u8]) -> Result<&mut Self, EncodeError> {
         self.will_message = BinaryData::from_slice(message)?;
         Ok(self)
     }
 
+    /// Get current will-message value.
+    #[must_use]
     pub fn will_message(&self) -> &[u8] {
         self.will_message.as_ref()
     }
@@ -340,11 +389,11 @@ impl DecodePacket for ConnectPacket {
             BinaryData::new()
         };
 
-        Ok(ConnectPacket {
+        Ok(Self {
             protocol_name,
             protocol_level,
-            keep_alive,
             connect_flags,
+            keep_alive,
             client_id,
             will_topic,
             will_message,
