@@ -10,7 +10,7 @@ pub type Uptime = u64;
 
 /// Global session id.
 ///
-/// Basically it is a (listener_id, session_id) pair.
+/// It is a `(listener_id, session_id)` pair.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SessionGid {
     listener_id: ListenerId,
@@ -18,18 +18,25 @@ pub struct SessionGid {
 }
 
 impl SessionGid {
-    pub fn new(listener_id: ListenerId, session_id: SessionId) -> Self {
+    #[must_use]
+    pub const fn new(listener_id: ListenerId, session_id: SessionId) -> Self {
         Self {
             listener_id,
             session_id,
         }
     }
 
-    pub fn listener_id(&self) -> ListenerId {
+    /// Get listener id.
+    #[must_use]
+    #[inline]
+    pub const fn listener_id(&self) -> ListenerId {
         self.listener_id
     }
 
-    pub fn session_id(&self) -> SessionId {
+    /// Get session id.
+    #[must_use]
+    #[inline]
+    pub const fn session_id(&self) -> SessionId {
         self.session_id
     }
 }
