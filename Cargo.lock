@@ -862,7 +862,6 @@ dependencies = [
  "ruo",
  "rustls-pemfile 1.0.0",
  "serde",
- "subprocess",
  "tokio",
  "tokio-postgres",
  "tokio-rustls",
