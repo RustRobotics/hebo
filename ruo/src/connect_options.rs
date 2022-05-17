@@ -158,7 +158,7 @@ pub struct ConnectOptions {
 impl Default for ConnectOptions {
     fn default() -> Self {
         let client_id = "ruo".to_owned() + &random_string(8);
-        ConnectOptions {
+        Self {
             protocol_level: ProtocolLevel::V4,
             connect_type: ConnectType::Mqtt(MqttConnect {
                 address: SocketAddr::from(([127, 0, 0, 1], 1883)),
@@ -172,8 +172,9 @@ impl Default for ConnectOptions {
 }
 
 impl ConnectOptions {
-    /// Create a ConnectionObject object with default values.
-    pub fn new() -> ConnectOptions {
+    /// Create a `ConnectionObject` object with default values.
+    #[must_use]
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -184,7 +185,8 @@ impl ConnectOptions {
     }
 
     /// Get current mqtt protocol level.
-    pub fn protocol_level(&self) -> ProtocolLevel {
+    #[must_use]
+    pub const fn protocol_level(&self) -> ProtocolLevel {
         self.protocol_level
     }
 
@@ -195,7 +197,8 @@ impl ConnectOptions {
     }
 
     /// Get current connection type.
-    pub fn connect_type(&self) -> &ConnectType {
+    #[must_use]
+    pub const fn connect_type(&self) -> &ConnectType {
         &self.connect_type
     }
 
@@ -206,6 +209,7 @@ impl ConnectOptions {
     }
 
     /// Get current client id.
+    #[must_use]
     pub fn client_id(&self) -> &str {
         &self.client_id
     }
@@ -217,7 +221,8 @@ impl ConnectOptions {
     }
 
     /// Get current connection timeout duration.
-    pub fn connect_timeout(&self) -> &Duration {
+    #[must_use]
+    pub const fn connect_timeout(&self) -> &Duration {
         &self.connect_timeout
     }
 
@@ -228,7 +233,8 @@ impl ConnectOptions {
     }
 
     /// Get current value of network keep alive.
-    pub fn keep_alive(&self) -> &Duration {
+    #[must_use]
+    pub const fn keep_alive(&self) -> &Duration {
         &self.keep_alive
     }
 
@@ -239,7 +245,8 @@ impl ConnectOptions {
     }
 
     /// Get current proxy value.
-    pub fn proxy(&self) -> &Proxy {
+    #[must_use]
+    pub const fn proxy(&self) -> &Proxy {
         &self.proxy
     }
 
