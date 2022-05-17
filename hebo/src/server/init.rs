@@ -22,6 +22,7 @@ use crate::metrics::Metrics;
 use crate::rule_engine::RuleEngineApp;
 
 impl ServerContext {
+    #[allow(clippy::too_many_lines)]
     pub(crate) async fn init_modules(&mut self, runtime: &Runtime) -> Result<(), Error> {
         log::info!("ServerContext::init_modules()");
 
@@ -35,13 +36,12 @@ impl ServerContext {
         let mut acl_to_listener_senders = Vec::new();
 
         let mut handles = Vec::new();
-        let mut listener_id: u32 = 0;
         let mut listeners_info = Vec::new();
 
         // Listeners module.
         let mut listener_objs = Vec::new();
-        for l in self.config.listeners() {
-            listeners_info.push((listener_id, l.address().clone()));
+        for (listener_id, l) in (0_u32..).zip(self.config.listeners().iter()) {
+            listeners_info.push((listener_id, l.address()));
             let (dispatcher_to_listener_sender, dispatcher_to_listener_receiver) =
                 mpsc::channel(CHANNEL_CAPACITY);
             dispatcher_to_listener_senders.push((listener_id, dispatcher_to_listener_sender));
@@ -68,14 +68,13 @@ impl ServerContext {
                 acl_to_listener_receiver,
             )
             .await
-            .expect(&format!("Failed to listen at {:?}", &listeners_info.last()));
+            .unwrap_or_else(|_| panic!("Failed to listen at {:?}", &listeners_info.last()));
             listener_objs.push(listener);
-            listener_id += 1;
         }
 
         self.set_uid()?;
 
-        for mut listener in listener_objs.into_iter() {
+        for mut listener in listener_objs {
             let handle = runtime.spawn(async move {
                 listener.run_loop().await;
             });

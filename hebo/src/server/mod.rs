@@ -24,8 +24,12 @@ pub mod run;
 
 pub const CHANNEL_CAPACITY: usize = 16;
 
-/// ServerContext manages lifetime of Dispatcher and Listeners.
+/// `ServerContext` manages lifetime of Dispatcher and Listeners.
+///
 /// All kernel signals are handled here.
+// TODO(Shaohua): Remove this attribute mark.
+#[allow(dead_code)]
+#[allow(clippy::module_name_repetitions)]
 pub struct ServerContext {
     config: Config,
 
@@ -34,23 +38,23 @@ pub struct ServerContext {
     dashboard_receiver: Receiver<DashboardToServerContexCmd>,
 
     // server_ctx -> acl
-    _acl_sender: Sender<ServerContextToAclCmd>,
+    acl_sender: Sender<ServerContextToAclCmd>,
     acl_receiver: Option<Receiver<ServerContextToAclCmd>>,
 
     // server_ctx -> auth
-    _auth_sender: Sender<ServerContextToAuthCmd>,
+    auth_sender: Sender<ServerContextToAuthCmd>,
     auth_receiver: Option<Receiver<ServerContextToAuthCmd>>,
 
     // server_ctx -> backends
-    _backends_sender: Sender<ServerContextToBackendsCmd>,
+    backends_sender: Sender<ServerContextToBackendsCmd>,
     backends_receiver: Option<Receiver<ServerContextToBackendsCmd>>,
 
     // server_ctx -> bridge
-    _bridge_sender: Sender<ServerContextToBridgeCmd>,
+    bridge_sender: Sender<ServerContextToBridgeCmd>,
     bridge_receiver: Option<Receiver<ServerContextToBridgeCmd>>,
 
     // server_ctx -> gateway
-    _gateway_sender: Sender<ServerContextToGatewayCmd>,
+    gateway_sender: Sender<ServerContextToGatewayCmd>,
     gateway_receiver: Option<Receiver<ServerContextToGatewayCmd>>,
 
     // server_ctx -> metrics
@@ -58,54 +62,69 @@ pub struct ServerContext {
     metrics_receiver: Option<Receiver<ServerContextToMetricsCmd>>,
 
     // server_ctx -> rule_engine
-    _rule_engine_sender: Sender<ServerContextToRuleEngineCmd>,
+    rule_engine_sender: Sender<ServerContextToRuleEngineCmd>,
     rule_engine_receiver: Option<Receiver<ServerContextToRuleEngineCmd>>,
 }
 
 impl ServerContext {
-    pub fn new(config: Config) -> ServerContext {
+    #[must_use]
+    pub fn new(config: Config) -> Self {
         let (dashboard_sender, dashboard_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (_acl_sender, acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (_auth_sender, auth_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (_backends_sender, backends_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (_bridge_sender, bridge_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (_gateway_sender, gateway_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (acl_sender, acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (auth_sender, auth_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (backends_sender, backends_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (bridge_sender, bridge_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (gateway_sender, gateway_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let (metrics_sender, metrics_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        let (_rule_engine_sender, rule_engine_receiver) = mpsc::channel(CHANNEL_CAPACITY);
+        let (rule_engine_sender, rule_engine_receiver) = mpsc::channel(CHANNEL_CAPACITY);
 
-        ServerContext {
+        Self {
             config,
 
             dashboard_sender: Some(dashboard_sender),
             dashboard_receiver,
 
-            _acl_sender,
+            acl_sender,
             acl_receiver: Some(acl_receiver),
 
-            _auth_sender,
+            auth_sender,
             auth_receiver: Some(auth_receiver),
 
-            _backends_sender,
+            backends_sender,
             backends_receiver: Some(backends_receiver),
 
-            _bridge_sender,
+            bridge_sender,
             bridge_receiver: Some(bridge_receiver),
 
-            _gateway_sender,
+            gateway_sender,
             gateway_receiver: Some(gateway_receiver),
 
             metrics_sender,
             metrics_receiver: Some(metrics_receiver),
 
-            _rule_engine_sender,
+            rule_engine_sender,
             rule_engine_receiver: Some(rule_engine_receiver),
         }
     }
 
+    /// Send `SIGUSR1` signal to running process.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Failed to read pid from file
+    /// - Failed to find that process
     pub fn send_reload_signal(&mut self) -> Result<(), Error> {
         self.send_signal(nc::SIGUSR1)
     }
 
+    /// Send `SIGTERM` signal to running process.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Failed to read pid from file
+    /// - Failed to find that process
     pub fn send_stop_signal(&mut self) -> Result<(), Error> {
         self.send_signal(nc::SIGTERM)
     }
@@ -165,26 +184,29 @@ impl ServerContext {
         if euid == 0 {
             // For root only.
             let user = self.config.general().user();
-            if let Some(user) = users::get_user_by_name(user) {
-                let real_uid = user.uid();
-                if let Err(errno) = unsafe { nc::setuid(real_uid) } {
+            users::get_user_by_name(user).map_or_else(
+                || {
                     Err(Error::from_string(
                         ErrorKind::ConfigError,
-                        format!(
-                            "Failed to setuid({}), got err: {}",
-                            real_uid,
-                            nc::strerror(errno)
-                        ),
+                        format!("Failed to get user entry by name: {}", user),
                     ))
-                } else {
-                    Ok(())
-                }
-            } else {
-                Err(Error::from_string(
-                    ErrorKind::ConfigError,
-                    format!("Failed to get user entry by name: {}", user),
-                ))
-            }
+                },
+                |user| {
+                    let real_uid = user.uid();
+                    if let Err(errno) = unsafe { nc::setuid(real_uid) } {
+                        Err(Error::from_string(
+                            ErrorKind::ConfigError,
+                            format!(
+                                "Failed to setuid({}), got err: {}",
+                                real_uid,
+                                nc::strerror(errno)
+                            ),
+                        ))
+                    } else {
+                        Ok(())
+                    }
+                },
+            )
         } else {
             // Normal user, do nothing.
             Ok(())
@@ -192,7 +214,14 @@ impl ServerContext {
     }
 
     /// Init modules and run tokio runtime.
-    pub fn run_loop(&mut self, runtime: Runtime) -> Result<(), Error> {
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Server config is invalid
+    /// - Failed to write pid to file
+    /// - Failed to init inner modules
+    pub fn run_loop(&mut self, runtime: &Runtime) -> Result<(), Error> {
         if let Err(err) = self.config.validate(true) {
             eprintln!("Failed to validate config file!");
             return Err(err);
@@ -201,7 +230,7 @@ impl ServerContext {
         self.write_pid()?;
 
         runtime.block_on(async {
-            self.init_modules(&runtime).await?;
+            self.init_modules(runtime).await?;
             self.run_inner_loop().await
         })
     }

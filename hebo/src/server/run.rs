@@ -107,29 +107,21 @@ fn handle_password_subcmd(matches: &ArgMatches) -> Result<(), Error> {
         return file_auth::update_file_hash(password_file);
     }
 
-    let add_users: Vec<&str> = if let Some(users) = matches.values_of(OPT_ADD) {
-        users.collect()
-    } else {
-        Vec::new()
-    };
+    let add_users = matches
+        .values_of(OPT_ADD)
+        .map_or_else(Vec::new, |users| users.collect());
+    let delete_users = matches
+        .values_of(OPT_DELETE)
+        .map_or_else(Vec::new, |users| users.collect());
 
-    let delete_users: Vec<&str> = if let Some(users) = matches.values_of(OPT_DELETE) {
-        users.collect()
-    } else {
-        Vec::new()
-    };
-
-    return file_auth::add_delete_users(password_file, &add_users, &delete_users);
+    file_auth::add_delete_users(password_file, &add_users, &delete_users)
 }
 
 /// Entry point of server
 pub fn handle_cmdline() -> Result<(), Error> {
     let matches = get_cmdline().get_matches();
-    match matches.subcommand() {
-        Some((SUBCMD_PASSWORD, sub_matches)) => return handle_password_subcmd(sub_matches),
-        _ => {
-            // Do nothing
-        }
+    if let Some((SUBCMD_PASSWORD, sub_matches)) = matches.subcommand() {
+        return handle_password_subcmd(sub_matches);
     }
 
     let config_file = if let Some(config_file) = matches.value_of(OPT_CONFIG) {
@@ -180,15 +172,23 @@ pub fn handle_cmdline() -> Result<(), Error> {
     }
 
     let runtime = Runtime::new()?;
-    server.run_loop(runtime)
+    server.run_loop(&runtime)
 }
 
 /// Run server with predefined config.
 ///
 /// Useful for integration tests.
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Failed to init log module
+/// - Failed to crate a runtime instance
+/// - Failed to start server
+#[allow(clippy::module_name_repetitions)]
 pub fn run_server_with_config(config: Config) -> Result<(), Error> {
-    init_log(&config.log())?;
+    init_log(config.log())?;
     let mut server = ServerContext::new(config);
     let runtime = Runtime::new()?;
-    server.run_loop(runtime)
+    server.run_loop(&runtime)
 }
