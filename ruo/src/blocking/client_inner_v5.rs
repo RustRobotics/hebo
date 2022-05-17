@@ -11,7 +11,7 @@ use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
 use std::collections::HashMap;
 
 use super::Stream;
-use crate::connect_options::*;
+use crate::connect_options::ConnectOptions;
 use crate::error::{Error, ErrorKind};
 use crate::{ClientStatus, PublishMessage};
 
@@ -32,7 +32,7 @@ pub struct ClientInnerV5 {
 impl Drop for ClientInnerV5 {
     fn drop(&mut self) {
         if self.status == ClientStatus::Connected {
-            let _ = self.disconnect();
+            let _ret = self.disconnect();
         }
     }
 }
@@ -57,12 +57,14 @@ impl ClientInnerV5 {
     }
 
     /// Get connection options.
-    pub fn connect_options(&self) -> &ConnectOptions {
+    #[must_use]
+    pub const fn connect_options(&self) -> &ConnectOptions {
         &self.connect_options
     }
 
     /// Get current connection status.
-    pub fn status(&self) -> ClientStatus {
+    #[must_use]
+    pub const fn status(&self) -> ClientStatus {
         self.status
     }
 
@@ -74,9 +76,9 @@ impl ClientInnerV5 {
         assert_eq!(self.status, ClientStatus::Disconnected);
         let stream = Stream::new(self.connect_options.connect_type())?;
         self.stream = Some(stream);
-        let conn_packet = ConnectPacket::new(&self.connect_options.client_id())?;
+        let conn_packet = ConnectPacket::new(self.connect_options.client_id())?;
         self.status = ClientStatus::Connecting;
-        self.send_packet(conn_packet)?;
+        self.send_packet(&conn_packet)?;
 
         // We read ConnectAck packet directly here,
         // because the first packet shall be Connect Packet.
@@ -89,7 +91,7 @@ impl ClientInnerV5 {
             }
         }
 
-        let mut ba = ByteArray::new(&mut buffer);
+        let mut ba = ByteArray::new(&buffer);
         let fixed_header = FixedHeader::decode(&mut ba)?;
         match fixed_header.packet_type() {
             PacketType::ConnectAck => {
@@ -97,22 +99,22 @@ impl ClientInnerV5 {
                 let packet = ConnectAckPacket::decode(&mut ba)?;
                 if packet.reason_code() == ReasonCode::Success {
                     self.status = ClientStatus::Connected;
-                    return Ok(());
+                    Ok(())
                 } else {
                     self.status = ClientStatus::Disconnected;
-                    return Err(Error::from_string(
+                    Err(Error::from_string(
                         ErrorKind::AuthFailed,
                         format!("return code: {:?}", packet.reason_code()),
-                    ));
+                    ))
                 }
             }
 
             t => {
                 self.status = ClientStatus::Disconnected;
-                return Err(Error::from_string(
+                Err(Error::from_string(
                     ErrorKind::PacketError,
                     format!("Expected connect packet, got: {:?}", t),
-                ));
+                ))
             }
         }
     }
@@ -133,9 +135,9 @@ impl ClientInnerV5 {
                 self.publishing_qos2_packets
                     .insert(packet_id, packet.clone());
             }
-            _ => (),
+            QoS::AtMostOnce => (),
         }
-        self.send_packet(packet)
+        self.send_packet(&packet)
     }
 
     /// Subscribe topic pattern.
@@ -146,7 +148,7 @@ impl ClientInnerV5 {
         //self.topics.insert(packet.topic().to_string(), packet_id);
         let packet = SubscribePacket::new(topic, qos, packet_id)?;
         self.subscribing_packets.insert(packet_id, packet.clone());
-        self.send_packet(packet)
+        self.send_packet(&packet)
     }
 
     /// Unsubscribe topic pattern.
@@ -155,7 +157,7 @@ impl ClientInnerV5 {
         let packet_id = self.next_packet_id();
         let packet = UnsubscribePacket::new(topic, packet_id)?;
         self.unsubscribing_packets.insert(packet_id, packet.clone());
-        self.send_packet(packet)
+        self.send_packet(&packet)
     }
 
     /// Send disconnect packet to broker.
@@ -164,7 +166,7 @@ impl ClientInnerV5 {
         let packet = DisconnectPacket::new();
         self.status = ClientStatus::Disconnecting;
         // Network connection will be closed soon.
-        self.send_packet(packet)?;
+        self.send_packet(&packet)?;
         self.status = ClientStatus::Disconnected;
         Ok(())
     }
@@ -173,7 +175,7 @@ impl ClientInnerV5 {
     pub fn ping(&mut self) -> Result<(), Error> {
         assert_eq!(self.status, ClientStatus::Connected);
         let packet = PingRequestPacket::new();
-        self.send_packet(packet)
+        self.send_packet(&packet)
     }
 
     pub fn wait_for_packet(&mut self) -> Result<Option<PublishMessage>, Error> {
@@ -250,7 +252,7 @@ impl ClientInnerV5 {
         // Parse packet_id and remove from cache.
         let packet = SubscribeAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
-        if let None = self.subscribing_packets.remove(&packet_id) {
+        if self.subscribing_packets.remove(&packet_id).is_none() {
             log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
         }
         Ok(())
@@ -259,7 +261,7 @@ impl ClientInnerV5 {
     fn on_unsubscribe_ack(&mut self, ba: &mut ByteArray) -> Result<(), Error> {
         let packet = UnsubscribeAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
-        if let None = self.unsubscribing_packets.remove(&packet_id) {
+        if self.unsubscribing_packets.remove(&packet_id).is_none() {
             log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
         }
         Ok(())
@@ -277,38 +279,38 @@ impl ClientInnerV5 {
     fn read_stream(&mut self, buffer: &mut Vec<u8>) -> Result<usize, Error> {
         // TODO(Shaohua): Do not resize buffer.
         buffer.resize(buffer.capacity(), 0);
-        if let Some(stream) = &mut self.stream {
-            match stream.read_buf(buffer) {
+        self.stream.as_mut().map_or_else(
+            || {
+                Err(Error::new(
+                    ErrorKind::SocketError,
+                    "Socket is uninitialized",
+                ))
+            },
+            |stream| match stream.read_buf(buffer) {
                 Ok(n_recv) => {
                     buffer.resize(n_recv, 0);
-                    return Ok(n_recv);
+                    Ok(n_recv)
                 }
-                Err(error) => {
-                    return Err(Error::from_string(
-                        ErrorKind::SocketError,
-                        format!("Failed to read bytes from socket, err: {:?}", error),
-                    ));
-                }
-            }
-        } else {
-            return Err(Error::new(
-                ErrorKind::SocketError,
-                "Socket is uninitialized",
-            ));
-        }
+                Err(error) => Err(Error::from_string(
+                    ErrorKind::SocketError,
+                    format!("Failed to read bytes from socket, err: {:?}", error),
+                )),
+            },
+        )
     }
 
-    fn send_packet<P: EncodePacket>(&mut self, packet: P) -> Result<(), Error> {
+    fn send_packet<P: EncodePacket>(&mut self, packet: &P) -> Result<(), Error> {
         // TODO(Shaohua): Replace Vec<u8> with ByteArray.
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
-        if let Some(stream) = &mut self.stream {
-            stream.write_all(&buf).map(drop)
-        } else {
-            Err(Error::new(
-                ErrorKind::SocketError,
-                "Socket is uninitialized",
-            ))
-        }
+        self.stream.as_mut().map_or_else(
+            || {
+                Err(Error::new(
+                    ErrorKind::SocketError,
+                    "Socket is uninitialized",
+                ))
+            },
+            |stream| stream.write_all(&buf).map(drop),
+        )
     }
 }

@@ -184,8 +184,7 @@ impl ClientInnerV5 {
             self.send(packet).await?;
         }
         self.status = ClientStatus::Disconnected;
-        self.on_disconnect();
-        Ok(())
+        self.on_disconnect()
     }
 
     pub async fn ping(&mut self) -> Result<(), Error> {
@@ -205,8 +204,9 @@ impl ClientInnerV5 {
         Ok(())
     }
 
-    fn on_disconnect(&mut self) {
-        todo!()
+    fn on_disconnect(&mut self) -> Result<(), Error> {
+        log::info!("on_disconnect()");
+        Ok(())
     }
 
     async fn on_message(&self, buf: &[u8]) -> Result<(), Error> {
