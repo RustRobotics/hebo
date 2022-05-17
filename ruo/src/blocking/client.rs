@@ -47,8 +47,7 @@ impl Client {
     /// Get mqtt connection options.
     pub fn connect_options(&self) -> &ConnectOptions {
         match &self.inner {
-            Inner::V3(inner) => inner.connect_options(),
-            Inner::V4(inner) => inner.connect_options(),
+            Inner::V3(inner) | Inner::V4(inner) => inner.connect_options(),
             Inner::V5(inner) => inner.connect_options(),
         }
     }
@@ -56,8 +55,7 @@ impl Client {
     /// Get current status.
     pub fn status(&self) -> ClientStatus {
         match &self.inner {
-            Inner::V3(inner) => inner.status(),
-            Inner::V4(inner) => inner.status(),
+            Inner::V3(inner) | Inner::V4(inner) => inner.status(),
             Inner::V5(inner) => inner.status(),
         }
     }
@@ -65,8 +63,7 @@ impl Client {
     /// Connect to server.
     pub fn connect(&mut self) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.connect(),
-            Inner::V4(inner) => inner.connect(),
+            Inner::V3(inner) | Inner::V4(inner) => inner.connect(),
             Inner::V5(inner) => inner.connect(),
         }
     }
@@ -74,8 +71,7 @@ impl Client {
     /// Publish packet.
     pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.publish(topic, qos, data),
-            Inner::V4(inner) => inner.publish(topic, qos, data),
+            Inner::V3(inner) | Inner::V4(inner) => inner.publish(topic, qos, data),
             Inner::V5(inner) => inner.publish(topic, qos, data),
         }
     }
@@ -83,8 +79,7 @@ impl Client {
     /// Subscribe to topic.
     pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.subscribe(topic, qos),
-            Inner::V4(inner) => inner.subscribe(topic, qos),
+            Inner::V3(inner) | Inner::V4(inner) => inner.subscribe(topic, qos),
             Inner::V5(inner) => inner.subscribe(topic, qos),
         }
     }
@@ -92,8 +87,7 @@ impl Client {
     /// Unsubscribe specific topic or topic pattern.
     pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.unsubscribe(topic),
-            Inner::V4(inner) => inner.unsubscribe(topic),
+            Inner::V3(inner) | Inner::V4(inner) => inner.unsubscribe(topic),
             Inner::V5(inner) => inner.unsubscribe(topic),
         }
     }
@@ -101,16 +95,14 @@ impl Client {
     /// Send ping packet to server explicitly.
     pub fn ping(&mut self) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.ping(),
-            Inner::V4(inner) => inner.ping(),
+            Inner::V3(inner) | Inner::V4(inner) => inner.ping(),
             Inner::V5(inner) => inner.ping(),
         }
     }
 
     pub fn wait_for_message(&mut self) -> Result<Option<PublishMessage>, Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.wait_for_packet(),
-            Inner::V4(inner) => inner.wait_for_packet(),
+            Inner::V3(inner) | Inner::V4(inner) => inner.wait_for_packet(),
             Inner::V5(inner) => inner.wait_for_packet(),
         }
     }
@@ -118,8 +110,7 @@ impl Client {
     /// Disconnect from server.
     pub fn disconnect(&mut self) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.disconnect(),
-            Inner::V4(inner) => inner.disconnect(),
+            Inner::V3(inner) | Inner::V4(inner) => inner.disconnect(),
             Inner::V5(inner) => inner.disconnect(),
         }
     }

@@ -119,14 +119,18 @@ impl ClientInnerV3 {
         }
     }
 
+    /// Connect to server.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if server is unreachable or connection is rejected.
     pub async fn connect(&mut self) -> Result<(), Error> {
         if self.status == ClientStatus::Connecting {
             return Err(Error::new(
                 ErrorKind::InvalidClientStatus,
                 "In connecting ..",
             ));
-        }
-        if self.status == ClientStatus::Connected {
+        } else if self.status == ClientStatus::Connected {
             return Err(Error::new(
                 ErrorKind::InvalidClientStatus,
                 "Already connected",
@@ -139,6 +143,14 @@ impl ClientInnerV3 {
         self.send(conn_packet).await
     }
 
+    /// Send a message to server.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `topic` is invalid
+    /// - `data` is too large
+    /// - Socket stream error
     pub async fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
         let mut packet = PublishPacket::new(topic, qos, data)?;
         match qos {
@@ -160,6 +172,13 @@ impl ClientInnerV3 {
         self.send(packet).await
     }
 
+    /// Subscribe to a specific `topic`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `topic` pattern is invalid
+    /// - Socket stream returns error
     pub async fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
         log::info!("subscribe to: {}", topic);
         let packet_id = self.next_packet_id();
@@ -169,6 +188,13 @@ impl ClientInnerV3 {
         self.send(packet).await
     }
 
+    /// Unsubscribe specific `topic` pattern.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `topic` pattern is invalid
+    /// - Socket stream returns error
     pub async fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
         log::info!("unsubscribe to: {:?}", topic);
         let packet_id = self.next_packet_id();
@@ -187,6 +213,13 @@ impl ClientInnerV3 {
         self.on_disconnect()
     }
 
+    /// Send ping packet to server explicitly.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Client status is invalid
+    /// - Socket stream returns error
     pub async fn ping(&mut self) -> Result<(), Error> {
         log::info!("ping()");
         if self.status == ClientStatus::Connected {
@@ -194,8 +227,10 @@ impl ClientInnerV3 {
             let packet = PingRequestPacket::new();
             self.send(packet).await
         } else {
-            // TODO(Shaohua): Return Error
-            Ok(())
+            Err(Error::new(
+                ErrorKind::InvalidClientStatus,
+                "Client is not connected",
+            ))
         }
     }
 

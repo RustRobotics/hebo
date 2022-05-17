@@ -6,7 +6,7 @@ use codec::{ProtocolLevel, QoS};
 use std::fmt;
 use std::future::Future;
 
-use crate::connect_options::*;
+use crate::connect_options::ConnectOptions;
 use crate::error::Error;
 use crate::{ClientInnerV3, ClientInnerV4, ClientInnerV5, ClientStatus};
 
@@ -37,13 +37,14 @@ impl Client {
     /// Create a new mqtt client.
     ///
     /// No packet is sent to server before calling [`Self::connect()`].
-    pub fn new(connect_options: ConnectOptions) -> Client {
+    #[must_use]
+    pub fn new(connect_options: ConnectOptions) -> Self {
         let inner = match connect_options.protocol_level() {
             ProtocolLevel::V3 => Inner::V3(ClientInnerV3::new(connect_options)),
             ProtocolLevel::V4 => Inner::V4(ClientInnerV4::new(connect_options)),
             ProtocolLevel::V5 => Inner::V5(ClientInnerV5::new(connect_options)),
         };
-        Client {
+        Self {
             inner,
             connect_cb: None,
         }
@@ -54,28 +55,31 @@ impl Client {
     }
 
     /// Get mqtt connection options.
-    pub fn connect_options(&self) -> &ConnectOptions {
+    #[must_use]
+    pub const fn connect_options(&self) -> &ConnectOptions {
         match &self.inner {
-            Inner::V3(inner) => inner.connect_options(),
-            Inner::V4(inner) => inner.connect_options(),
+            Inner::V3(inner) | Inner::V4(inner) => inner.connect_options(),
             Inner::V5(inner) => inner.connect_options(),
         }
     }
 
     /// Get current status.
-    pub fn status(&self) -> ClientStatus {
+    #[must_use]
+    pub const fn status(&self) -> ClientStatus {
         match &self.inner {
-            Inner::V3(inner) => inner.status(),
-            Inner::V4(inner) => inner.status(),
+            Inner::V3(inner) | Inner::V4(inner) => inner.status(),
             Inner::V5(inner) => inner.status(),
         }
     }
 
     /// Connect to server.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if server is unreachable or connection is rejected.
     pub async fn connect(&mut self) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.connect().await,
-            Inner::V4(inner) => inner.connect().await,
+            Inner::V3(inner) | Inner::V4(inner) => inner.connect().await,
             Inner::V5(inner) => inner.connect().await,
         }
     }
@@ -83,44 +87,64 @@ impl Client {
     /// Run inner infinite event loop.
     pub async fn run_loop(&mut self) -> ! {
         match &mut self.inner {
-            Inner::V3(inner) => inner.run_loop().await,
-            Inner::V4(inner) => inner.run_loop().await,
+            Inner::V3(inner) | Inner::V4(inner) => inner.run_loop().await,
             Inner::V5(inner) => inner.run_loop().await,
         }
     }
 
-    /// Publish packet.
+    /// Send a message to server.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `topic` is invalid
+    /// - `data` is too large
+    /// - Socket stream error
     pub async fn publish(&mut self, topic: &str, qos: QoS, payload: &[u8]) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.publish(topic, qos, payload).await,
-            Inner::V4(inner) => inner.publish(topic, qos, payload).await,
+            Inner::V3(inner) | Inner::V4(inner) => inner.publish(topic, qos, payload).await,
             Inner::V5(inner) => inner.publish(topic, qos, payload).await,
         }
     }
 
-    /// Subscribe to topic.
+    /// Subscribe to a specific `topic`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `topic` pattern is invalid
+    /// - Socket stream returns error
     pub async fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.subscribe(topic, qos).await,
-            Inner::V4(inner) => inner.subscribe(topic, qos).await,
+            Inner::V3(inner) | Inner::V4(inner) => inner.subscribe(topic, qos).await,
             Inner::V5(inner) => inner.subscribe(topic, qos).await,
         }
     }
 
-    /// Unsubscribe specific topic or topic pattern.
+    /// Unsubscribe specific `topic` pattern.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `topic` pattern is invalid
+    /// - Socket stream returns error
     pub async fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.unsubscribe(topic).await,
-            Inner::V4(inner) => inner.unsubscribe(topic).await,
+            Inner::V3(inner) | Inner::V4(inner) => inner.unsubscribe(topic).await,
             Inner::V5(inner) => inner.unsubscribe(topic).await,
         }
     }
 
     /// Send ping packet to server explicitly.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Client status is invalid
+    /// - Socket stream returns error
     pub async fn ping(&mut self) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) => inner.ping().await,
-            Inner::V4(inner) => inner.ping().await,
+            Inner::V3(inner) | Inner::V4(inner) => inner.ping().await,
             Inner::V5(inner) => inner.ping().await,
         }
     }
