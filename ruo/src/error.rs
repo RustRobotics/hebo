@@ -7,6 +7,7 @@ use std::io;
 use tokio_tungstenite::tungstenite;
 
 /// Represent the types of errors.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug)]
 pub enum ErrorKind {
     /// Error occurred while performing I/O.
@@ -40,6 +41,7 @@ pub enum ErrorKind {
     AuthFailed,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug)]
 pub struct Error {
     /// Type of current error.
@@ -50,15 +52,17 @@ pub struct Error {
 }
 
 impl Error {
+    #[must_use]
     pub fn new(kind: ErrorKind, message: &str) -> Self {
-        Error {
+        Self {
             kind,
             message: message.to_owned(),
         }
     }
 
-    pub fn from_string(kind: ErrorKind, message: String) -> Self {
-        Error { kind, message }
+    #[must_use]
+    pub const fn from_string(kind: ErrorKind, message: String) -> Self {
+        Self { kind, message }
     }
 }
 
@@ -72,25 +76,25 @@ impl std::error::Error for Error {}
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        Error::from_string(ErrorKind::IoError, format!("IoError {:?}", err))
+        Self::from_string(ErrorKind::IoError, format!("IoError {:?}", err))
     }
 }
 
 impl From<tungstenite::Error> for Error {
     fn from(err: tungstenite::Error) -> Self {
-        Error::from_string(ErrorKind::IoError, format!("Websocket error: {:?}", err))
+        Self::from_string(ErrorKind::IoError, format!("Websocket error: {:?}", err))
     }
 }
 
 impl From<tokio_rustls::webpki::Error> for Error {
     fn from(err: tokio_rustls::webpki::Error) -> Self {
-        Error::from_string(ErrorKind::ConfigError, format!("webpki error: {:?}", err))
+        Self::from_string(ErrorKind::ConfigError, format!("webpki error: {:?}", err))
     }
 }
 
 impl From<quinn::ConnectError> for Error {
     fn from(err: quinn::ConnectError) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::SocketError,
             format!("Quic connect error: {:?}", err),
         )
@@ -99,7 +103,7 @@ impl From<quinn::ConnectError> for Error {
 
 impl From<quinn::ConnectionError> for Error {
     fn from(err: quinn::ConnectionError) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::SocketError,
             format!("Quic connection error: {:?}", err),
         )
@@ -108,7 +112,7 @@ impl From<quinn::ConnectionError> for Error {
 
 impl From<quinn::ConfigError> for Error {
     fn from(err: quinn::ConfigError) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::ConfigError,
             format!("Quic config error: {:?}", err),
         )
@@ -117,7 +121,7 @@ impl From<quinn::ConfigError> for Error {
 
 impl From<quinn::WriteError> for Error {
     fn from(err: quinn::WriteError) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::SocketError,
             format!("Quic write error: {:?}", err),
         )
@@ -126,12 +130,12 @@ impl From<quinn::WriteError> for Error {
 
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
-        Error::from_string(ErrorKind::EncodeError, format!("{:?}", err))
+        Self::from_string(ErrorKind::EncodeError, format!("{:?}", err))
     }
 }
 
 impl From<codec::DecodeError> for Error {
     fn from(err: codec::DecodeError) -> Self {
-        Error::from_string(ErrorKind::DecodeError, format!("{:?}", err))
+        Self::from_string(ErrorKind::DecodeError, format!("{:?}", err))
     }
 }
