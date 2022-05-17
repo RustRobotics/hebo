@@ -34,9 +34,9 @@ impl ServerContext {
             .await?;
         let ret = resp2_rx.await?;
         resp_tx.send(ret).map_err(|_| {
-            Error::from_string(
+            Error::new(
                 ErrorKind::ChannelError,
-                format!("Failed to send metrics uptime to dashboard"),
+                "Failed to send metrics uptime to dashboard",
             )
         })
     }

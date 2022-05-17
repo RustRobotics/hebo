@@ -279,17 +279,15 @@ impl Listener {
                     )
                 })?;
             }
+        } else if self.protocol() == Protocol::Uds {
+            // TODO(Shaohua): Validate unix domain socket file.
         } else {
-            if self.protocol() == Protocol::Uds {
-                // TODO(Shaohua): Validate unix domain socket file.
-            } else {
-                let _ = self.address.to_socket_addrs().map_err(|err| {
-                    Error::from_string(
-                        ErrorKind::ConfigError,
-                        format!("Invalid socket address: {}, err: {:?}", &self.address, err),
-                    )
-                })?;
-            }
+            let _ = self.address.to_socket_addrs().map_err(|err| {
+                Error::from_string(
+                    ErrorKind::ConfigError,
+                    format!("Invalid socket address: {}, err: {:?}", &self.address, err),
+                )
+            })?;
         }
 
         // TODO(Shaohua): Validate cert and key files.

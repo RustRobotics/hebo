@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-//! ServerContex is the main entry pointer of hebo server.
+//! `ServerContex` is the main entry pointer of hebo server.
 
 use std::fs::File;
 use std::io::{Read, Write};
