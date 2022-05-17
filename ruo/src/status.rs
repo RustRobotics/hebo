@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 /// Mqtt connection status.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ClientStatus {
     /// The client sends a Connect packet to the server and waits for a reply packet.

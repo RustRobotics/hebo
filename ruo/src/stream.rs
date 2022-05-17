@@ -25,9 +25,9 @@ use crate::error::Error;
 
 pub enum Stream {
     Mqtt(TcpStream),
-    Mqtts(TlsStream<TcpStream>),
-    Ws(WebSocketStream<TcpStream>),
-    Wss(WebSocketStream<TlsStream<TcpStream>>),
+    Mqtts(Box<TlsStream<TcpStream>>),
+    Ws(Box<WebSocketStream<TcpStream>>),
+    Wss(Box<WebSocketStream<TlsStream<TcpStream>>>),
     #[cfg(unix)]
     Uds(UnixStream),
     Quic(quinn::NewConnection),
@@ -50,6 +50,11 @@ impl fmt::Debug for Stream {
 }
 
 impl Stream {
+    /// Create a new stream with `connect_type`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if failed to connect to server socket.
     pub async fn connect(connect_type: &ConnectType) -> Result<Self, Error> {
         match connect_type {
             ConnectType::Mqtt(mqtt_connect) => Self::new_mqtt(mqtt_connect).await,
@@ -107,7 +112,7 @@ impl Stream {
             .await
             .expect("Invalid connector");
 
-        return Ok(tls_stream);
+        Ok(tls_stream)
     }
 
     async fn new_mqtts(mqtts_connect: &MqttsConnect) -> Result<Self, Error> {
@@ -117,17 +122,17 @@ impl Stream {
             &mqtts_connect.domain,
         )
         .await?;
-        Ok(Self::Mqtts(tls_stream))
+        Ok(Self::Mqtts(Box::new(tls_stream)))
     }
 
-    async fn new_ws(ws_connect: &WsConnect) -> Result<Stream, Error> {
+    async fn new_ws(ws_connect: &WsConnect) -> Result<Self, Error> {
         let ws_url = format!("ws://{}{}", ws_connect.address, &ws_connect.path);
         let tcp_stream = TcpStream::connect(ws_connect.address).await?;
         let (ws_stream, _) = tokio_tungstenite::client_async(ws_url, tcp_stream).await?;
-        Ok(Stream::Ws(ws_stream))
+        Ok(Self::Ws(Box::new(ws_stream)))
     }
 
-    async fn new_wss(wss_connect: &WssConnect) -> Result<Stream, Error> {
+    async fn new_wss(wss_connect: &WssConnect) -> Result<Self, Error> {
         let tls_stream = Self::new_tls_stream(
             &wss_connect.tls_type,
             &wss_connect.address,
@@ -136,16 +141,16 @@ impl Stream {
         .await?;
         let ws_url = format!("ws://{}{}", wss_connect.address, &wss_connect.path);
         let (ws_stream, _) = tokio_tungstenite::client_async(ws_url, tls_stream).await?;
-        Ok(Stream::Wss(ws_stream))
+        Ok(Self::Wss(Box::new(ws_stream)))
     }
 
     #[cfg(unix)]
-    async fn new_uds(uds_connect: &UdsConnect) -> Result<Stream, Error> {
+    async fn new_uds(uds_connect: &UdsConnect) -> Result<Self, Error> {
         let uds_stream = UnixStream::connect(&uds_connect.sock_path).await?;
-        Ok(Stream::Uds(uds_stream))
+        Ok(Self::Uds(uds_stream))
     }
 
-    async fn new_quic(quic_connect: &QuicConnect) -> Result<Stream, Error> {
+    async fn new_quic(quic_connect: &QuicConnect) -> Result<Self, Error> {
         // TODO(Shaohua): set client config.
         //        let mut client_config = quinn::ClientConfigBuilder::default();
         //        match &quic_connect.tls_type {
@@ -168,14 +173,20 @@ impl Stream {
         let quic_connection = endpoint
             .connect(quic_connect.server_address, &quic_connect.domain)?
             .await?;
-        Ok(Stream::Quic(quic_connection))
+        Ok(Self::Quic(quic_connection))
     }
 
+    /// Pull some bytes from this source into the specified buffer, returning how many bytes were read.
+    ///
+    /// # Errors
+    ///
+    /// If this function encounters any form of I/O or other error, an error variant will be returned.
+    /// If an error is returned then it must be guaranteed that no bytes were read.
     pub async fn read_buf(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
         match self {
-            Stream::Mqtt(tcp_stream) => Ok(tcp_stream.read_buf(buf).await?),
-            Stream::Mqtts(tls_stream) => Ok(tls_stream.read(buf).await?),
-            Stream::Ws(ref mut ws_stream) => {
+            Self::Mqtt(tcp_stream) => Ok(tcp_stream.read_buf(buf).await?),
+            Self::Mqtts(tls_stream) => Ok(tls_stream.read(buf).await?),
+            Self::Ws(ref mut ws_stream) => {
                 if let Some(msg) = ws_stream.next().await {
                     let msg = msg?;
                     let data = msg.into_data();
@@ -186,7 +197,7 @@ impl Stream {
                     Ok(0)
                 }
             }
-            Stream::Wss(ref mut wss_stream) => {
+            Self::Wss(ref mut wss_stream) => {
                 if let Some(msg) = wss_stream.next().await {
                     let msg = msg?;
                     let data = msg.into_data();
@@ -198,41 +209,47 @@ impl Stream {
                 }
             }
             #[cfg(unix)]
-            Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
-            Stream::Quic(ref mut quic_connection) => {
+            Self::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
+            Self::Quic(ref mut quic_connection) => {
                 if let Some(Ok(mut recv)) = quic_connection.uni_streams.next().await {
                     Ok(recv.read_buf(buf).await?)
                 } else {
                     Ok(0)
                 }
             }
-            Stream::None => unreachable!(),
+            Self::None => unreachable!(),
         }
     }
 
+    /// Write buffers to stream.
+    ///
+    /// # Errors
+    ///
+    /// Each call to write may generate an I/O error indicating that the operation could not be completed.
+    /// If an error is returned then no bytes in the buffer were written to this writer.
     pub async fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
         match self {
-            Stream::Mqtt(tcp_stream) => Ok(tcp_stream.write(buf).await?),
-            Stream::Mqtts(tls_socket) => Ok(tls_socket.write(buf).await?),
-            Stream::Ws(ws_stream) => {
+            Self::Mqtt(tcp_stream) => Ok(tcp_stream.write(buf).await?),
+            Self::Mqtts(tls_socket) => Ok(tls_socket.write(buf).await?),
+            Self::Ws(ws_stream) => {
                 let msg = Message::binary(buf);
                 ws_stream.send(msg).await?;
                 Ok(buf.len())
             }
-            Stream::Wss(wss_stream) => {
+            Self::Wss(wss_stream) => {
                 let msg = Message::binary(buf);
                 wss_stream.send(msg).await?;
                 Ok(buf.len())
             }
             #[cfg(unix)]
-            Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
-            Stream::Quic(quic_connection) => {
+            Self::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
+            Self::Quic(quic_connection) => {
                 let mut send = quic_connection.connection.open_uni().await?;
                 send.write_all(buf).await?;
                 send.finish().await?;
                 Ok(buf.len())
             }
-            Stream::None => unreachable!(),
+            Self::None => unreachable!(),
         }
     }
 }

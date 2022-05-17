@@ -4,6 +4,7 @@
 
 use codec::QoS;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone)]
 pub struct PublishMessage {
     pub topic: String,
