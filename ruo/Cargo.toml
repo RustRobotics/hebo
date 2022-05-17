@@ -1,6 +1,6 @@
 [package]
 name = "ruo"
-version = "0.1.1"
+version = "0.1.2"
 authors = [ "Xu Shaohua <shaohua@biofan.org>" ]
 description = "MQTT client library for Rust"
 categories = [
@@ -27,7 +27,7 @@ blocking = [ "tungstenite" ]
 
 [dependencies]
 byteorder = "1.4.3"
-codec = { path = "../codec", package = "hebo_codec", version = "0.1.3" }
+codec = { path = "../codec", package = "hebo_codec", version = "0.1.4" }
 env_logger = "0.9.0"
 futures = "0.3.21"
 futures-util = "0.3.21"
