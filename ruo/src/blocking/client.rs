@@ -35,6 +35,7 @@ impl Client {
     /// Create a new mqtt client.
     ///
     /// No packet is sent to server before calling [`Self::connect()`].
+    #[must_use]
     pub fn new(connect_options: ConnectOptions) -> Self {
         let inner = match connect_options.protocol_level() {
             ProtocolLevel::V3 => Inner::V3(ClientInnerV3::new(connect_options)),
@@ -45,7 +46,8 @@ impl Client {
     }
 
     /// Get mqtt connection options.
-    pub fn connect_options(&self) -> &ConnectOptions {
+    #[must_use]
+    pub const fn connect_options(&self) -> &ConnectOptions {
         match &self.inner {
             Inner::V3(inner) | Inner::V4(inner) => inner.connect_options(),
             Inner::V5(inner) => inner.connect_options(),
@@ -53,7 +55,8 @@ impl Client {
     }
 
     /// Get current status.
-    pub fn status(&self) -> ClientStatus {
+    #[must_use]
+    pub const fn status(&self) -> ClientStatus {
         match &self.inner {
             Inner::V3(inner) | Inner::V4(inner) => inner.status(),
             Inner::V5(inner) => inner.status(),
@@ -61,6 +64,10 @@ impl Client {
     }
 
     /// Connect to server.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if server is unreachable or connection is rejected.
     pub fn connect(&mut self) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) | Inner::V4(inner) => inner.connect(),
@@ -69,14 +76,27 @@ impl Client {
     }
 
     /// Publish packet.
-    pub fn publish(&mut self, topic: &str, qos: QoS, data: &[u8]) -> Result<(), Error> {
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `topic` is invalid
+    /// - `payload` is too large
+    /// - Socket stream error
+    pub fn publish(&mut self, topic: &str, qos: QoS, payload: &[u8]) -> Result<(), Error> {
         match &mut self.inner {
-            Inner::V3(inner) | Inner::V4(inner) => inner.publish(topic, qos, data),
-            Inner::V5(inner) => inner.publish(topic, qos, data),
+            Inner::V3(inner) | Inner::V4(inner) => inner.publish(topic, qos, payload),
+            Inner::V5(inner) => inner.publish(topic, qos, payload),
         }
     }
 
-    /// Subscribe to topic.
+    /// Subscribe to `topic`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `topic` pattern is invalid
+    /// - Socket stream returns error
     pub fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) | Inner::V4(inner) => inner.subscribe(topic, qos),
@@ -85,6 +105,12 @@ impl Client {
     }
 
     /// Unsubscribe specific topic or topic pattern.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - `topic` pattern is invalid
+    /// - Socket stream returns error
     pub fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) | Inner::V4(inner) => inner.unsubscribe(topic),
@@ -93,6 +119,12 @@ impl Client {
     }
 
     /// Send ping packet to server explicitly.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Client status is invalid
+    /// - Socket stream returns error
     pub fn ping(&mut self) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) | Inner::V4(inner) => inner.ping(),
@@ -100,6 +132,13 @@ impl Client {
         }
     }
 
+    /// Wait for packets from server.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Failed to read packets from stream
+    /// - Client status is invalid
     pub fn wait_for_message(&mut self) -> Result<Option<PublishMessage>, Error> {
         match &mut self.inner {
             Inner::V3(inner) | Inner::V4(inner) => inner.wait_for_packet(),
@@ -108,6 +147,12 @@ impl Client {
     }
 
     /// Disconnect from server.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Failed to send disconnect packet via stream
+    /// - Client status is invalid
     pub fn disconnect(&mut self) -> Result<(), Error> {
         match &mut self.inner {
             Inner::V3(inner) | Inner::V4(inner) => inner.disconnect(),

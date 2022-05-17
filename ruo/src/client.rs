@@ -98,7 +98,7 @@ impl Client {
     ///
     /// Returns error if:
     /// - `topic` is invalid
-    /// - `data` is too large
+    /// - `payload` is too large
     /// - Socket stream error
     pub async fn publish(&mut self, topic: &str, qos: QoS, payload: &[u8]) -> Result<(), Error> {
         match &mut self.inner {
