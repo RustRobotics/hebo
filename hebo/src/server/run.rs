@@ -3,6 +3,7 @@
 // in the LICENSE file.
 
 use clap::{Arg, ArgMatches, Command};
+use std::iter::Iterator;
 use std::path::Path;
 use tokio::runtime::Runtime;
 
@@ -109,10 +110,10 @@ fn handle_password_subcmd(matches: &ArgMatches) -> Result<(), Error> {
 
     let add_users = matches
         .values_of(OPT_ADD)
-        .map_or_else(Vec::new, |users| users.collect());
+        .map_or_else(Vec::new, Iterator::collect);
     let delete_users = matches
         .values_of(OPT_DELETE)
-        .map_or_else(Vec::new, |users| users.collect());
+        .map_or_else(Vec::new, Iterator::collect);
 
     file_auth::add_delete_users(password_file, &add_users, &delete_users)
 }
@@ -159,7 +160,7 @@ pub fn handle_cmdline() -> Result<(), Error> {
         Config::default()
     };
 
-    init_log(&config.log())?;
+    init_log(config.log())?;
 
     let mut server = ServerContext::new(config);
 

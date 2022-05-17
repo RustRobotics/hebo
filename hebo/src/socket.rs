@@ -48,23 +48,25 @@ fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
     let queue_len: i32 = 1;
     let queue_len_ptr = std::ptr::addr_of!(queue_len) as usize;
 
-    // TODO(Shaohua): Replace with nc::TCP_FASTOPEN in new version.
-    const TCP_FASTOPEN: i32 = 23;
-
     unsafe {
         #[allow(clippy::cast_possible_truncation)]
         let len = std::mem::size_of_val(&queue_len) as u32;
-        nc::setsockopt(socket_fd, nc::IPPROTO_TCP, TCP_FASTOPEN, queue_len_ptr, len).map_err(
-            |errno| {
-                Error::from_string(
-                    ErrorKind::KernelError,
-                    format!(
-                        "Failed to enable socket fast open, got err: {}",
-                        nc::strerror(errno)
-                    ),
-                )
-            },
+        nc::setsockopt(
+            socket_fd,
+            nc::IPPROTO_TCP,
+            nc::TCP_FASTOPEN,
+            queue_len_ptr,
+            len,
         )
+        .map_err(|errno| {
+            Error::from_string(
+                ErrorKind::KernelError,
+                format!(
+                    "Failed to enable socket fast open, got err: {}",
+                    nc::strerror(errno)
+                ),
+            )
+        })
     }
 }
 

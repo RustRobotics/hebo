@@ -11,23 +11,25 @@ use crate::commands::{
 mod dispatcher;
 mod server;
 
+#[allow(dead_code)]
 pub struct RuleEngineApp {
-    _dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
+    dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToRuleEngineCmd>,
 
     server_ctx_receiver: Receiver<ServerContextToRuleEngineCmd>,
 }
 
 impl RuleEngineApp {
+    #[must_use]
     pub fn new(
         // dispatcher
-        _dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
+        dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToRuleEngineCmd>,
         // server ctx
         server_ctx_receiver: Receiver<ServerContextToRuleEngineCmd>,
     ) -> Self {
         Self {
-            _dispatcher_sender,
+            dispatcher_sender,
             dispatcher_receiver,
             server_ctx_receiver,
         }
