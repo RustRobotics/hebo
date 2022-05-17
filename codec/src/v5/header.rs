@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS, VarInt};
 
-pub trait Packet {
+pub trait Packet: Send {
     fn packet_type(&self) -> PacketType;
 }
 

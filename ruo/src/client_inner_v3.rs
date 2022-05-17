@@ -3,9 +3,9 @@
 // in the LICENSE file.
 
 use codec::v3::{
-    ConnectAckPacket, ConnectPacket, ConnectReturnCode, DisconnectPacket, FixedHeader, PacketType,
-    PingRequestPacket, PublishAckPacket, PublishPacket, SubscribeAckPacket, SubscribePacket,
-    UnsubscribeAckPacket, UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, ConnectReturnCode, DisconnectPacket, FixedHeader, Packet,
+    PacketType, PingRequestPacket, PublishAckPacket, PublishPacket, SubscribeAckPacket,
+    SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
 };
 use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
 use std::collections::HashMap;
@@ -107,7 +107,7 @@ impl ClientInnerV3 {
         }
     }
 
-    async fn send<P: EncodePacket>(&mut self, packet: &P) -> Result<(), Error> {
+    async fn send<P: EncodePacket + Packet>(&mut self, packet: P) -> Result<(), Error> {
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
         match &mut self.stream {
@@ -140,7 +140,7 @@ impl ClientInnerV3 {
         self.stream = Stream::connect(self.connect_options.connect_type()).await?;
         let conn_packet = ConnectPacket::new(self.connect_options.client_id())?;
         log::info!("send conn packet");
-        self.send(&conn_packet).await
+        self.send(conn_packet).await
     }
 
     /// Send a message to server.
@@ -169,7 +169,7 @@ impl ClientInnerV3 {
             }
             QoS::AtMostOnce => (),
         }
-        self.send(&packet).await
+        self.send(packet).await
     }
 
     /// Subscribe to a specific `topic`.
@@ -185,7 +185,7 @@ impl ClientInnerV3 {
         self.topics.insert(topic.to_string(), packet_id);
         let packet = SubscribePacket::new(topic, qos, packet_id)?;
         self.subscribing_packets.insert(packet_id, packet.clone());
-        self.send(&packet).await
+        self.send(packet).await
     }
 
     /// Unsubscribe specific `topic` pattern.
@@ -200,14 +200,14 @@ impl ClientInnerV3 {
         let packet_id = self.next_packet_id();
         let packet = UnsubscribePacket::new(topic, packet_id)?;
         self.unsubscribing_packets.insert(packet_id, packet.clone());
-        self.send(&packet).await
+        self.send(packet).await
     }
 
     pub async fn disconnect(&mut self) -> Result<(), Error> {
         if self.status == ClientStatus::Connected {
             self.status = ClientStatus::Disconnecting;
             let packet = DisconnectPacket::new();
-            self.send(&packet).await?;
+            self.send(packet).await?;
         }
         self.status = ClientStatus::Disconnected;
         self.on_disconnect()
@@ -225,7 +225,7 @@ impl ClientInnerV3 {
         if self.status == ClientStatus::Connected {
             log::info!("Send ping packet");
             let packet = PingRequestPacket::new();
-            self.send(&packet).await
+            self.send(packet).await
         } else {
             Err(Error::new(
                 ErrorKind::InvalidClientStatus,
