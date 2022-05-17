@@ -240,24 +240,23 @@ impl Listener {
             let path = request.uri().path();
             if listener_path.is_none() || path == listener_path.unwrap() {
                 return Ok(response);
-            } else {
-                let builder = http::Response::builder().status(http::StatusCode::NOT_FOUND);
-                let resp = builder.body(None);
-                // TODO(Shaohua): Remove unwrap()
-                let resp = resp.unwrap();
-                return Err(resp);
             }
+            let builder = http::Response::builder().status(http::StatusCode::NOT_FOUND);
+            let resp = builder.body(None);
+            // TODO(Shaohua): Remove unwrap()
+            let resp = resp.unwrap();
+            Err(resp)
         };
 
         match &mut self.protocol {
             Protocol::Mqtt(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
-                return Ok(Stream::Mqtt(tcp_stream));
+                Ok(Stream::Mqtt(tcp_stream))
             }
             Protocol::Mqtts(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
                 let tls_stream = acceptor.accept(tcp_stream).await?;
-                return Ok(Stream::Mqtts(Box::new(tls_stream)));
+                Ok(Stream::Mqtts(Box::new(tls_stream)))
             }
             Protocol::Ws(listener) => {
                 let (tcp_stream, _address) = listener.accept().await?;
@@ -266,7 +265,7 @@ impl Listener {
                 } else {
                     tokio_tungstenite::accept_hdr_async(tcp_stream, check_ws_path).await?
                 };
-                return Ok(Stream::Ws(Box::new(ws_stream)));
+                Ok(Stream::Ws(Box::new(ws_stream)))
             }
             Protocol::Wss(listener, acceptor) => {
                 let (tcp_stream, _address) = listener.accept().await?;
@@ -276,22 +275,21 @@ impl Listener {
                 } else {
                     tokio_tungstenite::accept_hdr_async(tls_stream, check_ws_path).await?
                 };
-                return Ok(Stream::Wss(Box::new(ws_stream)));
+                Ok(Stream::Wss(Box::new(ws_stream)))
             }
             Protocol::Uds(listener) => {
                 let (uds_stream, _address) = listener.accept().await?;
-                return Ok(Stream::Uds(uds_stream));
+                Ok(Stream::Uds(uds_stream))
             }
             Protocol::Quic(_endpoint, incoming) => {
                 if let Some(conn) = incoming.next().await {
                     let connection: quinn::NewConnection = conn.await?;
                     return Ok(Stream::Quic(connection));
-                } else {
-                    return Err(Error::new(
-                        ErrorKind::SocketError,
-                        "Failed to accept new quic connection",
-                    ));
                 }
+                Err(Error::new(
+                    ErrorKind::SocketError,
+                    "Failed to accept new quic connection",
+                ))
             }
         }
     }
