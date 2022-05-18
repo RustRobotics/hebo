@@ -96,14 +96,17 @@ pub struct General {
 }
 
 impl General {
+    #[must_use]
     pub const fn default_sys_interval() -> u64 {
         3
     }
 
+    #[must_use]
     pub fn default_user() -> String {
         "hebo".to_string()
     }
 
+    #[must_use]
     pub fn default_pid_file() -> PathBuf {
         let uid = unsafe { nc::geteuid() };
         if uid == 0 {
@@ -113,54 +116,67 @@ impl General {
         }
     }
 
+    #[must_use]
     pub const fn default_no_delay() -> bool {
         false
     }
 
+    #[must_use]
     pub const fn default_message_size_limit() -> usize {
         64 * 1024
     }
 
+    #[must_use]
     pub const fn default_max_qos() -> QoS {
         QoS::ExactOnce
     }
 
+    #[must_use]
     pub const fn default_max_keep_alive() -> u64 {
         65535
     }
 
+    #[must_use]
     pub const fn default_max_packet_size() -> usize {
         0
     }
 
+    #[must_use]
     pub fn sys_interval(&self) -> Duration {
         Duration::from_secs(self.sys_interval)
     }
 
+    #[must_use]
     pub fn user(&self) -> &str {
         &self.user
     }
 
+    #[must_use]
     pub fn pid_file(&self) -> &Path {
         self.pid_file.as_path()
     }
 
+    #[must_use]
     pub fn no_delay(&self) -> bool {
         self.no_delay
     }
 
+    #[must_use]
     pub fn message_size_limit(&self) -> usize {
         self.message_size_limit
     }
 
+    #[must_use]
     pub fn max_keep_alive(&self) -> u64 {
         self.max_keep_alive
     }
 
+    #[must_use]
     pub fn max_qos(&self) -> QoS {
         self.max_qos
     }
 
+    #[must_use]
     pub fn max_packet_size(&self) -> usize {
         self.max_packet_size
     }
@@ -169,7 +185,7 @@ impl General {
         let euid = unsafe { nc::geteuid() };
         if euid == 0 {
             // For root only.
-            if let None = users::get_user_by_name(&self.user) {
+            if users::get_user_by_name(&self.user).is_none() {
                 return Err(Error::from_string(
                     ErrorKind::ConfigError,
                     format!("Failed to find user info with name: {}", &self.user),

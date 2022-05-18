@@ -83,21 +83,24 @@ pub struct Error {
 }
 
 impl Error {
+    #[must_use]
     pub fn new(kind: ErrorKind, message: &str) -> Self {
-        Error {
+        Self {
             kind,
             message: message.to_owned(),
         }
     }
 
+    #[must_use]
     pub fn from_string(kind: ErrorKind, message: String) -> Self {
-        Error { kind, message }
+        Self { kind, message }
     }
 }
 
 impl Error {
+    #[must_use]
     pub fn session_error(session_id: SessionId) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::SessionNotFound,
             format!("Session with id {} not found", session_id),
         )
@@ -114,7 +117,7 @@ impl std::error::Error for Error {}
 
 impl From<std::net::AddrParseError> for Error {
     fn from(err: std::net::AddrParseError) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::ConfigError,
             format!("Invalid ip address, {}", err),
         )
@@ -123,19 +126,19 @@ impl From<std::net::AddrParseError> for Error {
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        Error::from_string(ErrorKind::IoError, format!("IoError {}", err))
+        Self::from_string(ErrorKind::IoError, format!("IoError {}", err))
     }
 }
 
 impl From<tungstenite::Error> for Error {
     fn from(err: tungstenite::Error) -> Self {
-        Error::from_string(ErrorKind::SocketError, format!("Websocket error: {}", err))
+        Self::from_string(ErrorKind::SocketError, format!("Websocket error: {}", err))
     }
 }
 
 impl From<quinn::ReadError> for Error {
     fn from(err: quinn::ReadError) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::SocketError,
             format!("Quic read error: {:?}", err),
         )
@@ -144,7 +147,7 @@ impl From<quinn::ReadError> for Error {
 
 impl From<quinn::WriteError> for Error {
     fn from(err: quinn::WriteError) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::SocketError,
             format!("Quic write error: {:?}", err),
         )
@@ -153,7 +156,7 @@ impl From<quinn::WriteError> for Error {
 
 impl From<quinn::ConnectionError> for Error {
     fn from(err: quinn::ConnectionError) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::SocketError,
             format!("Quic connection error: {}", err),
         )
@@ -171,72 +174,72 @@ impl From<quinn::ConnectionError> for Error {
 
 impl From<rustls::Error> for Error {
     fn from(err: rustls::Error) -> Self {
-        Error::from_string(ErrorKind::CertError, format!("Rustls error: {:?}", err))
+        Self::from_string(ErrorKind::CertError, format!("Rustls error: {:?}", err))
     }
 }
 
 impl From<openssl::error::ErrorStack> for Error {
     fn from(err: openssl::error::ErrorStack) -> Self {
-        Error::from_string(ErrorKind::SSLError, format!("{:?}", err))
+        Self::from_string(ErrorKind::SSLError, format!("{:?}", err))
     }
 }
 
 impl From<base64::DecodeError> for Error {
     fn from(err: base64::DecodeError) -> Self {
-        Error::from_string(ErrorKind::FormatError, format!("{:?}", err))
+        Self::from_string(ErrorKind::FormatError, format!("{:?}", err))
     }
 }
 
 #[cfg(feature = "redis_conn")]
 impl From<redis::RedisError> for Error {
     fn from(err: redis::RedisError) -> Self {
-        Error::from_string(ErrorKind::RedisError, format!("{:?}", err))
+        Self::from_string(ErrorKind::RedisError, format!("{:?}", err))
     }
 }
 
 #[cfg(feature = "mysql_conn")]
 impl From<mysql_async::Error> for Error {
     fn from(err: mysql_async::Error) -> Self {
-        Error::from_string(ErrorKind::MySQLError, format!("{:?}", err))
+        Self::from_string(ErrorKind::MySQLError, format!("{:?}", err))
     }
 }
 
 #[cfg(feature = "pgsql_conn")]
 impl From<tokio_postgres::Error> for Error {
     fn from(err: tokio_postgres::Error) -> Self {
-        Error::from_string(ErrorKind::PgSQLError, format!("{:?}", err))
+        Self::from_string(ErrorKind::PgSQLError, format!("{:?}", err))
     }
 }
 
 #[cfg(feature = "mongodb_conn")]
 impl From<mongodb::error::Error> for Error {
     fn from(err: mongodb::error::Error) -> Self {
-        Error::from_string(ErrorKind::MongoError, format!("{:?}", err))
+        Self::from_string(ErrorKind::MongoError, format!("{:?}", err))
     }
 }
 
 impl From<toml::de::Error> for Error {
     fn from(err: toml::de::Error) -> Self {
-        Error::from_string(ErrorKind::ConfigError, format!("{:?}", err))
+        Self::from_string(ErrorKind::ConfigError, format!("{:?}", err))
     }
 }
 
 // Internal error convertions.
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
-        Error::from_string(ErrorKind::EncodeError, format!("{:?}", err))
+        Self::from_string(ErrorKind::EncodeError, format!("{:?}", err))
     }
 }
 
 impl From<codec::DecodeError> for Error {
     fn from(err: codec::DecodeError) -> Self {
-        Error::from_string(ErrorKind::DecodeError, format!("{:?}", err))
+        Self::from_string(ErrorKind::DecodeError, format!("{:?}", err))
     }
 }
 
 impl From<oneshot::error::RecvError> for Error {
     fn from(err: oneshot::error::RecvError) -> Self {
-        Error::from_string(
+        Self::from_string(
             ErrorKind::ChannelError,
             format!("$cmd_type channel error: {}", err),
         )

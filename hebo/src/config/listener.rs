@@ -155,102 +155,127 @@ pub struct Listener {
 }
 
 impl Listener {
+    #[must_use]
     pub fn default_listeners() -> Vec<Self> {
         vec![Self::default()]
     }
 
+    #[must_use]
     pub fn default_bind_device() -> String {
         "".to_string()
     }
 
+    #[must_use]
     pub const fn default_max_connections() -> usize {
         0
     }
 
+    #[must_use]
     pub const fn default_protocol() -> Protocol {
         Protocol::Mqtt
     }
 
+    #[must_use]
     pub fn default_address() -> String {
         "0.0.0.0:1883".to_string()
     }
 
+    #[must_use]
     pub const fn default_path() -> Option<String> {
         None
     }
 
+    #[must_use]
     pub const fn default_cert_file() -> Option<PathBuf> {
         None
     }
 
+    #[must_use]
     pub const fn default_key_file() -> Option<PathBuf> {
         None
     }
 
+    #[must_use]
     pub const fn default_username_as_client_id() -> bool {
         false
     }
 
+    #[must_use]
     pub const fn default_keep_alive() -> u64 {
         60
     }
 
+    #[must_use]
     pub const fn default_connect_timeout() -> u64 {
         60
     }
 
+    #[must_use]
     pub const fn default_allow_empty_client_id() -> bool {
         false
     }
 
+    #[must_use]
     pub const fn default_max_inflight_messages() -> usize {
         20
     }
 
+    #[must_use]
     pub fn bind_device(&self) -> &str {
         &self.bind_device
     }
 
+    #[must_use]
     pub fn max_connections(&self) -> usize {
         self.max_connections
     }
 
+    #[must_use]
     pub fn protocol(&self) -> Protocol {
         self.protocol
     }
 
+    #[must_use]
     pub fn address(&self) -> &str {
         &self.address
     }
 
+    #[must_use]
     pub fn path(&self) -> Option<&str> {
-        self.path.as_ref().and_then(|s| Some(s.as_str()))
+        self.path.as_deref()
     }
 
+    #[must_use]
     pub fn cert_file(&self) -> Option<&Path> {
-        self.cert_file.as_ref().and_then(|p| Some(p.as_path()))
+        self.cert_file.as_deref()
     }
 
+    #[must_use]
     pub fn key_file(&self) -> Option<&Path> {
-        self.key_file.as_ref().and_then(|p| Some(p.as_path()))
+        self.key_file.as_deref()
     }
 
+    #[must_use]
     pub fn username_as_client_id(&self) -> bool {
         self.username_as_client_id
     }
 
+    #[must_use]
     pub fn keep_alive(&self) -> u64 {
         self.keep_alive
     }
 
+    #[must_use]
     pub fn connect_timeout(&self) -> u64 {
         self.connect_timeout
     }
 
+    #[must_use]
     pub fn allow_empty_client_id(&self) -> bool {
         self.allow_empty_client_id
     }
 
+    #[must_use]
     pub fn max_inflight_messages(&self) -> usize {
         self.max_inflight_messages
     }

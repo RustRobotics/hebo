@@ -121,8 +121,9 @@ impl Default for MongoConnConfig {
 }
 
 impl MongoConnConfig {
+    #[must_use]
     pub fn query_timeout(&self) -> Duration {
-        Duration::from_secs(self.query_timeout as u64)
+        Duration::from_secs(u64::from(self.query_timeout))
     }
 
     fn get_options(&self) -> ClientOptions {

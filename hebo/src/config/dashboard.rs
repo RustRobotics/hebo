@@ -32,10 +32,12 @@ impl Dashboard {
         "127.0.0.1:18083".to_string()
     }
 
+    #[must_use]
     pub fn enable(&self) -> bool {
         self.enable
     }
 
+    #[must_use]
     pub fn address(&self) -> &str {
         &self.address
     }

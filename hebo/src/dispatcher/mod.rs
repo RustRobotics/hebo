@@ -48,6 +48,7 @@ pub struct Dispatcher {
 }
 
 impl Dispatcher {
+    #[must_use]
     pub fn new(
         _backends_sender: Sender<DispatcherToBackendsCmd>,
         backends_receiver: Receiver<BackendsToDispatcherCmd>,

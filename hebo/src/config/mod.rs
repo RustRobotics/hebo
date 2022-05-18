@@ -43,26 +43,32 @@ pub struct Config {
 }
 
 impl Config {
+    #[must_use]
     pub fn general(&self) -> &General {
         &self.general
     }
 
+    #[must_use]
     pub fn listeners(&self) -> &[Listener] {
         &self.listeners
     }
 
+    #[must_use]
     pub fn security(&self) -> &Security {
         &self.security
     }
 
+    #[must_use]
     pub fn storage(&self) -> &Storage {
         &self.storage
     }
 
+    #[must_use]
     pub fn log(&self) -> &Log {
         &self.log
     }
 
+    #[must_use]
     pub fn dashboard(&self) -> &Dashboard {
         &self.dashboard
     }

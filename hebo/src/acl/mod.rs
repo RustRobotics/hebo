@@ -20,6 +20,7 @@ pub struct AclApp {
 }
 
 impl AclApp {
+    #[must_use]
     pub fn new(
         // listeners
         listener_senders: Vec<(ListenerId, Sender<AclToListenerCmd>)>,

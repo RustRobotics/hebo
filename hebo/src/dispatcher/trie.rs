@@ -94,7 +94,7 @@ impl SubTrie {
     pub fn match_packet(&mut self, packet: &PublishPacket) -> Vec<SessionGid> {
         let mut vec = vec![];
         let topic = packet.topic();
-        for (session_gid, topic_patterns) in self.map.iter() {
+        for (session_gid, topic_patterns) in &self.map {
             for topic_pattern in topic_patterns.values() {
                 if topic_pattern.topic().is_match(topic) {
                     vec.push(*session_gid);

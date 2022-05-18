@@ -44,14 +44,17 @@ pub struct Password {
 }
 
 impl Password {
+    #[must_use]
     pub fn hash(&self) -> &[u8] {
         &self.password_hash.0
     }
 
+    #[must_use]
     pub fn salt(&self) -> &[u8] {
         &self.salt.0
     }
 
+    #[must_use]
     pub fn valid(&self) -> bool {
         self.valid
     }
@@ -144,6 +147,7 @@ impl Password {
     }
 
     /// Generate password entry.
+    #[must_use]
     pub fn dump(&self, username: &str) -> String {
         if self.valid {
             let salt = base64::encode(self.salt.0);

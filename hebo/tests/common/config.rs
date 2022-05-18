@@ -6,7 +6,7 @@ use hebo::error::{Error, ErrorKind};
 use std::fs;
 use std::path::Path;
 
-/// ServerConfig is used to save config string to local filesystem.
+/// `ServerConfig` is used to save config string to local filesystem.
 ///
 /// That config file will be cleanup on drop.
 #[derive(Debug)]

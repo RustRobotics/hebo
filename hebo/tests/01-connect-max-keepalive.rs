@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-//! Test whether max_keepalive violations are rejected for MQTT < 5.0.
+//! Test whether `max_keepalive` violations are rejected for MQTT < 5.0.
 
 use hebo::error::Error;
 use std::thread::sleep;

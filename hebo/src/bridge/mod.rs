@@ -17,6 +17,7 @@ pub struct BridgeApp {
 }
 
 impl BridgeApp {
+    #[must_use]
     pub fn new(
         // dispatcher
         _dispatcher_sender: Sender<BridgeToDispatcherCmd>,

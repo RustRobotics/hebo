@@ -20,6 +20,7 @@ pub struct BackendsApp {
 }
 
 impl BackendsApp {
+    #[must_use]
     pub fn new(
         // dispatcher
         _dispatcher_sender: Sender<BackendsToDispatcherCmd>,

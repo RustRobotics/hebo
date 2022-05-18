@@ -32,20 +32,24 @@ pub struct Security {
 }
 
 impl Security {
+    #[must_use]
     pub const fn default_allow_anonymous() -> bool {
         true
     }
 
+    #[must_use]
     pub fn default_password_file() -> Option<PathBuf> {
         None
     }
 
+    #[must_use]
     pub fn allow_anonymous(&self) -> bool {
         self.allow_anonymous
     }
 
+    #[must_use]
     pub fn password_file(&self) -> Option<&Path> {
-        self.password_file.as_ref().and_then(|p| Some(p.as_path()))
+        self.password_file.as_deref()
     }
 
     pub fn validate(&self) -> Result<(), Error> {

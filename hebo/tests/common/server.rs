@@ -59,9 +59,9 @@ impl Server {
         if path.exists() {
             return Ok(path);
         }
-        return Err(Error::new(
+        Err(Error::new(
             ErrorKind::IoError,
             "Make sure hebo binary is compiled!",
-        ));
+        ))
     }
 }

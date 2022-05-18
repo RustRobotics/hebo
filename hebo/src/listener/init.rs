@@ -43,7 +43,7 @@ impl Listener {
         acl_receiver: Receiver<AclToListenerCmd>,
     ) -> Self {
         let (session_sender, session_receiver) = mpsc::channel(CHANNEL_CAPACITY);
-        Listener {
+        Self {
             id,
             protocol,
             config: listener_config,
@@ -76,28 +76,19 @@ impl Listener {
                     format!("Failed to load cert file at {:?}, got: {:?}", path, err),
                 )
             })?;
-        Ok(items
-            .into_iter()
-            .map(|item| rustls::Certificate(item))
-            .collect())
+        Ok(items.into_iter().map(rustls::Certificate).collect())
     }
 
     fn load_keys(path: &Path) -> Result<Vec<rustls::PrivateKey>, Error> {
         if let Ok(keys) = rustls_pemfile::rsa_private_keys(&mut BufReader::new(File::open(path)?)) {
             if !keys.is_empty() {
-                return Ok(keys
-                    .into_iter()
-                    .map(|item| rustls::PrivateKey(item))
-                    .collect());
+                return Ok(keys.into_iter().map(rustls::PrivateKey).collect());
             }
         }
         if let Ok(keys) = rustls_pemfile::pkcs8_private_keys(&mut BufReader::new(File::open(path)?))
         {
             if !keys.is_empty() {
-                return Ok(keys
-                    .into_iter()
-                    .map(|item| rustls::PrivateKey(item))
-                    .collect());
+                return Ok(keys.into_iter().map(rustls::PrivateKey).collect());
             }
         }
 
@@ -115,8 +106,8 @@ impl Listener {
             .key_file()
             .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
 
-        let certs = Listener::load_certs(cert_file)?;
-        let mut keys = Listener::load_keys(key_file)?;
+        let certs = Self::load_certs(cert_file)?;
+        let mut keys = Self::load_keys(key_file)?;
 
         rustls::ServerConfig::builder()
             .with_safe_default_cipher_suites()
@@ -150,12 +141,12 @@ impl Listener {
         // acl
         acl_sender: Sender<ListenerToAclCmd>,
         acl_receiver: Receiver<AclToListenerCmd>,
-    ) -> Result<Listener, Error> {
+    ) -> Result<Self, Error> {
         let device = listener_config.bind_device();
         let address = listener_config.address();
 
         let new_listener = |protocol| {
-            Ok(Listener::new(
+            Ok(Self::new(
                 id,
                 protocol,
                 listener_config.clone(),
@@ -171,26 +162,26 @@ impl Listener {
             config::Protocol::Mqtt => {
                 log::info!("bind mqtt://{}", address);
                 let listener = new_tcp_listener(address, device).await?;
-                return new_listener(Protocol::Mqtt(listener));
+                new_listener(Protocol::Mqtt(listener))
             }
             config::Protocol::Mqtts => {
                 log::info!("bind mqtts://{}", address);
-                let config = Listener::get_cert_config(&listener_config)?;
+                let config = Self::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
                 let listener = new_tcp_listener(address, device).await?;
-                return new_listener(Protocol::Mqtts(listener, acceptor));
+                new_listener(Protocol::Mqtts(listener, acceptor))
             }
             config::Protocol::Ws => {
                 log::info!("bind ws://{}", address);
                 let listener = new_tcp_listener(address, device).await?;
-                return new_listener(Protocol::Ws(listener));
+                new_listener(Protocol::Ws(listener))
             }
             config::Protocol::Wss => {
                 log::info!("bind wss://{}", address);
-                let config = Listener::get_cert_config(&listener_config)?;
+                let config = Self::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
                 let listener = new_tcp_listener(address, device).await?;
-                return new_listener(Protocol::Wss(listener, acceptor));
+                new_listener(Protocol::Wss(listener, acceptor))
             }
 
             config::Protocol::Uds => {
@@ -201,7 +192,7 @@ impl Listener {
                     fs::remove_file(address)?;
                 }
                 let listener = UnixListener::bind(address)?;
-                return new_listener(Protocol::Uds(listener));
+                new_listener(Protocol::Uds(listener))
             }
 
             config::Protocol::Quic => {
@@ -226,7 +217,7 @@ impl Listener {
                 let endpoint = quinn::EndpointConfig::default();
                 let (endpoint, incoming) =
                     quinn::Endpoint::new(endpoint, Some(server_config), udp_socket)?;
-                return new_listener(Protocol::Quic(endpoint, incoming));
+                new_listener(Protocol::Quic(endpoint, incoming))
             }
         }
     }

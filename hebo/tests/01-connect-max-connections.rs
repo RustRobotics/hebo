@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-//! Test whether max_connections works with repeated connections
+//! Test whether `max_connections` works with repeated connections
 
 use hebo::error::Error;
 use std::thread::sleep;

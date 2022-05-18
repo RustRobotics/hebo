@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-//! RuleEngine app handler
+//! `RuleEngine` app handler
 
 use super::Dispatcher;
 use crate::dispatcher::RuleEngineToDispatcherCmd;

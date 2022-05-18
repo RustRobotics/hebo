@@ -59,27 +59,33 @@ pub enum LogLevel {
 }
 
 impl Log {
+    #[must_use]
     pub const fn default_console_log() -> bool {
         true
     }
 
+    #[must_use]
     pub const fn default_log_level() -> LogLevel {
         LogLevel::Info
     }
 
+    #[must_use]
     pub fn default_log_file() -> Option<String> {
         //PathBuf::from("/var/log/hebo/hebo.log")
         None
     }
 
+    #[must_use]
     pub fn console_log(&self) -> bool {
         self.console_log
     }
 
+    #[must_use]
     pub fn log_level(&self) -> LogLevel {
         self.log_level
     }
 
+    #[must_use]
     pub fn log_file(&self) -> Option<&String> {
         self.log_file.as_ref()
     }

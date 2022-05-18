@@ -10,12 +10,12 @@ use std::path::Path;
 use super::pwd::Password;
 use crate::error::{Error, ErrorKind};
 
-/// FileAuth represents records in password_file.
+/// `FileAuth` represents records in `password_file`.
 #[derive(Debug)]
 pub struct FileAuth(BTreeMap<String, Password>);
 
 impl FileAuth {
-    /// Parse password_file.
+    /// Parse `password_file`.
     pub fn new<P: AsRef<Path>>(password_file: P) -> Result<Self, Error> {
         let fd = File::open(password_file.as_ref())?;
         let reader = BufReader::new(fd);
@@ -63,7 +63,7 @@ pub fn update_file_hash<P: AsRef<Path>>(password_file: P) -> Result<(), Error> {
             Ok(Some((username, password))) => {
                 let hashed_line = password.dump(username);
                 result.push_str(&hashed_line);
-                result.push_str("\n");
+                result.push('\n');
             }
         }
     }

@@ -7,7 +7,7 @@ use std::time::Duration;
 
 use crate::error::Error;
 
-/// Configuration for connection to MySQL server.
+/// Configuration for connection to `MySQL` server.
 #[derive(Debug, Deserialize, Clone)]
 pub struct MySQLConnConfig {
     /// Use unix domain socket connection to MySQL.
@@ -120,8 +120,9 @@ impl Default for MySQLConnConfig {
 }
 
 impl MySQLConnConfig {
+    #[must_use]
     pub fn query_timeout(&self) -> Duration {
-        Duration::from_secs(self.query_timeout as u64)
+        Duration::from_secs(u64::from(self.query_timeout))
     }
 }
 

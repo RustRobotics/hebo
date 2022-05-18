@@ -45,37 +45,44 @@ pub struct Storage {
 }
 
 impl Storage {
+    #[must_use]
     pub const fn default_persistence() -> bool {
         true
     }
 
+    #[must_use]
     pub fn default_db_path() -> PathBuf {
         PathBuf::from("/var/lib/hebo/hebo.db")
     }
 
+    #[must_use]
     pub const fn default_auto_save_interval() -> u64 {
         1800
     }
 
+    #[must_use]
     pub const fn default_auto_save_on_change() -> Option<u64> {
         None
     }
 
+    #[must_use]
     pub fn persistence(&self) -> bool {
         self.persistence
     }
 
+    #[must_use]
     pub fn db_path(&self) -> &Path {
         self.db_path.as_path()
     }
 
+    #[must_use]
     pub fn auto_save_interval(&self) -> Duration {
         Duration::from_secs(self.auto_save_interval)
     }
 
+    #[must_use]
     pub fn auto_save_on_change(&self) -> Option<Duration> {
-        self.auto_save_on_change
-            .and_then(|interval| Some(Duration::from_secs(interval)))
+        self.auto_save_on_change.map(Duration::from_secs)
     }
 
     pub fn validate(&self) -> Result<(), Error> {

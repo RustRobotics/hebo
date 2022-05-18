@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 //! Metrics service backend.
-//! Embed a sys_tree module to send $SYS messages to dispatcher.
+//! Embed a `sys_tree` module to send $SYS messages to dispatcher.
 
 use codec::{v3::PublishPacket, QoS};
 use std::collections::HashMap;
@@ -35,6 +35,7 @@ pub struct Metrics {
 }
 
 impl Metrics {
+    #[must_use]
     pub fn new(
         sys_tree_interval: Duration,
         // dispatcher module
@@ -43,7 +44,7 @@ impl Metrics {
         // server ctx module
         server_ctx_receiver: Receiver<ServerContextToMetricsCmd>,
     ) -> Self {
-        Metrics {
+        Self {
             sys_tree_interval,
             startup: SystemTime::now(),
             uptime: 0,
@@ -89,7 +90,7 @@ impl Metrics {
             DispatcherToMetricsCmd::ListenerAdded(listener_id, address) => {
                 log::info!("Add listener id: {}, addr: {:?}", listener_id, address);
                 assert!(self.listeners.get(&listener_id).is_none());
-                let listener_cache = ListenerMetrics::new(listener_id, address.to_string());
+                let listener_cache = ListenerMetrics::new(listener_id, address);
                 self.listeners.insert(listener_id, listener_cache);
                 self.system.listener_count += 1;
             }

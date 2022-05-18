@@ -120,10 +120,12 @@ impl Default for RedisConnConfig {
 }
 
 impl RedisConnConfig {
+    #[must_use]
     pub fn query_timeout(&self) -> Duration {
-        Duration::from_secs(self.query_timeout as u64)
+        Duration::from_secs(u64::from(self.query_timeout))
     }
 
+    #[must_use]
     pub fn get_uri(&self) -> String {
         let mut uri = String::new();
         if self.use_uds {
@@ -174,6 +176,7 @@ impl RedisConn {
         Ok(())
     }
 
+    #[must_use]
     pub fn get_conn(&self) -> Option<redis::aio::ConnectionManager> {
         self.conn.clone()
     }

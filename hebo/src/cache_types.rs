@@ -30,8 +30,9 @@ pub struct ListenerMetrics {
 }
 
 impl ListenerMetrics {
+    #[must_use]
     pub fn new(id: u32, address: String) -> Self {
-        ListenerMetrics {
+        Self {
             id,
             address,
             ..Self::default()
