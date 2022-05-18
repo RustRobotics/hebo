@@ -102,10 +102,10 @@ impl Listener {
     fn get_cert_config(listener_config: &config::Listener) -> Result<rustls::ServerConfig, Error> {
         let cert_file = listener_config
             .cert_file()
-            .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
+            .ok_or_else(|| Error::new(ErrorKind::CertError, "cert_file is required"))?;
         let key_file = listener_config
             .key_file()
-            .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
+            .ok_or_else(|| Error::new(ErrorKind::CertError, "key_file is required"))?;
 
         let certs = Self::load_certs(cert_file)?;
         let mut keys = Self::load_keys(key_file)?;
@@ -136,6 +136,7 @@ impl Listener {
     ///
     /// Returns error if:
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     pub async fn bind(
         id: u32,
         listener_config: config::Listener,

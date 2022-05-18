@@ -14,7 +14,7 @@ impl Dispatcher {
         match cmd {
             ListenerToDispatcherCmd::CheckCachedSession(session_gid, client_id) => {
                 self.on_listener_check_cached_session(session_gid, client_id)
-                    .await
+                    .await;
             }
             ListenerToDispatcherCmd::Publish(packet) => {
                 self.backends_store_packet(&packet).await;
@@ -66,7 +66,7 @@ impl Dispatcher {
     }
 
     async fn on_listener_subscribe(&mut self, session_gid: SessionGid, packet: SubscribePacket) {
-        let (sub_ack_packet, n_subscribed) = self.sub_trie.subscribe(session_gid, packet);
+        let (sub_ack_packet, n_subscribed) = self.sub_trie.subscribe(session_gid, &packet);
 
         self.metrics_on_subscription_added(session_gid.listener_id(), n_subscribed)
             .await;
@@ -94,7 +94,7 @@ impl Dispatcher {
         session_gid: SessionGid,
         packet: UnsubscribePacket,
     ) {
-        let n_unsubscribed = self.sub_trie.unsubscribe(session_gid, packet);
+        let n_unsubscribed = self.sub_trie.unsubscribe(session_gid, &packet);
         self.metrics_on_subscription_removed(session_gid.listener_id(), n_unsubscribed)
             .await;
     }

@@ -14,6 +14,7 @@ use super::Dispatcher;
 use crate::commands::DispatcherToListenerCmd;
 use crate::types::SessionGid;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone)]
 pub struct SubTrie {
     map: HashMap<SessionGid, HashMap<String, SubscribePattern>>,
@@ -29,7 +30,7 @@ impl SubTrie {
     pub fn subscribe(
         &mut self,
         session_gid: SessionGid,
-        packet: SubscribePacket,
+        packet: &SubscribePacket,
     ) -> (SubscribeAckPacket, usize) {
         let patterns = match self.map.get_mut(&session_gid) {
             Some(patterns) => patterns,
@@ -72,23 +73,26 @@ impl SubTrie {
         )
     }
 
-    pub fn unsubscribe(&mut self, session_gid: SessionGid, packet: UnsubscribePacket) -> usize {
-        if let Some(set) = self.map.get_mut(&session_gid) {
-            let to_be_removed: Vec<String> = packet
-                .topics()
-                .iter()
-                .filter(|topic| set.contains_key(topic.as_ref()))
-                .map(|topic| topic.as_ref().to_string())
-                .collect();
-            for p in &to_be_removed {
-                set.remove(p);
-            }
+    pub fn unsubscribe(&mut self, session_gid: SessionGid, packet: &UnsubscribePacket) -> usize {
+        self.map.get_mut(&session_gid).map_or_else(
+            || {
+                log::error!("trie: No subscription for gid: {:?}", session_gid);
+                0
+            },
+            |set| {
+                let to_be_removed: Vec<String> = packet
+                    .topics()
+                    .iter()
+                    .filter(|topic| set.contains_key(topic.as_ref()))
+                    .map(|topic| topic.as_ref().to_string())
+                    .collect();
+                for p in &to_be_removed {
+                    set.remove(p);
+                }
 
-            to_be_removed.len()
-        } else {
-            log::error!("trie: No subscription for gid: {:?}", session_gid);
-            0
-        }
+                to_be_removed.len()
+            },
+        )
     }
 
     pub fn match_packet(&mut self, packet: &PublishPacket) -> Vec<SessionGid> {

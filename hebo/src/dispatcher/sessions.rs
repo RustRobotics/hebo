@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 use crate::session::CachedSession;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct CachedSessions {
     map: HashMap<String, CachedSession>,

@@ -23,18 +23,19 @@ mod sessions;
 mod trie;
 
 /// Dispatcher is a message router.
+#[allow(dead_code)]
 pub struct Dispatcher {
     sub_trie: trie::SubTrie,
 
     cached_sessions: sessions::CachedSessions,
 
-    _backends_sender: Sender<DispatcherToBackendsCmd>,
+    backends_sender: Sender<DispatcherToBackendsCmd>,
     backends_receiver: Receiver<BackendsToDispatcherCmd>,
 
-    _bridge_sender: Sender<DispatcherToBridgeCmd>,
+    bridge_sender: Sender<DispatcherToBridgeCmd>,
     bridge_receiver: Receiver<BridgeToDispatcherCmd>,
 
-    _gateway_sender: Sender<DispatcherToGatewayCmd>,
+    gateway_sender: Sender<DispatcherToGatewayCmd>,
     gateway_receiver: Receiver<GatewayToDispatcherCmd>,
 
     metrics_sender: Sender<DispatcherToMetricsCmd>,
@@ -43,20 +44,21 @@ pub struct Dispatcher {
     listener_senders: HashMap<ListenerId, Sender<DispatcherToListenerCmd>>,
     listener_receiver: Receiver<ListenerToDispatcherCmd>,
 
-    _rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
+    rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
     rule_engine_receiver: Receiver<RuleEngineToDispatcherCmd>,
 }
 
 impl Dispatcher {
+    #[allow(clippy::too_many_arguments)]
     #[must_use]
     pub fn new(
-        _backends_sender: Sender<DispatcherToBackendsCmd>,
+        backends_sender: Sender<DispatcherToBackendsCmd>,
         backends_receiver: Receiver<BackendsToDispatcherCmd>,
 
-        _bridge_sender: Sender<DispatcherToBridgeCmd>,
+        bridge_sender: Sender<DispatcherToBridgeCmd>,
         bridge_receiver: Receiver<BridgeToDispatcherCmd>,
 
-        _gateway_sender: Sender<DispatcherToGatewayCmd>,
+        gateway_sender: Sender<DispatcherToGatewayCmd>,
         gateway_receiver: Receiver<GatewayToDispatcherCmd>,
 
         metrics_sender: Sender<DispatcherToMetricsCmd>,
@@ -65,7 +67,7 @@ impl Dispatcher {
         listener_senders: Vec<(ListenerId, Sender<DispatcherToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToDispatcherCmd>,
 
-        _rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
+        rule_engine_sender: Sender<DispatcherToRuleEngineCmd>,
         rule_engine_receiver: Receiver<RuleEngineToDispatcherCmd>,
     ) -> Self {
         Self {
@@ -73,13 +75,13 @@ impl Dispatcher {
 
             cached_sessions: sessions::CachedSessions::new(),
 
-            _backends_sender,
+            backends_sender,
             backends_receiver,
 
-            _bridge_sender,
+            bridge_sender,
             bridge_receiver,
 
-            _gateway_sender,
+            gateway_sender,
             gateway_receiver,
 
             metrics_sender,
@@ -88,7 +90,7 @@ impl Dispatcher {
             listener_senders: listener_senders.into_iter().collect(),
             listener_receiver,
 
-            _rule_engine_sender,
+            rule_engine_sender,
             rule_engine_receiver,
         }
     }

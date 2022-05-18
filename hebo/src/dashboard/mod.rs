@@ -18,6 +18,7 @@ mod metrics;
 mod routes;
 mod types;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct DashboardApp {
     addr: SocketAddr,
@@ -26,6 +27,11 @@ pub struct DashboardApp {
 }
 
 impl DashboardApp {
+    /// Create a new dashboard app.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `config` has invalid socket address.
     pub fn new(
         config: &config::Dashboard,
         server_ctx_sender: Sender<DashboardToServerContexCmd>,
@@ -40,6 +46,6 @@ impl DashboardApp {
     pub async fn run_loop(&mut self) {
         let sender = self.server_ctx_sender.clone();
         let routes = routes::init(sender);
-        warp::serve(routes).run(self.addr).await
+        warp::serve(routes).run(self.addr).await;
     }
 }
