@@ -119,6 +119,13 @@ fn handle_password_subcmd(matches: &ArgMatches) -> Result<(), Error> {
 }
 
 /// Entry point of server
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Failed to read/parse config file
+/// - Config file contains invalid options
+/// - Failed to init log mod
 pub fn handle_cmdline() -> Result<(), Error> {
     let matches = get_cmdline().get_matches();
     if let Some((SUBCMD_PASSWORD, sub_matches)) = matches.subcommand() {

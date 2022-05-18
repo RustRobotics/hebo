@@ -45,20 +45,28 @@ pub struct Password {
 
 impl Password {
     #[must_use]
-    pub fn hash(&self) -> &[u8] {
+    pub const fn hash(&self) -> &[u8] {
         &self.password_hash.0
     }
 
     #[must_use]
-    pub fn salt(&self) -> &[u8] {
+    pub const fn salt(&self) -> &[u8] {
         &self.salt.0
     }
 
     #[must_use]
-    pub fn valid(&self) -> bool {
+    pub const fn valid(&self) -> bool {
         self.valid
     }
 
+    /// Parse password value in string slice.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - String slice contains invalid password record
+    /// - Username or password in record is empty
+    /// - Failed to generate password hash
     pub fn parse_raw_text(s: &str) -> Result<Option<(&str, Self)>, Error> {
         if s.is_empty() {
             return Ok(None);
@@ -90,6 +98,13 @@ impl Password {
     /// Parse password entry from string.
     ///
     /// Returns (username, Password) pair if success.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - String slice contains invalid password record
+    /// - Username or password in record is empty
+    /// - Failed to generate password hash
     pub fn parse(s: &str) -> Result<Option<(&str, Self)>, Error> {
         if s.is_empty() {
             return Ok(None);

@@ -55,7 +55,7 @@ impl Drop for Listener {
     fn drop(&mut self) {
         if let Protocol::Uds(..) = &self.protocol {
             // Remove unix domain socket file.
-            let _ = fs::remove_file(self.config.address());
+            let _ret = fs::remove_file(self.config.address());
         }
     }
 }

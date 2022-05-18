@@ -20,7 +20,7 @@ const ROLLER_COUNT: u32 = 10;
 const STDOUT_NAME: &str = "stdout";
 const ROLLER_NAME: &str = "roller";
 
-fn get_log_level(level: config::LogLevel) -> LevelFilter {
+const fn get_log_level(level: config::LogLevel) -> LevelFilter {
     match level {
         config::LogLevel::Off => LevelFilter::Off,
         config::LogLevel::Error => LevelFilter::Error,
@@ -31,6 +31,14 @@ fn get_log_level(level: config::LogLevel) -> LevelFilter {
     }
 }
 
+/// Initialize log module.
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Failed to init rolling pattern or rolling appender
+/// - Failed to init log4rs
+#[allow(clippy::module_name_repetitions)]
 pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
     let log_level = get_log_level(log_conf.log_level());
 

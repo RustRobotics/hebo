@@ -11,6 +11,7 @@ use crate::commands::{
 mod dispatcher;
 mod server;
 
+#[allow(clippy::module_name_repetitions)]
 #[allow(dead_code)]
 pub struct RuleEngineApp {
     dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
@@ -21,7 +22,7 @@ pub struct RuleEngineApp {
 
 impl RuleEngineApp {
     #[must_use]
-    pub fn new(
+    pub const fn new(
         // dispatcher
         dispatcher_sender: Sender<RuleEngineToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToRuleEngineCmd>,

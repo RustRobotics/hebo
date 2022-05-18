@@ -11,6 +11,7 @@ use crate::types::ListenerId;
 mod listener;
 mod server;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct AclApp {
     listener_senders: HashMap<ListenerId, Sender<AclToListenerCmd>>,

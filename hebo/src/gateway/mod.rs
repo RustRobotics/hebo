@@ -9,8 +9,10 @@ use crate::commands::{DispatcherToGatewayCmd, GatewayToDispatcherCmd, ServerCont
 mod dispatcher;
 mod server;
 
+#[allow(clippy::module_name_repetitions)]
 pub struct GatewayApp {
-    _dispatcher_sender: Sender<GatewayToDispatcherCmd>,
+    #[allow(dead_code)]
+    dispatcher_sender: Sender<GatewayToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToGatewayCmd>,
 
     server_ctx_receiver: Receiver<ServerContextToGatewayCmd>,
@@ -18,15 +20,15 @@ pub struct GatewayApp {
 
 impl GatewayApp {
     #[must_use]
-    pub fn new(
+    pub const fn new(
         // dispatcher
-        _dispatcher_sender: Sender<GatewayToDispatcherCmd>,
+        dispatcher_sender: Sender<GatewayToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToGatewayCmd>,
         // server ctx
         server_ctx_receiver: Receiver<ServerContextToGatewayCmd>,
     ) -> Self {
         Self {
-            _dispatcher_sender,
+            dispatcher_sender,
             dispatcher_receiver,
 
             server_ctx_receiver,

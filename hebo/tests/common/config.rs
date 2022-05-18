@@ -9,6 +9,7 @@ use std::path::Path;
 /// `ServerConfig` is used to save config string to local filesystem.
 ///
 /// That config file will be cleanup on drop.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct ServerConfig {
     filename: String,

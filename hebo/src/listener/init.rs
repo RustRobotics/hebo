@@ -28,6 +28,7 @@ use crate::stream::Stream;
 use crate::types::ListenerId;
 
 impl Listener {
+    #[allow(clippy::too_many_arguments)]
     fn new(
         id: ListenerId,
         protocol: Protocol,
@@ -129,6 +130,12 @@ impl Listener {
             })
     }
 
+    /// Bind to specific socket address.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    #[allow(clippy::too_many_lines)]
     pub async fn bind(
         id: u32,
         listener_config: config::Listener,
@@ -200,13 +207,13 @@ impl Listener {
 
                 let key_file = listener_config
                     .key_file()
-                    .ok_or(Error::new(ErrorKind::CertError, "key_file is required"))?;
+                    .ok_or_else(|| Error::new(ErrorKind::CertError, "key_file is required"))?;
                 let key = fs::read(key_file)?;
                 let key = rustls::PrivateKey(key);
 
                 let cert_file = listener_config
                     .cert_file()
-                    .ok_or(Error::new(ErrorKind::CertError, "cert_file is required"))?;
+                    .ok_or_else(|| Error::new(ErrorKind::CertError, "cert_file is required"))?;
                 let cert = fs::read(cert_file)?;
                 let cert = rustls::Certificate(cert);
 

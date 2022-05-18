@@ -9,7 +9,9 @@ use crate::config::Security;
 use crate::error::{Error, ErrorKind};
 use crate::types::ListenerId;
 
+#[allow(clippy::module_name_repetitions)]
 pub mod db_auth;
+#[allow(clippy::module_name_repetitions)]
 pub mod file_auth;
 mod listener;
 pub mod pwd;

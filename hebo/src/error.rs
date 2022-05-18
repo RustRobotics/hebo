@@ -16,6 +16,7 @@ use crate::commands::{
 use crate::types::SessionId;
 
 /// Represent the types of errors.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug)]
 pub enum ErrorKind {
     /// Got error while processing system calls.
@@ -92,7 +93,7 @@ impl Error {
     }
 
     #[must_use]
-    pub fn from_string(kind: ErrorKind, message: String) -> Self {
+    pub const fn from_string(kind: ErrorKind, message: String) -> Self {
         Self { kind, message }
     }
 }

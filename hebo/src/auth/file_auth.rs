@@ -16,6 +16,12 @@ pub struct FileAuth(BTreeMap<String, Password>);
 
 impl FileAuth {
     /// Parse `password_file`.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Failed to read `password_file`
+    /// - File format error
     pub fn new<P: AsRef<Path>>(password_file: P) -> Result<Self, Error> {
         let fd = File::open(password_file.as_ref())?;
         let reader = BufReader::new(fd);
@@ -39,6 +45,10 @@ impl FileAuth {
     }
 
     /// Check if (username, password) pair exists in records.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if failed to calculate password hash.
     pub fn is_match(&self, username: &str, password: &[u8]) -> Result<bool, Error> {
         match self.0.get(username) {
             None => Ok(false),
@@ -47,6 +57,14 @@ impl FileAuth {
     }
 }
 
+/// Update hash value of all items in `password_file`.
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Failed to access `password_file`
+/// - File format is invalid
+/// - Failed to calculate password hash.
 pub fn update_file_hash<P: AsRef<Path>>(password_file: P) -> Result<(), Error> {
     let fd = File::open(password_file.as_ref())?;
     let reader = BufReader::new(fd);
@@ -140,8 +158,8 @@ pub fn add_delete_users<P: AsRef<Path>>(
     for (username, password) in users {
         let line = password.dump(&username);
         log::info!("line: {}", line);
-        fd.write(line.as_bytes())?;
-        fd.write(b"\n")?;
+        let _size = fd.write(line.as_bytes())?;
+        let _size = fd.write(b"\n")?;
     }
 
     Ok(())
