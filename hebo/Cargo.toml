@@ -1,6 +1,6 @@
 [package]
 name = "hebo"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 description = "Distributed MQTT broker"
 edition = "2021"
@@ -70,5 +70,5 @@ webpki-roots = "0.22.3"
 
 [dev-dependencies]
 rcgen = "0.9.2"
-ruo = { path = "../ruo", version = "0.1.1" }
+ruo = { path = "../ruo", version = "0.1.2" }
 tokio-test = "0.4.2"
