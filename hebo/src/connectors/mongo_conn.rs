@@ -9,6 +9,7 @@ use std::time::Duration;
 use crate::error::Error;
 
 /// Configuration for connection to pgsql server.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Deserialize, Clone)]
 pub struct MongoConnConfig {
     /// Use unix domain socket connection to MongoDB.
@@ -71,7 +72,7 @@ impl MongoConnConfig {
         false
     }
 
-    fn default_socket() -> String {
+    const fn default_socket() -> String {
         String::new()
     }
 
@@ -83,11 +84,11 @@ impl MongoConnConfig {
         27017
     }
 
-    fn default_username() -> Option<String> {
+    const fn default_username() -> Option<String> {
         None
     }
 
-    fn default_password() -> Option<String> {
+    const fn default_password() -> Option<String> {
         None
     }
 
@@ -150,6 +151,11 @@ pub struct MongoConn {
 }
 
 impl MongoConn {
+    /// Connect to mongodb.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if failed to connect to db.
     pub fn connect(mongo_config: &MongoConnConfig) -> Result<Self, Error> {
         let options = mongo_config.get_options();
         let client = mongodb::Client::with_options(options)?;

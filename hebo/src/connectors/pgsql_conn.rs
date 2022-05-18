@@ -10,6 +10,7 @@ use tokio_postgres::NoTls;
 use crate::error::Error;
 
 /// Configuration for connection to pgsql server.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Deserialize, Clone)]
 pub struct PgSQLConnConfig {
     /// Use unix domain socket connection to PgSQL.
@@ -72,7 +73,7 @@ impl PgSQLConnConfig {
         false
     }
 
-    fn default_socket() -> String {
+    const fn default_socket() -> String {
         String::new()
     }
 
@@ -88,7 +89,7 @@ impl PgSQLConnConfig {
         "postgres".to_string()
     }
 
-    fn default_password() -> String {
+    const fn default_password() -> String {
         String::new()
     }
 
@@ -152,6 +153,11 @@ pub struct PgSQLConn {
 }
 
 impl PgSQLConn {
+    /// Connect to postgres database.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if failed to connect to db.
     pub async fn connect(pg_config: &PgSQLConnConfig) -> Result<Self, Error> {
         let config = pg_config.get_config();
         let (client, connection) = config.connect(NoTls).await?;

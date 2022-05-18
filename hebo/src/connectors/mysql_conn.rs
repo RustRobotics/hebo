@@ -70,7 +70,7 @@ impl MySQLConnConfig {
         false
     }
 
-    fn default_socket() -> Option<String> {
+    const fn default_socket() -> Option<String> {
         None
     }
 
@@ -86,7 +86,7 @@ impl MySQLConnConfig {
         "root".to_string()
     }
 
-    fn default_password() -> String {
+    const fn default_password() -> String {
         String::new()
     }
 
@@ -132,6 +132,11 @@ pub struct MySQLConn {
 }
 
 impl MySQLConn {
+    /// Connect to mysql database.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if failed to connect to db.
     pub async fn connect(config: &MySQLConnConfig) -> Result<Self, Error> {
         let builder = mysql_async::OptsBuilder::default()
             .user(Some(&config.username))

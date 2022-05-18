@@ -8,6 +8,7 @@ use std::time::Duration;
 use crate::error::Error;
 
 /// Configuration for connection to redis server.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Deserialize, Clone)]
 pub struct RedisConnConfig {
     /// Use unix domain socket connection to redis.
@@ -70,7 +71,7 @@ impl RedisConnConfig {
         false
     }
 
-    fn default_socket() -> String {
+    const fn default_socket() -> String {
         String::new()
     }
 
@@ -82,11 +83,11 @@ impl RedisConnConfig {
         6379
     }
 
-    fn default_username() -> Option<String> {
+    const fn default_username() -> Option<String> {
         None
     }
 
-    fn default_password() -> Option<String> {
+    const fn default_password() -> Option<String> {
         None
     }
 
@@ -166,11 +167,21 @@ pub struct RedisConn {
 }
 
 impl RedisConn {
+    /// Connect to redis server.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if failed to connect to redis server.
     pub fn new(config: &RedisConnConfig) -> Result<Self, Error> {
         let client = redis::Client::open(config.get_uri())?;
         Ok(Self { client, conn: None })
     }
 
+    /// Get a redis connection instance.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if failed to get inner redis connection manager.
     pub async fn init(&mut self) -> Result<(), Error> {
         self.conn = Some(self.client.get_tokio_connection_manager().await?);
         Ok(())
