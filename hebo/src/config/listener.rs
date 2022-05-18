@@ -226,12 +226,12 @@ impl Listener {
     }
 
     #[must_use]
-    pub fn max_connections(&self) -> usize {
+    pub const fn max_connections(&self) -> usize {
         self.max_connections
     }
 
     #[must_use]
-    pub fn protocol(&self) -> Protocol {
+    pub const fn protocol(&self) -> Protocol {
         self.protocol
     }
 
@@ -256,30 +256,35 @@ impl Listener {
     }
 
     #[must_use]
-    pub fn username_as_client_id(&self) -> bool {
+    pub const fn username_as_client_id(&self) -> bool {
         self.username_as_client_id
     }
 
     #[must_use]
-    pub fn keep_alive(&self) -> u64 {
+    pub const fn keep_alive(&self) -> u64 {
         self.keep_alive
     }
 
     #[must_use]
-    pub fn connect_timeout(&self) -> u64 {
+    pub const fn connect_timeout(&self) -> u64 {
         self.connect_timeout
     }
 
     #[must_use]
-    pub fn allow_empty_client_id(&self) -> bool {
+    pub const fn allow_empty_client_id(&self) -> bool {
         self.allow_empty_client_id
     }
 
     #[must_use]
-    pub fn max_inflight_messages(&self) -> usize {
+    pub const fn max_inflight_messages(&self) -> usize {
         self.max_inflight_messages
     }
 
+    /// Validate config.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if socket address is invalid or already in use.
     pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
         if bind_address {
             if self.protocol() == Protocol::Uds {
@@ -307,7 +312,7 @@ impl Listener {
         } else if self.protocol() == Protocol::Uds {
             // TODO(Shaohua): Validate unix domain socket file.
         } else {
-            let _ = self.address.to_socket_addrs().map_err(|err| {
+            let _addr = self.address.to_socket_addrs().map_err(|err| {
                 Error::from_string(
                     ErrorKind::ConfigError,
                     format!("Invalid socket address: {}, err: {:?}", &self.address, err),

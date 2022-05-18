@@ -9,8 +9,10 @@ use crate::commands::{BridgeToDispatcherCmd, DispatcherToBridgeCmd, ServerContex
 mod dispatcher;
 mod server;
 
+#[allow(dead_code)]
+#[allow(clippy::module_name_repetitions)]
 pub struct BridgeApp {
-    _dispatcher_sender: Sender<BridgeToDispatcherCmd>,
+    dispatcher_sender: Sender<BridgeToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToBridgeCmd>,
 
     server_ctx_receiver: Receiver<ServerContextToBridgeCmd>,
@@ -18,15 +20,15 @@ pub struct BridgeApp {
 
 impl BridgeApp {
     #[must_use]
-    pub fn new(
+    pub const fn new(
         // dispatcher
-        _dispatcher_sender: Sender<BridgeToDispatcherCmd>,
+        dispatcher_sender: Sender<BridgeToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToBridgeCmd>,
         // server ctx
         server_ctx_receiver: Receiver<ServerContextToBridgeCmd>,
     ) -> Self {
         Self {
-            _dispatcher_sender,
+            dispatcher_sender,
             dispatcher_receiver,
             server_ctx_receiver,
         }

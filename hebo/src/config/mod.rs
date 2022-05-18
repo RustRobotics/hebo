@@ -44,7 +44,7 @@ pub struct Config {
 
 impl Config {
     #[must_use]
-    pub fn general(&self) -> &General {
+    pub const fn general(&self) -> &General {
         &self.general
     }
 
@@ -54,25 +54,30 @@ impl Config {
     }
 
     #[must_use]
-    pub fn security(&self) -> &Security {
+    pub const fn security(&self) -> &Security {
         &self.security
     }
 
     #[must_use]
-    pub fn storage(&self) -> &Storage {
+    pub const fn storage(&self) -> &Storage {
         &self.storage
     }
 
     #[must_use]
-    pub fn log(&self) -> &Log {
+    pub const fn log(&self) -> &Log {
         &self.log
     }
 
     #[must_use]
-    pub fn dashboard(&self) -> &Dashboard {
+    pub const fn dashboard(&self) -> &Dashboard {
         &self.dashboard
     }
 
+    /// Validate config.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if some options in config is invalid.
     pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
         self.general.validate()?;
 

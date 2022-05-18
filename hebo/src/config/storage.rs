@@ -8,6 +8,7 @@ use std::time::Duration;
 
 use crate::error::Error;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Deserialize, Clone)]
 pub struct Storage {
     /// Save persistent message data to disk.
@@ -66,7 +67,7 @@ impl Storage {
     }
 
     #[must_use]
-    pub fn persistence(&self) -> bool {
+    pub const fn persistence(&self) -> bool {
         self.persistence
     }
 
@@ -76,7 +77,7 @@ impl Storage {
     }
 
     #[must_use]
-    pub fn auto_save_interval(&self) -> Duration {
+    pub const fn auto_save_interval(&self) -> Duration {
         Duration::from_secs(self.auto_save_interval)
     }
 
@@ -85,6 +86,11 @@ impl Storage {
         self.auto_save_on_change.map(Duration::from_secs)
     }
 
+    /// Validate storage config.
+    ///
+    /// # Errors
+    ///
+    /// Does nothing.
     pub fn validate(&self) -> Result<(), Error> {
         // TODO(Shaohua): check storage file permission
         Ok(())

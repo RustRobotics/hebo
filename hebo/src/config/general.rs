@@ -142,7 +142,7 @@ impl General {
     }
 
     #[must_use]
-    pub fn sys_interval(&self) -> Duration {
+    pub const fn sys_interval(&self) -> Duration {
         Duration::from_secs(self.sys_interval)
     }
 
@@ -157,30 +157,35 @@ impl General {
     }
 
     #[must_use]
-    pub fn no_delay(&self) -> bool {
+    pub const fn no_delay(&self) -> bool {
         self.no_delay
     }
 
     #[must_use]
-    pub fn message_size_limit(&self) -> usize {
+    pub const fn message_size_limit(&self) -> usize {
         self.message_size_limit
     }
 
     #[must_use]
-    pub fn max_keep_alive(&self) -> u64 {
+    pub const fn max_keep_alive(&self) -> u64 {
         self.max_keep_alive
     }
 
     #[must_use]
-    pub fn max_qos(&self) -> QoS {
+    pub const fn max_qos(&self) -> QoS {
         self.max_qos
     }
 
     #[must_use]
-    pub fn max_packet_size(&self) -> usize {
+    pub const fn max_packet_size(&self) -> usize {
         self.max_packet_size
     }
 
+    /// Validate config.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if username not found.
     pub fn validate(&self) -> Result<(), Error> {
         let euid = unsafe { nc::geteuid() };
         if euid == 0 {

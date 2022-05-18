@@ -24,7 +24,7 @@ pub struct Dashboard {
 }
 
 impl Dashboard {
-    fn default_enable() -> bool {
+    const fn default_enable() -> bool {
         true
     }
 
@@ -33,7 +33,7 @@ impl Dashboard {
     }
 
     #[must_use]
-    pub fn enable(&self) -> bool {
+    pub const fn enable(&self) -> bool {
         self.enable
     }
 
@@ -42,6 +42,11 @@ impl Dashboard {
         &self.address
     }
 
+    /// Validate dashboard config.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if socket address is invalid or in use.
     pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
         if self.enable {
             if bind_address {
@@ -55,7 +60,7 @@ impl Dashboard {
                     )
                 })?;
             } else {
-                let _ = self.address.to_socket_addrs().map_err(|err| {
+                let _addr = self.address.to_socket_addrs().map_err(|err| {
                     Error::from_string(
                         ErrorKind::ConfigError,
                         format!(

@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 use crate::error::Error;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Deserialize, Clone)]
 pub struct Security {
     /// Determines whether clients that connect without providing a username are allowed to connect.
@@ -38,12 +39,12 @@ impl Security {
     }
 
     #[must_use]
-    pub fn default_password_file() -> Option<PathBuf> {
+    pub const fn default_password_file() -> Option<PathBuf> {
         None
     }
 
     #[must_use]
-    pub fn allow_anonymous(&self) -> bool {
+    pub const fn allow_anonymous(&self) -> bool {
         self.allow_anonymous
     }
 
@@ -52,6 +53,11 @@ impl Security {
         self.password_file.as_deref()
     }
 
+    /// Validate security config.
+    ///
+    /// # Errors
+    ///
+    /// Does nothing.
     pub fn validate(&self) -> Result<(), Error> {
         // TODO(Shaohua): Validate password file entry
         Ok(())

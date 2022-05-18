@@ -37,6 +37,7 @@ pub struct Log {
     log_file: Option<String>,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Deserialize, Clone, Copy)]
 pub enum LogLevel {
     #[serde(alias = "off")]
@@ -70,26 +71,31 @@ impl Log {
     }
 
     #[must_use]
-    pub fn default_log_file() -> Option<String> {
+    pub const fn default_log_file() -> Option<String> {
         //PathBuf::from("/var/log/hebo/hebo.log")
         None
     }
 
     #[must_use]
-    pub fn console_log(&self) -> bool {
+    pub const fn console_log(&self) -> bool {
         self.console_log
     }
 
     #[must_use]
-    pub fn log_level(&self) -> LogLevel {
+    pub const fn log_level(&self) -> LogLevel {
         self.log_level
     }
 
     #[must_use]
-    pub fn log_file(&self) -> Option<&String> {
+    pub const fn log_file(&self) -> Option<&String> {
         self.log_file.as_ref()
     }
 
+    /// Validate config.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if failed to create log file or its parent directory.
     pub fn validate(&self) -> Result<(), Error> {
         if let Some(log_file) = &self.log_file {
             let path = Path::new(log_file);

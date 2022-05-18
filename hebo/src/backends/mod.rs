@@ -12,8 +12,10 @@ mod dispatcher;
 pub mod memory;
 mod server;
 
+#[allow(dead_code)]
+#[allow(clippy::module_name_repetitions)]
 pub struct BackendsApp {
-    _dispatcher_sender: Sender<BackendsToDispatcherCmd>,
+    dispatcher_sender: Sender<BackendsToDispatcherCmd>,
     dispatcher_receiver: Receiver<DispatcherToBackendsCmd>,
 
     server_ctx_receiver: Receiver<ServerContextToBackendsCmd>,
@@ -21,15 +23,15 @@ pub struct BackendsApp {
 
 impl BackendsApp {
     #[must_use]
-    pub fn new(
+    pub const fn new(
         // dispatcher
-        _dispatcher_sender: Sender<BackendsToDispatcherCmd>,
+        dispatcher_sender: Sender<BackendsToDispatcherCmd>,
         dispatcher_receiver: Receiver<DispatcherToBackendsCmd>,
         // server ctx
         server_ctx_receiver: Receiver<ServerContextToBackendsCmd>,
     ) -> Self {
         Self {
-            _dispatcher_sender,
+            dispatcher_sender,
             dispatcher_receiver,
 
             server_ctx_receiver,
