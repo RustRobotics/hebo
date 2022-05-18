@@ -116,7 +116,7 @@ impl ServerContext {
 
         // Auth module.
         let mut auth_app = AuthApp::new(
-            self.config.security().clone(),
+            self.config.security(),
             // listeners
             auth_to_listener_senders,
             listeners_to_auth_receiver,

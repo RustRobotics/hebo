@@ -93,6 +93,14 @@ pub fn update_file_hash<P: AsRef<Path>>(password_file: P) -> Result<(), Error> {
     fd.write(result.as_bytes()).map(drop).map_err(Into::into)
 }
 
+/// Modify password entry.
+///
+/// # Errors
+///
+/// Returns error if:
+/// - Failed to read `password_file`
+/// - `password_file` contains invalid records
+/// - Failed to calculate password hash
 pub fn add_delete_users<P: AsRef<Path>>(
     password_file: P,
     add_users: &[&str],

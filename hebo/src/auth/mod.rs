@@ -19,6 +19,7 @@ mod server;
 
 use file_auth::FileAuth;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct AuthApp {
     allow_anonymous: bool,
@@ -31,8 +32,13 @@ pub struct AuthApp {
 }
 
 impl AuthApp {
+    /// Create an auth app.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if failed to read password file.
     pub fn new(
-        security: Security,
+        security: &Security,
         // listeners
         listener_senders: Vec<(ListenerId, Sender<AuthToListenerCmd>)>,
         listener_receiver: Receiver<ListenerToAuthCmd>,

@@ -26,7 +26,7 @@ impl Salt {
 struct Hash([u8; HASH_LEN]);
 
 impl Hash {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self([0; HASH_LEN])
     }
     fn from_slice(s: &[u8]) -> Self {
@@ -173,6 +173,11 @@ impl Password {
         }
     }
 
+    /// Generate password hash.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if openssl hash functions got error.
     pub fn generate(password: &[u8]) -> Result<Self, Error> {
         let salt = Salt(rand::thread_rng().gen());
         if password.is_empty() {
@@ -186,7 +191,7 @@ impl Password {
         h.update(password)?;
         h.update(&salt.0)?;
         let res = h.finish()?;
-        assert_eq!(res.as_ref().len(), HASH_LEN);
+        debug_assert!(res.as_ref().len() == HASH_LEN);
         let password_hash = Hash::from_slice(res.as_ref());
         Ok(Self {
             salt,
@@ -195,16 +200,26 @@ impl Password {
         })
     }
 
+    /// Update password hash.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if openssl hash functions got error.
     pub fn update(&mut self, password: &[u8]) -> Result<(), Error> {
         let mut h = Hasher::new(MessageDigest::sha512())?;
         h.update(password)?;
         h.update(&self.salt.0)?;
         let res = h.finish()?;
-        assert_eq!(res.as_ref().len(), HASH_LEN);
+        debug_assert!(res.as_ref().len() == HASH_LEN);
         self.password_hash.0.copy_from_slice(res.as_ref());
         Ok(())
     }
 
+    /// Calculate and compare `password` hash equality.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if openssl hash functions got error.
     pub fn is_match(&self, password: &[u8]) -> Result<bool, Error> {
         let mut h = Hasher::new(MessageDigest::sha512())?;
         h.update(password)?;
