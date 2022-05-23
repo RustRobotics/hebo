@@ -129,6 +129,7 @@ impl TryFrom<u8> for PropertyType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[repr(u8)]
 pub enum Property {
     /// Payload Format Indicator
     ///
@@ -894,10 +895,7 @@ impl EncodePacket for Property {
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct Properties {
-    len: VarInt,
-    props: Vec<Property>,
-}
+pub struct Properties(Vec<Property>);
 
 impl Properties {
     /// Create a new property list with default values.
@@ -909,41 +907,37 @@ impl Properties {
     /// Get byte length of property list.
     #[must_use]
     pub fn bytes(&self) -> usize {
-        self.len.bytes() + self.props.iter().map(Property::bytes).sum::<usize>()
+        let len = VarInt::from(self.len()).unwrap();
+        len.bytes() + self.0.iter().map(Property::bytes).sum::<usize>()
     }
 
     /// Get length of property list.
     #[must_use]
-    pub const fn len(&self) -> usize {
-        self.len.value()
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.0.len()
     }
 
     /// Check whether property list is empty.
     #[must_use]
-    pub const fn is_empty(&self) -> bool {
-        self.len.value() == 0
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
     /// Get a reference to property list.
     #[must_use]
     pub fn props(&self) -> &[Property] {
-        &self.props
+        &self.0
     }
 
     /// Clear property list.
     pub fn clear(&mut self) {
-        self.props.clear();
-        self.len = VarInt::new();
+        self.0.clear();
     }
 
     /// Removes the last property from list and returns it, or `None` if it is empty.
     pub fn pop(&mut self) -> Option<Property> {
-        if let Some(prop) = self.props.pop() {
-            self.len.unchecked_sub(1);
-            Some(prop)
-        } else {
-            None
-        }
+        self.0.pop()
     }
 
     /// Push a property to the back of the list.
@@ -952,8 +946,9 @@ impl Properties {
     ///
     /// Returns error if list is already full.
     pub fn push(&mut self, v: Property) -> Result<(), EncodeError> {
-        self.len.add(1)?;
-        self.props.push(v);
+        let mut len = VarInt::from(self.len())?;
+        len.add(1)?;
+        self.0.push(v);
         Ok(())
     }
 
@@ -963,8 +958,7 @@ impl Properties {
     ///
     /// Returns error if list is already full.
     pub fn insert(&mut self, index: usize, prop: Property) -> Result<(), EncodeError> {
-        self.len.add(1)?;
-        self.props.insert(index, prop);
+        self.0.insert(index, prop);
         Ok(())
     }
 
@@ -974,8 +968,7 @@ impl Properties {
     ///
     /// Returns error if list is already empty.
     pub fn remove(&mut self, index: usize) -> Result<Property, EncodeError> {
-        self.len.sub(1)?;
-        Ok(self.props.remove(index))
+        Ok(self.0.remove(index))
     }
 }
 
@@ -994,15 +987,16 @@ impl DecodePacket for Properties {
             props.push(property);
         }
 
-        Ok(Self { len, props })
+        Ok(Self(props))
     }
 }
 
 impl EncodePacket for Properties {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        let mut bytes_written = self.len.bytes();
-        self.len.encode(buf)?;
-        for property in &self.props {
+        let len = VarInt::from(self.len())?;
+        let mut bytes_written = len.bytes();
+        len.encode(buf)?;
+        for property in &self.0 {
             bytes_written += property.encode(buf)?;
         }
 
