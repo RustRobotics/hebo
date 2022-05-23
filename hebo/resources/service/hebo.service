@@ -7,7 +7,7 @@ After=network.target nss-lookup.target
 [Service]
 Type=forking
 PIDFile=/run/hebo.pid
-ExecStartPre=/usr/bin/hebo -t
+ExecStartPre=/usr/bin/hebo -t /etc/hebo/hebo.toml
 ExecStart=/usr/bin/hebo
 ExecReload=/usr/sbin/hebo -s reload
 ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/hebo.pid

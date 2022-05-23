@@ -1,0 +1,27 @@
+
+[metadata]
+name = "hebo"
+product_name = "Hebo"
+app_id = "org.biofan.hebo"
+author = "Xu Shaohua <shaohua@biofan.org"
+copyright = "Copyright (c) Xu Shaohua"
+description = "Cross platform MQTT broker"
+homepage = "https://github.org/HeboProject/hebo"
+company = "Biofan .Org"
+version = "0.2.6"
+build_id = "${date}"
+license = "AGPL-3.0"
+license_file = "LICENSE"
+
+workdir = "../target/pifu"
+src_dir = "."
+
+[linux]
+targets = ["deb"]
+arch = ["x86_64"]
+
+files = [
+	{ from = "../target/release/hebo", to = "usr/bin/hebo" },
+	{ from = "resources/pifu/hebo.toml", to = "etc/hebo/hebo.toml" },
+	{ from = "resources/service/hebo.service", to = "lib/systemd/system/hebo.service" },
+]

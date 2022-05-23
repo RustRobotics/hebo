@@ -1,0 +1,9 @@
+[general]
+pid_file = "/run/hebo.pid"
+
+[[listeners]]
+address = "0.0.0.0:1883"
+protocol = "mqtt"
+
+[log]
+log_file = "/var/log/hebo/hebo.log"
