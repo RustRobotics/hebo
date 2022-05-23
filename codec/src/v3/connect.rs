@@ -407,33 +407,7 @@ impl Packet for ConnectPacket {
 
     fn bytes(&self) -> Result<usize, VarIntError> {
         let fixed_header = self.get_fixed_header()?;
-        let mut len = fixed_header.bytes();
-
-        // variable header part
-        len += self.protocol_name.bytes()
-            + ProtocolLevel::bytes()
-            + ConnectFlags::bytes()
-            // keep_alive
-            + U16Data::bytes();
-
-        // payload part
-        len += self.client_id.bytes();
-        if self.connect_flags.will() {
-            assert!(self.will_topic.is_some());
-            if let Some(will_topic) = &self.will_topic {
-                len += will_topic.bytes();
-            }
-
-            len += self.will_message.bytes();
-        }
-        if self.connect_flags.has_username() {
-            len += self.username.bytes();
-        }
-        if self.connect_flags.has_password() {
-            len += self.password.bytes();
-        }
-
-        Ok(len)
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }
 

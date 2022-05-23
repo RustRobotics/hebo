@@ -167,12 +167,6 @@ impl Packet for SubscribeAckPacket {
 
     fn bytes(&self) -> Result<usize, VarIntError> {
         let fixed_header = self.get_fixed_header()?;
-        let mut len = fixed_header.bytes();
-
-        len += PacketId::bytes();
-        // ack flags
-        len += self.acknowledgements.len();
-
-        Ok(len)
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }

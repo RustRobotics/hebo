@@ -196,12 +196,6 @@ impl Packet for UnsubscribePacket {
 
     fn bytes(&self) -> Result<usize, VarIntError> {
         let fixed_header = self.get_fixed_header()?;
-        let mut len = fixed_header.bytes();
-
-        len += PacketId::bytes();
-        for topic in &self.topics {
-            len += topic.bytes();
-        }
-        Ok(len)
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }

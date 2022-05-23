@@ -312,19 +312,6 @@ impl Packet for PublishPacket {
 
     fn bytes(&self) -> Result<usize, VarIntError> {
         let fixed_header = self.get_fixed_header()?;
-        let mut len = fixed_header.bytes();
-
-        // variable header part
-        len += self.topic.bytes();
-
-        // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
-        if self.qos() != QoS::AtMostOnce {
-            len += PacketId::bytes();
-        }
-
-        // payload part
-        len += self.msg.len();
-
-        Ok(len)
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }

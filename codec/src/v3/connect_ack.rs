@@ -165,9 +165,9 @@ impl Packet for ConnectAckPacket {
     }
 
     fn bytes(&self) -> Result<usize, VarIntError> {
-        let fixed_header = FixedHeader::new(PacketType::ConnectAck, 2)?;
         // ack_flags + return_code
-        Ok(fixed_header.bytes() + 2)
+        let fixed_header = FixedHeader::new(PacketType::ConnectAck, 2)?;
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }
 
