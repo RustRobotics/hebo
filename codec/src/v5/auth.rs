@@ -125,11 +125,7 @@ impl Packet for AuthPacket {
     fn bytes(&self) -> Result<usize, VarIntError> {
         let remaining_length = ReasonCode::bytes() + self.properties.bytes();
         let fixed_header = FixedHeader::new(PacketType::PingRequest, remaining_length)?;
-        let mut len = fixed_header.bytes();
 
-        len += ReasonCode::bytes();
-        len += self.properties.bytes();
-
-        Ok(len)
+        Ok(fixed_header.bytes() + remaining_length)
     }
 }

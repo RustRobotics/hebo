@@ -225,15 +225,10 @@ impl Packet for ConnectAckPacket {
     }
 
     fn bytes(&self) -> Result<usize, VarIntError> {
+        // `1` for ack flags
         let remaining_length = 1 + ReasonCode::bytes() + self.properties.bytes();
         let fixed_header = FixedHeader::new(PacketType::ConnectAck, remaining_length)?;
-        let mut len = fixed_header.bytes();
 
-        // ack flags
-        len += 1;
-        len += ReasonCode::bytes();
-        len += self.properties.bytes();
-
-        Ok(len)
+        Ok(fixed_header.bytes() + remaining_length)
     }
 }

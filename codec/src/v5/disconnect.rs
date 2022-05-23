@@ -4,7 +4,7 @@
 
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, VarIntError};
 
 /// The Disconnect packet is the final packet sent to the Server from a Client.
 ///
@@ -110,12 +110,6 @@ impl EncodePacket for DisconnectPacket {
     }
 }
 
-impl Packet for DisconnectPacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::Disconnect
-    }
-}
-
 impl DecodePacket for DisconnectPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
@@ -147,5 +141,18 @@ impl DecodePacket for DisconnectPacket {
             reason_code,
             properties,
         })
+    }
+}
+
+impl Packet for DisconnectPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Disconnect
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let remaining_length = ReasonCode::bytes() + self.properties.bytes();
+        let fixed_header = FixedHeader::new(PacketType::Disconnect, remaining_length)?;
+
+        Ok(fixed_header.bytes() + remaining_length)
     }
 }

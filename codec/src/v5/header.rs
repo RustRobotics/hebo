@@ -311,11 +311,6 @@ impl FixedHeader {
     }
 
     #[must_use]
-    pub const fn remaining_bytes(&self) -> usize {
-        self.remaining_length.bytes()
-    }
-
-    #[must_use]
     pub const fn bytes(&self) -> usize {
         PacketType::bytes() + self.remaining_length.bytes()
     }
