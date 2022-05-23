@@ -4,7 +4,7 @@
 
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, VarIntError};
 
 /// The CONNACK packet is the packet sent by the Server in response to a CONNECT packet
 /// received from a Client.
@@ -222,5 +222,18 @@ impl EncodePacket for ConnectAckPacket {
 impl Packet for ConnectAckPacket {
     fn packet_type(&self) -> PacketType {
         PacketType::ConnectAck
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let remaining_length = 1 + ReasonCode::bytes() + self.properties.bytes();
+        let fixed_header = FixedHeader::new(PacketType::ConnectAck, remaining_length)?;
+        let mut len = fixed_header.bytes();
+
+        // ack flags
+        len += 1;
+        len += ReasonCode::bytes();
+        len += self.properties.bytes();
+
+        Ok(len)
     }
 }

@@ -11,7 +11,7 @@ use crate::connect_flags::ConnectFlags;
 use crate::utils::{validate_client_id, validate_keep_alive};
 use crate::{
     BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
-    PubTopic, QoS, StringData, U16Data,
+    PubTopic, QoS, StringData, U16Data, VarIntError,
 };
 
 /// `ConnectPacket` consists of three parts:
@@ -420,18 +420,9 @@ impl ConnectPacket {
     pub fn will_message(&self) -> &[u8] {
         self.will_message.as_ref()
     }
-}
 
-impl Packet for ConnectPacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::Connect
-    }
-}
-
-impl EncodePacket for ConnectPacket {
-    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        let old_len = v.len();
-
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
         let mut remaining_length = self.protocol_name.bytes()
             + ProtocolLevel::bytes()
             + ConnectFlags::bytes()
@@ -453,8 +444,16 @@ impl EncodePacket for ConnectPacket {
             remaining_length += self.password.bytes();
         }
 
-        let fixed_header = FixedHeader::new(PacketType::Connect, remaining_length)?;
+        FixedHeader::new(PacketType::Connect, remaining_length)
+    }
+}
+
+impl EncodePacket for ConnectPacket {
+    fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        let old_len = v.len();
+
         // Write fixed header
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(v)?;
 
         // Write variable header
@@ -589,6 +588,43 @@ impl DecodePacket for ConnectPacket {
             username,
             password,
         })
+    }
+}
+
+impl Packet for ConnectPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Connect
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        // fixed header
+        let fixed_header = self.get_fixed_header()?;
+        let mut len = fixed_header.bytes();
+
+        // variable header
+        len += self.protocol_name.bytes()
+            + ProtocolLevel::bytes()
+            + ConnectFlags::bytes()
+            // keep_alive
+            + U16Data::bytes();
+
+        // payload
+        len += self.client_id.bytes();
+        if self.connect_flags.will() {
+            if let Some(will_topic) = &self.will_topic {
+                len += will_topic.bytes();
+            }
+
+            len += self.will_message.bytes();
+        }
+        if self.connect_flags.has_username() {
+            len += self.username.bytes();
+        }
+        if self.connect_flags.has_password() {
+            len += self.password.bytes();
+        }
+
+        Ok(len)
     }
 }
 
