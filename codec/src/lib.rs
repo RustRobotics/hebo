@@ -28,7 +28,7 @@ pub use string_pair_data::StringPairData;
 pub use topic::{PubTopic, SubTopic, SubscribePattern, Topic, TopicError, TopicPart};
 pub use u16_data::U16Data;
 pub use u32_data::U32Data;
-pub use var_int::VarInt;
+pub use var_int::{VarInt, VarIntError};
 
 pub mod v3;
 pub mod v5;

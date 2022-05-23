@@ -20,6 +20,11 @@ pub struct VarInt(usize);
 /// 256MB
 pub const MAX_PACKET_LEN: usize = 0x7fff_ffff;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum VarIntError {
+    OutOfRange(usize),
+}
+
 impl VarInt {
     /// Returns an empty var int object.
     #[must_use]
@@ -32,9 +37,9 @@ impl VarInt {
     /// # Errors
     ///
     /// Returns error if `len` is too large.
-    pub const fn from(len: usize) -> Result<Self, EncodeError> {
+    pub const fn from(len: usize) -> Result<Self, VarIntError> {
         if len as usize > MAX_PACKET_LEN {
-            return Err(EncodeError::InvalidVarInt);
+            return Err(VarIntError::OutOfRange(len));
         }
         Ok(Self(len))
     }

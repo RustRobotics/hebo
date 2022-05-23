@@ -7,6 +7,7 @@ use std::io;
 use super::byte_array::ByteArrayError;
 use super::topic::TopicError;
 use super::utils::StringError;
+use super::var_int::VarIntError;
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
@@ -133,6 +134,12 @@ impl From<TopicError> for EncodeError {
     }
 }
 
+impl From<VarIntError> for EncodeError {
+    fn from(_err: VarIntError) -> Self {
+        Self::InvalidVarInt
+    }
+}
+
 impl From<TopicError> for DecodeError {
     fn from(err: TopicError) -> Self {
         Self::InvalidTopic(err)
@@ -145,5 +152,12 @@ impl From<ByteArrayError> for DecodeError {
             ByteArrayError::OutOfRangeError => Self::OutOfRangeError,
             ByteArrayError::InvalidString(err) => Self::InvalidString(err),
         }
+    }
+}
+
+impl From<VarIntError> for DecodeError {
+    fn from(_err: VarIntError) -> Self {
+        // TODO(Shaohua): Add description
+        Self::InvalidVarInt
     }
 }
