@@ -64,8 +64,8 @@ pub struct General {
     /// This only applies to MQTT v5 clients. The maximum value allowable is 65535. Do not set below 10.
     ///
     /// Default value is 65535.
-    #[serde(default = "General::default_max_keep_alive")]
-    max_keep_alive: u64,
+    #[serde(default = "General::default_maximum_keep_alive")]
+    maximum_keep_alive: u64,
 
     /// Set the maximum QoS supported.
     ///
@@ -73,8 +73,8 @@ pub struct General {
     /// Available values are 0, 1 and 2.
     ///
     /// Default is 2.
-    #[serde(default = "General::default_max_qos")]
-    max_qos: QoS,
+    #[serde(default = "General::default_maximum_qos")]
+    maximum_qos: QoS,
 
     /// For MQTT v5 clients, it is possible to have the server send a "maximum packet size" value
     /// that will instruct the client it will not accept MQTT packets with size
@@ -89,8 +89,8 @@ pub struct General {
     /// even with very small payloads.
     ///
     /// Defaults is 0, which means no limit.
-    #[serde(default = "General::default_max_packet_size")]
-    max_packet_size: usize,
+    #[serde(default = "General::default_maximum_packet_size")]
+    maximum_packet_size: usize,
     //pub max_queued_messages: usize,
     //pub max_queued_bytes: usize,
 }
@@ -127,17 +127,17 @@ impl General {
     }
 
     #[must_use]
-    pub const fn default_max_qos() -> QoS {
+    pub const fn default_maximum_qos() -> QoS {
         QoS::ExactOnce
     }
 
     #[must_use]
-    pub const fn default_max_keep_alive() -> u64 {
+    pub const fn default_maximum_keep_alive() -> u64 {
         65535
     }
 
     #[must_use]
-    pub const fn default_max_packet_size() -> usize {
+    pub const fn default_maximum_packet_size() -> usize {
         0
     }
 
@@ -167,18 +167,18 @@ impl General {
     }
 
     #[must_use]
-    pub const fn max_keep_alive(&self) -> u64 {
-        self.max_keep_alive
+    pub const fn maximum_keep_alive(&self) -> u64 {
+        self.maximum_keep_alive
     }
 
     #[must_use]
-    pub const fn max_qos(&self) -> QoS {
-        self.max_qos
+    pub const fn maximum_qos(&self) -> QoS {
+        self.maximum_qos
     }
 
     #[must_use]
-    pub const fn max_packet_size(&self) -> usize {
-        self.max_packet_size
+    pub const fn maximum_packet_size(&self) -> usize {
+        self.maximum_packet_size
     }
 
     /// Validate config.
@@ -209,9 +209,9 @@ impl Default for General {
             pid_file: Self::default_pid_file(),
             no_delay: Self::default_no_delay(),
             message_size_limit: Self::default_message_size_limit(),
-            max_qos: Self::default_max_qos(),
-            max_keep_alive: Self::default_max_keep_alive(),
-            max_packet_size: Self::default_max_packet_size(),
+            maximum_qos: Self::default_maximum_qos(),
+            maximum_keep_alive: Self::default_maximum_keep_alive(),
+            maximum_packet_size: Self::default_maximum_packet_size(),
         }
     }
 }
