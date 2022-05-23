@@ -4,7 +4,7 @@
 
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, VarIntError};
 
 /// An AUTH packet is sent from Client to Server or Server to Client
 /// as part of an extended authentication exchange, such as challenge / response authentication.
@@ -85,12 +85,6 @@ impl EncodePacket for AuthPacket {
     }
 }
 
-impl Packet for AuthPacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::Auth
-    }
-}
-
 impl DecodePacket for AuthPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
@@ -120,5 +114,22 @@ impl DecodePacket for AuthPacket {
             reason_code,
             properties,
         })
+    }
+}
+
+impl Packet for AuthPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Auth
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let remaining_length = ReasonCode::bytes() + self.properties.bytes();
+        let fixed_header = FixedHeader::new(PacketType::PingRequest, remaining_length)?;
+        let mut len = fixed_header.bytes();
+
+        len += ReasonCode::bytes();
+        len += self.properties.bytes();
+
+        Ok(len)
     }
 }
