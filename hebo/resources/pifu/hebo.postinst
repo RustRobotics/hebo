@@ -6,34 +6,37 @@
 set -e
 
 setup_hebo_user() {
-	if ! getent group hebo >/dev/null; then
-		addgroup --quiet --system hebo
-	fi
+  if ! getent group hebo >/dev/null; then
+    addgroup --quiet --system hebo
+  fi
 
-	if ! getent passwd hebo >/dev/null; then
-		adduser --quiet --system --no-create-home --ingroup hebo --home /var/lib/hebo --shell /usr/sbin/nologin hebo
-	fi
+  if ! getent passwd hebo >/dev/null; then
+    adduser --quiet --system --no-create-home --ingroup hebo \
+      --home /var/lib/hebo --shell /usr/sbin/nologin hebo
+  fi
 }
 
 fix_permissions() {
-	chown hebo /var/lib/hebo
-	test ! -e /var/log/hebo || chown hebo /var/log/hebo
-	test ! -e /var/log/hebo/hebo.log || chown hebo /var/log/hebo/hebo.log
+  mkdir -p /var/lib/hebo
+  chown hebo /var/lib/hebo
+  mkdir -p /var/log/hebo
+  chown hebo /var/log/hebo
+  test ! -e /var/log/hebo/hebo.log || chown hebo /var/log/hebo/hebo.log
 }
 
 case "$1" in
-	configure)
-		setup_hebo_user
-		fix_permissions
-	;;
+  configure)
+    setup_hebo_user
+    fix_permissions
+  ;;
 
-	abort-upgrade|abort-remove|abort-deconfigure)
-	;;
+  abort-upgrade|abort-remove|abort-deconfigure)
+  ;;
 
-	*)
-		echo "postinst called with unknown argument \`$1'" >&2
-		exit 1
-	;;
+  *)
+    echo "postinst called with unknown argument \`$1'" >&2
+    exit 1
+  ;;
 esac
 
 # Reload AppArmor profile
