@@ -1,5 +1,7 @@
 
-# About
+[![](resources/logo/hebo.png)](https://github.com/HeboProject/hebo)
+
+# Hebo
 ![Build status](https://github.com/HeboProject/hebo/actions/workflows/rust.yml/badge.svg)
 [![Latest version](https://img.shields.io/crates/v/hebo.svg)](https://crates.io/crates/hebo)
 [![Documentation](https://docs.rs/hebo/badge.svg)](https://docs.rs/hebo)

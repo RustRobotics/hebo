@@ -1,4 +1,6 @@
 
+[![](hebo/resources/logo/hebo.png)](https://github.com/HeboProject/hebo)
+
 # About
 
 ![Build status](https://github.com/HeboProject/hebo/actions/workflows/rust.yml/badge.svg)
