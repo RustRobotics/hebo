@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::v3::{ConnectPacket, ConnectReturnCode};
+use codec::v3;
 
 use super::Listener;
 use crate::commands::{AuthToListenerCmd, ListenerToDispatcherCmd};
@@ -16,6 +16,9 @@ impl Listener {
                 self.on_auth_response(session_id, access_granted, packet)
                     .await
             }
+            AuthToListenerCmd::ResponseAuthV5(_session_id, _access_granted, _packet) => {
+                todo!()
+            }
         }
     }
 
@@ -23,7 +26,7 @@ impl Listener {
         &mut self,
         session_id: SessionId,
         access_granted: bool,
-        packet: ConnectPacket,
+        packet: v3::ConnectPacket,
     ) -> Result<(), Error> {
         // If the Server accepts a connection with CleanSession set to 1,
         // the Server MUST set Session Present to 0 in the CONNACK packet
@@ -45,14 +48,14 @@ impl Listener {
         // If not granted, reject this session here.
         if !access_granted {
             return self
-                .session_send_connect_ack(session_id, ConnectReturnCode::Unauthorized, None)
+                .session_send_connect_ack(session_id, v3::ConnectReturnCode::Unauthorized, None)
                 .await;
         }
 
         // Clean session flag is on.
         if packet.connect_flags().clean_session() {
             return self
-                .session_send_connect_ack(session_id, ConnectReturnCode::Accepted, None)
+                .session_send_connect_ack(session_id, v3::ConnectReturnCode::Accepted, None)
                 .await;
         }
 

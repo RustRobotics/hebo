@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::v3::ConnectPacket;
+use codec::v3;
 
 use super::AuthApp;
 use crate::commands::{AuthToListenerCmd, ListenerToAuthCmd};
@@ -19,13 +19,16 @@ impl AuthApp {
             ListenerToAuthCmd::RequestAuth(session_gid, packet) => {
                 self.on_listener_request_auth(session_gid, packet).await
             }
+            ListenerToAuthCmd::RequestAuthV5(_session_gid, _packet) => {
+                todo!()
+            }
         }
     }
 
     async fn on_listener_request_auth(
         &mut self,
         session_gid: SessionGid,
-        packet: ConnectPacket,
+        packet: v3::ConnectPacket,
     ) -> Result<(), Error> {
         let username = packet.username();
         let password = packet.password();

@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::v3::{PublishPacket, SubscribeAck, SubscribePacket};
+use codec::v3;
 
 use super::AclApp;
 use crate::commands::{AclToListenerCmd, ListenerToAclCmd};
@@ -15,8 +15,14 @@ impl AclApp {
             ListenerToAclCmd::Publish(session_gid, packet) => {
                 self.on_listener_publish(session_gid, packet).await
             }
+            ListenerToAclCmd::PublishV5(_session_gid, _packet) => {
+                todo!()
+            }
             ListenerToAclCmd::Subscribe(session_gid, packet) => {
                 self.on_listener_subscribe(session_gid, packet).await
+            }
+            ListenerToAclCmd::SubscribeV5(_session_gid, _packet) => {
+                todo!()
             }
         }
     }
@@ -24,7 +30,7 @@ impl AclApp {
     async fn on_listener_publish(
         &mut self,
         session_gid: SessionGid,
-        packet: PublishPacket,
+        packet: v3::PublishPacket,
     ) -> Result<(), Error> {
         // TODO(Shaohua): Read acl list from config.
         let accepted = true;
@@ -50,14 +56,14 @@ impl AclApp {
     async fn on_listener_subscribe(
         &mut self,
         session_gid: SessionGid,
-        packet: SubscribePacket,
+        packet: v3::SubscribePacket,
     ) -> Result<(), Error> {
         // TODO(Shaohua): Read acl list from config.
         let accepted = true;
         let mut acks = Vec::with_capacity(packet.topics().len());
         for topic in packet.topics() {
             // TODO(Shaohua): Check topic patterns.
-            acks.push(SubscribeAck::QoS(topic.qos()));
+            acks.push(v3::SubscribeAck::QoS(topic.qos()));
         }
 
         if let Some(listener_sender) = self.listener_senders.get(&session_gid.listener_id()) {

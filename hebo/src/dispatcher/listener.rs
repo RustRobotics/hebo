@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::v3::{PublishPacket, SubscribePacket, UnsubscribePacket};
+use codec::v3;
 
 use super::Dispatcher;
 use crate::commands::{DispatcherToListenerCmd, ListenerToDispatcherCmd};
@@ -20,11 +20,20 @@ impl Dispatcher {
                 self.backends_store_packet(&packet).await;
                 self.on_listener_publish(&packet).await;
             }
+            ListenerToDispatcherCmd::PublishV5(_packet) => {
+                todo!()
+            }
             ListenerToDispatcherCmd::Subscribe(session_gid, packet) => {
                 self.on_listener_subscribe(session_gid, packet).await;
             }
+            ListenerToDispatcherCmd::SubscribeV5(_session_gid, _packet) => {
+                todo!()
+            }
             ListenerToDispatcherCmd::Unsubscribe(session_gid, packet) => {
                 self.on_listener_unsubscribe(session_gid, packet).await;
+            }
+            ListenerToDispatcherCmd::UnsubscribeV5(_session_gid, _packet) => {
+                todo!()
             }
             ListenerToDispatcherCmd::SessionAdded(listener_id) => {
                 self.metrics_on_session_added(listener_id).await;
@@ -61,11 +70,15 @@ impl Dispatcher {
         }
     }
 
-    pub(super) async fn on_listener_publish(&mut self, packet: &PublishPacket) {
+    pub(super) async fn on_listener_publish(&mut self, packet: &v3::PublishPacket) {
         self.publish_packet_to_sub_trie(packet).await;
     }
 
-    async fn on_listener_subscribe(&mut self, session_gid: SessionGid, packet: SubscribePacket) {
+    async fn on_listener_subscribe(
+        &mut self,
+        session_gid: SessionGid,
+        packet: v3::SubscribePacket,
+    ) {
         let (sub_ack_packet, n_subscribed) = self.sub_trie.subscribe(session_gid, &packet);
 
         self.metrics_on_subscription_added(session_gid.listener_id(), n_subscribed)
@@ -92,7 +105,7 @@ impl Dispatcher {
     async fn on_listener_unsubscribe(
         &mut self,
         session_gid: SessionGid,
-        packet: UnsubscribePacket,
+        packet: v3::UnsubscribePacket,
     ) {
         let n_unsubscribed = self.sub_trie.unsubscribe(session_gid, &packet);
         self.metrics_on_subscription_removed(session_gid.listener_id(), n_unsubscribed)

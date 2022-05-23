@@ -40,6 +40,8 @@ impl Session {
         // a PINGREQ Packet [MQTT-3.1.2-23].
         self.reset_instant();
 
+        // TODO(Shaohua): Check packet oversize.
+
         match fixed_header.packet_type() {
             PacketType::Connect => self.on_client_connect(buf).await,
             PacketType::PingRequest => self.on_client_ping(buf).await,

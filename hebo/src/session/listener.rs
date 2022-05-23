@@ -4,13 +4,7 @@
 
 //! Handles commands from listener.
 
-use codec::{
-    v3::{
-        ConnectAckPacket, ConnectReturnCode, PublishAckPacket, PublishPacket,
-        PublishReceivedPacket, SubscribeAckPacket,
-    },
-    PacketId, QoS,
-};
+use codec::{v3, PacketId, QoS};
 
 use super::{Session, Status};
 use crate::commands::ListenerToSessionCmd;
@@ -26,20 +20,35 @@ impl Session {
             ListenerToSessionCmd::ConnectAck(packet, cached_session) => {
                 self.on_listener_connect_ack(packet, cached_session).await
             }
+            ListenerToSessionCmd::ConnectAckV5(_packet, _cached_session) => {
+                todo!()
+            }
             ListenerToSessionCmd::PublishAck(packet_id, qos, accepted) => {
                 self.on_listener_publish_ack(packet_id, qos, accepted).await
             }
+            ListenerToSessionCmd::PublishAckV5(_packet_id, _qos, _accepted) => {
+                todo!()
+            }
             ListenerToSessionCmd::Publish(packet) => self.on_listener_publish(packet).await,
+            ListenerToSessionCmd::PublishV5(_packet) => {
+                todo!()
+            }
             ListenerToSessionCmd::SubscribeAck(packet) => {
                 self.on_listener_subscribe_ack(packet).await
             }
+            ListenerToSessionCmd::SubscribeAckV5(_packet) => {
+                todo!()
+            }
             ListenerToSessionCmd::Disconnect => self.on_listener_disconnect().await,
+            ListenerToSessionCmd::DisconnectV5 => {
+                todo!()
+            }
         }
     }
 
     async fn on_listener_connect_ack(
         &mut self,
-        packet: ConnectAckPacket,
+        packet: v3::ConnectAckPacket,
         cached_session: Option<CachedSession>,
     ) -> Result<(), Error> {
         // Send connect ack first, then update status.
@@ -47,7 +56,7 @@ impl Session {
         self.send(packet).await?;
 
         self.status = match return_code {
-            ConnectReturnCode::Accepted => Status::Connected,
+            v3::ConnectReturnCode::Accepted => Status::Connected,
             _ => Status::Disconnected,
         };
 
@@ -74,7 +83,7 @@ impl Session {
 
         // Check qos and send publish ack packet to client.
         if qos == QoS::AtLeastOnce {
-            let ack_packet = PublishAckPacket::new(packet_id);
+            let ack_packet = v3::PublishAckPacket::new(packet_id);
             // TODO(Shaohua): Catch errors
             self.send(ack_packet).await?;
         } else if qos == QoS::ExactOnce {
@@ -86,17 +95,20 @@ impl Session {
 
             // Send PublishReceived.
             self.pub_recv_packets.insert(packet_id);
-            let ack_packet = PublishReceivedPacket::new(packet_id);
+            let ack_packet = v3::PublishReceivedPacket::new(packet_id);
             // TODO(Shaohua): Catch errors
             self.send(ack_packet).await?;
         }
         Ok(())
     }
-    async fn on_listener_publish(&mut self, packet: PublishPacket) -> Result<(), Error> {
+    async fn on_listener_publish(&mut self, packet: v3::PublishPacket) -> Result<(), Error> {
         self.send(packet).await
     }
 
-    async fn on_listener_subscribe_ack(&mut self, packet: SubscribeAckPacket) -> Result<(), Error> {
+    async fn on_listener_subscribe_ack(
+        &mut self,
+        packet: v3::SubscribeAckPacket,
+    ) -> Result<(), Error> {
         // When the Server receives a SUBSCRIBE Packet from a Client, the Server MUST respond with a
         // SUBACK Packet [MQTT-3.8.4-1]. The SUBACK Packet MUST have the same Packet Identifier as the
         // SUBSCRIBE Packet that it is acknowledging [MQTT-3.8.4-2].

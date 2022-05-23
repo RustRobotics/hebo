@@ -4,10 +4,7 @@
 
 //! Session cmd handlers.
 
-use codec::v3::{
-    ConnectAckPacket, ConnectPacket, ConnectReturnCode, PublishPacket, SubscribeAckPacket,
-    SubscribePacket, UnsubscribePacket,
-};
+use codec::v3;
 
 use super::Listener;
 use crate::listener::{
@@ -33,17 +30,32 @@ impl Listener {
             SessionToListenerCmd::Connect(session_id, packet) => {
                 self.on_session_connect(session_id, packet).await
             }
+            SessionToListenerCmd::ConnectV5(_session_id, _packet) => {
+                todo!()
+            }
             SessionToListenerCmd::Publish(session_id, packet) => {
                 self.on_session_publish(session_id, packet).await
+            }
+            SessionToListenerCmd::PublishV5(_session_id, _packet) => {
+                todo!()
             }
             SessionToListenerCmd::Subscribe(session_id, packet) => {
                 self.on_session_subscribe(session_id, packet).await
             }
+            SessionToListenerCmd::SubscribeV5(_session_id, _packet) => {
+                todo!()
+            }
             SessionToListenerCmd::Unsubscribe(session_id, packet) => {
                 self.on_session_unsubscribe(session_id, packet).await
             }
+            SessionToListenerCmd::UnsubscribeV5(_session_id, _packet) => {
+                todo!()
+            }
             SessionToListenerCmd::Disconnect(session_id) => {
                 self.on_session_disconnect(session_id).await
+            }
+            SessionToListenerCmd::DisconnectV5(_session_id) => {
+                todo!()
             }
         }
     }
@@ -51,7 +63,7 @@ impl Listener {
     async fn on_session_connect(
         &mut self,
         session_id: SessionId,
-        packet: ConnectPacket,
+        packet: v3::ConnectPacket,
     ) -> Result<(), Error> {
         log::info!("Listener::on_session_connect()");
 
@@ -98,7 +110,7 @@ impl Listener {
     async fn on_session_subscribe(
         &mut self,
         session_id: SessionId,
-        packet: SubscribePacket,
+        packet: v3::SubscribePacket,
     ) -> Result<(), Error> {
         // Check ACL.
         let cmd = ListenerToAclCmd::Subscribe(SessionGid::new(self.id, session_id), packet);
@@ -108,7 +120,7 @@ impl Listener {
     async fn on_session_unsubscribe(
         &mut self,
         session_id: SessionId,
-        packet: UnsubscribePacket,
+        packet: v3::UnsubscribePacket,
     ) -> Result<(), Error> {
         // No need to check ACL.
         // Remove topic from sub tree.
@@ -124,7 +136,7 @@ impl Listener {
     async fn on_session_publish(
         &mut self,
         session_id: SessionId,
-        packet: PublishPacket,
+        packet: v3::PublishPacket,
     ) -> Result<(), Error> {
         // Check ACL.
         let cmd = ListenerToAclCmd::Publish(SessionGid::new(self.id, session_id), packet);
@@ -144,10 +156,10 @@ impl Listener {
     pub(crate) async fn session_send_connect_ack(
         &mut self,
         session_id: SessionId,
-        reason: ConnectReturnCode,
+        reason: v3::ConnectReturnCode,
         cached_session: Option<CachedSession>,
     ) -> Result<(), Error> {
-        let ack_packet = ConnectAckPacket::new(false, reason);
+        let ack_packet = v3::ConnectAckPacket::new(false, reason);
         let cmd = ListenerToSessionCmd::ConnectAck(ack_packet, cached_session);
 
         if let Some(session_sender) = self.session_senders.get(&session_id) {
@@ -160,7 +172,7 @@ impl Listener {
     pub(super) async fn session_send_publish_ack(
         &mut self,
         session_id: SessionId,
-        packet: SubscribeAckPacket,
+        packet: v3::SubscribeAckPacket,
     ) -> Result<(), Error> {
         if let Some(session_sender) = self.session_senders.get(&session_id) {
             let cmd = ListenerToSessionCmd::SubscribeAck(packet);

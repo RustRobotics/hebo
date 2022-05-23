@@ -14,6 +14,9 @@ impl Dispatcher {
             MetricsToDispatcherCmd::Publish(packet) => {
                 self.publish_packet_to_sub_trie(&packet).await;
             }
+            MetricsToDispatcherCmd::PublishV5(_packet) => {
+                todo!()
+            }
         }
     }
 

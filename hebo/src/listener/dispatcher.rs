@@ -4,7 +4,7 @@
 
 //! Dispatcher cmd handlers.
 
-use codec::v3::{ConnectReturnCode, PublishPacket, SubscribeAckPacket};
+use codec::v3;
 
 use super::Listener;
 use crate::commands::{DispatcherToListenerCmd, ListenerToSessionCmd};
@@ -25,8 +25,14 @@ impl Listener {
             DispatcherToListenerCmd::Publish(session_id, packet) => {
                 self.on_dispatcher_publish(session_id, packet).await
             }
+            DispatcherToListenerCmd::PublishV5(_session_id, _packet) => {
+                todo!()
+            }
             DispatcherToListenerCmd::SubscribeAck(session_id, packet) => {
                 self.on_dispatcher_subscribe_ack(session_id, packet).await
+            }
+            DispatcherToListenerCmd::SubscribeAckV5(_session_id, _packet) => {
+                todo!()
             }
         }
     }
@@ -36,14 +42,14 @@ impl Listener {
         session_id: SessionId,
         cached_session: Option<CachedSession>,
     ) -> Result<(), Error> {
-        self.session_send_connect_ack(session_id, ConnectReturnCode::Accepted, cached_session)
+        self.session_send_connect_ack(session_id, v3::ConnectReturnCode::Accepted, cached_session)
             .await
     }
 
     async fn on_dispatcher_publish(
         &mut self,
         session_id: SessionId,
-        packet: PublishPacket,
+        packet: v3::PublishPacket,
     ) -> Result<(), Error> {
         if let Some(session_sender) = self.session_senders.get(&session_id) {
             let cmd = ListenerToSessionCmd::Publish(packet);
@@ -56,7 +62,7 @@ impl Listener {
     async fn on_dispatcher_subscribe_ack(
         &mut self,
         session_id: SessionId,
-        packet: SubscribeAckPacket,
+        packet: v3::SubscribeAckPacket,
     ) -> Result<(), Error> {
         self.session_send_publish_ack(session_id, packet).await
     }

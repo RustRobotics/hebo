@@ -2,13 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{
-    v3::{
-        ConnectAckPacket, ConnectPacket, PublishPacket, SubscribeAck, SubscribeAckPacket,
-        SubscribePacket, UnsubscribePacket,
-    },
-    PacketId, QoS,
-};
+use codec::{v3, v5, PacketId, QoS};
 use tokio::sync::oneshot;
 
 use crate::types::{ListenerId, SessionGid, SessionId, SessionInfo, Uptime};
@@ -18,66 +12,88 @@ use crate::session::CachedSession;
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
     /// session_gid, username, password
-    RequestAuth(SessionGid, ConnectPacket),
+    RequestAuth(SessionGid, v3::ConnectPacket),
+    RequestAuthV5(SessionGid, v5::ConnectPacket),
 }
 
 #[derive(Debug, Clone)]
 pub enum AuthToListenerCmd {
     /// session-id, access-granted
-    ResponseAuth(SessionId, bool, ConnectPacket),
+    ResponseAuth(SessionId, bool, v3::ConnectPacket),
+    ResponseAuthV5(SessionId, bool, v5::ConnectPacket),
 }
 
 #[derive(Debug, Clone)]
 pub enum AclToListenerCmd {
     /// (session_id, packet, accepted).
-    PublishAck(SessionId, PublishPacket, bool),
+    PublishAck(SessionId, v3::PublishPacket, bool),
+    PublishAckV5(SessionId, v5::PublishPacket, bool),
 
-    SubscribeAck(SessionId, SubscribePacket, Vec<SubscribeAck>, bool),
+    SubscribeAck(SessionId, v3::SubscribePacket, Vec<v3::SubscribeAck>, bool),
+    SubscribeAckV5(SessionId, v5::SubscribePacket, Vec<v5::ReasonCode>, bool),
 }
 
 #[derive(Debug, Clone)]
 pub enum ListenerToAclCmd {
     /// Check publish packet.
-    Publish(SessionGid, PublishPacket),
+    Publish(SessionGid, v3::PublishPacket),
+    PublishV5(SessionGid, v5::PublishPacket),
 
     /// Check subscribe packet.
-    Subscribe(SessionGid, SubscribePacket),
+    Subscribe(SessionGid, v3::SubscribePacket),
+    SubscribeV5(SessionGid, v5::SubscribePacket),
 }
 
 #[derive(Debug, Clone)]
 pub enum ListenerToSessionCmd {
     /// Accepted or not.
-    ConnectAck(ConnectAckPacket, Option<CachedSession>),
+    ConnectAck(v3::ConnectAckPacket, Option<CachedSession>),
+    ConnectAckV5(v5::ConnectAckPacket, Option<CachedSession>),
 
     /// Response to Publish packet.
     ///
     /// (packet_id, qos, accept) pair.
     PublishAck(PacketId, QoS, bool),
+    PublishAckV5(PacketId, QoS, bool),
 
-    Publish(PublishPacket),
+    Publish(v3::PublishPacket),
+    PublishV5(v5::PublishPacket),
 
-    SubscribeAck(SubscribeAckPacket),
+    SubscribeAck(v3::SubscribeAckPacket),
+    SubscribeAckV5(v5::SubscribeAckPacket),
 
     /// Disconnect client connection.
     Disconnect,
+    DisconnectV5,
 }
 
 #[derive(Debug, Clone)]
 pub enum SessionToListenerCmd {
-    Connect(SessionId, ConnectPacket),
-    Publish(SessionId, PublishPacket),
-    Subscribe(SessionId, SubscribePacket),
-    Unsubscribe(SessionId, UnsubscribePacket),
+    Connect(SessionId, v3::ConnectPacket),
+    ConnectV5(SessionId, v5::ConnectPacket),
+
+    Publish(SessionId, v3::PublishPacket),
+    PublishV5(SessionId, v5::PublishPacket),
+
+    Subscribe(SessionId, v3::SubscribePacket),
+    SubscribeV5(SessionId, v5::SubscribePacket),
+
+    Unsubscribe(SessionId, v3::UnsubscribePacket),
+    UnsubscribeV5(SessionId, v5::UnsubscribePacket),
+
     Disconnect(SessionId),
+    DisconnectV5(SessionId),
 }
 
 #[derive(Debug, Clone)]
 pub enum DispatcherToListenerCmd {
     CheckCachedSessionResp(SessionId, Option<CachedSession>),
 
-    Publish(SessionId, PublishPacket),
+    Publish(SessionId, v3::PublishPacket),
+    PublishV5(SessionId, v5::PublishPacket),
 
-    SubscribeAck(SessionId, SubscribeAckPacket),
+    SubscribeAck(SessionId, v3::SubscribeAckPacket),
+    SubscribeAckV5(SessionId, v5::SubscribeAckPacket),
 }
 
 #[derive(Debug, Clone)]
@@ -85,11 +101,14 @@ pub enum ListenerToDispatcherCmd {
     // client-id
     CheckCachedSession(SessionGid, String),
 
-    Publish(PublishPacket),
+    Publish(v3::PublishPacket),
+    PublishV5(v5::PublishPacket),
 
-    Subscribe(SessionGid, SubscribePacket),
+    Subscribe(SessionGid, v3::SubscribePacket),
+    SubscribeV5(SessionGid, v5::SubscribePacket),
 
-    Unsubscribe(SessionGid, UnsubscribePacket),
+    Unsubscribe(SessionGid, v3::UnsubscribePacket),
+    UnsubscribeV5(SessionGid, v5::UnsubscribePacket),
 
     SessionAdded(ListenerId),
     SessionRemoved(ListenerId),
@@ -132,7 +151,8 @@ pub enum DispatcherToMetricsCmd {
 
 #[derive(Debug, Clone)]
 pub enum MetricsToDispatcherCmd {
-    Publish(PublishPacket),
+    Publish(v3::PublishPacket),
+    PublishV5(v5::PublishPacket),
 }
 
 #[derive(Debug, Clone)]

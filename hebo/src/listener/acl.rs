@@ -4,7 +4,7 @@
 
 //! Acl cmd handler.
 
-use codec::v3::{PublishPacket, SubscribeAck, SubscribeAckPacket, SubscribePacket};
+use codec::v3;
 
 use super::Listener;
 use crate::commands::{AclToListenerCmd, ListenerToDispatcherCmd, ListenerToSessionCmd};
@@ -17,9 +17,15 @@ impl Listener {
             AclToListenerCmd::PublishAck(session_id, packet, accepted) => {
                 self.on_acl_publish_ack(session_id, packet, accepted).await
             }
+            AclToListenerCmd::PublishAckV5(_session_id, _packet, _accepted) => {
+                todo!()
+            }
             AclToListenerCmd::SubscribeAck(session_id, packet, acks, accepted) => {
                 self.on_acl_subscribe_ack(session_id, packet, acks, accepted)
                     .await
+            }
+            AclToListenerCmd::SubscribeAckV5(_session_id, _packet, _acks, _accepted) => {
+                todo!()
             }
         }
     }
@@ -27,7 +33,7 @@ impl Listener {
     async fn on_acl_publish_ack(
         &mut self,
         session_id: SessionId,
-        packet: PublishPacket,
+        packet: v3::PublishPacket,
         accepted: bool,
     ) -> Result<(), Error> {
         if let Some(session_sender) = self.session_senders.get(&session_id) {
@@ -57,8 +63,8 @@ impl Listener {
     async fn on_acl_subscribe_ack(
         &mut self,
         session_id: SessionId,
-        packet: SubscribePacket,
-        acks: Vec<SubscribeAck>,
+        packet: v3::SubscribePacket,
+        acks: Vec<v3::SubscribeAck>,
         accepted: bool,
     ) -> Result<(), Error> {
         // If ACL passed, send publish packet to dispatcher layer.
@@ -71,7 +77,7 @@ impl Listener {
                 .map_err(Into::into)
         } else {
             // All of topic filters are rejected.
-            let ack_packet = SubscribeAckPacket::with_vec(packet.packet_id(), acks);
+            let ack_packet = v3::SubscribeAckPacket::with_vec(packet.packet_id(), acks);
             self.session_send_publish_ack(session_id, ack_packet).await
         }
     }
