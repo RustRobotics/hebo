@@ -4,21 +4,39 @@
 
 use std::mem::size_of;
 
+fn print_basic_types() {
+    use hebo_codec::{
+        BinaryData, BoolData, ByteArray, PacketId, PubTopic, QoS, StringData, StringPairData,
+        U16Data, U32Data, VarInt,
+    };
+    println!("Binarydata: {}", size_of::<BinaryData>());
+    println!("BoolData: {}", size_of::<BoolData>());
+    println!("ByteArray: {}", size_of::<ByteArray>());
+    println!("PacketId: {}", size_of::<PacketId>());
+    println!("PubTopic: {}", size_of::<PubTopic>());
+    println!("QoS: {}", size_of::<QoS>());
+    println!("StringData: {}", size_of::<StringData>());
+    println!("StringPairData: {}", size_of::<StringPairData>());
+    println!("U16Data: {}", size_of::<U16Data>());
+    println!("U32Data: {}", size_of::<U32Data>());
+    println!("VarInt: {}", size_of::<VarInt>());
+}
+
 fn print_v3_packets() {
     use hebo_codec::v3::*;
 
     println!("==== V3 ====");
-    println!("ConnectPacket: {}", size_of::<ConnectPacket>());
     println!("ConnectAckPacket: {}", size_of::<ConnectAckPacket>());
+    println!("ConnectPacket: {}", size_of::<ConnectPacket>());
     println!("DisconnectPacket: {}", size_of::<DisconnectPacket>());
     println!("PingRequestPacket: {}", size_of::<PingRequestPacket>());
     println!("PingResponsePacket: {}", size_of::<PingResponsePacket>());
-    println!("PublishPacket: {}", size_of::<PublishPacket>());
     println!("PublishAckPacket: {}", size_of::<PublishAckPacket>());
     println!(
         "PublishCompletePacket: {}",
         size_of::<PublishCompletePacket>()
     );
+    println!("PublishPacket: {}", size_of::<PublishPacket>());
     println!(
         "PublishReceivedPacket: {}",
         size_of::<PublishReceivedPacket>()
@@ -27,29 +45,30 @@ fn print_v3_packets() {
         "PublishReleasePacket: {}",
         size_of::<PublishReleasePacket>()
     );
-    println!("SubscribePacket: {}", size_of::<SubscribePacket>());
     println!("SubscribeAckPacket: {}", size_of::<SubscribeAckPacket>());
-    println!("UnsubscribePacket: {}", size_of::<UnsubscribePacket>());
+    println!("SubscribePacket: {}", size_of::<SubscribePacket>());
     println!(
         "UnsubscribeAckPacket: {}",
         size_of::<UnsubscribeAckPacket>()
     );
+    println!("UnsubscribePacket: {}", size_of::<UnsubscribePacket>());
 }
 
 fn print_v5_packets() {
     use hebo_codec::v5::*;
+
     println!("==== V5 ====");
-    println!("ConnectPacket: {}", size_of::<ConnectPacket>());
     println!("ConnectAckPacket: {}", size_of::<ConnectAckPacket>());
+    println!("ConnectPacket: {}", size_of::<ConnectPacket>());
     println!("DisconnectPacket: {}", size_of::<DisconnectPacket>());
     println!("PingRequestPacket: {}", size_of::<PingRequestPacket>());
     println!("PingResponsePacket: {}", size_of::<PingResponsePacket>());
-    println!("PublishPacket: {}", size_of::<PublishPacket>());
     println!("PublishAckPacket: {}", size_of::<PublishAckPacket>());
     println!(
         "PublishCompletePacket: {}",
         size_of::<PublishCompletePacket>()
     );
+    println!("PublishPacket: {}", size_of::<PublishPacket>());
     println!(
         "PublishReceivedPacket: {}",
         size_of::<PublishReceivedPacket>()
@@ -58,16 +77,20 @@ fn print_v5_packets() {
         "PublishReleasePacket: {}",
         size_of::<PublishReleasePacket>()
     );
-    println!("SubscribePacket: {}", size_of::<SubscribePacket>());
     println!("SubscribeAckPacket: {}", size_of::<SubscribeAckPacket>());
-    println!("UnsubscribePacket: {}", size_of::<UnsubscribePacket>());
+    println!("SubscribePacket: {}", size_of::<SubscribePacket>());
     println!(
         "UnsubscribeAckPacket: {}",
         size_of::<UnsubscribeAckPacket>()
     );
+    println!("UnsubscribePacket: {}", size_of::<UnsubscribePacket>());
+
+    println!("Property: {}", size_of::<Property>());
+    println!("Properties: {}", size_of::<Properties>());
 }
 
 fn main() {
+    print_basic_types();
     print_v3_packets();
     print_v5_packets();
 }
