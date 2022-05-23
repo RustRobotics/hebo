@@ -1,0 +1,40 @@
+#!/bin/sh
+# postrm script for hebo
+#
+# see: dh_installdeb(1)
+
+set -e
+
+case "$1" in
+	purge)
+		rm -f /var/lib/hebo/hebo.db
+		if [ -d /var/lib/hebo ]; then
+			rmdir --ignore-fail-on-non-empty /var/lib/hebo
+		fi
+		rm -f /var/log/hebo/hebo.log*
+		if [ -d /var/log/hebo ]; then
+			rmdir --ignore-fail-on-non-empty /var/log/hebo
+		fi
+		rm -f /run/hebo/hebo.pid
+		if [ -d /run/hebo ]; then
+			rmdir --ignore-fail-on-non-empty /run/hebo
+		fi
+        APP_PROFILE="usr.bin.hebo"
+        rm -f /etc/apparmor.d/disable/$APP_PROFILE >/dev/null 2>&1 || true
+	;;
+	remove|abort-install|abort-upgrade|disappear)
+	;;
+
+	upgrade|failed-upgrade)
+	;;
+
+	*)
+		echo "postrm called with unknown argument \`$1'" >&2
+		exit 1
+	;;
+esac
+
+
+#DEBHELPER#
+
+exit 0

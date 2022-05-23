@@ -1,0 +1,47 @@
+#!/bin/sh
+# postinst script for hebo
+#
+# see: dh_installdeb(1)
+
+set -e
+
+setup_hebo_user() {
+	if ! getent group hebo >/dev/null; then
+		addgroup --quiet --system hebo
+	fi
+
+	if ! getent passwd hebo >/dev/null; then
+		adduser --quiet --system --no-create-home --ingroup hebo --home /var/lib/hebo --shell /usr/sbin/nologin hebo
+	fi
+}
+
+fix_permissions() {
+	chown hebo /var/lib/hebo
+	test ! -e /var/log/hebo || chown hebo /var/log/hebo
+	test ! -e /var/log/hebo/hebo.log || chown hebo /var/log/hebo/hebo.log
+}
+
+case "$1" in
+	configure)
+		setup_hebo_user
+		fix_permissions
+	;;
+
+	abort-upgrade|abort-remove|abort-deconfigure)
+	;;
+
+	*)
+		echo "postinst called with unknown argument \`$1'" >&2
+		exit 1
+	;;
+esac
+
+# Reload AppArmor profile
+APP_PROFILE="/etc/apparmor.d/usr.bin.hebo"
+if [ -f "$APP_PROFILE" ] && aa-status --enabled 2>/dev/null; then
+       apparmor_parser -r "$APP_PROFILE" || true
+fi
+
+#DEBHELPER#
+
+exit 0
