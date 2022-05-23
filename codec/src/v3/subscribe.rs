@@ -172,6 +172,16 @@ impl SubscribePacket {
     pub fn mut_topics(&mut self) -> &mut Vec<SubscribeTopic> {
         &mut self.topics
     }
+
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        let mut remaining_length = PacketId::bytes();
+        for topic in &self.topics {
+            remaining_length += topic.bytes();
+        }
+
+        FixedHeader::new(PacketType::Subscribe, remaining_length)
+    }
 }
 
 impl DecodePacket for SubscribePacket {
@@ -212,18 +222,13 @@ impl EncodePacket for SubscribePacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let mut remaining_length = PacketId::bytes();
-        for topic in &self.topics {
-            remaining_length += topic.bytes();
-        }
-
-        let fixed_header = FixedHeader::new(PacketType::Subscribe, remaining_length)?;
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(buf)?;
 
-        // Variable header
+        // Write variable header
         self.packet_id.encode(buf)?;
 
-        // Payload
+        // Write payload
         for topic in &self.topics {
             topic.encode(buf)?;
         }
@@ -238,6 +243,17 @@ impl Packet for SubscribePacket {
     }
 
     fn bytes(&self) -> Result<usize, VarIntError> {
-        Ok(0)
+        let fixed_header = self.get_fixed_header()?;
+        let mut len = fixed_header.bytes();
+
+        // variable header
+        len += PacketId::bytes();
+
+        // payload
+        for topic in &self.topics {
+            len += topic.bytes();
+        }
+
+        Ok(len)
     }
 }

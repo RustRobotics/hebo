@@ -191,6 +191,21 @@ impl PublishPacket {
     }
 
     // TODO(Shaohua): Add message related operations.
+
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        let mut remaining_length = self.topic.bytes() + self.msg.len();
+        if self.qos != QoS::AtMostOnce {
+            remaining_length += PacketId::bytes();
+        }
+
+        let packet_type = PacketType::Publish {
+            dup: self.dup,
+            retain: self.retain,
+            qos: self.qos,
+        };
+        FixedHeader::new(packet_type, remaining_length)
+    }
 }
 
 impl DecodePacket for PublishPacket {
@@ -268,17 +283,7 @@ impl EncodePacket for PublishPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
-        let mut remaining_length = self.topic.bytes() + self.msg.len();
-        if self.qos != QoS::AtMostOnce {
-            remaining_length += PacketId::bytes();
-        }
-
-        let packet_type = PacketType::Publish {
-            dup: self.dup,
-            retain: self.retain,
-            qos: self.qos,
-        };
-        let fixed_header = FixedHeader::new(packet_type, remaining_length)?;
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(v)?;
 
         // Write variable header
@@ -306,6 +311,20 @@ impl Packet for PublishPacket {
     }
 
     fn bytes(&self) -> Result<usize, VarIntError> {
-        Ok(0)
+        let fixed_header = self.get_fixed_header()?;
+        let mut len = fixed_header.bytes();
+
+        // variable header part
+        len += self.topic.bytes();
+
+        // The Packet Identifier field is only present in PUBLISH Packets where the QoS level is 1 or 2.
+        if self.qos() != QoS::AtMostOnce {
+            len += PacketId::bytes();
+        }
+
+        // payload part
+        len += self.msg.len();
+
+        Ok(len)
     }
 }

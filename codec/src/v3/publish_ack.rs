@@ -73,7 +73,6 @@ impl Packet for PublishAckPacket {
 
     fn bytes(&self) -> Result<usize, VarIntError> {
         let fixed_header = FixedHeader::new(PacketType::PublishAck, PacketId::bytes())?;
-        // packet_id
         Ok(fixed_header.bytes() + PacketId::bytes())
     }
 }

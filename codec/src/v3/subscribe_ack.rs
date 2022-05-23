@@ -97,6 +97,12 @@ impl SubscribeAckPacket {
     pub fn acknowledgements(&self) -> &[SubscribeAck] {
         &self.acknowledgements
     }
+
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        let remaining_length = PacketId::bytes() + QoS::bytes() * self.acknowledgements.len();
+        FixedHeader::new(PacketType::SubscribeAck, remaining_length)
+    }
 }
 
 impl DecodePacket for SubscribeAckPacket {
@@ -134,11 +140,12 @@ impl DecodePacket for SubscribeAckPacket {
 impl EncodePacket for SubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let remaining_length = PacketId::bytes() + QoS::bytes() * self.acknowledgements.len();
-        let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
-        fixed_header.encode(buf)?;
-        self.packet_id.encode(buf)?;
 
+        let fixed_header = self.get_fixed_header()?;
+        fixed_header.encode(buf)?;
+
+        // Write variable header
+        self.packet_id.encode(buf)?;
         for ack in &self.acknowledgements {
             let flag = {
                 match *ack {
@@ -159,6 +166,13 @@ impl Packet for SubscribeAckPacket {
     }
 
     fn bytes(&self) -> Result<usize, VarIntError> {
-        Ok(0)
+        let fixed_header = self.get_fixed_header()?;
+        let mut len = fixed_header.bytes();
+
+        len += PacketId::bytes();
+        // ack flags
+        len += self.acknowledgements.len();
+
+        Ok(len)
     }
 }
