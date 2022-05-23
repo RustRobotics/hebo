@@ -7,6 +7,7 @@ use std::convert::TryFrom;
 use super::{FixedHeader, Packet, PacketType};
 use crate::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS, SubTopic,
+    VarIntError,
 };
 
 /// Topic/QoS pair.
@@ -234,5 +235,9 @@ impl EncodePacket for SubscribePacket {
 impl Packet for SubscribePacket {
     fn packet_type(&self) -> PacketType {
         PacketType::Subscribe
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        Ok(0)
     }
 }

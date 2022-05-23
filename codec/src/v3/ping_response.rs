@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, VarIntError};
 
 /// The `PingResponse` packet is sent to a Client from the Server to reply to `PingRequest` packet.
 ///
@@ -29,12 +29,6 @@ impl EncodePacket for PingResponsePacket {
     }
 }
 
-impl Packet for PingResponsePacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::PingResponse
-    }
-}
-
 impl DecodePacket for PingResponsePacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
@@ -45,5 +39,16 @@ impl DecodePacket for PingResponsePacket {
         } else {
             Ok(Self())
         }
+    }
+}
+
+impl Packet for PingResponsePacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::PingResponse
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = FixedHeader::new(PacketType::PingResponse, 0)?;
+        Ok(fixed_header.bytes())
     }
 }

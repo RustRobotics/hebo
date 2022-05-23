@@ -5,7 +5,7 @@
 use std::default::Default;
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, VarIntError};
 
 /// The Disconnect packet is the final packet sent to the Server from a Client.
 ///
@@ -33,12 +33,6 @@ impl EncodePacket for DisconnectPacket {
     }
 }
 
-impl Packet for DisconnectPacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::Disconnect
-    }
-}
-
 impl DecodePacket for DisconnectPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
@@ -49,5 +43,16 @@ impl DecodePacket for DisconnectPacket {
         } else {
             Ok(Self {})
         }
+    }
+}
+
+impl Packet for DisconnectPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::Disconnect
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = FixedHeader::new(PacketType::Disconnect, 0)?;
+        Ok(fixed_header.bytes())
     }
 }

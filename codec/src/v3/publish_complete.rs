@@ -3,7 +3,9 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, VarIntError,
+};
 
 /// Response to a Publish packet with `QoS` 2.
 ///
@@ -69,5 +71,10 @@ impl EncodePacket for PublishCompletePacket {
 impl Packet for PublishCompletePacket {
     fn packet_type(&self) -> PacketType {
         PacketType::PublishComplete
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = FixedHeader::new(PacketType::PublishComplete, PacketId::bytes())?;
+        Ok(fixed_header.bytes() + PacketId::bytes())
     }
 }

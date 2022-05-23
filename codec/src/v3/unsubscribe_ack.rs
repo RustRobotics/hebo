@@ -3,7 +3,9 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, VarIntError,
+};
 
 /// `UnsubscribeAck` packet is sent by the Server to the Client to confirm receipt of an
 /// unsubscribe packet.
@@ -70,5 +72,10 @@ impl EncodePacket for UnsubscribeAckPacket {
 impl Packet for UnsubscribeAckPacket {
     fn packet_type(&self) -> PacketType {
         PacketType::UnsubscribeAck
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = FixedHeader::new(PacketType::UnsubscribeAck, PacketId::bytes())?;
+        Ok(fixed_header.bytes() + PacketId::bytes())
     }
 }

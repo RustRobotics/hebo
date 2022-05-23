@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, VarIntError};
 
 /// The `PingRequest` packet is sent to the Server from a Client. It is used to:
 /// 1. Notify the Server that this Client is still alive.
@@ -30,12 +30,6 @@ impl EncodePacket for PingRequestPacket {
     }
 }
 
-impl Packet for PingRequestPacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::PingRequest
-    }
-}
-
 impl DecodePacket for PingRequestPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
@@ -46,5 +40,16 @@ impl DecodePacket for PingRequestPacket {
         } else {
             Ok(Self())
         }
+    }
+}
+
+impl Packet for PingRequestPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::PingRequest
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = FixedHeader::new(PacketType::PingRequest, 0)?;
+        Ok(fixed_header.bytes())
     }
 }

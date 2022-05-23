@@ -3,7 +3,10 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic,
+    VarIntError,
+};
 
 /// The Client request to unsubscribe topics from the Server.
 ///
@@ -184,5 +187,9 @@ impl EncodePacket for UnsubscribePacket {
 impl Packet for UnsubscribePacket {
     fn packet_type(&self) -> PacketType {
         PacketType::Unsubscribe
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        Ok(0)
     }
 }

@@ -8,6 +8,7 @@ use std::io::Write;
 use super::{FixedHeader, Packet, PacketType};
 use crate::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic, QoS,
+    VarIntError,
 };
 
 /// `PublishPacket` is used to transport application messages from the Client to the Server,
@@ -302,5 +303,9 @@ impl Packet for PublishPacket {
             retain: self.retain,
             qos: self.qos,
         }
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        Ok(0)
     }
 }

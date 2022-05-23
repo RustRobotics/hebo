@@ -3,7 +3,9 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, VarIntError,
+};
 
 /// Acknowledge packet for Publish message in `QoS` 1.
 ///
@@ -50,12 +52,6 @@ impl EncodePacket for PublishAckPacket {
     }
 }
 
-impl Packet for PublishAckPacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::PublishAck
-    }
-}
-
 impl DecodePacket for PublishAckPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
@@ -67,5 +63,17 @@ impl DecodePacket for PublishAckPacket {
             let packet_id = PacketId::decode(ba)?;
             Ok(Self { packet_id })
         }
+    }
+}
+
+impl Packet for PublishAckPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::PublishAck
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = FixedHeader::new(PacketType::PublishAck, PacketId::bytes())?;
+        // packet_id
+        Ok(fixed_header.bytes() + PacketId::bytes())
     }
 }

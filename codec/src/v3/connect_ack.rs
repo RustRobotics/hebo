@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
+use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, VarIntError};
 
 /// If the Server sends a `ConnectAck` packet with non-zero return code, it MUST
 /// close the network connection.
@@ -162,6 +162,12 @@ impl EncodePacket for ConnectAckPacket {
 impl Packet for ConnectAckPacket {
     fn packet_type(&self) -> PacketType {
         PacketType::ConnectAck
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = FixedHeader::new(PacketType::ConnectAck, 2)?;
+        // ack_flags + return_code
+        Ok(fixed_header.bytes() + 2)
     }
 }
 

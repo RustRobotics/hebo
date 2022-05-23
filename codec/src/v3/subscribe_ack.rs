@@ -3,7 +3,9 @@
 // in the LICENSE file.
 
 use super::{FixedHeader, Packet, PacketType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS, VarIntError,
+};
 
 /// Reply to each subscribed topic.
 #[repr(u8)]
@@ -154,5 +156,9 @@ impl EncodePacket for SubscribeAckPacket {
 impl Packet for SubscribeAckPacket {
     fn packet_type(&self) -> PacketType {
         PacketType::SubscribeAck
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        Ok(0)
     }
 }

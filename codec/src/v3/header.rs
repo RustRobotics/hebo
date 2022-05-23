@@ -4,10 +4,15 @@
 
 use std::convert::TryFrom;
 
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS, VarInt};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS, VarInt, VarIntError,
+};
 
 pub trait Packet: Send {
     fn packet_type(&self) -> PacketType;
+
+    /// Get byte length in packet.
+    fn bytes(&self) -> Result<usize, VarIntError>;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -284,7 +289,7 @@ impl FixedHeader {
     /// # Errors
     ///
     /// Returns error if `remaining_length` is invalid.
-    pub fn new(packet_type: PacketType, remaining_length: usize) -> Result<Self, EncodeError> {
+    pub fn new(packet_type: PacketType, remaining_length: usize) -> Result<Self, VarIntError> {
         let remaining_length = VarInt::from(remaining_length)?;
         Ok(Self {
             packet_type,
@@ -308,6 +313,12 @@ impl FixedHeader {
     #[must_use]
     pub const fn remaining_bytes(&self) -> usize {
         self.remaining_length.bytes()
+    }
+
+    /// Get byte length in packet.
+    #[must_use]
+    pub const fn bytes(&self) -> usize {
+        PacketType::bytes() + self.remaining_length.bytes()
     }
 }
 
