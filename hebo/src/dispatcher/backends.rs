@@ -4,14 +4,14 @@
 
 //! Backends app handlers
 
-use codec::v3::PublishPacket;
+use codec::v3;
 
 use super::Dispatcher;
 use crate::commands::BackendsToDispatcherCmd;
 
 impl Dispatcher {
     /// Send packet to backends.
-    pub(super) async fn backends_store_packet(&mut self, packet: &PublishPacket) {
+    pub(super) async fn backends_store_packet(&mut self, packet: &v3::PublishPacket) {
         log::info!("backends store packet: {:?}", packet);
     }
 

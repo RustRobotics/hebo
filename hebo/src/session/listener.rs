@@ -12,7 +12,7 @@ use crate::error::Error;
 use crate::session::CachedSession;
 
 impl Session {
-    pub(super) async fn handle_listener_packet(
+    pub(super) async fn handle_listener_cmd(
         &mut self,
         cmd: ListenerToSessionCmd,
     ) -> Result<(), Error> {

@@ -4,10 +4,7 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use codec::{
-    v3::{DisconnectPacket, Packet, PacketType},
-    EncodePacket, PacketId,
-};
+use codec::{v3, EncodePacket, PacketId};
 use std::collections::HashSet;
 use std::time::Instant;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -120,7 +117,7 @@ impl Session {
                     }
                 }
                 Some(cmd) = self.receiver.recv() => {
-                    if let Err(err) = self.handle_listener_packet(cmd).await {
+                    if let Err(err) = self.handle_listener_cmd(cmd).await {
                         log::error!("Failed to handle server packet: {:?}", err);
                     }
                 },
@@ -168,11 +165,11 @@ impl Session {
         self.instant = Instant::now();
     }
 
-    async fn send<P: EncodePacket + Packet>(&mut self, packet: P) -> Result<(), Error> {
+    async fn send<P: EncodePacket + v3::Packet>(&mut self, packet: P) -> Result<(), Error> {
         // The CONNACK Packet is the packet sent by the Server in response to a CONNECT Packet
         // received from a Client. The first packet sent from the Server to the Client MUST be
         // a CONNACK Packet [MQTT-3.2.0-1].
-        if self.status == Status::Connecting && packet.packet_type() != PacketType::ConnectAck {
+        if self.status == Status::Connecting && packet.packet_type() != v3::PacketType::ConnectAck {
             log::error!(
                 "ConnectAck is not the first packet to send: {:?}",
                 packet.packet_type()
@@ -202,7 +199,7 @@ impl Session {
     /// Send disconnect packet to client and update status.
     async fn send_disconnect(&mut self) -> Result<(), Error> {
         self.status = Status::Disconnecting;
-        let packet = DisconnectPacket::new();
+        let packet = v3::DisconnectPacket::new();
         if let Err(err) = self.send(packet).await.map(drop) {
             log::error!(
                 "session: Failed to send disconnect packet, {}, err: {:?}",

@@ -5,7 +5,7 @@
 //! Metrics service backend.
 //! Embed a `sys_tree` module to send $SYS messages to dispatcher.
 
-use codec::{v3::PublishPacket, QoS};
+use codec::{v3, QoS};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -251,7 +251,7 @@ impl Metrics {
     async fn sys_tree_send_uptime(&mut self) -> Result<(), Error> {
         //log::info!("metrics::sys_tree_send_uptime()");
         let msg = format!("{}", self.uptime).into_bytes();
-        let packet = PublishPacket::new(UPTIME, QoS::AtMostOnce, &msg)?;
+        let packet = v3::PublishPacket::new(UPTIME, QoS::AtMostOnce, &msg)?;
         self.dispatcher_sender
             .send(MetricsToDispatcherCmd::Publish(packet))
             .await
