@@ -93,7 +93,6 @@ impl UnsubscribeAckPacket {
         &self.reasons
     }
 
-    #[must_use]
     fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
         let remaining_length =
             PacketId::bytes() + self.properties.bytes() + self.reasons.len() * ReasonCode::bytes();

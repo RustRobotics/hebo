@@ -116,7 +116,6 @@ impl PublishAckPacket {
         &mut self.properties
     }
 
-    #[must_use]
     fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
         let mut packet_bytes = PacketId::bytes();
         if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {

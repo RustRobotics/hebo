@@ -341,7 +341,6 @@ impl SubscribePacket {
         &mut self.topics
     }
 
-    #[must_use]
     fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
         let mut remaining_length = PacketId::bytes();
         for topic in &self.topics {

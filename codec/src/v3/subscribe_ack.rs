@@ -98,7 +98,6 @@ impl SubscribeAckPacket {
         &self.acknowledgements
     }
 
-    #[must_use]
     fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
         let remaining_length = PacketId::bytes() + QoS::bytes() * self.acknowledgements.len();
         FixedHeader::new(PacketType::SubscribeAck, remaining_length)

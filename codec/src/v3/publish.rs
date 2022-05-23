@@ -192,7 +192,6 @@ impl PublishPacket {
 
     // TODO(Shaohua): Add message related operations.
 
-    #[must_use]
     fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
         let mut remaining_length = self.topic.bytes() + self.msg.len();
         if self.qos != QoS::AtMostOnce {

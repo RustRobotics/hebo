@@ -421,7 +421,6 @@ impl ConnectPacket {
         self.will_message.as_ref()
     }
 
-    #[must_use]
     fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
         let mut remaining_length = self.protocol_name.bytes()
             + ProtocolLevel::bytes()

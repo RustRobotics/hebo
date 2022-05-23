@@ -323,7 +323,6 @@ impl PublishPacket {
         &self.msg
     }
 
-    #[must_use]
     fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
         // TODO(Shaohua): Add properties.bytes()
         let mut remaining_length = self.topic.bytes()
