@@ -4,7 +4,10 @@
 
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic,
+    VarIntError,
+};
 
 /// The Client request to unsubscribe topics from the Server.
 /// When the Server receives this packet, no more Publish packet will be sent to the Client.
@@ -142,6 +145,16 @@ impl UnsubscribePacket {
     pub fn mut_topics(&mut self) -> &mut Vec<SubTopic> {
         &mut self.topics
     }
+
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        let mut remaining_length: usize = PacketId::bytes() + self.properties.bytes();
+        for topic in &self.topics {
+            remaining_length += topic.bytes();
+        }
+
+        FixedHeader::new(PacketType::Unsubscribe, remaining_length)
+    }
 }
 
 /// Properties can be used in `UnsubscribePacket`.
@@ -194,12 +207,8 @@ impl DecodePacket for UnsubscribePacket {
 impl EncodePacket for UnsubscribePacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
-        let mut remaining_length: usize = PacketId::bytes() + self.properties.bytes();
-        for topic in &self.topics {
-            remaining_length += topic.bytes();
-        }
 
-        let fixed_header = FixedHeader::new(PacketType::Unsubscribe, remaining_length)?;
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(v)?;
 
         self.packet_id.encode(v)?;
@@ -216,5 +225,10 @@ impl EncodePacket for UnsubscribePacket {
 impl Packet for UnsubscribePacket {
     fn packet_type(&self) -> PacketType {
         PacketType::Unsubscribe
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = self.get_fixed_header()?;
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }

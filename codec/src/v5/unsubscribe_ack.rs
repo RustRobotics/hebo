@@ -4,7 +4,9 @@
 
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, VarIntError,
+};
 
 /// `UnsubscribeAck` packet is sent by the Server to the Client to confirm receipt of an
 /// Unsubscribe packet.
@@ -90,6 +92,13 @@ impl UnsubscribeAckPacket {
     pub fn reasons(&self) -> &[ReasonCode] {
         &self.reasons
     }
+
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        let remaining_length =
+            PacketId::bytes() + self.properties.bytes() + self.reasons.len() * ReasonCode::bytes();
+        FixedHeader::new(PacketType::UnsubscribeAck, remaining_length)
+    }
 }
 
 /// Each Reason Code corresponds to a Topic Filter in the UNSUBSCRIBE packet being acknowledged.
@@ -163,10 +172,10 @@ impl DecodePacket for UnsubscribeAckPacket {
 impl EncodePacket for UnsubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let remaining_length =
-            PacketId::bytes() + self.properties.bytes() + self.reasons.len() * ReasonCode::bytes();
-        let fixed_header = FixedHeader::new(PacketType::UnsubscribeAck, remaining_length)?;
+
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(buf)?;
+
         self.packet_id.encode(buf)?;
         self.properties.encode(buf)?;
 
@@ -181,5 +190,10 @@ impl EncodePacket for UnsubscribeAckPacket {
 impl Packet for UnsubscribeAckPacket {
     fn packet_type(&self) -> PacketType {
         PacketType::UnsubscribeAck
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = self.get_fixed_header()?;
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }
