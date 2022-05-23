@@ -8,6 +8,7 @@ use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic, QoS,
+    VarIntError,
 };
 
 /// `PublishPacket` is used to transport application messages from the Client to the Server,
@@ -321,6 +322,24 @@ impl PublishPacket {
     pub fn message(&self) -> &[u8] {
         &self.msg
     }
+
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        // TODO(Shaohua): Add properties.bytes()
+        let mut remaining_length = self.topic.bytes()
+            //+ self.properties.bytes()
+            + self.msg.len();
+        if self.qos != QoS::AtMostOnce {
+            remaining_length += PacketId::bytes();
+        }
+
+        let packet_type = PacketType::Publish {
+            dup: self.dup,
+            retain: self.retain,
+            qos: self.qos,
+        };
+        FixedHeader::new(packet_type, remaining_length)
+    }
 }
 
 impl DecodePacket for PublishPacket {
@@ -407,20 +426,7 @@ impl EncodePacket for PublishPacket {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = v.len();
 
-        // TODO(Shaohua): Add properties.bytes()
-        let mut remaining_length = self.topic.bytes()
-            //+ self.properties.bytes()
-            + self.msg.len();
-        if self.qos != QoS::AtMostOnce {
-            remaining_length += PacketId::bytes();
-        }
-
-        let packet_type = PacketType::Publish {
-            dup: self.dup,
-            retain: self.retain,
-            qos: self.qos,
-        };
-        let fixed_header = FixedHeader::new(packet_type, remaining_length)?;
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(v)?;
 
         // Write variable header
@@ -447,5 +453,10 @@ impl Packet for PublishPacket {
             retain: self.retain,
             qos: self.qos,
         }
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = self.get_fixed_header()?;
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }

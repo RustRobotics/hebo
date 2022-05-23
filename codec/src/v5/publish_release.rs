@@ -4,7 +4,9 @@
 
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, VarIntError,
+};
 
 /// Response to a Publish packet with `QoS` 2. It is the third packet of the `QoS` 2
 /// protocol exchange.
@@ -80,6 +82,18 @@ impl PublishReleasePacket {
     pub fn mut_properties(&mut self) -> &mut Properties {
         &mut self.properties
     }
+
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        let mut packet_bytes = PacketId::bytes();
+        if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
+            packet_bytes += ReasonCode::bytes();
+        }
+        if !self.properties.is_empty() {
+            packet_bytes += self.properties.bytes();
+        }
+        FixedHeader::new(PacketType::PublishRelease, packet_bytes)
+    }
 }
 
 /// Byte 3 in the Variable Header is the PUBREL Reason Code. If the Remaining Length is 2,
@@ -100,14 +114,7 @@ impl EncodePacket for PublishReleasePacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let mut packet_bytes = PacketId::bytes();
-        if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
-            packet_bytes += ReasonCode::bytes();
-        }
-        if !self.properties.is_empty() {
-            packet_bytes += self.properties.bytes();
-        }
-        let fixed_header = FixedHeader::new(PacketType::PublishRelease, packet_bytes)?;
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;
         if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
@@ -117,12 +124,6 @@ impl EncodePacket for PublishReleasePacket {
             self.properties.encode(buf)?;
         }
         Ok(buf.len() - old_len)
-    }
-}
-
-impl Packet for PublishReleasePacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::PublishRelease
     }
 }
 
@@ -167,5 +168,16 @@ impl DecodePacket for PublishReleasePacket {
             reason_code,
             properties,
         })
+    }
+}
+
+impl Packet for PublishReleasePacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::PublishRelease
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = self.get_fixed_header()?;
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }

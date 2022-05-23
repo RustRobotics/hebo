@@ -4,7 +4,9 @@
 
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, VarIntError,
+};
 
 /// Acknowledge packet for Publish message in `QoS` 1.
 ///
@@ -113,12 +115,9 @@ impl PublishAckPacket {
     pub fn mut_properties(&mut self) -> &mut Properties {
         &mut self.properties
     }
-}
 
-impl EncodePacket for PublishAckPacket {
-    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        let old_len = buf.len();
-
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
         let mut packet_bytes = PacketId::bytes();
         if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
             packet_bytes += ReasonCode::bytes();
@@ -126,7 +125,15 @@ impl EncodePacket for PublishAckPacket {
         if !self.properties.is_empty() {
             packet_bytes += self.properties.bytes();
         }
-        let fixed_header = FixedHeader::new(PacketType::PublishAck, packet_bytes)?;
+        FixedHeader::new(PacketType::PublishAck, packet_bytes)
+    }
+}
+
+impl EncodePacket for PublishAckPacket {
+    fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
+        let old_len = buf.len();
+
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;
         if self.reason_code != ReasonCode::Success || !self.properties.is_empty() {
@@ -137,12 +144,6 @@ impl EncodePacket for PublishAckPacket {
         }
 
         Ok(buf.len() - old_len)
-    }
-}
-
-impl Packet for PublishAckPacket {
-    fn packet_type(&self) -> PacketType {
-        PacketType::PublishAck
     }
 }
 
@@ -187,5 +188,16 @@ impl DecodePacket for PublishAckPacket {
             reason_code,
             properties,
         })
+    }
+}
+
+impl Packet for PublishAckPacket {
+    fn packet_type(&self) -> PacketType {
+        PacketType::PublishAck
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = self.get_fixed_header()?;
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }
