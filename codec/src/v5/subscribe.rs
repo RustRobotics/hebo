@@ -7,6 +7,7 @@ use std::convert::TryFrom;
 use super::{property, FixedHeader, Packet, PacketType, Properties, PropertyType};
 use crate::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS, SubTopic,
+    VarIntError,
 };
 
 #[repr(u8)]
@@ -339,6 +340,16 @@ impl SubscribePacket {
     pub fn mut_topics(&mut self) -> &mut Vec<SubscribeTopic> {
         &mut self.topics
     }
+
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        let mut remaining_length = PacketId::bytes();
+        for topic in &self.topics {
+            remaining_length += topic.bytes();
+        }
+
+        FixedHeader::new(PacketType::Subscribe, remaining_length)
+    }
 }
 
 impl DecodePacket for SubscribePacket {
@@ -403,12 +414,7 @@ impl EncodePacket for SubscribePacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let mut remaining_length = PacketId::bytes();
-        for topic in &self.topics {
-            remaining_length += topic.bytes();
-        }
-
-        let fixed_header = FixedHeader::new(PacketType::Subscribe, remaining_length)?;
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(buf)?;
 
         // Variable header
@@ -426,5 +432,10 @@ impl EncodePacket for SubscribePacket {
 impl Packet for SubscribePacket {
     fn packet_type(&self) -> PacketType {
         PacketType::Subscribe
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = self.get_fixed_header()?;
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }

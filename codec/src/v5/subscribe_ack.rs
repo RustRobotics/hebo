@@ -4,7 +4,9 @@
 
 use super::property::check_property_type_list;
 use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, VarIntError,
+};
 
 /// Reply to Subscribe packet.
 ///
@@ -122,6 +124,13 @@ impl SubscribeAckPacket {
     pub fn reasons(&self) -> &[ReasonCode] {
         &self.reasons
     }
+
+    #[must_use]
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        let remaining_length =
+            PacketId::bytes() + self.properties.bytes() + self.reasons.len() * ReasonCode::bytes();
+        FixedHeader::new(PacketType::SubscribeAck, remaining_length)
+    }
 }
 
 impl DecodePacket for SubscribeAckPacket {
@@ -166,9 +175,8 @@ impl DecodePacket for SubscribeAckPacket {
 impl EncodePacket for SubscribeAckPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
-        let remaining_length =
-            PacketId::bytes() + self.properties.bytes() + self.reasons.len() * ReasonCode::bytes();
-        let fixed_header = FixedHeader::new(PacketType::SubscribeAck, remaining_length)?;
+
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(buf)?;
         self.packet_id.encode(buf)?;
         self.properties.encode(buf)?;
@@ -184,5 +192,10 @@ impl EncodePacket for SubscribeAckPacket {
 impl Packet for SubscribeAckPacket {
     fn packet_type(&self) -> PacketType {
         PacketType::SubscribeAck
+    }
+
+    fn bytes(&self) -> Result<usize, VarIntError> {
+        let fixed_header = self.get_fixed_header()?;
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }
