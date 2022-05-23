@@ -223,7 +223,7 @@ mod tests {
         let config: Result<RedisConnConfig, Error> = toml::from_str(
             r#"
         use_uds = true
-        socket = "/var/run/redis.sock"
+        socket = "/run/redis.sock"
         database = 1
         password = "password1"
         pool_size = 8
@@ -233,6 +233,6 @@ mod tests {
         assert!(config.is_ok());
         let config = config.unwrap();
         let uri = config.get_uri();
-        assert_eq!(uri, "redis+unix:///var/run/redis.sock?db=1&pass=password1");
+        assert_eq!(uri, "redis+unix:///run/redis.sock?db=1&pass=password1");
     }
 }

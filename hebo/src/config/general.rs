@@ -30,8 +30,8 @@ pub struct General {
 
     /// Write process id to a file. A blank string means a pid file shouldn't be written.
     ///
-    /// Default is `/var/run/hebo.pid` for root user,
-    /// and `/var/run/user/UID/hebo.pid` for non-root users.
+    /// Default is `/run/hebo.pid` for root user,
+    /// and `/run/user/UID/hebo.pid` for non-root users.
     #[serde(default = "General::default_pid_file")]
     pid_file: PathBuf,
 
@@ -110,9 +110,9 @@ impl General {
     pub fn default_pid_file() -> PathBuf {
         let uid = unsafe { nc::geteuid() };
         if uid == 0 {
-            PathBuf::from("/var/run/hebo.pid")
+            PathBuf::from("/run/hebo.pid")
         } else {
-            PathBuf::from(&format!("/var/run/user/{}/hebo.pid", uid))
+            PathBuf::from(&format!("/run/user/{}/hebo.pid", uid))
         }
     }
 
