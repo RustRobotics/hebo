@@ -5,7 +5,6 @@
 use codec::QoS;
 use ruo::client::Client;
 use ruo::connect_options::{ConnectOptions, ConnectType, UdsConnect};
-use std::future::Future;
 use std::path::PathBuf;
 
 async fn on_connect(client: &mut Client) {

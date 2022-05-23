@@ -1,4 +1,6 @@
 
+# Build hebo on all available architectures with `cross` tool.
+
 cross-all: cross-aarch64 cross-arm cross-i686 \
 	cross-mips cross-mips64 cross-mips64el cross-mipsel \
 	cross-powerpc64le cross-x86_64
