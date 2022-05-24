@@ -31,6 +31,10 @@ pub fn check_property_type_list(
     properties: &[Property],
     types: &[PropertyType],
 ) -> Result<(), PropertyType> {
+    if properties.is_empty() {
+        return Ok(());
+    }
+
     for property in properties {
         if !types.contains(&property.property_type()) {
             return Err(property.property_type());

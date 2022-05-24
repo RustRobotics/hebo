@@ -46,6 +46,11 @@ use crate::{
 /// +----------------------------+
 /// | Client id string ...       |
 /// +----------------------------+
+/// | Will Properties Length     |
+/// +----------------------------+
+/// | Will Properties            |
+/// |                            |
+/// +----------------------------+
 /// | Will topic length          |
 /// |                            |
 /// +----------------------------+
@@ -530,10 +535,37 @@ impl DecodePacket for ConnectPacket {
         let keep_alive = KeepAlive::decode(ba)?;
         validate_keep_alive(keep_alive)?;
 
+        let properties = Properties::decode(ba)?;
+        log::info!("properties: {:?}", properties);
+        println!("properties: {:?}", properties);
+        if let Err(property_type) = check_property_type_list(properties.props(), CONNECT_PROPERTIES)
+        {
+            log::error!(
+                "v5/ConnectPacket: property type {:?} cannot be used in properties!",
+                property_type
+            );
+            return Err(DecodeError::InvalidPropertyType);
+        }
+
         let client_id = StringData::decode(ba).map_err(|_err| DecodeError::InvalidClientId)?;
         if client_id.is_empty() && !connect_flags.clean_session() {
             // If clean_session is false, a client_id is always required.
             return Err(DecodeError::InvalidClientId);
+        }
+
+        let will_properties = if connect_flags.will() {
+            Properties::decode(ba)?
+        } else {
+            Properties::new()
+        };
+        if let Err(property_type) =
+            check_property_type_list(will_properties.props(), CONNECT_WILL_PROPERTIES)
+        {
+            log::error!(
+                "v5/ConnectPacket: property type {:?} cannot be used in will properties!",
+                property_type
+            );
+            return Err(DecodeError::InvalidPropertyType);
         }
 
         let will_topic = if connect_flags.will() {
@@ -558,27 +590,6 @@ impl DecodePacket for ConnectPacket {
         } else {
             BinaryData::new()
         };
-
-        let properties = Properties::decode(ba)?;
-        if let Err(property_type) = check_property_type_list(properties.props(), CONNECT_PROPERTIES)
-        {
-            log::error!(
-                "v5/ConnectPacket: property type {:?} cannot be used in properties!",
-                property_type
-            );
-            return Err(DecodeError::InvalidPropertyType);
-        }
-
-        let will_properties = Properties::decode(ba)?;
-        if let Err(property_type) =
-            check_property_type_list(will_properties.props(), CONNECT_WILL_PROPERTIES)
-        {
-            log::error!(
-                "v5/ConnectPacket: property type {:?} cannot be used in will properties!",
-                property_type
-            );
-            return Err(DecodeError::InvalidPropertyType);
-        }
 
         Ok(Self {
             protocol_name,
