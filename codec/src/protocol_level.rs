@@ -64,6 +64,7 @@ impl EncodePacket for ProtocolLevel {
 }
 
 impl DecodePacket for ProtocolLevel {
+    /// Only parse protocol level in byte array.
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
         if fixed_header.packet_type() != PacketType::Connect {

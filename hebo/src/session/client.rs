@@ -5,7 +5,8 @@
 //! Handles client packets
 
 use codec::{
-    utils::random_client_id, v3, ByteArray, DecodeError, DecodePacket, FixedHeader, PacketType, QoS,
+    utils::random_client_id, v3, v5, ByteArray, DecodeError, DecodePacket, FixedHeader, PacketType,
+    ProtocolLevel, QoS,
 };
 
 use super::{Session, Status};
@@ -62,6 +63,53 @@ impl Session {
 
     async fn on_client_connect(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
+        let protocol_level = match ProtocolLevel::decode(&mut ba) {
+            Ok(protocol_level) => protocol_level,
+            Err(err) => match err {
+                // From [MQTT-3.1.2-2].
+                //
+                // The Server MUST respond to the CONNECT Packet with a CONNACK return code
+                // 0x01 (unacceptable protocol level) and then disconnect
+                // the Client if the Protocol Level is not supported by the Server
+                //
+                // If a server sends a CONNACK packet containing a non-zero return code
+                // it MUST set Session Present to 0 [MQTT-3.2.2-4].
+                //
+                // If a server sends a CONNACK packet containing a non-zero return code it MUST
+                // then close the Network Connection. [MQTT-3.2.2-5]
+                DecodeError::InvalidProtocolName | DecodeError::InvalidProtocolLevel => {
+                    let ack_packet =
+                        v3::ConnectAckPacket::new(false, v3::ConnectReturnCode::UnacceptedProtocol);
+                    self.send(ack_packet).await?;
+                    self.status = Status::Disconnected;
+                    // TODO(Shaohua): Close socket stream by handle.
+                    return Err(err.into());
+                }
+                _ => {
+                    // Got malformed packet, disconnect client.
+                    //
+                    // The Server MUST validate that the CONNECT Packet conforms to section 3.1 and close the
+                    // Network Connection without sending a CONNACK if it does not conform [MQTT-3.1.4-1].
+                    //
+                    // We do not send any packets, just disconnect the stream.
+                    self.status = Status::Disconnected;
+                    // TODO(Shaohua): Close socket stream by handle.
+                    return Err(err.into());
+                }
+            },
+        };
+
+        self.protocol_level = protocol_level;
+        if protocol_level == ProtocolLevel::V5 {
+            self.on_client_connect_v5(buf).await
+        } else {
+            self.on_client_connect_v3(buf).await
+        }
+    }
+
+    async fn on_client_connect_v3(&mut self, buf: &[u8]) -> Result<(), Error> {
+        let mut ba = ByteArray::new(buf);
+
         let mut packet = match v3::ConnectPacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => match err {
@@ -81,10 +129,12 @@ impl Session {
                         v3::ConnectAckPacket::new(false, v3::ConnectReturnCode::UnacceptedProtocol);
                     self.send(ack_packet).await?;
                     self.status = Status::Disconnected;
+                    // TODO(Shaohua): disconnect socket stream
                     return Err(err.into());
                 }
                 DecodeError::InvalidClientId => {
                     self.reject_client_id().await?;
+                    // TODO(Shaohua): disconnect socket stream
                     return Err(err.into());
                 }
                 _ => {
@@ -95,12 +145,14 @@ impl Session {
                     //
                     // We do not send any packets, just disconnect the stream.
                     self.status = Status::Disconnected;
+                    // TODO(Shaohua): disconnect socket stream
                     return Err(err.into());
                 }
             },
         };
 
         // Check connection status first.
+        //
         // If this client is already connected, send disconnect packet.
         //
         // The Server MUST process a second CONNECT Packet sent from a Client as
@@ -110,6 +162,7 @@ impl Session {
         // Client after the CONNECT Packet. [MQTT-3.1.4-5]
         if self.status == Status::Connecting || self.status == Status::Connected {
             self.status = Status::Disconnected;
+            // TODO(Shaohua): disconnect socket stream
             return Err(Error::new(
                 ErrorKind::StatusError,
                 "sesion: Invalid status, got a second CONNECT packet!",
@@ -166,6 +219,11 @@ impl Session {
             .await
             .map(drop)?;
         Ok(())
+    }
+
+    async fn on_client_connect_v5(&mut self, buf: &[u8]) -> Result<(), Error> {
+        let _ba = ByteArray::new(buf);
+        todo!()
     }
 
     async fn on_client_ping(&mut self, buf: &[u8]) -> Result<(), Error> {

@@ -4,7 +4,7 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use codec::{v3, EncodePacket, Packet, PacketId, PacketType};
+use codec::{v3, EncodePacket, Packet, PacketId, PacketType, ProtocolLevel};
 use std::collections::HashSet;
 use std::time::Instant;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -37,6 +37,8 @@ pub enum Status {
 #[derive(Debug)]
 pub struct Session {
     id: SessionId,
+    protocol_level: ProtocolLevel,
+
     config: SessionConfig,
     stream: Stream,
 
@@ -63,6 +65,8 @@ impl Session {
     ) -> Self {
         Self {
             id,
+            protocol_level: ProtocolLevel::default(),
+
             config,
             stream,
 
