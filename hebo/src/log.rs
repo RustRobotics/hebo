@@ -4,7 +4,8 @@
 
 use log::LevelFilter;
 use log4rs::{
-    append::console,
+    append::console::ConsoleAppender,
+    append::console::Target,
     append::rolling_file::policy::compound::roll::fixed_window::FixedWindowRoller,
     append::rolling_file::policy::compound::trigger::size::SizeTrigger,
     append::rolling_file::policy::compound::CompoundPolicy,
@@ -45,10 +46,11 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
     let mut config_builder = Config::builder();
     let mut root_builder = Root::builder();
     if log_conf.console_log() {
-        let stdout = console::ConsoleAppender::builder()
+        let stdout = ConsoleAppender::builder()
             .encoder(Box::new(PatternEncoder::new(
                 "{d(%Y-%m-%d %H:%M:%S)} {l} {M}:{L} - {m}{n}",
             )))
+            .target(Target::Stderr)
             .build();
         config_builder =
             config_builder.appender(Appender::builder().build(STDOUT_NAME, Box::new(stdout)));

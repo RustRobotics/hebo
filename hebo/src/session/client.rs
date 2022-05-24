@@ -24,10 +24,7 @@ impl Session {
                 return self.send_disconnect().await;
             }
         };
-        log::info!(
-            "Session::handle_client_packet(), header: {:?}",
-            fixed_header
-        );
+        log::info!("handle_client_packet(), header: {:?}", fixed_header);
 
         // The Keep Alive is a time interval measured in seconds. Expressed as a 16-bit word,
         // it is the maximum time interval that is permitted to elapse between the point
@@ -145,10 +142,7 @@ impl Session {
                 }
             },
         };
-        log::info!(
-            "session::on_client_connect(), protocol level: {:?}",
-            protocol_level
-        );
+        log::info!("on_client_connect(), protocol level: {:?}", protocol_level);
 
         self.protocol_level = protocol_level;
         if protocol_level == ProtocolLevel::V5 {
@@ -264,6 +258,7 @@ impl Session {
                     return Err(err.into());
                 }
                 _ => {
+                    log::error!("on_client_connect_v5() Uncatched error: {:?}", err);
                     // Got malformed packet, disconnect client.
                     self.status = Status::Disconnected;
                     // TODO(Shaohua): disconnect socket stream.
