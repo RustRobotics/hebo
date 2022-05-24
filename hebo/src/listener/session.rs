@@ -36,26 +36,26 @@ impl Listener {
             SessionToListenerCmd::Publish(session_id, packet) => {
                 self.on_session_publish(session_id, packet).await
             }
-            SessionToListenerCmd::PublishV5(_session_id, _packet) => {
-                todo!()
+            SessionToListenerCmd::PublishV5(session_id, packet) => {
+                self.on_session_publish_v5(session_id, packet).await
             }
             SessionToListenerCmd::Subscribe(session_id, packet) => {
                 self.on_session_subscribe(session_id, packet).await
             }
-            SessionToListenerCmd::SubscribeV5(_session_id, _packet) => {
-                todo!()
+            SessionToListenerCmd::SubscribeV5(session_id, packet) => {
+                self.on_session_subscribe_v5(session_id, packet).await
             }
             SessionToListenerCmd::Unsubscribe(session_id, packet) => {
                 self.on_session_unsubscribe(session_id, packet).await
             }
-            SessionToListenerCmd::UnsubscribeV5(_session_id, _packet) => {
-                todo!()
+            SessionToListenerCmd::UnsubscribeV5(session_id, packet) => {
+                self.on_session_unsubscribe_v5(session_id, packet).await
             }
             SessionToListenerCmd::Disconnect(session_id) => {
                 self.on_session_disconnect(session_id).await
             }
-            SessionToListenerCmd::DisconnectV5(_session_id) => {
-                todo!()
+            SessionToListenerCmd::DisconnectV5(session_id) => {
+                self.on_session_disconnect_v5(session_id).await
             }
         }
     }
@@ -142,6 +142,19 @@ impl Listener {
             .map_err(Into::into)
     }
 
+    async fn on_session_disconnect_v5(&mut self, session_id: SessionId) -> Result<(), Error> {
+        log::info!("Listener::on_session_disconnect_v5()");
+        // Delete session info
+        if self.session_senders.remove(&session_id).is_none() {
+            log::error!("Failed to remove pipeline with session id: {}", session_id);
+        }
+
+        self.dispatcher_sender
+            .send(ListenerToDispatcherCmd::SessionRemoved(self.id))
+            .await
+            .map_err(Into::into)
+    }
+
     async fn on_session_subscribe(
         &mut self,
         session_id: SessionId,
@@ -149,6 +162,16 @@ impl Listener {
     ) -> Result<(), Error> {
         // Check ACL.
         let cmd = ListenerToAclCmd::Subscribe(SessionGid::new(self.id, session_id), packet);
+        self.acl_sender.send(cmd).await.map_err(Into::into)
+    }
+
+    async fn on_session_subscribe_v5(
+        &mut self,
+        session_id: SessionId,
+        packet: v5::SubscribePacket,
+    ) -> Result<(), Error> {
+        // Check ACL.
+        let cmd = ListenerToAclCmd::SubscribeV5(SessionGid::new(self.id, session_id), packet);
         self.acl_sender.send(cmd).await.map_err(Into::into)
     }
 
@@ -168,6 +191,22 @@ impl Listener {
             .map_err(Into::into)
     }
 
+    async fn on_session_unsubscribe_v5(
+        &mut self,
+        session_id: SessionId,
+        packet: v5::UnsubscribePacket,
+    ) -> Result<(), Error> {
+        // No need to check ACL.
+        // Remove topic from sub tree.
+        self.dispatcher_sender
+            .send(ListenerToDispatcherCmd::UnsubscribeV5(
+                SessionGid::new(self.id, session_id),
+                packet,
+            ))
+            .await
+            .map_err(Into::into)
+    }
+
     async fn on_session_publish(
         &mut self,
         session_id: SessionId,
@@ -175,6 +214,16 @@ impl Listener {
     ) -> Result<(), Error> {
         // Check ACL.
         let cmd = ListenerToAclCmd::Publish(SessionGid::new(self.id, session_id), packet);
+        self.acl_sender.send(cmd).await.map_err(Into::into)
+    }
+
+    async fn on_session_publish_v5(
+        &mut self,
+        session_id: SessionId,
+        packet: v5::PublishPacket,
+    ) -> Result<(), Error> {
+        // Check ACL.
+        let cmd = ListenerToAclCmd::PublishV5(SessionGid::new(self.id, session_id), packet);
         self.acl_sender.send(cmd).await.map_err(Into::into)
     }
 
