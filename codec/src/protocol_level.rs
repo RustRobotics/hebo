@@ -4,7 +4,11 @@
 
 use std::convert::TryFrom;
 
-use crate::{DecodeError, EncodeError, EncodePacket};
+use crate::base::PROTOCOL_NAME;
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, PacketType,
+    StringData,
+};
 
 /// Current version of MQTT protocol can be:
 /// * 3.1
@@ -56,5 +60,22 @@ impl EncodePacket for ProtocolLevel {
     fn encode(&self, v: &mut Vec<u8>) -> Result<usize, EncodeError> {
         v.push(*self as u8);
         Ok(Self::bytes())
+    }
+}
+
+impl DecodePacket for ProtocolLevel {
+    fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
+        let fixed_header = FixedHeader::decode(ba)?;
+        if fixed_header.packet_type() != PacketType::Connect {
+            return Err(DecodeError::InvalidPacketType);
+        }
+
+        let protocol_name = StringData::decode(ba)?;
+        if protocol_name.as_ref() != PROTOCOL_NAME {
+            return Err(DecodeError::InvalidProtocolName);
+        }
+
+        let protocol_level = ProtocolLevel::try_from(ba.read_byte()?)?;
+        Ok(protocol_level)
     }
 }
