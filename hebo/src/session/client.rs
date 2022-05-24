@@ -113,25 +113,6 @@ impl Session {
         let mut packet = match v3::ConnectPacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => match err {
-                // From [MQTT-3.1.2-2].
-                //
-                // The Server MUST respond to the CONNECT Packet with a CONNACK return code
-                // 0x01 (unacceptable protocol level) and then disconnect
-                // the Client if the Protocol Level is not supported by the Server
-                //
-                // If a server sends a CONNACK packet containing a non-zero return code
-                // it MUST set Session Present to 0 [MQTT-3.2.2-4].
-                //
-                // If a server sends a CONNACK packet containing a non-zero return code it MUST
-                // then close the Network Connection. [MQTT-3.2.2-5]
-                DecodeError::InvalidProtocolName | DecodeError::InvalidProtocolLevel => {
-                    let ack_packet =
-                        v3::ConnectAckPacket::new(false, v3::ConnectReturnCode::UnacceptedProtocol);
-                    self.send(ack_packet).await?;
-                    self.status = Status::Disconnected;
-                    // TODO(Shaohua): disconnect socket stream
-                    return Err(err.into());
-                }
                 DecodeError::InvalidClientId => {
                     self.reject_client_id().await?;
                     // TODO(Shaohua): disconnect socket stream
@@ -222,8 +203,72 @@ impl Session {
     }
 
     async fn on_client_connect_v5(&mut self, buf: &[u8]) -> Result<(), Error> {
-        let _ba = ByteArray::new(buf);
-        todo!()
+        let mut ba = ByteArray::new(buf);
+        let mut packet = match v5::ConnectPacket::decode(&mut ba) {
+            Ok(packet) => packet,
+            Err(err) => match err {
+                DecodeError::InvalidClientId => {
+                    self.reject_client_id().await?;
+                    // TODO(Shaohua): disconnect socket stream
+                    return Err(err.into());
+                }
+                _ => {
+                    // Got malformed packet, disconnect client.
+                    self.status = Status::Disconnected;
+                    // TODO(Shaohua): disconnect socket stream.
+                    // TODO(Shaohua): Return reason-code to client.
+                    return Err(err.into());
+                }
+            },
+        };
+
+        // Check connection status first.
+        if self.status == Status::Connecting || self.status == Status::Connected {
+            self.status = Status::Disconnected;
+            // TODO(Shaohua): disconnect socket stream
+            return Err(Error::new(
+                ErrorKind::StatusError,
+                "sesion: Invalid status, got a second CONNECT packet!",
+            ));
+        }
+
+        // TODO(Shaohua): Check client-id rules in V5 spec.
+        if packet.client_id().is_empty() {
+            if self.config.allow_empty_client_id() {
+                let new_client_id = random_client_id();
+                // No need to catch errors as client id is always valid.
+                let _ret = packet.set_client_id(&new_client_id);
+            } else {
+                return self.reject_client_id().await;
+            }
+        }
+        self.client_id = packet.client_id().to_string();
+
+        // Update keep_alive timer.
+        if packet.keep_alive() > 0 {
+            #[allow(clippy::cast_possible_truncation)]
+            #[allow(clippy::cast_sign_loss)]
+            let keep_alive = (f64::from(packet.keep_alive()) * 1.5) as u64;
+            self.config.set_keep_alive(keep_alive);
+        }
+
+        if !packet.connect_flags().clean_session() && packet.client_id().is_empty() {
+            let ack_packet =
+                v5::ConnectAckPacket::new(false, v5::ReasonCode::ClientIdentifierNotValid);
+            self.send(ack_packet).await?;
+            return self.send_disconnect().await;
+        }
+
+        self.clean_session = packet.connect_flags().clean_session();
+        // TODO(Shaohua): Handle other connection flags.
+
+        // Send the connect packet to listener.
+        self.status = Status::Connecting;
+        self.sender
+            .send(SessionToListenerCmd::ConnectV5(self.id, packet))
+            .await
+            .map(drop)?;
+        Ok(())
     }
 
     async fn on_client_ping(&mut self, buf: &[u8]) -> Result<(), Error> {
