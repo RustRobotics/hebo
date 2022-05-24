@@ -5,9 +5,10 @@
 
 set -xe
 
-GID=$(id -g)
-sudo docker run --user ${UID}:${GID} --rm --volume ${PWD}/../../:/hebo \
-  rust:latest /bin/bash -c 'cd /hebo; cargo build --release --bin hebo'
+readonly GID=$(id -g)
+sudo docker run --user ${UID}:${GID} --rm --volume ${PWD}/../../../:/hebo \
+  rust:latest /bin/bash -c 'cd /hebo/hebo; cargo build --release --bin hebo'
+#cd ../../.. && cross build --release --bin hebo --target x86_64-unknown-linux-gnu
 
 install -m644 ../pifu/hebo.toml hebo.toml
 install -m755 ../../../target/release/hebo hebo
