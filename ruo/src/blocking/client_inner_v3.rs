@@ -3,11 +3,11 @@
 // in the LICENSE file.
 
 use codec::v3::{
-    ConnectAckPacket, ConnectPacket, ConnectReturnCode, DisconnectPacket, FixedHeader, PacketType,
-    PingRequestPacket, PublishAckPacket, PublishPacket, SubscribeAckPacket, SubscribePacket,
-    UnsubscribeAckPacket, UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, ConnectReturnCode, DisconnectPacket, PingRequestPacket,
+    PublishAckPacket, PublishPacket, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
+    UnsubscribePacket,
 };
-use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
+use codec::{ByteArray, DecodePacket, EncodePacket, FixedHeader, PacketId, PacketType, QoS};
 use std::collections::HashMap;
 
 use super::Stream;

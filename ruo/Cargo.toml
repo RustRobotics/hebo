@@ -27,7 +27,7 @@ blocking = [ "tungstenite" ]
 
 [dependencies]
 byteorder = "1.4.3"
-codec = { path = "../codec", package = "hebo_codec", version = "0.1.4" }
+codec = { path = "../codec", package = "hebo_codec", version = "0.2.1" }
 env_logger = "0.9.0"
 futures = "0.3.21"
 futures-util = "0.3.21"

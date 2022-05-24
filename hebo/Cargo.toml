@@ -42,7 +42,7 @@ redis_conn = ["redis"]
 base64 = "0.13.0"
 chrono = { version = "0.4.19", features = ["serde"] }
 clap = "3.1.18"
-codec = { path = "../codec", package = "hebo_codec", version = "0.1.4" }
+codec = { path = "../codec", package = "hebo_codec", version = "0.2.1" }
 env_logger = "0.9.0"
 futures = "0.3.21"
 futures-util = "0.3.21"

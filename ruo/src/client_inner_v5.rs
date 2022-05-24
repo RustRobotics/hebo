@@ -3,11 +3,13 @@
 // in the LICENSE file.
 
 use codec::v5::{
-    ConnectAckPacket, ConnectPacket, DisconnectPacket, FixedHeader, Packet, PacketType,
-    PingRequestPacket, PublishAckPacket, PublishPacket, ReasonCode, SubscribeAckPacket,
-    SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
+    ConnectAckPacket, ConnectPacket, DisconnectPacket, PingRequestPacket, PublishAckPacket,
+    PublishPacket, ReasonCode, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
+    UnsubscribePacket,
 };
-use codec::{ByteArray, DecodePacket, EncodePacket, PacketId, QoS};
+use codec::{
+    ByteArray, DecodePacket, EncodePacket, FixedHeader, Packet, PacketId, PacketType, QoS,
+};
 use std::collections::HashMap;
 use tokio::time::interval;
 
