@@ -275,6 +275,7 @@ pub struct SubscribePacket {
     topics: Vec<SubscribeTopic>,
 }
 
+/// Properties available in subscribe packet.
 pub const SUBSCRIBE_PROPERTIES: &[PropertyType] = &[
     // The Subscription Identifier can have the value of 1 to 268,435,455.
     // It is a Protocol Error if the Subscription Identifier has a value of 0.

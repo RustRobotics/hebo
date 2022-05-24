@@ -64,6 +64,7 @@ pub const PUBLISH_ACK_REASONS: &[ReasonCode] = &[
 /// Properties available in publish ack packets.
 pub const PUBLISH_ACK_PROPERTIES: &[PropertyType] = &[
     // The sender uses this value to give additional information to the receiver.
+    //
     // The sender MUST NOT send this property if it would increase the size of the PUBACK packet
     // beyond the Maximum Packet Size specified by the receiver [MQTT-3.4.2-2].
     PropertyType::ReasonString,

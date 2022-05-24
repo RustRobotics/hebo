@@ -63,6 +63,7 @@ pub const AUTH_REASONS: &[ReasonCode] = &[
     ReasonCode::ReAuthenticate,
 ];
 
+/// Property types available in auth packet.
 pub const AUTH_PROPERTIES: &[PropertyType] = &[
     PropertyType::AuthenticationMethod,
     PropertyType::AuthenticationData,

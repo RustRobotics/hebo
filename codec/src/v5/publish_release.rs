@@ -101,6 +101,7 @@ impl PublishReleasePacket {
 pub const PUBLISH_RELEASE_REASONS: &[ReasonCode] =
     &[ReasonCode::Success, ReasonCode::PacketIdentifierNotFound];
 
+/// Properties available in publish release packet.
 pub const PUBLISH_RELEASE_PROPERTIES: &[PropertyType] = &[
     // The sender MUST NOT send this Property if it would increase the size of the PUBREL packet
     // beyond the Maximum Packet Size specified by the receiver [MQTT-3.6.2-2]

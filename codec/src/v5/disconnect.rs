@@ -87,6 +87,7 @@ pub const DISCONNECT_REASONS: &[ReasonCode] = &[
     ReasonCode::TopicAliasInvalid,
 ];
 
+/// Properties available in disconnect packet.
 pub const DISCONNECT_PROPERTIES: &[PropertyType] = &[
     // The Session Expiry Interval MUST NOT be sent on a DISCONNECT by the Server [MQTT-3.14.2-2].
     PropertyType::SessionExpiryInterval,

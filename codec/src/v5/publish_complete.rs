@@ -97,9 +97,11 @@ impl PublishCompletePacket {
     }
 }
 
+/// Reason code available in publish complete packet.
 pub const PUBLISH_COMPLETE_REASONS: &[ReasonCode] =
     &[ReasonCode::Success, ReasonCode::PacketIdentifierNotFound];
 
+/// Properties available in publish complete packet.
 pub const PUBLISH_COMPLETE_PROPERTIES: &[PropertyType] =
     &[PropertyType::ReasonString, PropertyType::UserProperty];
 

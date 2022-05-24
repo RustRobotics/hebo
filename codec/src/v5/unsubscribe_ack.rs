@@ -115,6 +115,7 @@ pub const UNSUBSCRIBE_REASONS: &[ReasonCode] = &[
     ReasonCode::PacketIdentifierInUse,
 ];
 
+/// Properties available in unsubscribe ack packet.
 pub const UNSUBSCRIBE_ACK_PROPERTIES: &[PropertyType] = &[
     // The Server MUST NOT send this Property if it would increase the size of
     // the UNSUBACK packet beyond the Maximum Packet Size specified by the Client [MQTT-3.11.2-1].
