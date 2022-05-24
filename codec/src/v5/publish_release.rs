@@ -3,9 +3,10 @@
 // in the LICENSE file.
 
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
+use super::{Properties, PropertyType, ReasonCode};
 use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, VarIntError,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
+    PacketType, VarIntError,
 };
 
 /// Response to a Publish packet with `QoS` 2. It is the third packet of the `QoS` 2

@@ -5,7 +5,8 @@
 use std::convert::TryFrom;
 
 use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, QoS, VarInt, VarIntError,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel, QoS, VarInt,
+    VarIntError,
 };
 
 pub trait Packet: Send {
@@ -58,12 +59,14 @@ pub enum PacketType {
 
     /// Client is disconnecting
     Disconnect,
+
+    /// Authentication exchange
+    Auth,
 }
 
 impl PacketType {
-    /// Get byte length in packet.
+    /// Get byte length used in packet.
     #[must_use]
-    #[inline]
     pub const fn bytes() -> usize {
         1
     }
@@ -86,6 +89,7 @@ impl From<PacketType> for u8 {
             PacketType::PingRequest => 12,
             PacketType::PingResponse => 13,
             PacketType::Disconnect => 14,
+            PacketType::Auth => 15,
         };
 
         let flags_bits = match packet_type {
@@ -102,8 +106,9 @@ impl From<PacketType> for u8 {
             }
             // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
             // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
-            // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
+            // any other value as malformed and close the Network Connection [MQTT3-3.6.1-1].
             PacketType::PublishRelease | PacketType::Subscribe | PacketType::Unsubscribe => {
+                // Reserved
                 0b0000_0010
             }
             _ => 0b0000_0000,
@@ -115,8 +120,13 @@ impl From<PacketType> for u8 {
 impl TryFrom<u8> for PacketType {
     type Error = DecodeError;
 
-    #[allow(clippy::cognitive_complexity)]
+    /// Parse packet type from one byte data.
+    ///
+    /// # Errors
+    ///
+    /// Returns error value `InvalidPacketFlags` if flag bits is not expected.
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::cognitive_complexity)]
     fn try_from(v: u8) -> Result<Self, Self::Error> {
         let type_bits = (v & 0b1111_0000) >> 4;
         let flag = v & 0b0000_1111;
@@ -126,8 +136,6 @@ impl TryFrom<u8> for PacketType {
         // the receiver MUST close the Network Connection [MQTT-2.2.2-2].
         match type_bits {
             1 => {
-                // The Server MUST validate that the reserved flag in the CONNECT Control
-                // Packet is set to zero and disconnect the Client if it is not zero. [MQTT-3.1.2-3]
                 if flag == 0b0000_0000 {
                     Ok(Self::Connect)
                 } else {
@@ -151,7 +159,7 @@ impl TryFrom<u8> for PacketType {
                     0b0000_0010 => QoS::AtLeastOnce,
                     0b0000_0100 => QoS::ExactOnce,
 
-                    _ => return Err(DecodeError::InvalidQoS),
+                    _ => return Err(DecodeError::InvalidPacketFlags),
                 };
 
                 Ok(Self::Publish { dup, retain, qos })
@@ -173,9 +181,6 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             6 => {
-                // Bits 3,2,1 and 0 of the fixed header in the PUBREL Control Packet are reserved
-                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
-                // any other value as malformed and close the Network Connection [MQTT-3.6.1-1].
                 if flag == 0b0000_0010 {
                     Ok(Self::PublishRelease)
                 } else {
@@ -192,9 +197,6 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             8 => {
-                // Bits 3,2,1 and 0 of the fixed header of the SUBSCRIBE Control Packet are reserved
-                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
-                // any other value as malformed and close the Network Connection [MQTT-3.8.1-1].
                 if flag == 0b0000_0010 {
                     Ok(Self::Subscribe)
                 } else {
@@ -211,9 +213,6 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             10 => {
-                // Bits 3,2,1 and 0 of the fixed header of the UNSUBSCRIBE Control Packet are reserved
-                // and MUST be set to 0,0,1 and 0 respectively. The Server MUST treat
-                // any other value as malformed and close the Network Connection [MQTT-3.10.1-1].
                 if flag == 0b0000_0010 {
                     Ok(Self::Unsubscribe)
                 } else {
@@ -246,12 +245,21 @@ impl TryFrom<u8> for PacketType {
                 }
             }
             14 => {
-                // The Server MUST validate that reserved bits are set to zero and disconnect the Client
-                // if they are not zero [MQTT-3.14.1-1].
                 if flag == 0b0000_0000 {
                     Ok(Self::Disconnect)
                 } else {
                     log::error!("header: Got packet flag in Disconnect: {:#b}", flag);
+                    Err(DecodeError::InvalidPacketFlags)
+                }
+            }
+            15 => {
+                // Bits 3,2,1 and 0 of the Fixed Header of the AUTH packet are reserved
+                // and MUST all be set to 0. The Client or Server MUST treat any other value
+                // as malformed and close the Network Connection [MQTT-3.15.1-1].
+                if flag == 0b0000_0000 {
+                    Ok(Self::Auth)
+                } else {
+                    log::error!("header: Got packet flag in Auth: {:#b}", flag);
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -270,22 +278,29 @@ impl Default for PacketType {
 }
 
 /// Fixed header part of a mqtt control packet. It consists of as least two bytes.
+///
+/// ```txt
 ///  7 6 5 4 3 2 1 0
 /// +-------+-------+
 /// | Type  | Flags |
 /// +-------+-------+
 /// | Remaining Len |
 /// +-------+-------+
+/// ```
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct FixedHeader {
     packet_type: PacketType,
+
+    /// `Remaining Length` uses variable length encoding method. The 7th bit
+    /// in a byte is used to indicate are bytes are available. And the maximum number
+    /// of bytes in the `Remaining Length` field is 4 bytes. The maximum value is
+    /// `0xFF 0xFF 0xFF 0x7F`, `256MB`.
     remaining_length: VarInt,
 }
 
 impl FixedHeader {
-    /// Create a new fixed header.
-    ///
+    /// Create a new fixed header with `packet_type` and `remaining_length`.
     /// # Errors
     ///
     /// Returns error if `remaining_length` is invalid.
@@ -297,28 +312,28 @@ impl FixedHeader {
         })
     }
 
-    /// Get current packet type.
     #[must_use]
     pub const fn packet_type(&self) -> PacketType {
         self.packet_type
     }
 
-    /// Get remaining length.
     #[must_use]
     pub const fn remaining_length(&self) -> usize {
         self.remaining_length.value()
-    }
-
-    /// Get remaining bytes.
-    #[must_use]
-    pub const fn remaining_bytes(&self) -> usize {
-        self.remaining_length.bytes()
     }
 
     /// Get byte length in packet.
     #[must_use]
     pub const fn bytes(&self) -> usize {
         PacketType::bytes() + self.remaining_length.bytes()
+    }
+
+    /// Check whether this fixed header is valid within specific `protocol_level`.
+    ///
+    /// Note that `Auth` packet is only available in MQTT 5.0.
+    #[must_use]
+    pub fn is_valid_header(&self, protocol_level: ProtocolLevel) -> bool {
+        !(self.packet_type == PacketType::Auth && protocol_level != ProtocolLevel::V5)
     }
 }
 

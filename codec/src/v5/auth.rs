@@ -3,8 +3,11 @@
 // in the LICENSE file.
 
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType, ReasonCode};
-use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, VarIntError};
+use super::{Properties, PropertyType, ReasonCode};
+use crate::{
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet,
+    PacketType, VarIntError,
+};
 
 /// An AUTH packet is sent from Client to Server or Server to Client
 /// as part of an extended authentication exchange, such as challenge / response authentication.

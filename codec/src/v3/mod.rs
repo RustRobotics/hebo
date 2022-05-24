@@ -5,7 +5,6 @@
 mod connect;
 mod connect_ack;
 mod disconnect;
-mod header;
 mod ping_request;
 mod ping_response;
 mod publish;
@@ -21,7 +20,6 @@ mod unsubscribe_ack;
 pub use connect::ConnectPacket;
 pub use connect_ack::{ConnectAckPacket, ConnectReturnCode};
 pub use disconnect::DisconnectPacket;
-pub use header::{FixedHeader, Packet, PacketType};
 pub use ping_request::PingRequestPacket;
 pub use ping_response::PingResponsePacket;
 pub use publish::PublishPacket;

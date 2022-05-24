@@ -4,10 +4,9 @@
 
 use std::convert::TryFrom;
 
-use super::{FixedHeader, Packet, PacketType};
 use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, QoS, SubTopic,
-    VarIntError,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
+    PacketType, QoS, SubTopic, VarIntError,
 };
 
 /// Topic/QoS pair.

@@ -5,13 +5,13 @@
 use std::convert::TryFrom;
 
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{Properties, PropertyType};
 use crate::base::PROTOCOL_NAME;
 use crate::connect_flags::ConnectFlags;
 use crate::utils::{validate_client_id, validate_keep_alive};
 use crate::{
-    BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel,
-    PubTopic, QoS, StringData, U16Data, VarIntError,
+    BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
+    Packet, PacketType, ProtocolLevel, PubTopic, QoS, StringData, U16Data, VarIntError,
 };
 
 /// `ConnectPacket` consists of three parts:

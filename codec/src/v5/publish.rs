@@ -5,10 +5,10 @@
 use std::io::Write;
 
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{Properties, PropertyType};
 use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, PubTopic, QoS,
-    VarIntError,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
+    PacketType, PubTopic, QoS, VarIntError,
 };
 
 /// `PublishPacket` is used to transport application messages from the Client to the Server,

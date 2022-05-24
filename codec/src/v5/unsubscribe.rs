@@ -3,10 +3,10 @@
 // in the LICENSE file.
 
 use super::property::check_property_type_list;
-use super::{FixedHeader, Packet, PacketType, Properties, PropertyType};
+use super::{Properties, PropertyType};
 use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, SubTopic,
-    VarIntError,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
+    PacketType, SubTopic, VarIntError,
 };
 
 /// The Client request to unsubscribe topics from the Server.

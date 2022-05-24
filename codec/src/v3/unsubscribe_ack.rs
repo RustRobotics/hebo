@@ -2,9 +2,9 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use super::{FixedHeader, Packet, PacketType};
 use crate::{
-    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, PacketId, VarIntError,
+    ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader, Packet, PacketId,
+    PacketType, VarIntError,
 };
 
 /// `UnsubscribeAck` packet is sent by the Server to the Client to confirm receipt of an
