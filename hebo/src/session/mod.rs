@@ -4,7 +4,7 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use codec::{v3, EncodePacket, PacketId};
+use codec::{v3, EncodePacket, Packet, PacketId, PacketType};
 use std::collections::HashSet;
 use std::time::Instant;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -165,11 +165,11 @@ impl Session {
         self.instant = Instant::now();
     }
 
-    async fn send<P: EncodePacket + v3::Packet>(&mut self, packet: P) -> Result<(), Error> {
+    async fn send<P: EncodePacket + Packet>(&mut self, packet: P) -> Result<(), Error> {
         // The CONNACK Packet is the packet sent by the Server in response to a CONNECT Packet
         // received from a Client. The first packet sent from the Server to the Client MUST be
         // a CONNACK Packet [MQTT-3.2.0-1].
-        if self.status == Status::Connecting && packet.packet_type() != v3::PacketType::ConnectAck {
+        if self.status == Status::Connecting && packet.packet_type() != PacketType::ConnectAck {
             log::error!(
                 "ConnectAck is not the first packet to send: {:?}",
                 packet.packet_type()

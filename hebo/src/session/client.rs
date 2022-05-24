@@ -5,14 +5,7 @@
 //! Handles client packets
 
 use codec::{
-    utils::random_client_id,
-    v3::{
-        ConnectAckPacket, ConnectPacket, ConnectReturnCode, FixedHeader, PacketType,
-        PingRequestPacket, PingResponsePacket, PublishCompletePacket, PublishPacket,
-        PublishReceivedPacket, PublishReleasePacket, SubscribeAck, SubscribeAckPacket,
-        SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket,
-    },
-    ByteArray, DecodeError, DecodePacket, QoS,
+    utils::random_client_id, v3, ByteArray, DecodeError, DecodePacket, FixedHeader, PacketType, QoS,
 };
 
 use super::{Session, Status};
@@ -60,7 +53,8 @@ impl Session {
     async fn reject_client_id(&mut self) -> Result<(), Error> {
         // If a server sends a CONNACK packet containing a non-zero return code
         // it MUST set Session Present to 0 [MQTT-3.2.2-4].
-        let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
+        let ack_packet =
+            v3::ConnectAckPacket::new(false, v3::ConnectReturnCode::IdentifierRejected);
         self.send(ack_packet).await?;
         self.status = Status::Disconnected;
         Ok(())
@@ -68,7 +62,7 @@ impl Session {
 
     async fn on_client_connect(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let mut packet = match ConnectPacket::decode(&mut ba) {
+        let mut packet = match v3::ConnectPacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => match err {
                 // From [MQTT-3.1.2-2].
@@ -84,7 +78,7 @@ impl Session {
                 // then close the Network Connection. [MQTT-3.2.2-5]
                 DecodeError::InvalidProtocolName | DecodeError::InvalidProtocolLevel => {
                     let ack_packet =
-                        ConnectAckPacket::new(false, ConnectReturnCode::UnacceptedProtocol);
+                        v3::ConnectAckPacket::new(false, v3::ConnectReturnCode::UnacceptedProtocol);
                     self.send(ack_packet).await?;
                     self.status = Status::Disconnected;
                     return Err(err.into());
@@ -156,7 +150,8 @@ impl Session {
         // the Server MUST respond to the CONNECT Packet with a CONNACK return code
         // 0x02 (Identifier rejected) and then close the Network Connection
         if !packet.connect_flags().clean_session() && packet.client_id().is_empty() {
-            let ack_packet = ConnectAckPacket::new(false, ConnectReturnCode::IdentifierRejected);
+            let ack_packet =
+                v3::ConnectAckPacket::new(false, v3::ConnectReturnCode::IdentifierRejected);
             self.send(ack_packet).await?;
             return self.send_disconnect().await;
         }
@@ -175,23 +170,23 @@ impl Session {
 
     async fn on_client_ping(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let _packet = PingRequestPacket::decode(&mut ba)?;
+        let _packet = v3::PingRequestPacket::decode(&mut ba)?;
 
         // Send ping resp packet to client.
-        let ping_resp_packet = PingResponsePacket::new();
+        let ping_resp_packet = v3::PingResponsePacket::new();
         self.send(ping_resp_packet).await
     }
 
     async fn on_client_publish(&mut self, buf: &[u8]) -> Result<(), Error> {
         log::info!("on_client_publish()");
         let mut ba = ByteArray::new(buf);
-        let packet = PublishPacket::decode(&mut ba)?;
+        let packet = v3::PublishPacket::decode(&mut ba)?;
 
         // Check dup flag for QoS2.
         if packet.qos() == QoS::ExactOnce && packet.dup() {
             // If this packet_id is already handled, send PublishReceivedPacket again.
             if self.pub_recv_packets.contains(&packet.packet_id()) {
-                let ack_packet = PublishReceivedPacket::new(packet.packet_id());
+                let ack_packet = v3::PublishReceivedPacket::new(packet.packet_id());
                 // TODO(Shaohua): Catch errors
                 return self.send(ack_packet).await;
             }
@@ -207,7 +202,7 @@ impl Session {
 
     async fn on_client_publish_release(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let packet = match PublishReleasePacket::decode(&mut ba) {
+        let packet = match v3::PublishReleasePacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => match err {
                 DecodeError::InvalidPacketFlags => {
@@ -226,7 +221,7 @@ impl Session {
         if self.pub_recv_packets.contains(&packet.packet_id()) {
             // Remove packet_id from cache then send complete packet.
             self.pub_recv_packets.remove(&packet.packet_id());
-            let ack_packet = PublishCompletePacket::new(packet.packet_id());
+            let ack_packet = v3::PublishCompletePacket::new(packet.packet_id());
             self.send(ack_packet).await
         } else {
             log::error!(
@@ -239,7 +234,7 @@ impl Session {
 
     async fn on_client_subscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let packet = match SubscribePacket::decode(&mut ba) {
+        let packet = match v3::SubscribePacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => match err {
                 DecodeError::InvalidPacketFlags => {
@@ -283,9 +278,9 @@ impl Session {
         {
             // Send subscribe ack (failed) to client.
             log::error!("Failed to send subscribe command to server: {:?}", err);
-            let ack = SubscribeAck::Failed;
+            let ack = v3::SubscribeAck::Failed;
 
-            let subscribe_ack_packet = SubscribeAckPacket::new(packet_id, ack);
+            let subscribe_ack_packet = v3::SubscribeAckPacket::new(packet_id, ack);
             self.send(subscribe_ack_packet).await
         } else {
             Ok(())
@@ -294,7 +289,7 @@ impl Session {
 
     async fn on_client_unsubscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
-        let packet = match UnsubscribePacket::decode(&mut ba) {
+        let packet = match v3::UnsubscribePacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => match err {
                 DecodeError::InvalidPacketFlags => {
@@ -320,7 +315,7 @@ impl Session {
             log::warn!("Failed to send unsubscribe command to server: {:?}", err);
         }
 
-        let unsubscribe_ack_packet = UnsubscribeAckPacket::new(packet_id);
+        let unsubscribe_ack_packet = v3::UnsubscribeAckPacket::new(packet_id);
         self.send(unsubscribe_ack_packet).await
     }
 
