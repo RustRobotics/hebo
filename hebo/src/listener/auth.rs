@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::v3;
+use codec::{v3, v5};
 
 use super::Listener;
 use crate::commands::{AuthToListenerCmd, ListenerToDispatcherCmd};
@@ -16,8 +16,9 @@ impl Listener {
                 self.on_auth_response(session_id, access_granted, packet)
                     .await
             }
-            AuthToListenerCmd::ResponseAuthV5(_session_id, _access_granted, _packet) => {
-                todo!()
+            AuthToListenerCmd::ResponseAuthV5(session_id, access_granted, packet) => {
+                self.on_auth_response_v5(session_id, access_granted, packet)
+                    .await
             }
         }
     }
@@ -66,6 +67,42 @@ impl Listener {
         let cmd = ListenerToDispatcherCmd::CheckCachedSession(
             SessionGid::new(self.id, session_id),
             packet.client_id().to_string(),
+            packet.protocol_level(),
+        );
+        self.dispatcher_sender.send(cmd).await.map_err(Into::into)
+    }
+
+    async fn on_auth_response_v5(
+        &mut self,
+        session_id: SessionId,
+        access_granted: bool,
+        packet: v5::ConnectPacket,
+    ) -> Result<(), Error> {
+        // TODO(Shaohua): Add comments
+        self.connecting_sessions.remove(&session_id);
+
+        // If not granted, reject this session here.
+        if !access_granted {
+            return self
+                .session_send_connect_ack_v5(session_id, v5::ReasonCode::NotAuthorized, None)
+                .await;
+        }
+
+        // Clean session flag is on.
+        if packet.connect_flags().clean_session() {
+            return self
+                .session_send_connect_ack_v5(session_id, v5::ReasonCode::Success, None)
+                .await;
+        }
+
+        self.client_ids
+            .insert(packet.client_id().to_string(), session_id);
+
+        // Check cached session store and update session_present flag.
+        let cmd = ListenerToDispatcherCmd::CheckCachedSession(
+            SessionGid::new(self.id, session_id),
+            packet.client_id().to_string(),
+            packet.protocol_level(),
         );
         self.dispatcher_sender.send(cmd).await.map_err(Into::into)
     }

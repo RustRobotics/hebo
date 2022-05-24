@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::v3;
+use codec::{v3, ProtocolLevel};
 
 use super::Dispatcher;
 use crate::commands::{DispatcherToListenerCmd, ListenerToDispatcherCmd};
@@ -12,8 +12,8 @@ impl Dispatcher {
     pub(super) async fn handle_listener_cmd(&mut self, cmd: ListenerToDispatcherCmd) {
         log::info!("handle_listener_cmd: {:?}", cmd);
         match cmd {
-            ListenerToDispatcherCmd::CheckCachedSession(session_gid, client_id) => {
-                self.on_listener_check_cached_session(session_gid, client_id)
+            ListenerToDispatcherCmd::CheckCachedSession(session_gid, client_id, protocol_level) => {
+                self.on_listener_check_cached_session(session_gid, client_id, protocol_level)
                     .await;
             }
             ListenerToDispatcherCmd::Publish(packet) => {
@@ -48,11 +48,13 @@ impl Dispatcher {
         &mut self,
         session_gid: SessionGid,
         client_id: String,
+        protocol_level: ProtocolLevel,
     ) {
         let cached_session = self.cached_sessions.pop(&client_id);
         if let Some(listener_sender) = self.listener_senders.get(&session_gid.listener_id()) {
             let cmd = DispatcherToListenerCmd::CheckCachedSessionResp(
                 session_gid.session_id(),
+                protocol_level,
                 cached_session,
             );
             if let Err(err) = listener_sender.send(cmd).await {

@@ -4,7 +4,7 @@
 
 //! Dispatcher cmd handlers.
 
-use codec::v3;
+use codec::{v3, ProtocolLevel};
 
 use super::Listener;
 use crate::commands::{DispatcherToListenerCmd, ListenerToSessionCmd};
@@ -18,8 +18,12 @@ impl Listener {
         cmd: DispatcherToListenerCmd,
     ) -> Result<(), Error> {
         match cmd {
-            DispatcherToListenerCmd::CheckCachedSessionResp(session_id, cached_session) => {
-                self.on_dispatcher_check_cached_session(session_id, cached_session)
+            DispatcherToListenerCmd::CheckCachedSessionResp(
+                session_id,
+                protocol_level,
+                cached_session,
+            ) => {
+                self.on_dispatcher_check_cached_session(session_id, protocol_level, cached_session)
                     .await
             }
             DispatcherToListenerCmd::Publish(session_id, packet) => {
@@ -40,10 +44,21 @@ impl Listener {
     async fn on_dispatcher_check_cached_session(
         &mut self,
         session_id: SessionId,
+        protocol_level: ProtocolLevel,
         cached_session: Option<CachedSession>,
     ) -> Result<(), Error> {
-        self.session_send_connect_ack(session_id, v3::ConnectReturnCode::Accepted, cached_session)
+        if protocol_level == ProtocolLevel::V5 {
+            todo!()
+            //self.session_send_connect_ack(session_id, v5::ReasonCode::Success, cached_session)
+            //    .await
+        } else {
+            self.session_send_connect_ack(
+                session_id,
+                v3::ConnectReturnCode::Accepted,
+                cached_session,
+            )
             .await
+        }
     }
 
     async fn on_dispatcher_publish(

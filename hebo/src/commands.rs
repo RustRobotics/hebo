@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::{v3, v5, PacketId, QoS};
+use codec::{v3, v5, PacketId, ProtocolLevel, QoS};
 use tokio::sync::oneshot;
 
 use crate::types::{ListenerId, SessionGid, SessionId, SessionInfo, Uptime};
@@ -11,21 +11,21 @@ use crate::session::CachedSession;
 
 #[derive(Debug, Clone)]
 pub enum ListenerToAuthCmd {
-    /// session_gid, username, password
+    /// `(session_gid, connect_packet)` pair.
     RequestAuth(SessionGid, v3::ConnectPacket),
     RequestAuthV5(SessionGid, v5::ConnectPacket),
 }
 
 #[derive(Debug, Clone)]
 pub enum AuthToListenerCmd {
-    /// session-id, access-granted
+    /// `(session_id, access_granted, connect_packet)` pair.
     ResponseAuth(SessionId, bool, v3::ConnectPacket),
     ResponseAuthV5(SessionId, bool, v5::ConnectPacket),
 }
 
 #[derive(Debug, Clone)]
 pub enum AclToListenerCmd {
-    /// (session_id, packet, accepted).
+    /// `(session_id, publish_packet, accepted)` pair.
     PublishAck(SessionId, v3::PublishPacket, bool),
     PublishAckV5(SessionId, v5::PublishPacket, bool),
 
@@ -52,7 +52,7 @@ pub enum ListenerToSessionCmd {
 
     /// Response to Publish packet.
     ///
-    /// (packet_id, qos, accept) pair.
+    /// `(packet_id, qos, accepted)` pair.
     PublishAck(PacketId, QoS, bool),
     PublishAckV5(PacketId, QoS, bool),
 
@@ -87,7 +87,7 @@ pub enum SessionToListenerCmd {
 
 #[derive(Debug, Clone)]
 pub enum DispatcherToListenerCmd {
-    CheckCachedSessionResp(SessionId, Option<CachedSession>),
+    CheckCachedSessionResp(SessionId, ProtocolLevel, Option<CachedSession>),
 
     Publish(SessionId, v3::PublishPacket),
     PublishV5(SessionId, v5::PublishPacket),
@@ -98,8 +98,8 @@ pub enum DispatcherToListenerCmd {
 
 #[derive(Debug, Clone)]
 pub enum ListenerToDispatcherCmd {
-    // client-id
-    CheckCachedSession(SessionGid, String),
+    // `(session_gid, client_id, protocol_level)` pair.
+    CheckCachedSession(SessionGid, String, ProtocolLevel),
 
     Publish(v3::PublishPacket),
     PublishV5(v5::PublishPacket),

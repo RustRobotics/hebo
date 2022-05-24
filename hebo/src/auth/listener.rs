@@ -2,7 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use codec::v3;
+use codec::{v3, v5};
 
 use super::AuthApp;
 use crate::commands::{AuthToListenerCmd, ListenerToAuthCmd};
@@ -19,8 +19,8 @@ impl AuthApp {
             ListenerToAuthCmd::RequestAuth(session_gid, packet) => {
                 self.on_listener_request_auth(session_gid, packet).await
             }
-            ListenerToAuthCmd::RequestAuthV5(_session_gid, _packet) => {
-                todo!()
+            ListenerToAuthCmd::RequestAuthV5(session_gid, packet) => {
+                self.on_listener_request_auth_v5(session_gid, packet).await
             }
         }
     }
@@ -45,6 +45,44 @@ impl AuthApp {
         for (sender_listener_id, sender) in &self.listener_senders {
             if *sender_listener_id == session_gid.listener_id() {
                 let cmd = AuthToListenerCmd::ResponseAuth(
+                    session_gid.session_id(),
+                    access_granted,
+                    packet,
+                );
+                sender.send(cmd).await?;
+                return Ok(());
+            }
+        }
+
+        Err(Error::from_string(
+            ErrorKind::ChannelError,
+            format!(
+                "AuthApp: Failed to find listener_senders with id: {}",
+                session_gid.listener_id()
+            ),
+        ))
+    }
+
+    async fn on_listener_request_auth_v5(
+        &mut self,
+        session_gid: SessionGid,
+        packet: v5::ConnectPacket,
+    ) -> Result<(), Error> {
+        let username = packet.username();
+        let password = packet.password();
+        let access_granted = if username.is_empty() {
+            self.allow_anonymous
+        } else if let Some(file_auth) = &self.file_auth {
+            file_auth.is_match(username, password)?
+        } else {
+            false
+        };
+        if !access_granted {
+            log::error!("AuthApp: Check auth failed, {:?}:{:?}", username, password);
+        }
+        for (sender_listener_id, sender) in &self.listener_senders {
+            if *sender_listener_id == session_gid.listener_id() {
+                let cmd = AuthToListenerCmd::ResponseAuthV5(
                     session_gid.session_id(),
                     access_granted,
                     packet,

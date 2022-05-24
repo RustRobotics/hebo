@@ -4,7 +4,7 @@
 
 //! Session cmd handlers.
 
-use codec::v3;
+use codec::{v3, v5};
 
 use super::Listener;
 use crate::listener::{
@@ -30,8 +30,8 @@ impl Listener {
             SessionToListenerCmd::Connect(session_id, packet) => {
                 self.on_session_connect(session_id, packet).await
             }
-            SessionToListenerCmd::ConnectV5(_session_id, _packet) => {
-                todo!()
+            SessionToListenerCmd::ConnectV5(session_id, packet) => {
+                self.on_session_connect_v5(session_id, packet).await
             }
             SessionToListenerCmd::Publish(session_id, packet) => {
                 self.on_session_publish(session_id, packet).await
@@ -87,6 +87,41 @@ impl Listener {
         // Send request to auth app.
         self.auth_sender
             .send(ListenerToAuthCmd::RequestAuth(
+                SessionGid::new(self.id, session_id),
+                packet,
+            ))
+            .await
+            .map_err(Into::into)
+    }
+
+    async fn on_session_connect_v5(
+        &mut self,
+        session_id: SessionId,
+        packet: v5::ConnectPacket,
+    ) -> Result<(), Error> {
+        log::info!("Listener::on_session_connect_v5()");
+
+        // TODO(Shaohua): Update comments.
+        // If the ClientId represents a Client already connected to the Server then the Server MUST
+        // disconnect the existing Client [MQTT-3.1.4-2].
+        let old_session_id = self.client_ids.get(packet.client_id());
+        if let Some(old_session_id) = old_session_id {
+            let old_session_id = *old_session_id;
+            if let Err(err) = self.disconnect_session(old_session_id).await {
+                log::error!(
+                    "Failed to send disconnect cmd to {}, err: {:?}",
+                    old_session_id,
+                    err
+                );
+            }
+        }
+
+        // TODO(Shaohua): Check duplicated ConnectPacket.
+        self.connecting_sessions.insert(session_id);
+
+        // Send request to auth app.
+        self.auth_sender
+            .send(ListenerToAuthCmd::RequestAuthV5(
                 SessionGid::new(self.id, session_id),
                 packet,
             ))
@@ -161,6 +196,22 @@ impl Listener {
     ) -> Result<(), Error> {
         let ack_packet = v3::ConnectAckPacket::new(false, reason);
         let cmd = ListenerToSessionCmd::ConnectAck(ack_packet, cached_session);
+
+        if let Some(session_sender) = self.session_senders.get(&session_id) {
+            session_sender.send(cmd).await.map_err(Into::into)
+        } else {
+            Err(Error::session_error(session_id))
+        }
+    }
+
+    pub(crate) async fn session_send_connect_ack_v5(
+        &mut self,
+        session_id: SessionId,
+        reason: v5::ReasonCode,
+        cached_session: Option<CachedSession>,
+    ) -> Result<(), Error> {
+        let ack_packet = v5::ConnectAckPacket::new(false, reason);
+        let cmd = ListenerToSessionCmd::ConnectAckV5(ack_packet, cached_session);
 
         if let Some(session_sender) = self.session_senders.get(&session_id) {
             session_sender.send(cmd).await.map_err(Into::into)

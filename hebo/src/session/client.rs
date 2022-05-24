@@ -52,11 +52,17 @@ impl Session {
     }
 
     async fn reject_client_id(&mut self) -> Result<(), Error> {
-        // If a server sends a CONNACK packet containing a non-zero return code
-        // it MUST set Session Present to 0 [MQTT-3.2.2-4].
-        let ack_packet =
-            v3::ConnectAckPacket::new(false, v3::ConnectReturnCode::IdentifierRejected);
-        self.send(ack_packet).await?;
+        if self.protocol_level == ProtocolLevel::V5 {
+            let ack_packet =
+                v5::ConnectAckPacket::new(false, v5::ReasonCode::ClientIdentifierNotValid);
+            self.send(ack_packet).await?;
+        } else {
+            // If a server sends a CONNACK packet containing a non-zero return code
+            // it MUST set Session Present to 0 [MQTT-3.2.2-4].
+            let ack_packet =
+                v3::ConnectAckPacket::new(false, v3::ConnectReturnCode::IdentifierRejected);
+            self.send(ack_packet).await?;
+        }
         self.status = Status::Disconnected;
         Ok(())
     }
