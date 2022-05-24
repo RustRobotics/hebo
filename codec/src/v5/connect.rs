@@ -352,12 +352,8 @@ impl ConnectPacket {
 
     /// Get current username value.
     #[must_use]
-    pub fn username(&self) -> Option<&str> {
-        if self.connect_flags.has_username() {
-            Some(self.username.as_ref())
-        } else {
-            None
-        }
+    pub fn username(&self) -> &str {
+        self.username.as_ref()
     }
 
     /// Update password value.
@@ -381,12 +377,8 @@ impl ConnectPacket {
 
     /// Get current password value.
     #[must_use]
-    pub fn password(&self) -> Option<&[u8]> {
-        if self.connect_flags.has_password() {
-            Some(self.password.as_ref())
-        } else {
-            None
-        }
+    pub fn password(&self) -> &[u8] {
+        self.password.as_ref()
     }
 
     /// Get a mutable reference to will property list.
