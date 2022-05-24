@@ -3,15 +3,16 @@
 // in the LICENSE file.
 
 use log::LevelFilter;
-use log4rs::append::console;
-use log4rs::append::rolling_file::policy::compound::{
-    roll::fixed_window::FixedWindowRoller, trigger::size::SizeTrigger, CompoundPolicy,
+use log4rs::{
+    append::console,
+    append::rolling_file::policy::compound::roll::fixed_window::FixedWindowRoller,
+    append::rolling_file::policy::compound::trigger::size::SizeTrigger,
+    append::rolling_file::policy::compound::CompoundPolicy,
+    append::rolling_file::RollingFileAppender,
+    config::{Appender, Config, Root},
 };
-use log4rs::append::rolling_file::RollingFileAppender;
-use log4rs::config::{Appender, Config, Root};
-use log4rs::encode::pattern::PatternEncoder;
 
-use crate::config;
+use crate::config::{self, LogLevel};
 use crate::error::{Error, ErrorKind};
 
 const LOG_FILE_SIZE: u64 = 16 * 1024 * 1024;
@@ -20,14 +21,14 @@ const ROLLER_COUNT: u32 = 10;
 const STDOUT_NAME: &str = "stdout";
 const ROLLER_NAME: &str = "roller";
 
-const fn get_log_level(level: config::LogLevel) -> LevelFilter {
+const fn get_log_level(level: LogLevel) -> LevelFilter {
     match level {
-        config::LogLevel::Off => LevelFilter::Off,
-        config::LogLevel::Error => LevelFilter::Error,
-        config::LogLevel::Warn => LevelFilter::Warn,
-        config::LogLevel::Info => LevelFilter::Info,
-        config::LogLevel::Debug => LevelFilter::Debug,
-        config::LogLevel::Trace => LevelFilter::Trace,
+        LogLevel::Off => LevelFilter::Off,
+        LogLevel::Error => LevelFilter::Error,
+        LogLevel::Warn => LevelFilter::Warn,
+        LogLevel::Info => LevelFilter::Info,
+        LogLevel::Debug => LevelFilter::Debug,
+        LogLevel::Trace => LevelFilter::Trace,
     }
 }
 
@@ -40,17 +41,16 @@ const fn get_log_level(level: config::LogLevel) -> LevelFilter {
 /// - Failed to init log4rs
 #[allow(clippy::module_name_repetitions)]
 pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
-    let log_level = get_log_level(log_conf.log_level());
-
     let mut config_builder = Config::builder();
+    let mut root_builder = Root::builder();
     if log_conf.console_log() {
-        let stdout = console::ConsoleAppender::builder()
-            .target(console::Target::Stderr)
-            .encoder(Box::new(PatternEncoder::new("{d} {h({l})} - {m}{n}")))
-            .build();
+        println!("enable console log");
+        let stdout = console::ConsoleAppender::builder().build();
         config_builder =
             config_builder.appender(Appender::builder().build(STDOUT_NAME, Box::new(stdout)));
+        root_builder = root_builder.appender(STDOUT_NAME);
     }
+
     if let Some(log_file) = log_conf.log_file() {
         let roller_pattern = log_file.to_string() + ROLLER_PATTERN;
         let roller = FixedWindowRoller::builder()
@@ -76,10 +76,12 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
 
         config_builder =
             config_builder.appender(Appender::builder().build(ROLLER_NAME, Box::new(requests)));
+        root_builder = root_builder.appender(ROLLER_NAME);
     }
 
+    let log_level = get_log_level(log_conf.log_level());
     let config = config_builder
-        .build(Root::builder().build(log_level))
+        .build(root_builder.build(log_level))
         .map_err(|err| {
             Error::from_string(
                 ErrorKind::LoggerError,
