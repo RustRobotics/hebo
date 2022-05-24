@@ -8,10 +8,11 @@ use super::property::check_property_type_list;
 use super::{Properties, PropertyType};
 use crate::base::PROTOCOL_NAME;
 use crate::connect_flags::ConnectFlags;
-use crate::utils::{validate_client_id, validate_keep_alive};
+use crate::utils::validate_client_id;
 use crate::{
-    BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
-    Packet, PacketType, ProtocolLevel, PubTopic, QoS, StringData, U16Data, VarIntError,
+    validate_keep_alive, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError,
+    EncodePacket, FixedHeader, KeepAlive, Packet, PacketType, ProtocolLevel, PubTopic, QoS,
+    StringData, VarIntError,
 };
 
 /// `ConnectPacket` consists of three parts:
@@ -113,7 +114,7 @@ pub struct ConnectPacket {
     /// A Keep Alive value of 0 has the effect of turning off the Keep Alive mechanism.
     /// If Keep Alive is 0 the Client is not obliged to send MQTT Control Packets
     /// on any particular schedule.
-    keep_alive: U16Data,
+    keep_alive: KeepAlive,
 
     properties: Properties,
 
@@ -214,7 +215,7 @@ impl ConnectPacket {
         let client_id = StringData::from(client_id)?;
         Ok(Self {
             protocol_name,
-            keep_alive: U16Data::new(60),
+            keep_alive: KeepAlive::new(60),
             client_id,
             ..Self::default()
         })
@@ -234,7 +235,7 @@ impl ConnectPacket {
 
     /// Update keep-alive value.
     pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
-        self.keep_alive = U16Data::new(keep_alive);
+        self.keep_alive = KeepAlive::new(keep_alive);
         self
     }
 
@@ -425,7 +426,7 @@ impl ConnectPacket {
         let mut remaining_length = self.protocol_name.bytes()
             + ProtocolLevel::bytes()
             + ConnectFlags::bytes()
-            + U16Data::bytes()  // keep_alive
+            + KeepAlive::bytes()
             + self.client_id.bytes();
 
         // Check username/password/topic/message.
@@ -521,8 +522,8 @@ impl DecodePacket for ConnectPacket {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
-        let keep_alive = U16Data::decode(ba)?;
-        validate_keep_alive(keep_alive.value())?;
+        let keep_alive = KeepAlive::decode(ba)?;
+        validate_keep_alive(keep_alive)?;
 
         let client_id = StringData::decode(ba).map_err(|_err| DecodeError::InvalidClientId)?;
         if client_id.is_empty() && !connect_flags.clean_session() {

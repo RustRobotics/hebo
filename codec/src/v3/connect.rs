@@ -6,10 +6,11 @@ use std::convert::TryFrom;
 
 use crate::base::PROTOCOL_NAME;
 use crate::connect_flags::ConnectFlags;
-use crate::utils::{validate_client_id, validate_keep_alive};
+use crate::utils::validate_client_id;
 use crate::{
-    BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, FixedHeader,
-    Packet, PacketType, ProtocolLevel, PubTopic, QoS, StringData, U16Data, VarIntError,
+    validate_keep_alive, BinaryData, ByteArray, DecodeError, DecodePacket, EncodeError,
+    EncodePacket, FixedHeader, KeepAlive, Packet, PacketType, ProtocolLevel, PubTopic, QoS,
+    StringData, VarIntError,
 };
 
 /// `ConnectPacket` consists of three parts:
@@ -74,7 +75,7 @@ pub struct ConnectPacket {
     /// will disconnect the network.
     ///
     /// If this value is zero, the Server is not required to disconnect the network.
-    keep_alive: U16Data,
+    keep_alive: KeepAlive,
 
     /// Payload is `client_id`.
     /// `client_id` is generated in client side. Normally it can be `device_id` or just
@@ -116,7 +117,7 @@ impl ConnectPacket {
         let client_id = StringData::from(client_id)?;
         Ok(Self {
             protocol_name,
-            keep_alive: U16Data::new(60),
+            keep_alive: KeepAlive::new(60),
             client_id,
             ..Self::default()
         })
@@ -150,7 +151,7 @@ impl ConnectPacket {
 
     /// Update keep alive value in milliseconds.
     pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
-        self.keep_alive = U16Data::new(keep_alive);
+        self.keep_alive = KeepAlive::new(keep_alive);
         self
     }
 
@@ -253,7 +254,7 @@ impl ConnectPacket {
         let mut remaining_length = self.protocol_name.bytes()
             + ProtocolLevel::bytes()
             + ConnectFlags::bytes()
-            + U16Data::bytes()  // keep_alive
+            + KeepAlive::bytes()
             + self.client_id.bytes();
 
         // Check username/password/topic/message.
@@ -343,8 +344,8 @@ impl DecodePacket for ConnectPacket {
             return Err(DecodeError::InvalidConnectFlags);
         }
 
-        let keep_alive = U16Data::decode(ba)?;
-        validate_keep_alive(keep_alive.value())?;
+        let keep_alive = KeepAlive::decode(ba)?;
+        validate_keep_alive(keep_alive)?;
 
         // A Server MAY allow a Client to supply a ClientId that has a length of zero bytes,
         // however if it does so the Server MUST treat this as a special case and assign

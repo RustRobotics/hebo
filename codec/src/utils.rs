@@ -5,8 +5,6 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
-use crate::DecodeError;
-
 /// Generate random string.
 #[must_use]
 pub fn random_string(len: usize) -> String {
@@ -147,17 +145,4 @@ pub fn validate_client_id(id: &str) -> Result<(), StringError> {
         }
     }
     Ok(())
-}
-
-/// Check `keep_alive` is in range.
-///
-/// # Errors
-///
-/// Returns error if `keep_alive` value is too small.
-pub const fn validate_keep_alive(keep_alive: u16) -> Result<(), DecodeError> {
-    if keep_alive != 0 && keep_alive < 5 {
-        Err(DecodeError::OtherErrors)
-    } else {
-        Ok(())
-    }
 }
