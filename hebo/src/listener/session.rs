@@ -232,4 +232,17 @@ impl Listener {
             Err(Error::session_error(session_id))
         }
     }
+
+    pub(super) async fn session_send_publish_ack_v5(
+        &mut self,
+        session_id: SessionId,
+        packet: v5::SubscribeAckPacket,
+    ) -> Result<(), Error> {
+        if let Some(session_sender) = self.session_senders.get(&session_id) {
+            let cmd = ListenerToSessionCmd::SubscribeAckV5(packet);
+            session_sender.send(cmd).await.map_err(Into::into)
+        } else {
+            Err(Error::session_error(session_id))
+        }
+    }
 }
