@@ -9,5 +9,6 @@ GID=$(id -g)
 sudo docker run --user ${UID}:${GID} --rm --volume ${PWD}/../../:/hebo \
   rust:latest /bin/bash -c 'cd /hebo; cargo build --release --bin hebo'
 
-install -m755 ../../target/release/hebo hebo
+install -m644 ../pifu/hebo.toml hebo.toml
+install -m755 ../../../target/release/hebo hebo
 sudo docker build -t hebo:latest .
