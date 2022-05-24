@@ -10,6 +10,7 @@ use log4rs::{
     append::rolling_file::policy::compound::CompoundPolicy,
     append::rolling_file::RollingFileAppender,
     config::{Appender, Config, Root},
+    encode::pattern::PatternEncoder,
 };
 
 use crate::config::{self, LogLevel};
@@ -44,8 +45,11 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
     let mut config_builder = Config::builder();
     let mut root_builder = Root::builder();
     if log_conf.console_log() {
-        println!("enable console log");
-        let stdout = console::ConsoleAppender::builder().build();
+        let stdout = console::ConsoleAppender::builder()
+            .encoder(Box::new(PatternEncoder::new(
+                "{d(%Y-%m-%d %H:%M:%S)} {l} {M}:{L} - {m}{n}",
+            )))
+            .build();
         config_builder =
             config_builder.appender(Appender::builder().build(STDOUT_NAME, Box::new(stdout)));
         root_builder = root_builder.appender(STDOUT_NAME);
