@@ -102,7 +102,7 @@ impl Metrics {
             DispatcherToMetricsCmd::SessionAdded(listener_id, count) => {
                 log::info!("{} sessions added to #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
+                    let count = count as i64;
                     listener.sessions += count;
                     self.system.sessions += count;
                 } else {
@@ -112,7 +112,7 @@ impl Metrics {
             DispatcherToMetricsCmd::SessionRemoved(listener_id, count) => {
                 log::info!("{} sessions removed from #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
+                    let count = count as i64;
                     listener.sessions -= count;
                     self.system.sessions -= count;
                 } else {
@@ -122,7 +122,7 @@ impl Metrics {
             DispatcherToMetricsCmd::SubscriptionsAdded(listener_id, count) => {
                 log::info!("{} subscriptions added to #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
+                    let count = count as i64;
                     listener.subscriptions += count;
                     self.system.subscriptions += count;
                 } else {
@@ -132,7 +132,7 @@ impl Metrics {
             DispatcherToMetricsCmd::SubscriptionsRemoved(listener_id, count) => {
                 log::info!("{} subscriptions removed from #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
+                    let count = count as i64;
                     listener.subscriptions -= count;
                     self.system.subscriptions -= count;
                 } else {
@@ -142,8 +142,8 @@ impl Metrics {
             DispatcherToMetricsCmd::RetainedMessageAdded(listener_id, count, bytes) => {
                 log::info!("{} retained messages added to #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
-                    let bytes = bytes as u64;
+                    let count = count as i64;
+                    let bytes = bytes as i64;
                     listener.retained_messages += count;
                     listener.retained_bytes += bytes;
                     self.system.retained_messages += count;
@@ -155,8 +155,8 @@ impl Metrics {
             DispatcherToMetricsCmd::RetainedMessageRemoved(listener_id, count, bytes) => {
                 log::info!("{} retained messages removed from #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
-                    let bytes = bytes as u64;
+                    let count = count as i64;
+                    let bytes = bytes as i64;
                     listener.retained_messages -= count;
                     listener.retained_bytes -= bytes;
                     self.system.retained_messages -= count;
@@ -168,8 +168,8 @@ impl Metrics {
             DispatcherToMetricsCmd::PublishPacketSent(listener_id, count, bytes) => {
                 log::info!("{} publishPacketSent added to #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
-                    let bytes = bytes as u64;
+                    let count = count as i64;
+                    let bytes = bytes as i64;
                     listener.publish_messages_sent += count;
                     listener.publish_bytes_sent += bytes;
                     self.system.publish_messages_sent += count;
@@ -181,8 +181,8 @@ impl Metrics {
             DispatcherToMetricsCmd::PublishPacketReceived(listener_id, count, bytes) => {
                 log::info!("{} publishPacketReceived added to #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
-                    let bytes = bytes as u64;
+                    let count = count as i64;
+                    let bytes = bytes as i64;
                     listener.publish_messages_received += count;
                     listener.publish_bytes_received += bytes;
                     self.system.publish_messages_received += count;
@@ -193,16 +193,16 @@ impl Metrics {
             }
             DispatcherToMetricsCmd::PublishPacketDropped(count, bytes) => {
                 log::info!("{} publishPacket dropped", count);
-                let count = count as u64;
-                let bytes = bytes as u64;
+                let count = count as i64;
+                let bytes = bytes as i64;
                 self.system.publish_messages_dropped += count;
                 self.system.publish_bytes_dropped += bytes;
             }
             DispatcherToMetricsCmd::PacketSent(listener_id, count, bytes) => {
                 log::info!("{} packetSent added to #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
-                    let bytes = bytes as u64;
+                    let count = count as i64;
+                    let bytes = bytes as i64;
                     listener.messages_sent += count;
                     listener.bytes_sent += bytes;
                     self.system.messages_sent += count;
@@ -214,8 +214,8 @@ impl Metrics {
             DispatcherToMetricsCmd::PacketReceived(listener_id, count, bytes) => {
                 log::info!("{} packetReceived added to #{}", count, listener_id);
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
-                    let count = count as u64;
-                    let bytes = bytes as u64;
+                    let count = count as i64;
+                    let bytes = bytes as i64;
                     listener.messages_received += count;
                     listener.bytes_received += bytes;
                     self.system.messages_received += count;

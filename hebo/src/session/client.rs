@@ -24,6 +24,10 @@ impl Session {
                 return self.send_disconnect().await;
             }
         };
+        log::info!(
+            "Session::handle_client_packet(), header: {:?}",
+            fixed_header
+        );
 
         // The Keep Alive is a time interval measured in seconds. Expressed as a 16-bit word,
         // it is the maximum time interval that is permitted to elapse between the point
@@ -38,12 +42,48 @@ impl Session {
 
         match fixed_header.packet_type() {
             PacketType::Connect => self.on_client_connect(buf).await,
-            PacketType::PingRequest => self.on_client_ping(buf).await,
-            PacketType::Publish { .. } => self.on_client_publish(buf).await,
-            PacketType::PublishRelease { .. } => self.on_client_publish_release(buf).await,
-            PacketType::Subscribe => self.on_client_subscribe(buf).await,
-            PacketType::Unsubscribe => self.on_client_unsubscribe(buf).await,
-            PacketType::Disconnect => self.on_client_disconnect(buf).await,
+            PacketType::PingRequest => {
+                if self.protocol_level == ProtocolLevel::V5 {
+                    self.on_client_ping_v5(buf).await
+                } else {
+                    self.on_client_ping(buf).await
+                }
+            }
+            PacketType::Publish { .. } => {
+                if self.protocol_level == ProtocolLevel::V5 {
+                    self.on_client_publish_v5(buf).await
+                } else {
+                    self.on_client_publish(buf).await
+                }
+            }
+            PacketType::PublishRelease { .. } => {
+                if self.protocol_level == ProtocolLevel::V5 {
+                    self.on_client_publish_release_v5(buf).await
+                } else {
+                    self.on_client_publish_release(buf).await
+                }
+            }
+            PacketType::Subscribe => {
+                if self.protocol_level == ProtocolLevel::V5 {
+                    self.on_client_subscribe_v5(buf).await
+                } else {
+                    self.on_client_subscribe(buf).await
+                }
+            }
+            PacketType::Unsubscribe => {
+                if self.protocol_level == ProtocolLevel::V5 {
+                    self.on_client_unsubscribe_v5(buf).await
+                } else {
+                    self.on_client_unsubscribe(buf).await
+                }
+            }
+            PacketType::Disconnect => {
+                if self.protocol_level == ProtocolLevel::V5 {
+                    self.on_client_disconnect_v5(buf).await
+                } else {
+                    self.on_client_disconnect(buf).await
+                }
+            }
             t => {
                 log::warn!("Unhandled msg: {:?}", t);
                 Ok(())
@@ -52,6 +92,7 @@ impl Session {
     }
 
     async fn reject_client_id(&mut self) -> Result<(), Error> {
+        log::info!("Session::reject_client_id()");
         if self.protocol_level == ProtocolLevel::V5 {
             let ack_packet =
                 v5::ConnectAckPacket::new(false, v5::ReasonCode::ClientIdentifierNotValid);
@@ -104,6 +145,10 @@ impl Session {
                 }
             },
         };
+        log::info!(
+            "session::on_client_connect(), protocol level: {:?}",
+            protocol_level
+        );
 
         self.protocol_level = protocol_level;
         if protocol_level == ProtocolLevel::V5 {
@@ -286,8 +331,17 @@ impl Session {
         self.send(ping_resp_packet).await
     }
 
+    async fn on_client_ping_v5(&mut self, buf: &[u8]) -> Result<(), Error> {
+        let mut ba = ByteArray::new(buf);
+        let _packet = v5::PingRequestPacket::decode(&mut ba)?;
+
+        // Send ping resp packet to client.
+        let ping_resp_packet = v5::PingResponsePacket::new();
+        self.send(ping_resp_packet).await
+    }
+
     async fn on_client_publish(&mut self, buf: &[u8]) -> Result<(), Error> {
-        log::info!("on_client_publish()");
+        log::info!("Session::on_client_publish()");
         let mut ba = ByteArray::new(buf);
         let packet = v3::PublishPacket::decode(&mut ba)?;
 
@@ -304,6 +358,29 @@ impl Session {
         // Send the publish packet to listener.
         self.sender
             .send(SessionToListenerCmd::Publish(self.id, packet))
+            .await
+            .map(drop)?;
+        Ok(())
+    }
+
+    async fn on_client_publish_v5(&mut self, buf: &[u8]) -> Result<(), Error> {
+        log::info!("Session::on_client_publish_v5()");
+        let mut ba = ByteArray::new(buf);
+        let packet = v5::PublishPacket::decode(&mut ba)?;
+
+        // Check dup flag for QoS2.
+        if packet.qos() == QoS::ExactOnce && packet.dup() {
+            // If this packet_id is already handled, send PublishReceivedPacket again.
+            if self.pub_recv_packets.contains(&packet.packet_id()) {
+                let ack_packet = v5::PublishReceivedPacket::new(packet.packet_id());
+                // TODO(Shaohua): Catch errors
+                return self.send(ack_packet).await;
+            }
+        }
+
+        // Send the publish packet to listener.
+        self.sender
+            .send(SessionToListenerCmd::PublishV5(self.id, packet))
             .await
             .map(drop)?;
         Ok(())
@@ -331,6 +408,36 @@ impl Session {
             // Remove packet_id from cache then send complete packet.
             self.pub_recv_packets.remove(&packet.packet_id());
             let ack_packet = v3::PublishCompletePacket::new(packet.packet_id());
+            self.send(ack_packet).await
+        } else {
+            log::error!(
+                "session: Failed to remove {} from pub_recv_packets",
+                packet.packet_id()
+            );
+            Ok(())
+        }
+    }
+
+    async fn on_client_publish_release_v5(&mut self, buf: &[u8]) -> Result<(), Error> {
+        let mut ba = ByteArray::new(buf);
+        let packet = match v5::PublishReleasePacket::decode(&mut ba) {
+            Ok(packet) => packet,
+            Err(err) => match err {
+                DecodeError::InvalidPacketFlags => {
+                    // TODO(Shaohua): Add commentds
+                    log::error!(
+                        "session: Invalid bit flags for publish release packet, do disconnect!"
+                    );
+                    return self.send_disconnect().await;
+                }
+                _ => return Err(err.into()),
+            },
+        };
+
+        if self.pub_recv_packets.contains(&packet.packet_id()) {
+            // Remove packet_id from cache then send complete packet.
+            self.pub_recv_packets.remove(&packet.packet_id());
+            let ack_packet = v5::PublishCompletePacket::new(packet.packet_id());
             self.send(ack_packet).await
         } else {
             log::error!(
@@ -396,6 +503,51 @@ impl Session {
         }
     }
 
+    async fn on_client_subscribe_v5(&mut self, buf: &[u8]) -> Result<(), Error> {
+        let mut ba = ByteArray::new(buf);
+        let packet = match v5::SubscribePacket::decode(&mut ba) {
+            Ok(packet) => packet,
+            Err(err) => match err {
+                DecodeError::InvalidPacketFlags => {
+                    // TODO(Shaohua): Add comments
+                    log::error!("session: Invalid bit flags for subscribe packet, do disconnect!");
+                    return self.send_disconnect().await;
+                }
+                DecodeError::EmptyTopicFilter => {
+                    // TODO(Shaohua): Add comments
+                    log::error!("session: Empty topic filter in subscribe packet, do disconnect!");
+                    return self.send_disconnect().await;
+                }
+                DecodeError::InvalidQoS => {
+                    // TODO(Shaohua): Add comments
+                    log::error!("session: Invalid QoS flag in subscribe packet, do disconnect!");
+                    return self.send_disconnect().await;
+                }
+                _ => {
+                    // TODO(Shaohua): Send disconnect when got error.
+                    return Err(err.into());
+                }
+            },
+        };
+
+        // Send subscribe packet to listener, which will check ACL.
+        let packet_id = packet.packet_id();
+        if let Err(err) = self
+            .sender
+            .send(SessionToListenerCmd::SubscribeV5(self.id, packet))
+            .await
+        {
+            // Send subscribe ack (failed) to client.
+            log::error!("Failed to send subscribe command to server: {:?}", err);
+            let reason = v5::ReasonCode::UnspecifiedError;
+
+            let subscribe_ack_packet = v5::SubscribeAckPacket::new(packet_id, reason);
+            self.send(subscribe_ack_packet).await
+        } else {
+            Ok(())
+        }
+    }
+
     async fn on_client_unsubscribe(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let packet = match v3::UnsubscribePacket::decode(&mut ba) {
@@ -428,14 +580,52 @@ impl Session {
         self.send(unsubscribe_ack_packet).await
     }
 
+    async fn on_client_unsubscribe_v5(&mut self, buf: &[u8]) -> Result<(), Error> {
+        let mut ba = ByteArray::new(buf);
+        let packet = match v5::UnsubscribePacket::decode(&mut ba) {
+            Ok(packet) => packet,
+            Err(err) => match err {
+                DecodeError::InvalidPacketFlags => {
+                    // TODO(Shaohua): Add comments
+                    log::error!(
+                        "session: Invalid bit flags for unsubscribe packet, do disconnect!"
+                    );
+                    return self.send_disconnect().await;
+                }
+                _ => {
+                    // TODO(Shaohua): Send disconnect when got error.
+                    return Err(err.into());
+                }
+            },
+        };
+        let packet_id = packet.packet_id();
+        if let Err(err) = self
+            .sender
+            .send(SessionToListenerCmd::UnsubscribeV5(self.id, packet))
+            .await
+        {
+            log::warn!("Failed to send unsubscribe command to server: {:?}", err);
+        }
+
+        let unsubscribe_ack_packet =
+            v5::UnsubscribeAckPacket::new(packet_id, v5::ReasonCode::Success);
+        self.send(unsubscribe_ack_packet).await
+    }
+
     /// Handle disconnect request from client.
     async fn on_client_disconnect(&mut self, _buf: &[u8]) -> Result<(), Error> {
         self.status = Status::Disconnected;
-        if let Err(err) = self
-            .sender
-            .send(SessionToListenerCmd::Disconnect(self.id))
-            .await
-        {
+        let cmd = SessionToListenerCmd::Disconnect(self.id);
+        if let Err(err) = self.sender.send(cmd).await {
+            log::warn!("Failed to send disconnect command to server: {:?}", err);
+        }
+        Ok(())
+    }
+
+    async fn on_client_disconnect_v5(&mut self, _buf: &[u8]) -> Result<(), Error> {
+        self.status = Status::Disconnected;
+        let cmd = SessionToListenerCmd::DisconnectV5(self.id);
+        if let Err(err) = self.sender.send(cmd).await {
             log::warn!("Failed to send disconnect command to server: {:?}", err);
         }
         Ok(())
