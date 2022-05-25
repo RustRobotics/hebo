@@ -16,6 +16,7 @@ pub struct SessionConfig {
 
     out_packet_count: usize,
     last_packet_id: u16,
+    session_expiry_interval: Duration,
 }
 
 impl Default for SessionConfig {
@@ -28,8 +29,8 @@ impl SessionConfig {
     #[must_use]
     pub const fn new() -> Self {
         Self {
-            keep_alive: Duration::from_secs(10),
-            connect_timeout: Duration::from_secs(10),
+            keep_alive: Duration::from_secs(60),
+            connect_timeout: Duration::from_secs(30),
 
             maximum_inflight_messages: 10,
             maximum_packet_size: 10,
@@ -38,11 +39,13 @@ impl SessionConfig {
 
             out_packet_count: 0,
             last_packet_id: 0,
+            session_expiry_interval: Duration::from_secs(180),
         }
     }
 
-    pub fn set_keep_alive(&mut self, keep_alive: u32) -> &mut Self {
-        self.keep_alive = Duration::from_secs(u64::from(keep_alive));
+    pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
+        let keep_alive = (f64::from(keep_alive) * 1.5).round() as u64;
+        self.keep_alive = Duration::from_secs(keep_alive);
         self
     }
 
@@ -52,7 +55,7 @@ impl SessionConfig {
         self.keep_alive
     }
 
-    pub fn set_connect_timeout(&mut self, connect_timeout: u32) -> &mut Self {
+    pub fn set_connect_timeout(&mut self, connect_timeout: u16) -> &mut Self {
         self.connect_timeout = Duration::from_secs(u64::from(connect_timeout));
         self
     }
@@ -112,7 +115,18 @@ impl SessionConfig {
 
     #[inline]
     #[must_use]
-    pub fn last_packet_id(&self) -> u16 {
+    pub const fn last_packet_id(&self) -> u16 {
         self.last_packet_id
+    }
+
+    pub fn set_session_expiry_interval(&mut self, session_expiry_interval: u32) -> &mut Self {
+        self.session_expiry_interval = Duration::from_secs(u64::from(session_expiry_interval));
+        self
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn session_expiry_interval(&self) -> Duration {
+        self.session_expiry_interval
     }
 }

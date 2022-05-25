@@ -122,7 +122,7 @@ pub struct Listener {
     ///
     /// Default is 60.
     #[serde(default = "Listener::default_keep_alive")]
-    keep_alive: u32,
+    keep_alive: u16,
 
     /// Timeout value in seconds before receiving Connect Packet from client.
     ///
@@ -130,7 +130,7 @@ pub struct Listener {
     ///
     /// Default is 60s.
     #[serde(default = "Listener::default_connect_timeout")]
-    connect_timeout: u32,
+    connect_timeout: u16,
 
     /// MAY allow a Client to supply a ClientId that has a length of zero bytes.
     ///
@@ -201,12 +201,12 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn default_keep_alive() -> u32 {
+    pub const fn default_keep_alive() -> u16 {
         60
     }
 
     #[must_use]
-    pub const fn default_connect_timeout() -> u32 {
+    pub const fn default_connect_timeout() -> u16 {
         60
     }
 
@@ -261,12 +261,12 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn keep_alive(&self) -> u32 {
+    pub const fn keep_alive(&self) -> u16 {
         self.keep_alive
     }
 
     #[must_use]
-    pub const fn connect_timeout(&self) -> u32 {
+    pub const fn connect_timeout(&self) -> u16 {
         self.connect_timeout
     }
 

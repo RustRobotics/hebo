@@ -219,8 +219,7 @@ impl Session {
         if packet.keep_alive() > 0 {
             #[allow(clippy::cast_possible_truncation)]
             #[allow(clippy::cast_sign_loss)]
-            let keep_alive = (f64::from(packet.keep_alive()) * 1.5) as u32;
-            self.config.set_keep_alive(keep_alive);
+            self.config.set_keep_alive(packet.keep_alive());
         }
 
         // From [MQTT-3.1.3-8].
@@ -294,8 +293,7 @@ impl Session {
         if packet.keep_alive() > 0 {
             #[allow(clippy::cast_possible_truncation)]
             #[allow(clippy::cast_sign_loss)]
-            let keep_alive = (f64::from(packet.keep_alive()) * 1.5) as u32;
-            self.config.set_keep_alive(keep_alive);
+            self.config.set_keep_alive(packet.keep_alive());
         }
 
         if !packet.connect_flags().clean_session() && packet.client_id().is_empty() {
@@ -307,6 +305,8 @@ impl Session {
 
         self.clean_session = packet.connect_flags().clean_session();
         // TODO(Shaohua): Handle other connection flags.
+
+        // TODO(Shaohua): Handle properties in packet.
 
         // Send the connect packet to listener.
         self.status = Status::Connecting;
