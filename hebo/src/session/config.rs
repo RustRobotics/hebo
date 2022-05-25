@@ -11,6 +11,7 @@ pub struct SessionConfig {
 
     maximum_inflight_messages: usize,
     maximum_packet_size: usize,
+    maximum_topic_alias: u16,
 
     allow_empty_client_id: bool,
 
@@ -34,6 +35,7 @@ impl SessionConfig {
 
             maximum_inflight_messages: 10,
             maximum_packet_size: 10,
+            maximum_topic_alias: 10,
 
             allow_empty_client_id: false,
 
@@ -66,7 +68,7 @@ impl SessionConfig {
         self.connect_timeout
     }
 
-    pub fn set_maximum_inflight_messages(&mut self, maximum_inflight_messages: u32) -> &mut Self {
+    pub fn set_maximum_inflight_messages(&mut self, maximum_inflight_messages: u16) -> &mut Self {
         self.maximum_inflight_messages = maximum_inflight_messages as usize;
         self
     }
@@ -86,6 +88,17 @@ impl SessionConfig {
     #[must_use]
     pub const fn maximum_packet_size(&self) -> usize {
         self.maximum_packet_size
+    }
+
+    pub fn set_maximum_topic_alias(&mut self, maximum_topic_alias: u16) -> &mut Self {
+        self.maximum_topic_alias = maximum_topic_alias;
+        self
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn maximum_topic_alias(&self) -> u16 {
+        self.maximum_topic_alias
     }
 
     pub fn set_allow_empty_client_id(&mut self, allow_empty_client_id: bool) -> &mut Self {

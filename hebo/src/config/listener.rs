@@ -151,7 +151,7 @@ pub struct Listener {
     ///
     /// Defaults to 20.
     #[serde(default = "Listener::default_maximum_inflight_messages")]
-    maximum_inflight_messages: u32,
+    maximum_inflight_messages: u16,
 }
 
 impl Listener {
@@ -216,7 +216,7 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn default_maximum_inflight_messages() -> u32 {
+    pub const fn default_maximum_inflight_messages() -> u16 {
         20
     }
 
@@ -276,7 +276,7 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn maximum_inflight_messages(&self) -> u32 {
+    pub const fn maximum_inflight_messages(&self) -> u16 {
         self.maximum_inflight_messages
     }
 
