@@ -317,31 +317,6 @@ impl Session {
         Ok(())
     }
 
-    /// Handle properties in connect packet.
-    fn process_connect_properties(&mut self, packet: &v5::ConnectPacket) -> Result<(), Error> {
-        for property in packet.properties().as_ref() {
-            match property {
-                v5::Property::SessionExpiryInterval(interval) => {
-                    self.config.set_session_expiry_interval(interval.value());
-                }
-                v5::Property::ReceiveMaximum(receive) => {
-                    // TODO(Shaohua): Check receive > 0
-                    self.config.set_maximum_inflight_messages(receive.value());
-                }
-                v5::Property::MaximumPacketSize(packet_size) => {
-                    self.config.set_maximum_packet_size(packet_size.value());
-                }
-                v5::Property::TopicAliasMaximum(topic_alias) => {
-                    self.config.set_maximum_topic_alias(topic_alias.value());
-                }
-                _ => {
-                    // todo!()
-                }
-            }
-        }
-        Ok(())
-    }
-
     async fn on_client_ping(&mut self, buf: &[u8]) -> Result<(), Error> {
         let mut ba = ByteArray::new(buf);
         let _packet = v3::PingRequestPacket::decode(&mut ba)?;

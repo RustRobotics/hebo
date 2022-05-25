@@ -18,6 +18,7 @@ mod cache;
 mod client;
 mod config;
 mod listener;
+mod properties;
 
 pub use cache::CachedSession;
 pub use config::SessionConfig;
