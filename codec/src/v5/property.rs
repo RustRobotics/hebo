@@ -901,6 +901,12 @@ impl EncodePacket for Property {
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct Properties(Vec<Property>);
 
+impl AsRef<[Property]> for Properties {
+    fn as_ref(&self) -> &[Property] {
+        self.0.as_ref()
+    }
+}
+
 impl Properties {
     /// Create a new property list with default values.
     #[must_use]
