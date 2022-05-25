@@ -18,7 +18,7 @@ pub struct General {
     ///
     /// Default is 3s.
     #[serde(default = "General::default_sys_interval")]
-    sys_interval: u64,
+    sys_interval: u32,
 
     /// When run as root, drop privileges to this user.
     ///
@@ -51,7 +51,7 @@ pub struct General {
     ///
     /// Default value is 0, which means that all valid MQTT messages are accepted.
     #[serde(default = "General::default_message_size_limit")]
-    message_size_limit: usize,
+    message_size_limit: u32,
 
     /// For MQTT v5 clients, it is possible to have the server send a "server keep_alive" value
     /// that will override the keep_alive value set by the client.
@@ -65,7 +65,7 @@ pub struct General {
     ///
     /// Default value is 65535.
     #[serde(default = "General::default_maximum_keep_alive")]
-    maximum_keep_alive: u64,
+    maximum_keep_alive: u32,
 
     /// Set the maximum QoS supported.
     ///
@@ -90,14 +90,14 @@ pub struct General {
     ///
     /// Defaults is 0, which means no limit.
     #[serde(default = "General::default_maximum_packet_size")]
-    maximum_packet_size: usize,
+    maximum_packet_size: u32,
     //pub max_queued_messages: usize,
     //pub max_queued_bytes: usize,
 }
 
 impl General {
     #[must_use]
-    pub const fn default_sys_interval() -> u64 {
+    pub const fn default_sys_interval() -> u32 {
         3
     }
 
@@ -122,7 +122,7 @@ impl General {
     }
 
     #[must_use]
-    pub const fn default_message_size_limit() -> usize {
+    pub const fn default_message_size_limit() -> u32 {
         64 * 1024
     }
 
@@ -132,18 +132,18 @@ impl General {
     }
 
     #[must_use]
-    pub const fn default_maximum_keep_alive() -> u64 {
+    pub const fn default_maximum_keep_alive() -> u32 {
         65535
     }
 
     #[must_use]
-    pub const fn default_maximum_packet_size() -> usize {
+    pub const fn default_maximum_packet_size() -> u32 {
         0
     }
 
     #[must_use]
     pub const fn sys_interval(&self) -> Duration {
-        Duration::from_secs(self.sys_interval)
+        Duration::from_secs(self.sys_interval as u64)
     }
 
     #[must_use]
@@ -162,12 +162,12 @@ impl General {
     }
 
     #[must_use]
-    pub const fn message_size_limit(&self) -> usize {
+    pub const fn message_size_limit(&self) -> u32 {
         self.message_size_limit
     }
 
     #[must_use]
-    pub const fn maximum_keep_alive(&self) -> u64 {
+    pub const fn maximum_keep_alive(&self) -> u32 {
         self.maximum_keep_alive
     }
 
@@ -177,7 +177,7 @@ impl General {
     }
 
     #[must_use]
-    pub const fn maximum_packet_size(&self) -> usize {
+    pub const fn maximum_packet_size(&self) -> u32 {
         self.maximum_packet_size
     }
 
