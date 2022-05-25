@@ -219,7 +219,7 @@ impl Session {
         if packet.keep_alive() > 0 {
             #[allow(clippy::cast_possible_truncation)]
             #[allow(clippy::cast_sign_loss)]
-            let keep_alive = (f64::from(packet.keep_alive()) * 1.5) as u64;
+            let keep_alive = (f64::from(packet.keep_alive()) * 1.5) as u32;
             self.config.set_keep_alive(keep_alive);
         }
 
@@ -294,7 +294,7 @@ impl Session {
         if packet.keep_alive() > 0 {
             #[allow(clippy::cast_possible_truncation)]
             #[allow(clippy::cast_sign_loss)]
-            let keep_alive = (f64::from(packet.keep_alive()) * 1.5) as u64;
+            let keep_alive = (f64::from(packet.keep_alive()) * 1.5) as u32;
             self.config.set_keep_alive(keep_alive);
         }
 

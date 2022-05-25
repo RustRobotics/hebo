@@ -64,12 +64,12 @@ impl Listener {
         let (sender, receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let session_id = self.next_session_id();
         self.session_senders.insert(session_id, sender);
-        let session_config = SessionConfig::new(
-            self.config.keep_alive(),
-            self.config.connect_timeout(),
-            self.config.allow_empty_client_id(),
-            self.config.max_inflight_messages(),
-        );
+        let mut session_config = SessionConfig::new();
+        session_config
+            .set_keep_alive(self.config.keep_alive())
+            .set_allow_empty_client_id(self.config.allow_empty_client_id())
+            .set_maximum_inflight_messages(self.config.maximum_inflight_messages())
+            .set_connect_timeout(self.config.connect_timeout());
         let session = Session::new(
             session_id,
             session_config,

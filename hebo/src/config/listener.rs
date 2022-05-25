@@ -58,8 +58,8 @@ pub struct Listener {
     /// connections possible is around 1024.
     ///
     /// Default is 0, which means unlimited connections.
-    #[serde(default = "Listener::default_max_connections")]
-    max_connections: usize,
+    #[serde(default = "Listener::default_maximum_connections")]
+    maximum_connections: usize,
 
     /// Binding protocol.
     ///
@@ -122,7 +122,7 @@ pub struct Listener {
     ///
     /// Default is 60.
     #[serde(default = "Listener::default_keep_alive")]
-    keep_alive: u64,
+    keep_alive: u32,
 
     /// Timeout value in seconds before receiving Connect Packet from client.
     ///
@@ -130,7 +130,7 @@ pub struct Listener {
     ///
     /// Default is 60s.
     #[serde(default = "Listener::default_connect_timeout")]
-    connect_timeout: u64,
+    connect_timeout: u32,
 
     /// MAY allow a Client to supply a ClientId that has a length of zero bytes.
     ///
@@ -150,8 +150,8 @@ pub struct Listener {
     /// those that are being retried.
     ///
     /// Defaults to 20.
-    #[serde(default = "Listener::default_max_inflight_messages")]
-    max_inflight_messages: usize,
+    #[serde(default = "Listener::default_maximum_inflight_messages")]
+    maximum_inflight_messages: u32,
 }
 
 impl Listener {
@@ -166,7 +166,7 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn default_max_connections() -> usize {
+    pub const fn default_maximum_connections() -> usize {
         0
     }
 
@@ -201,12 +201,12 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn default_keep_alive() -> u64 {
+    pub const fn default_keep_alive() -> u32 {
         60
     }
 
     #[must_use]
-    pub const fn default_connect_timeout() -> u64 {
+    pub const fn default_connect_timeout() -> u32 {
         60
     }
 
@@ -216,7 +216,7 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn default_max_inflight_messages() -> usize {
+    pub const fn default_maximum_inflight_messages() -> u32 {
         20
     }
 
@@ -226,8 +226,8 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn max_connections(&self) -> usize {
-        self.max_connections
+    pub const fn maximum_connections(&self) -> usize {
+        self.maximum_connections
     }
 
     #[must_use]
@@ -261,12 +261,12 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn keep_alive(&self) -> u64 {
+    pub const fn keep_alive(&self) -> u32 {
         self.keep_alive
     }
 
     #[must_use]
-    pub const fn connect_timeout(&self) -> u64 {
+    pub const fn connect_timeout(&self) -> u32 {
         self.connect_timeout
     }
 
@@ -276,8 +276,8 @@ impl Listener {
     }
 
     #[must_use]
-    pub const fn max_inflight_messages(&self) -> usize {
-        self.max_inflight_messages
+    pub const fn maximum_inflight_messages(&self) -> u32 {
+        self.maximum_inflight_messages
     }
 
     /// Validate config.
@@ -329,7 +329,7 @@ impl Default for Listener {
     fn default() -> Self {
         Self {
             bind_device: Self::default_bind_device(),
-            max_connections: Self::default_max_connections(),
+            maximum_connections: Self::default_maximum_connections(),
             protocol: Self::default_protocol(),
             address: Self::default_address(),
             path: Self::default_path(),
@@ -339,7 +339,7 @@ impl Default for Listener {
             keep_alive: Self::default_keep_alive(),
             connect_timeout: Self::default_connect_timeout(),
             allow_empty_client_id: Self::default_allow_empty_client_id(),
-            max_inflight_messages: Self::default_max_inflight_messages(),
+            maximum_inflight_messages: Self::default_maximum_inflight_messages(),
         }
     }
 }

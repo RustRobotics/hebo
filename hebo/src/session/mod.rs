@@ -92,8 +92,8 @@ impl Session {
             // If the Server does not receive a CONNECT Packet within a reasonable amount of time after the
             // Network Connection is established, the Server SHOULD close the connection.
             if self.status == Status::Invalid
-                && self.config.connect_timeout() > 0
-                && connect_timeout.elapsed().as_secs() > self.config.connect_timeout()
+                && !self.config.connect_timeout().is_zero()
+                && connect_timeout.elapsed() > self.config.connect_timeout()
             {
                 break;
             }
@@ -140,8 +140,8 @@ impl Session {
             //
             // Note that a Server is permitted to disconnect a Client that it determines to be inactive
             // or non-responsive at any time, regardless of the Keep Alive value provided by that Client.
-            if self.config.keep_alive() > 0
-                && self.instant.elapsed().as_secs() > self.config.keep_alive()
+            if !self.config.keep_alive().is_zero()
+                && self.instant.elapsed() > self.config.keep_alive()
             {
                 log::warn!("sessoin: keep_alive time reached, disconnect client!");
                 if let Err(err) = self.send_disconnect().await {

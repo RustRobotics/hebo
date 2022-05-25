@@ -107,7 +107,7 @@ impl Session {
             self.send(ack_packet).await?;
         } else if qos == QoS::ExactOnce {
             // Check inflight messages overflow.
-            if self.pub_recv_packets.len() > self.config.max_inflight_messages() {
+            if self.pub_recv_packets.len() > self.config.maximum_inflight_messages() {
                 log::error!("session: Too many unacknowledged qos=2 messages, disconnect client!");
                 return self.send_disconnect().await;
             }
@@ -142,7 +142,7 @@ impl Session {
             self.send(ack_packet).await?;
         } else if qos == QoS::ExactOnce {
             // Check inflight messages overflow.
-            if self.pub_recv_packets.len() > self.config.max_inflight_messages() {
+            if self.pub_recv_packets.len() > self.config.maximum_inflight_messages() {
                 log::error!("session: Too many unacknowledged qos=2 messages, disconnect client!");
                 return self.send_disconnect().await;
             }
