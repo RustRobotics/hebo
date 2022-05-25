@@ -13,6 +13,9 @@ pub struct SessionConfig {
     maximum_packet_size: usize,
 
     allow_empty_client_id: bool,
+
+    out_packet_count: usize,
+    last_packet_id: u16,
 }
 
 impl Default for SessionConfig {
@@ -32,6 +35,9 @@ impl SessionConfig {
             maximum_packet_size: 10,
 
             allow_empty_client_id: false,
+
+            out_packet_count: 0,
+            last_packet_id: 0,
         }
     }
 
@@ -88,5 +94,25 @@ impl SessionConfig {
     #[must_use]
     pub const fn allow_empty_client_id(&self) -> bool {
         self.allow_empty_client_id
+    }
+
+    pub fn out_packet_count_add_one(&mut self) {
+        self.out_packet_count += 1;
+    }
+
+    pub const fn out_packet_count(&self) -> usize {
+        self.out_packet_count
+    }
+
+    pub fn renew_last_packet_id(&mut self) -> u16 {
+        let last_packet_id = self.last_packet_id;
+        self.last_packet_id += 1;
+        last_packet_id
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn last_packet_id(&self) -> u16 {
+        self.last_packet_id
     }
 }
