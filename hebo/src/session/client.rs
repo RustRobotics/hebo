@@ -407,13 +407,11 @@ impl Session {
         self.status = Status::Disconnecting;
         let ret = if self.protocol_level == ProtocolLevel::V5 {
             let packet = v5::DisconnectPacket::new();
-            log::info!("disconnect packet: {:?}", packet);
             self.send(packet).await
         } else {
             let packet = v3::DisconnectPacket::new();
             self.send(packet).await
         };
-        log::info!("ret: {:?}", ret);
         if let Err(err) = ret {
             log::error!(
                 "session: Failed to send v5 disconnect packet, {}, err: {:?}",

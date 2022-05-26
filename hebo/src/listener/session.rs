@@ -25,7 +25,7 @@ impl Listener {
         &mut self,
         cmd: SessionToListenerCmd,
     ) -> Result<(), Error> {
-        log::info!("Listener::handle_session_cmd()");
+        log::info!("Listener::handle_session_cmd: {:?}", cmd);
         match cmd {
             SessionToListenerCmd::Connect(session_id, packet) => {
                 self.on_session_connect(session_id, packet).await

@@ -202,10 +202,18 @@ impl Session {
 
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
-        if packet.packet_type() == PacketType::Disconnect {
-            log::info!("buffer of disconnect packet: {:x?}", buf);
+        let n_write = self.stream.write(&buf).await?;
+        if n_write != buf.len() {
+            log::error!("packet: {:?}", packet);
+            return Err(Error::from_string(
+                ErrorKind::SocketError,
+                format!(
+                    "Failed to send packet, write bytes: {}, total: {}",
+                    n_write,
+                    buf.len()
+                ),
+            ));
         }
-        self.stream.write(&buf).await.map(drop)?;
         self.reset_instant();
         Ok(())
     }
