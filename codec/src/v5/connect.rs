@@ -535,7 +535,14 @@ impl DecodePacket for ConnectPacket {
         let keep_alive = KeepAlive::decode(ba)?;
         validate_keep_alive(keep_alive)?;
 
-        let properties = Properties::decode(ba)?;
+        let properties = Properties::decode(ba);
+        let properties = match properties {
+            Ok(properties) => properties,
+            Err(err) => {
+                log::error!("err: {:?}", err);
+                return Err(DecodeError::InvalidPropertyType);
+            }
+        };
         if let Err(property_type) = check_property_type_list(properties.props(), CONNECT_PROPERTIES)
         {
             log::error!(
@@ -550,6 +557,7 @@ impl DecodePacket for ConnectPacket {
             // If clean_session is false, a client_id is always required.
             return Err(DecodeError::InvalidClientId);
         }
+        // TODO(Shaohua): Validate client id.
 
         let will_properties = if connect_flags.will() {
             Properties::decode(ba)?

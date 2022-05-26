@@ -746,10 +746,14 @@ impl DecodePacket for Property {
     #[allow(clippy::too_many_lines)]
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let property_type_byte = ba.read_byte()?;
+        log::info!("property_type_byte: {}", property_type_byte);
         let property_type = PropertyType::try_from(property_type_byte)?;
+        log::info!("property_type: {:?}", property_type);
         match property_type {
             PropertyType::SessionExpiryInterval => {
+                log::info!("SessionExpiryInterval");
                 let interval = U32Data::decode(ba)?;
+                log::info!("interval: {}", interval);
                 Ok(Self::SessionExpiryInterval(interval))
             }
             PropertyType::ReceiveMaximum => {
@@ -989,15 +993,16 @@ impl DecodePacket for Properties {
             return Ok(Self::new());
         }
 
-        let len = VarInt::decode(ba)?;
-
-        let mut props = Vec::with_capacity(len.value());
-        for _i in 0..len.value() {
+        let remaining_length = VarInt::decode(ba)?;
+        let mut remaining_length = remaining_length.value();
+        let mut properties = Vec::new();
+        while remaining_length > 0 {
             let property = Property::decode(ba)?;
-            props.push(property);
+            remaining_length -= property.bytes();
+            properties.push(property);
         }
 
-        Ok(Self(props))
+        Ok(Self(properties))
     }
 }
 
