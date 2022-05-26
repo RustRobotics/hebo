@@ -3,13 +3,14 @@
 // in the LICENSE file.
 
 use std::convert::TryFrom;
+use std::fmt;
 
 use crate::{
     ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket, ProtocolLevel, QoS, VarInt,
     VarIntError,
 };
 
-pub trait Packet: Send {
+pub trait Packet: Send + fmt::Debug {
     fn packet_type(&self) -> PacketType;
 
     /// Get byte length in packet.
