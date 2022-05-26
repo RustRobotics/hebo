@@ -16,6 +16,7 @@ use crate::types::SessionId;
 
 mod cache;
 mod client;
+mod client_v5;
 mod config;
 mod listener;
 mod properties;

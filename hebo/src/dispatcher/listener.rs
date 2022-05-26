@@ -10,7 +10,6 @@ use crate::types::SessionGid;
 
 impl Dispatcher {
     pub(super) async fn handle_listener_cmd(&mut self, cmd: ListenerToDispatcherCmd) {
-        log::info!("handle_listener_cmd: {:?}", cmd);
         match cmd {
             ListenerToDispatcherCmd::CheckCachedSession(session_gid, client_id, protocol_level) => {
                 self.on_listener_check_cached_session(session_gid, client_id, protocol_level)
