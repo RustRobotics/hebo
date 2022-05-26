@@ -365,6 +365,7 @@ impl DecodePacket for ConnectPacket {
         if client_id.is_empty() && !connect_flags.clean_session() {
             return Err(DecodeError::InvalidClientId);
         }
+        validate_client_id(client_id.as_ref())?;
 
         let will_topic = if connect_flags.will() {
             Some(PubTopic::decode(ba)?)

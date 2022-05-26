@@ -557,7 +557,7 @@ impl DecodePacket for ConnectPacket {
             // If clean_session is false, a client_id is always required.
             return Err(DecodeError::InvalidClientId);
         }
-        // TODO(Shaohua): Validate client id.
+        validate_client_id(client_id.as_ref())?;
 
         let will_properties = if connect_flags.will() {
             Properties::decode(ba)?
