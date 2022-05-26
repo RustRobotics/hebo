@@ -5,7 +5,7 @@
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 
-pub const MAXIMUM_CLIENT_ID: usize = 23;
+pub const MAXIMUM_CLIENT_ID: usize = 32;
 
 /// Generate random string.
 #[must_use]
@@ -130,6 +130,7 @@ pub fn to_utf8_string(buf: &[u8]) -> Result<String, StringError> {
 ///   contain only the characters
 ///   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" [MQTT-3.1.3-5].
 /// - And '-_.' characters are allowed
+/// - And at most 32 characters are allowed
 ///
 /// # Errors
 ///
