@@ -344,7 +344,6 @@ impl PublishPacket {
 impl DecodePacket for PublishPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
-
         let (dup, qos, retain) =
             if let PacketType::Publish { dup, qos, retain } = fixed_header.packet_type() {
                 (dup, qos, retain)
@@ -393,21 +392,22 @@ impl DecodePacket for PublishPacket {
             return Err(DecodeError::InvalidPropertyType);
         }
 
+        let got_length = if qos == QoS::AtMostOnce {
+            topic.bytes() + properties.bytes()
+        } else {
+            topic.bytes() + properties.bytes() + PacketId::bytes()
+        };
         // It is valid for a PUBLISH Packet to contain a zero length payload.
-        if fixed_header.remaining_length() < topic.bytes() {
+        if fixed_header.remaining_length() < got_length {
+            log::error!(
+                "got {} bytes, expected: {}",
+                topic.bytes(),
+                fixed_header.remaining_length()
+            );
             return Err(DecodeError::InvalidRemainingLength);
         }
-        let mut msg_len = fixed_header.remaining_length() - topic.bytes();
-        if qos != QoS::AtMostOnce {
-            if msg_len < PacketId::bytes() {
-                return Err(DecodeError::InvalidRemainingLength);
-            }
-
-            // Packet identifier is presesnt in QoS1/QoS2 packets.
-            msg_len -= PacketId::bytes();
-        }
-
-        let msg = ba.read_bytes(msg_len)?;
+        let payload_len = fixed_header.remaining_length() - got_length;
+        let msg = ba.read_bytes(payload_len)?;
         let msg = msg.to_vec();
         Ok(Self {
             dup,
