@@ -11,15 +11,9 @@ use crate::commands::BackendsToDispatcherCmd;
 
 impl Dispatcher {
     /// Send packet to backends.
-    pub(super) async fn backends_store_packet(&mut self, packet: &v3::PublishPacket) {
-        log::info!("backends store packet: {:?}", packet);
-    }
+    pub(super) async fn backends_store_packet(&mut self, _packet: &v3::PublishPacket) {}
 
-    pub(super) async fn backends_store_packet_v5(&mut self, packet: &v5::PublishPacket) {
-        log::info!("backends store packet: {:?}", packet);
-    }
+    pub(super) async fn backends_store_packet_v5(&mut self, _packet: &v5::PublishPacket) {}
 
-    pub(super) async fn handle_backends_cmd(&mut self, cmd: BackendsToDispatcherCmd) {
-        log::info!("cmd: {:?}", cmd);
-    }
+    pub(super) async fn handle_backends_cmd(&mut self, _cmd: BackendsToDispatcherCmd) {}
 }

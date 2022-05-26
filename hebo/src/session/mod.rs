@@ -4,7 +4,7 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use codec::{v3, EncodePacket, Packet, PacketId, PacketType, ProtocolLevel};
+use codec::{EncodePacket, Packet, PacketId, PacketType, ProtocolLevel};
 use std::collections::HashSet;
 use std::time::Instant;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -101,6 +101,7 @@ impl Session {
             }
 
             if self.status == Status::Disconnected {
+                log::info!("status is Disconnected");
                 break;
             }
 
@@ -166,6 +167,8 @@ impl Session {
         }
 
         log::info!("Session {} exit main loop", self.id);
+
+        // Now session object goes out of scope and stream is dropped.
     }
 
     /// Reset instant if packet is send to or receive from client.
@@ -173,7 +176,7 @@ impl Session {
         self.instant = Instant::now();
     }
 
-    async fn send<P: EncodePacket + Packet>(&mut self, packet: P) -> Result<(), Error> {
+    pub(super) async fn send<P: EncodePacket + Packet>(&mut self, packet: P) -> Result<(), Error> {
         // The CONNACK Packet is the packet sent by the Server in response to a CONNECT Packet
         // received from a Client. The first packet sent from the Server to the Client MUST be
         // a CONNACK Packet [MQTT-3.2.0-1].
@@ -199,24 +202,11 @@ impl Session {
 
         let mut buf = Vec::new();
         packet.encode(&mut buf)?;
+        if packet.packet_type() == PacketType::Disconnect {
+            log::info!("buffer of disconnect packet: {:x?}", buf);
+        }
         self.stream.write(&buf).await.map(drop)?;
         self.reset_instant();
-        Ok(())
-    }
-
-    /// Send disconnect packet to client and update status.
-    async fn send_disconnect(&mut self) -> Result<(), Error> {
-        self.status = Status::Disconnecting;
-        let packet = v3::DisconnectPacket::new();
-        if let Err(err) = self.send(packet).await.map(drop) {
-            log::error!(
-                "session: Failed to send disconnect packet, {}, err: {:?}",
-                self.id,
-                err
-            );
-            return Err(err);
-        }
-        self.status = Status::Disconnected;
         Ok(())
     }
 }

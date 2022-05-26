@@ -64,6 +64,11 @@ impl DisconnectPacket {
     pub const fn properties(&self) -> &Properties {
         &self.properties
     }
+
+    fn get_fixed_header(&self) -> Result<FixedHeader, VarIntError> {
+        let remaining_length = ReasonCode::bytes() + self.properties.bytes();
+        FixedHeader::new(PacketType::Disconnect, remaining_length)
+    }
 }
 
 /// Byte 1 in the Variable Header is the Disconnect Reason Code.
@@ -104,8 +109,7 @@ impl EncodePacket for DisconnectPacket {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
         let old_len = buf.len();
 
-        let remaining_length = ReasonCode::bytes() + self.properties.bytes();
-        let fixed_header = FixedHeader::new(PacketType::Disconnect, remaining_length)?;
+        let fixed_header = self.get_fixed_header()?;
         fixed_header.encode(buf)?;
         self.reason_code.encode(buf)?;
         self.properties.encode(buf)?;
@@ -154,9 +158,7 @@ impl Packet for DisconnectPacket {
     }
 
     fn bytes(&self) -> Result<usize, VarIntError> {
-        let remaining_length = ReasonCode::bytes() + self.properties.bytes();
-        let fixed_header = FixedHeader::new(PacketType::Disconnect, remaining_length)?;
-
-        Ok(fixed_header.bytes() + remaining_length)
+        let fixed_header = self.get_fixed_header()?;
+        Ok(fixed_header.bytes() + fixed_header.remaining_length())
     }
 }

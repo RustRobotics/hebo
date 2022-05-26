@@ -5,7 +5,7 @@
 //! Handles client packets
 
 use codec::{
-    utils::random_client_id, v3, ByteArray, DecodeError, DecodePacket, FixedHeader, PacketType,
+    utils::random_client_id, v3, v5, ByteArray, DecodeError, DecodePacket, FixedHeader, PacketType,
     ProtocolLevel, QoS,
 };
 
@@ -398,6 +398,31 @@ impl Session {
         if let Err(err) = self.sender.send(cmd).await {
             log::warn!("Failed to send disconnect command to server: {:?}", err);
         }
+        Ok(())
+    }
+
+    /// Send v3 disconnect packet to client and update status.
+    pub(super) async fn send_disconnect(&mut self) -> Result<(), Error> {
+        log::info!("send_disconnect()");
+        self.status = Status::Disconnecting;
+        let ret = if self.protocol_level == ProtocolLevel::V5 {
+            let packet = v5::DisconnectPacket::new();
+            log::info!("disconnect packet: {:?}", packet);
+            self.send(packet).await
+        } else {
+            let packet = v3::DisconnectPacket::new();
+            self.send(packet).await
+        };
+        log::info!("ret: {:?}", ret);
+        if let Err(err) = ret {
+            log::error!(
+                "session: Failed to send v5 disconnect packet, {}, err: {:?}",
+                self.id,
+                err
+            );
+            return Err(err);
+        }
+        self.status = Status::Disconnected;
         Ok(())
     }
 }
