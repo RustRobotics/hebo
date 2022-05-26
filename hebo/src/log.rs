@@ -17,9 +17,9 @@ use log4rs::{
 use crate::config::{self, LogLevel};
 use crate::error::{Error, ErrorKind};
 
-const LOG_FILE_SIZE: u64 = 16 * 1024 * 1024;
+const LOG_FILE_SIZE: u64 = 64 * 1024 * 1024;
 const ROLLER_PATTERN: &str = ".{}.gz";
-const ROLLER_COUNT: u32 = 10;
+const ROLLER_COUNT: u32 = 16;
 const STDOUT_NAME: &str = "stdout";
 const ROLLER_NAME: &str = "roller";
 

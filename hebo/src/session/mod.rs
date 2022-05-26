@@ -164,6 +164,8 @@ impl Session {
                 err
             );
         }
+
+        log::info!("Session {} exit main loop", self.id);
     }
 
     /// Reset instant if packet is send to or receive from client.
