@@ -60,10 +60,11 @@ impl<'a> ByteArray<'a> {
     ///
     /// Returns error if the array has no length bytes.
     pub fn read_byte(&mut self) -> Result<u8, ByteArrayError> {
-        self.offset += 1;
+        let offset = self.offset + 1;
         if self.offset > self.data.len() {
             Err(ByteArrayError::OutOfRangeError)
         } else {
+            self.offset = offset;
             Ok(self.data[self.offset - 1])
         }
     }
@@ -101,10 +102,17 @@ impl<'a> ByteArray<'a> {
     ///
     /// Returns error if the array has no length bytes.
     pub fn read_bytes(&mut self, len: usize) -> Result<&[u8], ByteArrayError> {
-        self.offset += len;
-        if self.offset > self.data.len() {
+        let offset = self.offset + len;
+        if offset > self.data.len() {
+            log::error!(
+                "read_bytes() reading {} bytes, current offset: {}, data len: {}",
+                len,
+                self.offset,
+                self.data.len()
+            );
             Err(ByteArrayError::OutOfRangeError)
         } else {
+            self.offset = offset;
             Ok(&self.data[self.offset - len..self.offset])
         }
     }
