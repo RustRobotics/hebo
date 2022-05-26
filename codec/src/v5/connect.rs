@@ -536,8 +536,6 @@ impl DecodePacket for ConnectPacket {
         validate_keep_alive(keep_alive)?;
 
         let properties = Properties::decode(ba)?;
-        log::info!("properties: {:?}", properties);
-        println!("properties: {:?}", properties);
         if let Err(property_type) = check_property_type_list(properties.props(), CONNECT_PROPERTIES)
         {
             log::error!(

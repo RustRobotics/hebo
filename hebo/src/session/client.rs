@@ -24,7 +24,6 @@ impl Session {
                 return self.send_disconnect().await;
             }
         };
-        log::info!("handle_client_packet(), header: {:?}", fixed_header);
 
         // The Keep Alive is a time interval measured in seconds. Expressed as a 16-bit word,
         // it is the maximum time interval that is permitted to elapse between the point
@@ -305,8 +304,11 @@ impl Session {
 
         self.clean_session = packet.connect_flags().clean_session();
         // TODO(Shaohua): Handle other connection flags.
+        // TODO(Shaohua): Check will and will_qos is valid.
 
         self.process_connect_properties(&packet)?;
+
+        // TODO(Shaohua): Read auth-method and auth-data in properties.
 
         // Send the connect packet to listener.
         self.status = Status::Connecting;
