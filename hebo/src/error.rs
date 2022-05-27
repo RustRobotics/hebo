@@ -66,11 +66,8 @@ pub enum ErrorKind {
     FormatError,
 
     RedisError,
-
     MySQLError,
-
     PgSQLError,
-
     MongoError,
 }
 

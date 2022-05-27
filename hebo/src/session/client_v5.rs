@@ -39,7 +39,7 @@ impl Session {
         };
 
         // Check connection status first.
-        if self.status == Status::Connecting || self.status == Status::Connected {
+        if self.status != Status::Invalid {
             self.status = Status::Disconnected;
             // TODO(Shaohua): disconnect socket stream
             return Err(Error::new(
@@ -60,10 +60,7 @@ impl Session {
         }
         self.client_id = packet.client_id().to_string();
 
-        // Update keep_alive timer.
         if packet.keep_alive() > 0 {
-            #[allow(clippy::cast_possible_truncation)]
-            #[allow(clippy::cast_sign_loss)]
             self.config.set_keep_alive(packet.keep_alive());
         }
 
