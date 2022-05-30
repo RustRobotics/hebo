@@ -4,7 +4,7 @@
 
 use std::convert::TryFrom;
 
-use crate::base::PROTOCOL_NAME;
+use crate::base::{PROTOCOL_NAME, PROTOCOL_NAME_V3};
 use crate::connect_flags::ConnectFlags;
 use crate::utils::validate_client_id;
 use crate::{
@@ -65,7 +65,9 @@ use crate::{
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ConnectPacket {
-    /// Protocol name can only be `MQTT` in specification.
+    /// Protocol name can be `MQTT` in specification for MQTT v3.1.1.
+    ///
+    /// Or `MQIsdp` for MQTT v3.1.
     protocol_name: StringData,
 
     protocol_level: ProtocolLevel,
@@ -126,10 +128,40 @@ impl ConnectPacket {
         })
     }
 
+    /// Create a new connect packet with `client_id` with mqtt 3.1 protocol.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if `client_id` is invalid.
+    pub fn new_v3(client_id: &str) -> Result<Self, EncodeError> {
+        let protocol_name = StringData::from(PROTOCOL_NAME_V3)?;
+        let protocol_level = ProtocolLevel::V3;
+        validate_client_id(client_id).map_err(|_err| EncodeError::InvalidClientId)?;
+        let client_id = StringData::from(client_id)?;
+        Ok(Self {
+            protocol_name,
+            protocol_level,
+            keep_alive: KeepAlive::new(60),
+            client_id,
+            ..Self::default()
+        })
+    }
+
     /// Update protocol level.
-    pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> &Self {
+    pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> Result<(), EncodeError> {
+        match level {
+            ProtocolLevel::V3 => {
+                self.protocol_name = StringData::from(PROTOCOL_NAME_V3)?;
+            }
+            ProtocolLevel::V4 => {
+                self.protocol_name = StringData::from(PROTOCOL_NAME)?;
+            }
+            ProtocolLevel::V5 => {
+                return Err(EncodeError::InvalidPacketLevel);
+            }
+        }
         self.protocol_level = level;
-        self
+        Ok(())
     }
 
     /// Get current protocol level.
@@ -321,11 +353,22 @@ impl DecodePacket for ConnectPacket {
         }
 
         let protocol_name = StringData::decode(ba)?;
-        if protocol_name.as_ref() != PROTOCOL_NAME {
-            return Err(DecodeError::InvalidProtocolName);
-        }
-
         let protocol_level = ProtocolLevel::try_from(ba.read_byte()?)?;
+        match protocol_level {
+            ProtocolLevel::V3 => {
+                if protocol_name.as_ref() != PROTOCOL_NAME_V3 {
+                    return Err(DecodeError::InvalidProtocolName);
+                }
+            }
+            ProtocolLevel::V4 => {
+                if protocol_name.as_ref() != PROTOCOL_NAME {
+                    return Err(DecodeError::InvalidProtocolName);
+                }
+            }
+            ProtocolLevel::V5 => {
+                return Err(DecodeError::InvalidProtocolLevel);
+            }
+        }
 
         let connect_flags = ConnectFlags::decode(ba)?;
         // If the Will Flag is set to 0 the Will QoS and Will Retain fields in the

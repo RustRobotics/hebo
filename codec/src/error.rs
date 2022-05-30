@@ -90,6 +90,8 @@ pub enum EncodeError {
 
     InvalidPacketType,
 
+    InvalidPacketLevel,
+
     /// PacketId should be present but not set.
     /// Or PacketId is none where it is required.
     InvalidPacketId,

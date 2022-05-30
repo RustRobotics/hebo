@@ -83,7 +83,7 @@ impl Session {
             }
             t => {
                 log::warn!("Unhandled msg: {:?}", t);
-                Ok(())
+                self.send_disconnect().await
             }
         }
     }
@@ -180,7 +180,7 @@ impl Session {
         //
         // If the Server rejects the CONNECT, it MUST NOT process any data sent by the
         // Client after the CONNECT Packet. [MQTT-3.1.4-5]
-        if self.status == Status::Connecting || self.status == Status::Connected {
+        if self.status != Status::Invalid {
             self.status = Status::Disconnected;
             // TODO(Shaohua): disconnect socket stream
             return Err(Error::new(
@@ -211,8 +211,6 @@ impl Session {
         // it MUST disconnect the Network Connection to the Client as if the network
         // had failed [MQTT-3.1.2-24].
         if packet.keep_alive() > 0 {
-            #[allow(clippy::cast_possible_truncation)]
-            #[allow(clippy::cast_sign_loss)]
             self.config.set_keep_alive(packet.keep_alive());
         }
 
