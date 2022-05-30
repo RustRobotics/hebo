@@ -1,6 +1,6 @@
 [package]
 name = "hebo"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 description = "Distributed MQTT broker"
 edition = "2021"
@@ -42,19 +42,19 @@ redis_conn = ["redis"]
 base64 = "0.13.0"
 chrono = { version = "0.4.19", features = ["serde"] }
 clap = "3.1.18"
-codec = { path = "../codec", package = "hebo_codec", version = "0.2.1" }
+codec = { path = "../codec", package = "hebo_codec", version = "0.2.2" }
 env_logger = "0.9.0"
 futures = "0.3.21"
 futures-util = "0.3.21"
 http = "0.2.7"
-jemallocator = { version = "0.3.2", optional = true }
+jemallocator = { version = "0.5.0", optional = true }
 log = "0.4.17"
 log4rs = { version = "1.1.1", features = [ "background_rotation", "gzip" ] }
 mongodb = { version = "2.2.1", optional = true }
 mysql_async = { version = "0.29.0", optional = true }
 nc = "0.8.3"
 openssl = "0.10.40"
-quinn = "0.8.2"
+quinn = "0.8.3"
 rand = "0.8.5"
 redis = { version = "0.21.5", features = ["tokio-comp", "connection-manager"], optional = true }
 rustls-pemfile = "1.0.0"
