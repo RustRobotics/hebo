@@ -41,7 +41,7 @@ redis_conn = ["redis"]
 [dependencies]
 base64 = "0.13.0"
 chrono = { version = "0.4.19", features = ["serde"] }
-clap = "3.1.18"
+clap = "3.2.5"
 codec = { path = "../codec", package = "hebo_codec", version = "0.2.2" }
 env_logger = "0.9.0"
 futures = "0.3.21"
@@ -52,7 +52,7 @@ log = "0.4.17"
 log4rs = { version = "1.1.1", features = [ "background_rotation", "gzip" ] }
 mongodb = { version = "2.2.2", optional = true }
 mysql_async = { version = "0.30.0", optional = true }
-nc = "0.8.3"
+nc = "0.8.4"
 openssl = "0.10.40"
 quinn = "0.8.3"
 rand = "0.8.5"
