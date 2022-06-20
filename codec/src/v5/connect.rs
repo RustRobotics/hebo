@@ -631,7 +631,8 @@ mod tests {
     #[test]
     fn test_decode() {
         let buf: Vec<u8> = vec![
-            16, 20, 0, 4, 77, 81, 84, 84, 4, 2, 0, 60, 0, 8, 119, 118, 80, 84, 88, 99, 67, 119,
+            0x10, 0x15, 0x00, 0x04, 0x4d, 0x51, 0x54, 0x54, 0x05, 0x02, 0x00, 0x3c, 0x00, 0x00,
+            0x08, 0x77, 0x76, 0x50, 0x54, 0x58, 0x63, 0x43, 0x77,
         ];
         let mut ba = ByteArray::new(&buf);
         let packet = ConnectPacket::decode(&mut ba);
