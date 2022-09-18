@@ -40,35 +40,35 @@ redis_conn = ["redis"]
 
 [dependencies]
 base64 = "0.13.0"
-chrono = { version = "0.4.19", features = ["serde"] }
-clap = "3.2.8"
+chrono = { version = "0.4.22", features = ["serde"] }
+clap = "3.2.22"
 codec = { path = "../codec", package = "hebo_codec", version = "0.2.2" }
-env_logger = "0.9.0"
-futures = "0.3.21"
-futures-util = "0.3.21"
+env_logger = "0.9.1"
+futures = "0.3.24"
+futures-util = "0.3.24"
 http = "0.2.8"
 jemallocator = { version = "0.5.0", optional = true }
 log = "0.4.17"
 log4rs = { version = "1.1.1", default-features = true, features = [ "all_components", "background_rotation", "gzip" ] }
-mongodb = { version = "2.2.2", optional = true }
+mongodb = { version = "2.3.0", optional = true }
 mysql_async = { version = "0.30.0", optional = true }
-nc = "0.8.4"
-openssl = "0.10.40"
-quinn = "0.8.3"
+nc = "0.8.6"
+openssl = "0.10.41"
+quinn = "0.8.5"
 rand = "0.8.5"
-redis = { version = "0.21.5", features = ["tokio-comp", "connection-manager"], optional = true }
-rustls-pemfile = "1.0.0"
-serde = { version = "1.0.138", features = ["derive"] }
-tokio = { version = "1.19.2", features = ["full"] }
-tokio-postgres = { version = "0.7.6", optional = true }
+redis = { version = "0.21.6", features = ["tokio-comp", "connection-manager"], optional = true }
+rustls-pemfile = "1.0.1"
+serde = { version = "1.0.144", features = ["derive"] }
+tokio = { version = "1.21.1", features = ["full"] }
+tokio-postgres = { version = "0.7.7", optional = true }
 tokio-rustls = "0.23.4"
-tokio-tungstenite = { version = "0.17.1", features = ["rustls"] }
+tokio-tungstenite = { version = "0.17.2", features = ["rustls"] }
 toml = "0.5.9"
 users = "0.11.0"
 warp = "0.3.2"
-webpki-roots = "0.22.3"
+webpki-roots = "0.22.4"
 
 [dev-dependencies]
-rcgen = "0.9.2"
+rcgen = "0.9.3"
 ruo = { path = "../ruo", version = "0.1.2" }
 tokio-test = "0.4.2"
