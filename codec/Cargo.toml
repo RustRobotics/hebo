@@ -28,4 +28,4 @@ byteorder = "1.4.3"
 bytes = "1.2.1"
 log = "0.4.17"
 rand = "0.8.5"
-serde = { version = "1.0.144", features = ["derive"] }
+serde = { version = "1.0.145", features = ["derive"] }
