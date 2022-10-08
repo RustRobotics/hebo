@@ -17,7 +17,7 @@ use crate::{
 ///
 /// This packet does not contain variable header or payload.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct DisconnectPacket {}
 
 impl DisconnectPacket {

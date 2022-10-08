@@ -4,7 +4,7 @@
 
 /// Mqtt connection status.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ClientStatus {
     /// The client sends a Connect packet to the server and waits for a reply packet.
     Connecting,

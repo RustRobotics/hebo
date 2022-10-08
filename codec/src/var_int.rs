@@ -20,7 +20,7 @@ pub struct VarInt(usize);
 /// 256MB
 pub const MAX_PACKET_LEN: usize = 0x7fff_ffff;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VarIntError {
     OutOfRange(usize),
 }

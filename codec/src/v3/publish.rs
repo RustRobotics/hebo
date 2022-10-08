@@ -40,7 +40,7 @@ use crate::{
 /// * `QoS` 1, `PublishAckPacket`
 /// * `QoS` 2, `PublishRecPacket`
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct PublishPacket {
     /// If dup field is false, it indicates that this is the first time to send this packet.
     /// If it is true, then this packet might be re-delivery of an earlier attempt to send the

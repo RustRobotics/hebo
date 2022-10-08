@@ -4,7 +4,7 @@
 
 #[allow(dead_code)]
 #[repr(u8)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ErrorCode {
     OK = 0,
 

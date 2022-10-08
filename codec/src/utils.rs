@@ -33,7 +33,7 @@ pub fn random_client_id() -> String {
 }
 
 /// Invalid UTF-8 string.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum StringError {
     TooManyData,
 

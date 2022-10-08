@@ -17,7 +17,7 @@ pub struct Topic {
 }
 
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TopicError {
     EmptyTopic,
     TooManyData,

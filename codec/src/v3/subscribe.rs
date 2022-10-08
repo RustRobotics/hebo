@@ -11,7 +11,7 @@ use crate::{
 
 /// Topic/QoS pair.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SubscribeTopic {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
     topic: SubTopic,
@@ -118,7 +118,7 @@ impl DecodePacket for SubscribeTopic {
 /// be identical to the previous Subscription, also `QoS` may be different. Any existing
 /// retained message will be re-sent to the new Subscrption.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SubscribePacket {
     /// `packet_id` is used by the Server to reply SubscribeAckPacket to the client.
     packet_id: PacketId,

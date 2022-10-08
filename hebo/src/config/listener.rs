@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use crate::error::{Error, ErrorKind};
 
 /// Binding protocol types.
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq)]
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum Protocol {
     /// Raw Mqtt protocol, int TCP.
     #[serde(alias = "mqtt")]

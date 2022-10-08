@@ -14,7 +14,7 @@ use crate::{
 ///
 /// This packet does not contain variable header or payload.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct PingRequestPacket();
 
 impl PingRequestPacket {

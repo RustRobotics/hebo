@@ -43,7 +43,7 @@ use crate::{
 /// - `QoS` 1, `PublishAckPacket`
 /// - `QoS` 2, `PublishReceivedPacket`
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct PublishPacket {
     /// If the DUP flag is set to 0, it indicates that this is the first occasion that
     /// the Client or Server has attempted to send this PUBLISH packet.

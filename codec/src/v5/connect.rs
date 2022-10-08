@@ -84,7 +84,7 @@ use crate::{
 /// if present, MUST appear in the order Client Identifier, Will Properties, Will Topic,
 /// Will Payload, User Name, Password [MQTT-3.1.3-1].
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ConnectPacket {
     /// Protocol name can only be `MQTT` in specification.
     protocol_name: StringData,

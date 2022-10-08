@@ -63,7 +63,7 @@ use crate::{
 /// +----------------------------+
 /// ```
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ConnectPacket {
     /// Protocol name can be `MQTT` in specification for MQTT v3.1.1.
     ///

@@ -13,7 +13,7 @@ use crate::{
 ///
 /// Note that this packet does not contain variable header or payload.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct PingResponsePacket();
 
 impl PingResponsePacket {

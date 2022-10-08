@@ -289,7 +289,7 @@ impl Default for PacketType {
 /// +-------+-------+
 /// ```
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct FixedHeader {
     packet_type: PacketType,
 

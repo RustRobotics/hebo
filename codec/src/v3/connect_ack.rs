@@ -10,7 +10,7 @@ use crate::{
 /// If the Server sends a `ConnectAck` packet with non-zero return code, it MUST
 /// close the network connection.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ConnectReturnCode {
     /// Connection accepted.
     Accepted = 0,
@@ -73,7 +73,7 @@ impl From<u8> for ConnectReturnCode {
 ///
 /// This packet does not contain payload.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ConnectAckPacket {
     /// Acknowledge flags is the first byte in variable header.
     /// Session Present flag is set in bit 0 of Ack flags, bits 7-1 are reserved.
