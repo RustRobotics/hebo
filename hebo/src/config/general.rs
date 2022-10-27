@@ -106,6 +106,13 @@ impl General {
         "hebo".to_string()
     }
 
+    #[cfg(not(unix))]
+    #[must_use]
+    pub fn default_pid_file() -> PathBuf {
+        PathBuf::from("hebo.pid")
+    }
+
+    #[cfg(unix)]
     #[must_use]
     pub fn default_pid_file() -> PathBuf {
         let uid = unsafe { nc::geteuid() };

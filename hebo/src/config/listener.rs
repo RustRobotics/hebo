@@ -4,6 +4,7 @@
 
 use serde::Deserialize;
 use std::net::{TcpListener, ToSocketAddrs};
+#[cfg(unix)]
 use std::os::unix::net::UnixListener;
 use std::path::{Path, PathBuf};
 
@@ -29,6 +30,7 @@ pub enum Protocol {
     Wss,
 
     /// Unix Domain Socket
+    #[cfg(unix)]
     #[serde(alias = "uds")]
     Uds,
 
@@ -285,6 +287,35 @@ impl Listener {
     /// # Errors
     ///
     /// Returns error if socket address is invalid or already in use.
+    #[cfg(not(unix))]
+    pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
+        if bind_address {
+            let _socket = TcpListener::bind(&self.address).map_err(|err| {
+                Error::from_string(
+                    ErrorKind::ConfigError,
+                    format!(
+                        "Failed to bind to address {} for listener, err: {:?}",
+                        &self.address, err
+                    ),
+                )
+            })?;
+        } else {
+            let _addr = self.address.to_socket_addrs().map_err(|err| {
+                Error::from_string(
+                    ErrorKind::ConfigError,
+                    format!("Invalid socket address: {}, err: {:?}", &self.address, err),
+                )
+            })?;
+        }
+        Ok(())
+    }
+
+    /// Validate config.
+    ///
+    /// # Errors
+    ///
+    /// Returns error if socket address is invalid or already in use.
+    #[cfg(unix)]
     pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
         if bind_address {
             if self.protocol() == Protocol::Uds {
