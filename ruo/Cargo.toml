@@ -29,8 +29,8 @@ blocking = [ "tungstenite" ]
 byteorder = "1.4.3"
 codec = { path = "../codec", package = "hebo_codec", version = "0.2.2" }
 env_logger = "0.9.1"
-futures = "0.3.24"
-futures-util = "0.3.24"
+futures = "0.3.25"
+futures-util = "0.3.25"
 log = "0.4.17"
 quinn = "0.8.5"
 rustls-pemfile = "1.0.1"
