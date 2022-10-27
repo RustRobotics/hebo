@@ -5,6 +5,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::net::UdpSocket;
+#[cfg(unix)]
 use std::os::unix::io::{AsRawFd, RawFd};
 use tokio::net::TcpListener;
 
@@ -35,11 +36,6 @@ fn bind_device(socket_fd: RawFd, device: &str) -> Result<(), Error> {
             })?;
         }
     }
-    Ok(())
-}
-
-#[cfg(not(target_os = "linux"))]
-fn bind_device(_socket_fd: RawFd, _device: &str) -> Result<(), Error> {
     Ok(())
 }
 
@@ -77,16 +73,12 @@ fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
     }
 }
 
-#[cfg(not(target_os = "linux"))]
-fn enable_fast_open(_socket_fd: RawFd) -> Result<(), Error> {
-    Ok(())
-}
-
 /// Create a new tcp server socket at `address` and binds to `device`.
 ///
 /// # Errors
 ///
 /// Returns error if socket `address` is invalid or failed to bind to specific `device`.
+#[cfg(target_os = "linux")]
 pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener, Error> {
     let listener = TcpListener::bind(address).await?;
     let socket_fd: RawFd = listener.as_raw_fd();
@@ -100,11 +92,18 @@ pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener
     Ok(listener)
 }
 
+#[cfg(not(target_os = "linux"))]
+pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener, Error> {
+    let listener = TcpListener::bind(address).await?;
+    Ok(listener)
+}
+
 /// Create a new udp socket at `address` and binds to `device`.
 ///
 /// # Errors
 ///
 /// Returns error if socket `address` is invalid or failed to bind to specific `device`.
+#[cfg(target_os = "linux")]
 pub fn new_udp_socket(address: &str, device: &str) -> Result<UdpSocket, Error> {
     let socket = UdpSocket::bind(address)?;
     let socket_fd: RawFd = socket.as_raw_fd();
