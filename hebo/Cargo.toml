@@ -25,7 +25,7 @@ name = "hebo"
 path = "src/bin/hebo.rs"
 
 [features]
-default = ["full"]
+default = []
 
 full = [
   "mongodb_conn",
