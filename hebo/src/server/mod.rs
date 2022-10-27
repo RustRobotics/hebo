@@ -7,6 +7,7 @@
 use std::fs::File;
 use std::io::{Read, Write};
 use tokio::runtime::Runtime;
+#[cfg(unix)]
 use tokio::signal::unix::{signal, SignalKind};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 
@@ -256,6 +257,20 @@ impl ServerContext {
         })
     }
 
+    #[cfg(not(unix))]
+    async fn run_inner_loop(&mut self) -> Result<(), Error> {
+        loop {
+            tokio::select! {
+                Some(cmd) = self.dashboard_receiver.recv() => {
+                    if let Err(err) = self.handle_dashboard_cmd(cmd).await {
+                        log::error!("Failed to handle dashboard cmd: {:?}", err);
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(unix)]
     async fn run_inner_loop(&mut self) -> Result<(), Error> {
         log::info!("ServerContext::run_inner_loop()");
         let mut sigusr1_stream = signal(SignalKind::user_defined1())?;

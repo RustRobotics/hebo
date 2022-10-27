@@ -93,7 +93,7 @@ pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener
 }
 
 #[cfg(not(target_os = "linux"))]
-pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener, Error> {
+pub async fn new_tcp_listener(address: &str, _device: &str) -> Result<TcpListener, Error> {
     let listener = TcpListener::bind(address).await?;
     Ok(listener)
 }
@@ -110,5 +110,16 @@ pub fn new_udp_socket(address: &str, device: &str) -> Result<UdpSocket, Error> {
 
     bind_device(socket_fd, device)?;
 
+    Ok(socket)
+}
+
+/// Create a new udp socket at `address` and binds to `device`.
+///
+/// # Errors
+///
+/// Returns error if socket `address` is invalid or failed to bind to specific `device`.
+#[cfg(not(target_os = "linux"))]
+pub fn new_udp_socket(address: &str, _device: &str) -> Result<UdpSocket, Error> {
+    let socket = UdpSocket::bind(address)?;
     Ok(socket)
 }
