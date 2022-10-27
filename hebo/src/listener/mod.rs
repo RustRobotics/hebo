@@ -53,6 +53,7 @@ pub struct Listener {
 
 impl Drop for Listener {
     fn drop(&mut self) {
+        #[cfg(unix)]
         if let Protocol::Uds(..) = &self.protocol {
             // Remove unix domain socket file.
             let _ret = fs::remove_file(self.config.address());

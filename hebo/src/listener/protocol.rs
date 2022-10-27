@@ -3,7 +3,9 @@
 // in the LICENSE file.
 
 use std::fmt;
-use tokio::net::{TcpListener, UnixListener};
+use tokio::net::TcpListener;
+#[cfg(unix)]
+use tokio::net::UnixListener;
 use tokio_rustls::TlsAcceptor;
 
 /// Each Listener binds to a specific port
@@ -12,6 +14,7 @@ pub enum Protocol {
     Mqtts(TcpListener, TlsAcceptor),
     Ws(TcpListener),
     Wss(TcpListener, TlsAcceptor),
+    #[cfg(unix)]
     Uds(UnixListener),
     Quic(quinn::Endpoint, quinn::Incoming),
 }
@@ -23,6 +26,7 @@ impl fmt::Debug for Protocol {
             Protocol::Mqtts(..) => "Mqtts",
             Protocol::Ws(..) => "Ws",
             Protocol::Wss(..) => "Wss",
+            #[cfg(unix)]
             Protocol::Uds(..) => "Uds",
             Protocol::Quic(..) => "Quic",
         };

@@ -10,6 +10,7 @@ use std::fs::{self, File};
 use std::io::BufReader;
 use std::path::Path;
 use std::sync::Arc;
+#[cfg(unix)]
 use tokio::net::UnixListener;
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_rustls::{rustls, TlsAcceptor};
@@ -192,6 +193,7 @@ impl Listener {
                 new_listener(Protocol::Wss(listener, acceptor))
             }
 
+            #[cfg(unix)]
             config::Protocol::Uds => {
                 log::info!("bind uds://{}", address);
 
@@ -276,6 +278,7 @@ impl Listener {
                 };
                 Ok(Stream::Wss(Box::new(ws_stream)))
             }
+            #[cfg(unix)]
             Protocol::Uds(listener) => {
                 let (uds_stream, _address) = listener.accept().await?;
                 Ok(Stream::Uds(uds_stream))
