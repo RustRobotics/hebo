@@ -10,6 +10,7 @@ use tokio::net::TcpListener;
 
 use crate::error::{Error, ErrorKind};
 
+#[cfg(target_os = "linux")]
 fn bind_device(socket_fd: RawFd, device: &str) -> Result<(), Error> {
     if !device.is_empty() {
         unsafe {
@@ -37,6 +38,12 @@ fn bind_device(socket_fd: RawFd, device: &str) -> Result<(), Error> {
     Ok(())
 }
 
+#[cfg(not(target_os = "linux"))]
+fn bind_device(_socket_fd: RawFd, _device: &str) -> Result<(), Error> {
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
 fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
     // For Linux, value is the queue length of pending packets.
     //
@@ -68,6 +75,11 @@ fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
             )
         })
     }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn enable_fast_open(_socket_fd: RawFd) -> Result<(), Error> {
+    Ok(())
 }
 
 /// Create a new tcp server socket at `address` and binds to `device`.
