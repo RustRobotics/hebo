@@ -4,7 +4,9 @@
 
 use futures_util::{SinkExt, StreamExt};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpStream, UnixStream};
+use tokio::net::TcpStream;
+#[cfg(unix)]
+use tokio::net::UnixStream;
 use tokio_rustls::server::TlsStream;
 use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
@@ -17,6 +19,7 @@ pub enum Stream {
     Mqtts(Box<TlsStream<TcpStream>>),
     Ws(Box<WebSocketStream<TcpStream>>),
     Wss(Box<WebSocketStream<TlsStream<TcpStream>>>),
+    #[cfg(unix)]
     Uds(UnixStream),
     Quic(quinn::NewConnection),
 }
@@ -54,6 +57,7 @@ impl Stream {
                     Ok(0)
                 }
             }
+            #[cfg(unix)]
             Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
             Stream::Quic(ref mut quic_connection) => {
                 if let Some(Ok(mut recv)) = quic_connection.uni_streams.next().await {
@@ -84,6 +88,7 @@ impl Stream {
                 wss_stream.send(msg).await?;
                 Ok(buf.len())
             }
+            #[cfg(unix)]
             Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
             Stream::Quic(quic_connection) => {
                 let mut send = quic_connection.connection.open_uni().await?;
