@@ -186,6 +186,12 @@ impl General {
     /// # Errors
     ///
     /// Returns error if username not found.
+    #[cfg(not(target_os = "linux"))]
+    pub fn validate(&self) -> Result<(), Error> {
+        Ok(())
+    }
+
+    #[cfg(target_os = "linux")]
     pub fn validate(&self) -> Result<(), Error> {
         let euid = unsafe { nc::geteuid() };
         if euid == 0 {
