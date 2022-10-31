@@ -11,7 +11,7 @@ use tokio::net::TcpListener;
 
 use crate::error::{Error, ErrorKind};
 
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 fn bind_device(socket_fd: RawFd, device: &str) -> Result<(), Error> {
     if !device.is_empty() {
         unsafe {
@@ -39,15 +39,15 @@ fn bind_device(socket_fd: RawFd, device: &str) -> Result<(), Error> {
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
     // For Linux, value is the queue length of pending packets.
     //
     // TODO(Shaohua): Add a config option
-    #[cfg(target_os = "linux")]
+    #[cfg(unix)]
     let queue_len: i32 = 5;
     // For the others, just a boolean value for enable and disable.
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(unix))]
     let queue_len: i32 = 1;
     let queue_len_ptr = std::ptr::addr_of!(queue_len) as usize;
 
@@ -78,7 +78,7 @@ fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
 /// # Errors
 ///
 /// Returns error if socket `address` is invalid or failed to bind to specific `device`.
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener, Error> {
     let listener = TcpListener::bind(address).await?;
     let socket_fd: RawFd = listener.as_raw_fd();
@@ -92,7 +92,7 @@ pub async fn new_tcp_listener(address: &str, device: &str) -> Result<TcpListener
     Ok(listener)
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(unix))]
 pub async fn new_tcp_listener(address: &str, _device: &str) -> Result<TcpListener, Error> {
     let listener = TcpListener::bind(address).await?;
     Ok(listener)
@@ -103,7 +103,7 @@ pub async fn new_tcp_listener(address: &str, _device: &str) -> Result<TcpListene
 /// # Errors
 ///
 /// Returns error if socket `address` is invalid or failed to bind to specific `device`.
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 pub fn new_udp_socket(address: &str, device: &str) -> Result<UdpSocket, Error> {
     let socket = UdpSocket::bind(address)?;
     let socket_fd: RawFd = socket.as_raw_fd();
@@ -118,7 +118,7 @@ pub fn new_udp_socket(address: &str, device: &str) -> Result<UdpSocket, Error> {
 /// # Errors
 ///
 /// Returns error if socket `address` is invalid or failed to bind to specific `device`.
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(unix))]
 pub fn new_udp_socket(address: &str, _device: &str) -> Result<UdpSocket, Error> {
     let socket = UdpSocket::bind(address)?;
     Ok(socket)

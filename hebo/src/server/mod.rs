@@ -116,10 +116,10 @@ impl ServerContext {
     /// - Failed to read pid from file
     /// - Failed to find that process
     pub fn send_reload_signal(&mut self) -> Result<(), Error> {
-        #[cfg(target_os = "linux")]
+        #[cfg(unix)]
         return self.send_signal(nc::SIGUSR1);
 
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(not(unix))]
         return self.send_signal(0);
     }
 
@@ -131,21 +131,21 @@ impl ServerContext {
     /// - Failed to read pid from file
     /// - Failed to find that process
     pub fn send_stop_signal(&mut self) -> Result<(), Error> {
-        #[cfg(target_os = "linux")]
+        #[cfg(unix)]
         return self.send_signal(nc::SIGTERM);
 
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(not(unix))]
         return self.send_signal(0);
     }
 
     /// Notify server process to reload config by sending a signal.
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(unix))]
     fn send_signal(&mut self, _sig: i32) -> Result<(), Error> {
         Ok(())
     }
 
     /// Notify server process to reload config by sending a signal.
-    #[cfg(target_os = "linux")]
+    #[cfg(unix)]
     fn send_signal(&mut self, sig: i32) -> Result<(), Error> {
         log::info!("send_signal() {}", sig);
         let mut fd = File::open(&self.config.general().pid_file())?;
@@ -195,12 +195,12 @@ impl ServerContext {
         Ok(())
     }
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(unix))]
     fn set_uid(&self) -> Result<(), Error> {
         Ok(())
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(unix)]
     fn set_uid(&self) -> Result<(), Error> {
         let euid = unsafe { nc::geteuid() };
         if euid == 0 {
