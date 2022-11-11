@@ -1,11 +1,11 @@
-CURRENT_TAG = $(shell git describe --abbrev=0 --tags)
+CURRENT_TAG = $(shell git describe --abbrev=0 --tags | sed -e 's/v//')
 
-all: build-hebo-docker push-hebo-docker
+all: build-docker push-docker
 
-build-hebo-docker:
+build-docker:
 	docker build -t xushaohua/hebo:latest -f Dockerfile ..
 	docker tag xushaohua/hebo:latest xushaohua/hebo:$(CURRENT_TAG)
 
-push-hebo-docker:
+push-docker:
 	docker push xushaohua/hebo:latest
 	docker push xushaohua/hebo:$(CURRENT_TAG)
