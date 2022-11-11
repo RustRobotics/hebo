@@ -1,0 +1,11 @@
+[source.crates-io]
+replace-with = "ustc"
+
+[source.ustc]
+registry = "git://mirrors.ustc.edu.cn/crates.io-index"
+#registry = "https://mirrors.ustc.edu.cn/crates.io-index"
+
+[http]
+timeout = 30
+multiplexing = false
+check-revoke = false

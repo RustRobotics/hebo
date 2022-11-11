@@ -22,6 +22,6 @@ arch = ["x86_64"]
 
 files = [
 	{ from = "../target/release/hebo", to = "usr/bin/hebo" },
-	{ from = "resources/pifu/hebo.toml", to = "etc/hebo/hebo.toml" },
+	{ from = "hebo-example.toml", to = "etc/hebo/hebo.toml" },
 	{ from = "resources/service/hebo.service", to = "lib/systemd/system/hebo.service" },
 ]
