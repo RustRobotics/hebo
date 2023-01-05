@@ -76,19 +76,19 @@ impl std::error::Error for Error {}
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Self {
-        Self::from_string(ErrorKind::IoError, format!("IoError {:?}", err))
+        Self::from_string(ErrorKind::IoError, format!("IoError {err:?}"))
     }
 }
 
 impl From<tungstenite::Error> for Error {
     fn from(err: tungstenite::Error) -> Self {
-        Self::from_string(ErrorKind::IoError, format!("Websocket error: {:?}", err))
+        Self::from_string(ErrorKind::IoError, format!("Websocket error: {err:?}"))
     }
 }
 
 impl From<tokio_rustls::webpki::Error> for Error {
     fn from(err: tokio_rustls::webpki::Error) -> Self {
-        Self::from_string(ErrorKind::ConfigError, format!("webpki error: {:?}", err))
+        Self::from_string(ErrorKind::ConfigError, format!("webpki error: {err:?}"))
     }
 }
 
@@ -96,7 +96,7 @@ impl From<quinn::ConnectError> for Error {
     fn from(err: quinn::ConnectError) -> Self {
         Self::from_string(
             ErrorKind::SocketError,
-            format!("Quic connect error: {:?}", err),
+            format!("Quic connect error: {err:?}"),
         )
     }
 }
@@ -105,7 +105,7 @@ impl From<quinn::ConnectionError> for Error {
     fn from(err: quinn::ConnectionError) -> Self {
         Self::from_string(
             ErrorKind::SocketError,
-            format!("Quic connection error: {:?}", err),
+            format!("Quic connection error: {err:?}"),
         )
     }
 }
@@ -114,28 +114,25 @@ impl From<quinn::ConfigError> for Error {
     fn from(err: quinn::ConfigError) -> Self {
         Self::from_string(
             ErrorKind::ConfigError,
-            format!("Quic config error: {:?}", err),
+            format!("Quic config error: {err:?}"),
         )
     }
 }
 
 impl From<quinn::WriteError> for Error {
     fn from(err: quinn::WriteError) -> Self {
-        Self::from_string(
-            ErrorKind::SocketError,
-            format!("Quic write error: {:?}", err),
-        )
+        Self::from_string(ErrorKind::SocketError, format!("Quic write error: {err:?}"))
     }
 }
 
 impl From<codec::EncodeError> for Error {
     fn from(err: codec::EncodeError) -> Self {
-        Self::from_string(ErrorKind::EncodeError, format!("{:?}", err))
+        Self::from_string(ErrorKind::EncodeError, format!("{err:?}"))
     }
 }
 
 impl From<codec::DecodeError> for Error {
     fn from(err: codec::DecodeError) -> Self {
-        Self::from_string(ErrorKind::DecodeError, format!("{:?}", err))
+        Self::from_string(ErrorKind::DecodeError, format!("{err:?}"))
     }
 }

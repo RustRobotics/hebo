@@ -113,7 +113,7 @@ impl ClientInnerV5 {
                 self.status = ClientStatus::Disconnected;
                 Err(Error::from_string(
                     ErrorKind::PacketError,
-                    format!("Expected connect packet, got: {:?}", t),
+                    format!("Expected connect packet, got: {t:?}"),
                 ))
             }
         }
@@ -218,6 +218,7 @@ impl ClientInnerV5 {
         Ok(None)
     }
 
+    #[allow(clippy::unused_self)]
     fn on_publish_message(&mut self, ba: &mut ByteArray) -> Result<PublishMessage, Error> {
         // TODO(Shaohua): Support QoS1 / QoS2.
         let packet = PublishPacket::decode(ba)?;
@@ -228,6 +229,7 @@ impl ClientInnerV5 {
         })
     }
 
+    #[allow(clippy::unused_self)]
     fn on_ping_resp(&self, ba: &mut ByteArray) -> Result<(), Error> {
         log::info!("on ping resp");
         let _ping_req = PingRequestPacket::decode(ba)?;
@@ -293,7 +295,7 @@ impl ClientInnerV5 {
                 }
                 Err(error) => Err(Error::from_string(
                     ErrorKind::SocketError,
-                    format!("Failed to read bytes from socket, err: {:?}", error),
+                    format!("Failed to read bytes from socket, err: {error:?}"),
                 )),
             },
         )

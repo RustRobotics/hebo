@@ -74,13 +74,13 @@ impl Stream {
     /// If an error is returned then it must be guaranteed that no bytes were read.
     pub fn read_buf(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
         match self {
-            Stream::Mqtt(stream) => {
+            Self::Mqtt(stream) => {
                 // let reference = std::io::Read::by_ref(socket);
                 // reference.take(buf.capacity() as u64).read_to_end(buf)
                 stream.read(buf).map_err(Into::into)
             }
 
-            Stream::Ws(ws_stream) => {
+            Self::Ws(ws_stream) => {
                 let msg = ws_stream.read_message()?;
                 let data = msg.into_data();
                 let data_len = data.len();
@@ -88,7 +88,7 @@ impl Stream {
                 Ok(data_len)
             }
             #[cfg(unix)]
-            Stream::Uds(uds_stream) => uds_stream.read(buf).map_err(Into::into),
+            Self::Uds(uds_stream) => uds_stream.read(buf).map_err(Into::into),
         }
     }
 
@@ -101,19 +101,19 @@ impl Stream {
     pub fn write_all(&mut self, buf: &[u8]) -> Result<usize, Error> {
         // TODO(Shaohua): Replace with io::Write trait.
         match self {
-            Stream::Mqtt(stream) => {
+            Self::Mqtt(stream) => {
                 stream.write_all(buf)?;
                 Ok(buf.len())
             }
 
-            Stream::Ws(ws_stream) => {
+            Self::Ws(ws_stream) => {
                 let msg = Message::binary(buf);
                 ws_stream.write_message(msg)?;
                 Ok(buf.len())
             }
 
             #[cfg(unix)]
-            Stream::Uds(uds_stream) => {
+            Self::Uds(uds_stream) => {
                 uds_stream.write_all(buf)?;
                 Ok(buf.len())
             }
