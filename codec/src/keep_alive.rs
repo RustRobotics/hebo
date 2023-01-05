@@ -2,9 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+#![allow(clippy::module_name_repetitions)]
+
 use crate::{DecodeError, U16Data};
 
-/// KeepAlive presents connection keep-alive time in milliseconds.
+/// `KeepAlive` presents connection keep-alive time in milliseconds.
 pub type KeepAlive = U16Data;
 
 /// Check `keep_alive` is in range.

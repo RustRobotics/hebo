@@ -148,7 +148,7 @@ impl EncodePacket for ConnectAckPacket {
         let fixed_header = FixedHeader::new(PacketType::ConnectAck, 2)?;
         fixed_header.encode(buf)?;
 
-        let ack_flags = if self.session_present { 0b0000_0001 } else { 0 };
+        let ack_flags = u8::from(self.session_present);
         buf.push(ack_flags);
         buf.push(self.return_code as u8);
 

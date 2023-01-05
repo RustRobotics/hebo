@@ -367,15 +367,12 @@ impl ConnectPacket {
     ///
     /// Returns error if `password` is out of range.
     pub fn set_password(&mut self, password: Option<&[u8]>) -> Result<&mut Self, EncodeError> {
-        match password {
-            Some(password) => {
-                self.connect_flags.set_has_password(true);
-                self.password = BinaryData::from_slice(password)?;
-            }
-            None => {
-                self.connect_flags.set_has_password(false);
-                self.password.clear();
-            }
+        if let Some(password) = password {
+            self.connect_flags.set_has_password(true);
+            self.password = BinaryData::from_slice(password)?;
+        } else {
+            self.connect_flags.set_has_password(false);
+            self.password.clear();
         }
         Ok(self)
     }

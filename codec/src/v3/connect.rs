@@ -148,6 +148,9 @@ impl ConnectPacket {
     }
 
     /// Update protocol level.
+    ///
+    /// # Errors
+    /// Returns error if set protocol to MQTT v5.
     pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> Result<(), EncodeError> {
         match level {
             ProtocolLevel::V3 => {

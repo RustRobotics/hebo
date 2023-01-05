@@ -14,6 +14,9 @@ pub trait Packet: Send + fmt::Debug {
     fn packet_type(&self) -> PacketType;
 
     /// Get byte length in packet.
+    ///
+    /// # Errors
+    /// Returns error if packet size is invalid.
     fn bytes(&self) -> Result<usize, VarIntError>;
 }
 
@@ -75,6 +78,7 @@ impl PacketType {
 }
 
 impl From<PacketType> for u8 {
+    #[allow(clippy::bool_to_int_with_if)]
     fn from(packet_type: PacketType) -> Self {
         let type_bits = match packet_type {
             PacketType::Connect => 1,

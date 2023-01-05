@@ -71,7 +71,7 @@ impl DecodePacket for ProtocolLevel {
             return Err(DecodeError::InvalidProtocolName);
         }
 
-        let protocol_level = ProtocolLevel::try_from(ba.read_byte()?)?;
+        let protocol_level = Self::try_from(ba.read_byte()?)?;
         Ok(protocol_level)
     }
 }

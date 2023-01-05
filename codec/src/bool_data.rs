@@ -41,7 +41,7 @@ impl DecodePacket for BoolData {
 
 impl EncodePacket for BoolData {
     fn encode(&self, buf: &mut Vec<u8>) -> Result<usize, EncodeError> {
-        let byte = if self.0 { 0x01 } else { 0x00 };
+        let byte = u8::from(self.0);
         buf.push(byte);
         Ok(Self::bytes())
     }

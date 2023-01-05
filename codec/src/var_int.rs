@@ -2,6 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+#![allow(clippy::module_name_repetitions)]
+
 use std::fmt;
 
 use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
@@ -38,7 +40,7 @@ impl VarInt {
     ///
     /// Returns error if `len` is too large.
     pub const fn from(len: usize) -> Result<Self, VarIntError> {
-        if len as usize > MAX_PACKET_LEN {
+        if len > MAX_PACKET_LEN {
             return Err(VarIntError::OutOfRange(len));
         }
         Ok(Self(len))
@@ -77,7 +79,7 @@ impl VarInt {
     /// Returns error if result is overflow.
     pub fn add(&mut self, v: usize) -> Result<(), EncodeError> {
         let new_len = self.0 + v;
-        if new_len as usize > MAX_PACKET_LEN {
+        if new_len > MAX_PACKET_LEN {
             return Err(EncodeError::InvalidVarInt);
         }
         self.0 = new_len;

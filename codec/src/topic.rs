@@ -188,10 +188,10 @@ pub fn validate_pub_topic(topic: &str) -> Result<(), TopicError> {
         return Err(TopicError::TooManyData);
     }
 
-    if topic.as_bytes().iter().find(|c| c == &&b'+' || c == &&b'#') == None {
-        Ok(())
-    } else {
+    if topic.as_bytes().iter().any(|c| c == &b'+' || c == &b'#') {
         Err(TopicError::InvalidChar)
+    } else {
+        Ok(())
     }
 }
 

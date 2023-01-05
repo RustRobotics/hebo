@@ -919,6 +919,9 @@ impl Properties {
     }
 
     /// Get byte length of property list.
+    ///
+    /// # Panics
+    /// Raise panic if bytes of properties is larger than 256MB.
     #[must_use]
     pub fn bytes(&self) -> usize {
         let len = VarInt::from(self.len()).unwrap();
