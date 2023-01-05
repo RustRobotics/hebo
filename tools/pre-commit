@@ -3,6 +3,8 @@
 # Use of this source is governed by Apache-2.0 License that can be found
 # in the LICENSE file.
 
+# Copy this script into `.git/hooks` directory.
+
 set -xe
 
 cargo clippy --all-targets --all-features --fix --allow-dirty --allow-staged -- \
