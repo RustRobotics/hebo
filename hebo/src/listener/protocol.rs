@@ -16,7 +16,7 @@ pub enum Protocol {
     Wss(TcpListener, TlsAcceptor),
     #[cfg(unix)]
     Uds(UnixListener),
-    Quic(quinn::Endpoint, quinn::Incoming),
+    Quic(quinn::Endpoint),
 }
 
 impl fmt::Debug for Protocol {

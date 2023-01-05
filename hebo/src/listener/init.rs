@@ -4,10 +4,10 @@
 
 //! Initialize Listener
 
-use futures_util::StreamExt;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs::{self, File};
 use std::io::BufReader;
+use std::net::SocketAddr;
 use std::path::Path;
 use std::sync::Arc;
 #[cfg(unix)]
@@ -24,7 +24,7 @@ use crate::commands::{
 };
 use crate::config;
 use crate::error::{Error, ErrorKind};
-use crate::socket::{new_tcp_listener, new_udp_socket};
+use crate::socket::new_tcp_listener;
 use crate::stream::Stream;
 use crate::types::ListenerId;
 
@@ -222,12 +222,11 @@ impl Listener {
 
                 let server_config = quinn::ServerConfig::with_single_cert(vec![cert], key)?;
 
-                // Bind this endpoint to a UDP socket on the given server address.
-                let udp_socket = new_udp_socket(address, device)?;
-                let endpoint = quinn::EndpointConfig::default();
-                let (endpoint, incoming) =
-                    quinn::Endpoint::new(endpoint, Some(server_config), udp_socket)?;
-                new_listener(Protocol::Quic(endpoint, incoming))
+                // TODO(Shaohua): Bind this endpoint to a UDP socket on the given server address.
+                //let udp_socket = new_udp_socket(address, device)?;
+                let sock_addr: SocketAddr = address.parse()?;
+                let endpoint = quinn::Endpoint::server(server_config, sock_addr)?;
+                new_listener(Protocol::Quic(endpoint))
             }
         }
     }
@@ -283,9 +282,9 @@ impl Listener {
                 let (uds_stream, _address) = listener.accept().await?;
                 Ok(Stream::Uds(uds_stream))
             }
-            Protocol::Quic(_endpoint, incoming) => {
-                if let Some(conn) = incoming.next().await {
-                    let connection: quinn::NewConnection = conn.await?;
+            Protocol::Quic(endpoint) => {
+                if let Some(conn) = endpoint.accept().await {
+                    let connection: quinn::Connection = conn.await?;
                     return Ok(Stream::Quic(connection));
                 }
                 Err(Error::new(

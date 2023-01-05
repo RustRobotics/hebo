@@ -21,7 +21,7 @@ pub enum Stream {
     Wss(Box<WebSocketStream<TlsStream<TcpStream>>>),
     #[cfg(unix)]
     Uds(UnixStream),
-    Quic(quinn::NewConnection),
+    Quic(quinn::Connection),
 }
 
 impl Stream {
@@ -60,7 +60,7 @@ impl Stream {
             #[cfg(unix)]
             Stream::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
             Stream::Quic(ref mut quic_connection) => {
-                if let Some(Ok(mut recv)) = quic_connection.uni_streams.next().await {
+                if let Ok(mut recv) = quic_connection.accept_uni().await {
                     Ok(recv.read_buf(buf).await?)
                 } else {
                     Ok(0)
@@ -91,7 +91,7 @@ impl Stream {
             #[cfg(unix)]
             Stream::Uds(uds_stream) => Ok(uds_stream.write(buf).await?),
             Stream::Quic(quic_connection) => {
-                let mut send = quic_connection.connection.open_uni().await?;
+                let mut send = quic_connection.open_uni().await?;
                 send.write_all(buf).await?;
                 send.finish().await?;
                 Ok(buf.len())
