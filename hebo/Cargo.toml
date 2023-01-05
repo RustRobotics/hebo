@@ -40,7 +40,6 @@ redis_conn = ["redis"]
 
 [dependencies]
 base64 = "0.20.0"
-chrono = { version = "0.4.23", features = ["serde"] }
 clap = { vsersion = "4.0.32", features = ["derive"] }
 codec = { path = "../codec", package = "hebo_codec", version = "0.2.2" }
 env_logger = "0.10.0"
