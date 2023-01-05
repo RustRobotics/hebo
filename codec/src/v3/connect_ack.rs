@@ -10,9 +10,10 @@ use crate::{
 /// If the Server sends a `ConnectAck` packet with non-zero return code, it MUST
 /// close the network connection.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ConnectReturnCode {
     /// Connection accepted.
+    #[default]
     Accepted = 0,
 
     /// The server do not support the level of the MQTT protocol requested by the Client.
@@ -32,12 +33,6 @@ pub enum ConnectReturnCode {
 
     /// 6-255 are reserved.
     Reserved = 6,
-}
-
-impl Default for ConnectReturnCode {
-    fn default() -> Self {
-        Self::Accepted
-    }
 }
 
 impl From<u8> for ConnectReturnCode {

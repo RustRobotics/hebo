@@ -15,7 +15,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 /// have a single Reason Code as part of the Variable Header. The SUBACK and UNSUBACK packets
 /// contain a list of one or more Reason Codes in the Payload.
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ReasonCode {
     /// - Success: CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, UNSUBACK, AUTH
     /// - Normal disconnection: DISCONNECT
@@ -40,6 +40,7 @@ pub enum ReasonCode {
     /// PUBREC: The message is accepted. Publication of the QoS 2 message proceeds.
     ///
     /// PUBREL: Message released.
+    #[default]
     Success = 0x00,
 
     /// Granted QoS 1: SUBACK
@@ -337,12 +338,6 @@ pub enum ReasonCode {
     ///
     /// SUBACK: The Server does not support Wildcard Subscriptions; the subscription is not accepted.
     WildcardSubscriptionsNotSupported = 0xa2,
-}
-
-impl Default for ReasonCode {
-    fn default() -> Self {
-        Self::Success
-    }
 }
 
 impl TryFrom<u8> for ReasonCode {

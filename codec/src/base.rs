@@ -30,9 +30,10 @@ pub trait DecodePacket: Sized {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
 pub enum QoS {
     /// At most once delivery.
+    #[default]
     AtMostOnce = 0,
 
     /// At least once delivery.
@@ -47,12 +48,6 @@ impl QoS {
     #[must_use]
     pub const fn bytes() -> usize {
         1
-    }
-}
-
-impl Default for QoS {
-    fn default() -> Self {
-        Self::AtMostOnce
     }
 }
 

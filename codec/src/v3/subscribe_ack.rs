@@ -9,19 +9,14 @@ use crate::{
 
 /// Reply to each subscribed topic.
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum SubscribeAck {
     /// Maximum level of QoS the Server granted for this topic.
     QoS(QoS),
 
     /// This subscription if failed or not.
+    #[default]
     Failed,
-}
-
-impl Default for SubscribeAck {
-    fn default() -> Self {
-        Self::Failed
-    }
 }
 
 /// Reply to Subscribe packet.

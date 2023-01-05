@@ -15,12 +15,13 @@ use crate::{
 /// * 3.1.1
 /// * 5.0
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ProtocolLevel {
     /// MQTT 3.1
     V3 = 3,
 
     /// MQTT 3.1.1
+    #[default]
     V4 = 4,
 
     /// MQTT 5.0
@@ -33,12 +34,6 @@ impl ProtocolLevel {
     #[inline]
     pub const fn bytes() -> usize {
         1
-    }
-}
-
-impl Default for ProtocolLevel {
-    fn default() -> Self {
-        Self::V4
     }
 }
 

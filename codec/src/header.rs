@@ -17,9 +17,10 @@ pub trait Packet: Send + fmt::Debug {
     fn bytes(&self) -> Result<usize, VarIntError>;
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum PacketType {
     /// Request to connect to broker
+    #[default]
     Connect,
 
     /// Broker reply to connect request
@@ -269,12 +270,6 @@ impl TryFrom<u8> for PacketType {
                 Err(DecodeError::InvalidPacketType)
             }
         }
-    }
-}
-
-impl Default for PacketType {
-    fn default() -> Self {
-        Self::Connect
     }
 }
 

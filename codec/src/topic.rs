@@ -197,7 +197,7 @@ pub fn validate_pub_topic(topic: &str) -> Result<(), TopicError> {
 
 // TODO(Shaohua): Impl internal reference to `topic` String.
 #[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TopicPart {
     /// Special internal part, like `$SYS`.
     /// Topics start will `$` char will be traited as internal topic, even so
@@ -208,6 +208,7 @@ pub enum TopicPart {
     Normal(String),
 
     /// Empty part.
+    #[default]
     Empty,
 
     /// `#` char, to match any remaining parts.
@@ -248,12 +249,6 @@ impl TopicPart {
                 }
             }
         }
-    }
-}
-
-impl Default for TopicPart {
-    fn default() -> Self {
-        Self::Empty
     }
 }
 

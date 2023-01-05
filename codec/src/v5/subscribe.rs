@@ -14,9 +14,10 @@ use crate::{
 };
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum RetainHandling {
     /// 0 = Send retained messages at the time of the subscribe.
+    #[default]
     Send = 0,
 
     /// 1 = Send retained messages at subscribe only if the subscription does not currently exist.
@@ -24,12 +25,6 @@ pub enum RetainHandling {
 
     /// 2 = Do not send retained messages at the time of the subscribe.
     NoSend = 2,
-}
-
-impl Default for RetainHandling {
-    fn default() -> Self {
-        Self::Send
-    }
 }
 
 impl TryFrom<u8> for RetainHandling {
