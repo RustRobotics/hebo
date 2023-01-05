@@ -2,98 +2,41 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
-use clap::{Arg, ArgMatches, Command};
-use std::iter::Iterator;
+use clap::Parser;
 use std::path::Path;
 use tokio::runtime::Runtime;
 
 use super::ServerContext;
-use crate::auth::file_auth;
 use crate::config::Config;
 use crate::error::{Error, ErrorKind};
 use crate::log::init_log;
 
 pub const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
-const OPT_CONFIG: &str = "config";
-const OPT_RELOAD: &str = "reload";
-const OPT_STOP: &str = "stop";
-const OPT_TEST: &str = "test";
-const SUBCMD_PASSWORD: &str = "password";
-const OPT_ADD: &str = "add";
-const OPT_UPDATE: &str = "update";
-const OPT_DELETE: &str = "delete";
-const OPT_PASSWORD_FILE: &str = "password_file";
 
-fn get_cmdline() -> Command<'static> {
-    Command::new("Hebo")
-        .version("0.2.5")
-        .author("Xu Shaohua <shaohua@biofan.org>")
-        .about("High Performance MQTT Server")
-        .subcommand(
-            Command::new(SUBCMD_PASSWORD)
-                .about("Manages password files for hebo")
-                .arg(
-                    Arg::new(OPT_ADD)
-                        .short('a')
-                        .long(OPT_ADD)
-                        .takes_value(true)
-                        .value_name("username:passwd")
-                        .multiple_occurrences(true)
-                        .help("Add username:passwd pair. Or update if username already exists."),
-                )
-                .arg(
-                    Arg::new(OPT_DELETE)
-                        .short('d')
-                        .long(OPT_DELETE)
-                        .takes_value(true)
-                        .value_name("username")
-                        .multiple_occurrences(true)
-                        .help("Delete the username rather than adding/updating its password."),
-                )
-                .arg(
-                    Arg::new(OPT_UPDATE)
-                        .short('u')
-                        .long(OPT_UPDATE)
-                        .takes_value(false)
-                        .help("Update a plain text password file to use hashed passwords"),
-                )
-                .arg(
-                    Arg::new(OPT_PASSWORD_FILE)
-                        .required(true)
-                        .help("password_file will be crated if not exist"),
-                ),
-        )
-        .arg(
-            Arg::new(OPT_CONFIG)
-                .short('c')
-                .long(OPT_CONFIG)
-                .value_name("config_file")
-                .takes_value(true)
-                .help("Specify config file path"),
-        )
-        .arg(
-            Arg::new(OPT_RELOAD)
-                .short('r')
-                .long(OPT_RELOAD)
-                .takes_value(false)
-                .help("Reload config"),
-        )
-        .arg(
-            Arg::new(OPT_STOP)
-                .short('s')
-                .long(OPT_STOP)
-                .takes_value(false)
-                .help("Stop server"),
-        )
-        .arg(
-            Arg::new(OPT_TEST)
-                .short('t')
-                .long(OPT_TEST)
-                .takes_value(false)
-                .help("Test config file and exit"),
-        )
+#[derive(Debug, Parser)]
+#[command(name = "Hebo")]
+#[command(author = "Xu Shaohua <shaohua@biofan.org>")]
+#[command(version = "0.2.5")]
+#[command(about = "High Performance MQTT Server", long_about = None)]
+struct Arguments {
+    /// Specify config file path
+    #[arg(short, long, value_name = "config_file")]
+    config: Option<String>,
+
+    /// Reload config.
+    #[arg(short, long)]
+    reload: bool,
+
+    /// Stop server
+    #[arg(short, long)]
+    stop: bool,
+
+    /// Test config file and exit.
+    #[arg(short, long)]
+    test: bool,
 }
 
+/*
 fn handle_password_subcmd(matches: &ArgMatches) -> Result<(), Error> {
     let password_file = if let Some(file) = matches.value_of(OPT_PASSWORD_FILE) {
         file
@@ -104,7 +47,7 @@ fn handle_password_subcmd(matches: &ArgMatches) -> Result<(), Error> {
         ));
     };
 
-    if matches.is_present(OPT_UPDATE) {
+    if matches.contains_id(OPT_UPDATE) {
         return file_auth::update_file_hash(password_file);
     }
 
@@ -117,6 +60,7 @@ fn handle_password_subcmd(matches: &ArgMatches) -> Result<(), Error> {
 
     file_auth::add_delete_users(password_file, &add_users, &delete_users)
 }
+*/
 
 /// Entry point of server
 ///
@@ -127,12 +71,9 @@ fn handle_password_subcmd(matches: &ArgMatches) -> Result<(), Error> {
 /// - Config file contains invalid options
 /// - Failed to init log mod
 pub fn handle_cmdline() -> Result<(), Error> {
-    let matches = get_cmdline().get_matches();
-    if let Some((SUBCMD_PASSWORD, sub_matches)) = matches.subcommand() {
-        return handle_password_subcmd(sub_matches);
-    }
+    let args = Arguments::parse();
 
-    let config_file = if let Some(config_file) = matches.value_of(OPT_CONFIG) {
+    let config_file = if let Some(config_file) = args.config.as_deref() {
         Some(config_file)
     } else if Path::new(DEFAULT_CONFIG).exists() {
         Some(DEFAULT_CONFIG)
@@ -154,7 +95,7 @@ pub fn handle_cmdline() -> Result<(), Error> {
             )
         })?;
 
-        if matches.is_present(OPT_TEST) {
+        if args.test {
             if let Err(err) = config.validate(false) {
                 eprintln!("Failed to validate config file!");
                 return Err(err);
@@ -171,11 +112,11 @@ pub fn handle_cmdline() -> Result<(), Error> {
 
     let mut server = ServerContext::new(config);
 
-    if matches.is_present(OPT_STOP) {
+    if args.stop {
         return server.send_stop_signal();
     }
 
-    if matches.is_present(OPT_RELOAD) {
+    if args.reload {
         return server.send_reload_signal();
     }
 
