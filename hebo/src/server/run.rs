@@ -16,7 +16,7 @@ pub const DEFAULT_CONFIG: &str = "/etc/hebo/hebo.toml";
 #[derive(Debug, Parser)]
 #[command(name = "Hebo")]
 #[command(author = "Xu Shaohua <shaohua@biofan.org>")]
-#[command(version = "0.2.5")]
+#[command(version = "0.3.2")]
 #[command(about = "High Performance MQTT Server", long_about = None)]
 struct Arguments {
     /// Specify config file path
