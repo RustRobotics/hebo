@@ -4,8 +4,9 @@
 
 #[allow(dead_code)]
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub enum ErrorCode {
+    #[default]
     OK = 0,
 
     /// Bad rpc.
@@ -45,10 +46,4 @@ pub enum ErrorCode {
 
     /// User is not online.
     UserOffline = 112,
-}
-
-impl Default for ErrorCode {
-    fn default() -> Self {
-        Self::OK
-    }
 }

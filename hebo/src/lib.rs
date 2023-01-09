@@ -2,6 +2,14 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+#![deny(
+    warnings,
+    clippy::all,
+    clippy::cargo,
+    clippy::nursery,
+    clippy::pedantic
+)]
+
 pub mod acl;
 pub mod auth;
 pub mod backends;
