@@ -2,6 +2,7 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+use base64::Engine;
 use openssl::hash::{Hasher, MessageDigest};
 use rand::Rng;
 
@@ -150,9 +151,10 @@ impl Password {
             return err;
         }
 
-        let salt = base64::decode(parts[2])?;
+        let b64 = base64::engine::general_purpose::STANDARD;
+        let salt = b64.decode(parts[2])?;
         let salt = Salt::from_slice(&salt);
-        let password_hash = base64::decode(parts[3])?;
+        let password_hash = b64.decode(parts[3])?;
         let password_hash = Hash::from_slice(&password_hash);
         Ok(Self {
             salt,
@@ -165,8 +167,9 @@ impl Password {
     #[must_use]
     pub fn dump(&self, username: &str) -> String {
         if self.valid {
-            let salt = base64::encode(self.salt.0);
-            let hash = base64::encode(self.password_hash.0);
+            let b64 = base64::engine::general_purpose::STANDARD;
+            let salt = b64.encode(self.salt.0);
+            let hash = b64.encode(self.password_hash.0);
             format!("{username}:${PW_SHA512}${salt}${hash}")
         } else {
             format!("{username}:")

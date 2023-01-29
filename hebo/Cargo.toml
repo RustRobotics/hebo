@@ -39,9 +39,9 @@ pgsql_conn = ["tokio-postgres"]
 redis_conn = ["redis"]
 
 [dependencies]
-base64 = "0.20.0"
-clap = { version = "4.0.32", features = ["derive"] }
-codec = { path = "../codec", package = "hebo_codec", version = "0.2.2" }
+base64 = "0.21.0"
+clap = { version = "4.1.4", features = ["derive"] }
+codec = { path = "../codec", package = "hebo_codec", version = "0.2.3" }
 env_logger = "0.10.0"
 futures = "0.3.25"
 futures-util = "0.3.25"
@@ -54,19 +54,19 @@ mysql_async = { version = "0.31.2", optional = true }
 openssl = "0.10.45"
 quinn = { version = "0.9.3", features = ["runtime-tokio"] }
 rand = "0.8.5"
-redis = { version = "0.22.1", features = ["tokio-comp", "connection-manager"], optional = true }
-rustls-pemfile = "1.0.1"
+redis = { version = "0.22.3", features = ["tokio-comp", "connection-manager"], optional = true }
+rustls-pemfile = "1.0.2"
 serde = { version = "1.0.152", features = ["derive"] }
-tokio = { version = "1.23.1", features = ["full"] }
+tokio = { version = "1.24.2", features = ["full"] }
 tokio-postgres = { version = "0.7.7", optional = true }
 tokio-rustls = "0.23.4"
 tokio-tungstenite = { version = "0.18.0", features = ["rustls"] }
-toml = "0.5.10"
+toml = "0.7.0"
 warp = "0.3.3"
 webpki-roots = "0.22.6"
 
 [target.'cfg(unix)'.dependencies]
-nc = "0.8.11"
+nc = "0.8.13"
 users = "0.11.0"
 
 [dev-dependencies]
