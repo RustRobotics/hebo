@@ -1,6 +1,6 @@
 [package]
 name = "hebo_codec"
-version = "0.2.2"
+version = "0.2.3"
 authors = [
   "Xu Shaohua <shaohua@biofan.org>"
 ]
