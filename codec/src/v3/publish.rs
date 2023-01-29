@@ -210,12 +210,9 @@ impl DecodePacket for PublishPacket {
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let fixed_header = FixedHeader::decode(ba)?;
 
-        let (dup, qos, retain) =
-            if let PacketType::Publish { dup, qos, retain } = fixed_header.packet_type() {
-                (dup, qos, retain)
-            } else {
-                return Err(DecodeError::InvalidPacketType);
-            };
+        let PacketType::Publish { dup, qos, retain } = fixed_header.packet_type() else {
+            return Err(DecodeError::InvalidPacketType);
+        };
 
         // The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
         if dup && qos == QoS::AtMostOnce {
