@@ -8,7 +8,6 @@ use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
 use super::{ServerContext, CHANNEL_CAPACITY};
-use crate::acl::AclApp;
 use crate::auth::AuthApp;
 use crate::backends::BackendsApp;
 use crate::bridge::BridgeApp;
@@ -20,6 +19,9 @@ use crate::gateway::GatewayApp;
 use crate::listener::Listener;
 use crate::metrics::Metrics;
 use crate::rule_engine::RuleEngineApp;
+
+#[cfg(feature = "acl")]
+use crate::acl::AclApp;
 
 impl ServerContext {
     #[allow(clippy::too_many_lines)]
@@ -67,8 +69,8 @@ impl ServerContext {
                 listeners_to_acl_sender.clone(),
                 acl_to_listener_receiver,
             )
-            .await
-            .unwrap_or_else(|_| panic!("Failed to listen at {:?}", &listeners_info.last()));
+                .await
+                .unwrap_or_else(|_| panic!("Failed to listen at {:?}", &listeners_info.last()));
             listener_objs.push(listener);
         }
 
@@ -128,18 +130,26 @@ impl ServerContext {
         });
         handles.push(auth_app_handle);
 
-        // ACL module.
-        let mut acl_app = AclApp::new(
-            // listeners
-            acl_to_listener_senders,
-            listeners_to_acl_receiver,
-            // server ctx
-            self.acl_receiver.take().unwrap(),
-        );
-        let acl_app_handle = runtime.spawn(async move {
-            acl_app.run_loop().await;
-        });
-        handles.push(acl_app_handle);
+        #[cfg(feature = "acl")]
+        {
+            // ACL module.
+            let mut acl_app = AclApp::new(
+                // listeners
+                acl_to_listener_senders,
+                listeners_to_acl_receiver,
+                // server ctx
+                self.acl_receiver.take().unwrap(),
+            );
+            let acl_app_handle = runtime.spawn(async move {
+                acl_app.run_loop().await;
+            });
+            handles.push(acl_app_handle);
+        }
+
+        #[cfg(not(feature = "acl"))]
+        {
+            drop(listeners_to_acl_receiver);
+        }
 
         // Backends module.
         let (backends_to_dispatcher_sender, backends_to_dispatcher_receiver) =

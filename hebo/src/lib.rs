@@ -12,7 +12,6 @@
 // TODO(Shaohua): Remove this lint flag
 #![allow(clippy::multiple_crate_versions)]
 
-pub mod acl;
 pub mod auth;
 pub mod backends;
 pub mod bridge;
@@ -27,11 +26,16 @@ pub mod gateway;
 pub mod listener;
 pub mod log;
 pub mod metrics;
-pub mod rule_engine;
 pub mod server;
 pub mod session;
 pub mod socket;
 pub mod stream;
 pub mod types;
+
+
+#[cfg(feature = "acl")]
+pub mod acl;
+
+pub mod rule_engine;
 
 pub use error::Error;
