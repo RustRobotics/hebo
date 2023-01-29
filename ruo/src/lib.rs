@@ -9,6 +9,8 @@
     clippy::nursery,
     clippy::pedantic
 )]
+// TODO(Shaohua): Remove this lint flag
+#![allow(clippy::multiple_crate_versions)]
 
 pub mod client;
 mod client_inner_v3;

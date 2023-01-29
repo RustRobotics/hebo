@@ -2,6 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+#![allow(clippy::module_name_repetitions)]
+
 use std::fmt::{self, Display};
 use std::io;
 use tokio_tungstenite::tungstenite;
@@ -41,8 +43,7 @@ pub enum ErrorKind {
     AuthFailed,
 }
 
-#[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Error {
     /// Type of current error.
     kind: ErrorKind,

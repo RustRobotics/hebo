@@ -238,12 +238,12 @@ impl ClientInnerV3 {
 
     async fn on_connect(&mut self) -> Result<(), Error> {
         log::info!("on_connect()");
-        Ok(())
+        todo!()
     }
 
     fn on_disconnect(&mut self) -> Result<(), Error> {
         log::info!("on_disconnect()");
-        Ok(())
+        todo!()
     }
 
     async fn on_message(&self, buf: &[u8]) -> Result<(), Error> {
@@ -254,7 +254,7 @@ impl ClientInnerV3 {
         //if let Some(cb) = &self.on_message_cb {
         //    cb(self, &packet);
         //}
-        Ok(())
+        todo!()
     }
 
     async fn on_ping_resp(&self) -> Result<(), Error> {

@@ -205,12 +205,12 @@ impl ClientInnerV5 {
 
     async fn on_connect(&mut self) -> Result<(), Error> {
         log::info!("on_connect()");
-        Ok(())
+        todo!()
     }
 
     fn on_disconnect(&mut self) -> Result<(), Error> {
         log::info!("on_disconnect()");
-        Ok(())
+        todo!()
     }
 
     async fn on_message(&self, buf: &[u8]) -> Result<(), Error> {
