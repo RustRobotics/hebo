@@ -148,7 +148,7 @@ impl ServerContext {
     #[cfg(unix)]
     fn send_signal(&mut self, sig: i32) -> Result<(), Error> {
         log::info!("send_signal() {}", sig);
-        let mut fd = File::open(&self.config.general().pid_file())?;
+        let mut fd = File::open(self.config.general().pid_file())?;
         let mut pid_str = String::new();
         fd.read_to_string(&mut pid_str)?;
         log::info!("pid str: {}", pid_str);
@@ -181,7 +181,7 @@ impl ServerContext {
 
     fn write_pid(&self) -> Result<(), Error> {
         let pid = std::process::id();
-        let mut fd = File::create(&self.config.general().pid_file()).map_err(|err| {
+        let mut fd = File::create(self.config.general().pid_file()).map_err(|err| {
             Error::from_string(
                 ErrorKind::IoError,
                 format!(
@@ -191,7 +191,7 @@ impl ServerContext {
                 ),
             )
         })?;
-        write!(fd, "{}", pid)?;
+        write!(fd, "{pid}")?;
         Ok(())
     }
 
@@ -210,7 +210,7 @@ impl ServerContext {
                 || {
                     Err(Error::from_string(
                         ErrorKind::ConfigError,
-                        format!("Failed to get user entry by name: {}", user),
+                        format!("Failed to get user entry by name: {user}"),
                     ))
                 },
                 |user| {
@@ -219,8 +219,7 @@ impl ServerContext {
                         Err(Error::from_string(
                             ErrorKind::ConfigError,
                             format!(
-                                "Failed to setuid({}), got err: {}",
-                                real_uid,
+                                "Failed to setuid({real_uid}), got err: {}",
                                 nc::strerror(errno)
                             ),
                         ))

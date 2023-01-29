@@ -49,7 +49,7 @@ impl AuthApp {
             let file_auth = FileAuth::new(password_file).map_err(|err| {
                 Error::from_string(
                     ErrorKind::ConfigError,
-                    format!("Invalid password file: {:?}, err: {:?}", password_file, err),
+                    format!("Invalid password file: {password_file:?}, err: {err:?}"),
                 )
             })?;
             Some(file_auth)

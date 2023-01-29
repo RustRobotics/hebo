@@ -91,7 +91,7 @@ impl Storage {
     /// # Errors
     ///
     /// Does nothing.
-    pub fn validate(&self) -> Result<(), Error> {
+    pub const fn validate(&self) -> Result<(), Error> {
         // TODO(Shaohua): check storage file permission
         Ok(())
     }

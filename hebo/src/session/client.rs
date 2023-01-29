@@ -151,13 +151,11 @@ impl Session {
 
         let mut packet = match v3::ConnectPacket::decode(&mut ba) {
             Ok(packet) => packet,
-            Err(err) => match err {
-                DecodeError::InvalidClientId => {
+            Err(err) => {
+                if let DecodeError::InvalidClientId = err {
                     self.reject_client_id().await?;
                     // TODO(Shaohua): disconnect socket stream
-                    return Err(err.into());
-                }
-                _ => {
+                } else {
                     // Got malformed packet, disconnect client.
                     //
                     // The Server MUST validate that the CONNECT Packet conforms to section 3.1 and close the
@@ -166,9 +164,9 @@ impl Session {
                     // We do not send any packets, just disconnect the stream.
                     self.status = Status::Disconnected;
                     // TODO(Shaohua): disconnect socket stream
-                    return Err(err.into());
                 }
-            },
+                return Err(err.into());
+            }
         };
 
         // Check connection status first.

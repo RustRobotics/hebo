@@ -16,17 +16,17 @@ pub async fn get_uptime(sender: DashboardSender) -> Result<impl warp::Reply, war
         .send(DashboardToServerContexCmd::MetricsGetUptime(resp_tx))
         .await
     {
-        log::error!("Failed to send cmd to server ctx, err: {:?}", err);
+        log::error!("Failed to send cmd to server ctx, err: {err:?}");
     } else {
         match resp_rx.await {
             Ok(uptime) => {
                 return Ok(warp::reply::with_status(
-                    format!("{}", uptime),
+                    format!("{uptime}"),
                     StatusCode::OK,
                 ));
             }
             Err(err) => {
-                log::info!("metrics response err: {:?}", err);
+                log::info!("metrics response err: {err:?}");
             }
         }
     }

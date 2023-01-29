@@ -59,7 +59,7 @@ impl Session {
         };
 
         if let Some(cached_session) = cached_session {
-            self.load_cached_session(cached_session);
+            self.load_cached_session(&cached_session);
         }
 
         Ok(())
@@ -80,7 +80,7 @@ impl Session {
         };
 
         if let Some(cached_session) = cached_session {
-            self.load_cached_session(cached_session);
+            self.load_cached_session(&cached_session);
         }
 
         Ok(())

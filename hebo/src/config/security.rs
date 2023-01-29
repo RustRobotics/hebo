@@ -58,7 +58,7 @@ impl Security {
     /// # Errors
     ///
     /// Does nothing.
-    pub fn validate(&self) -> Result<(), Error> {
+    pub const fn validate(&self) -> Result<(), Error> {
         // TODO(Shaohua): Validate password file entry
         Ok(())
     }

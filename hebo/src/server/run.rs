@@ -85,13 +85,13 @@ pub fn handle_cmdline() -> Result<(), Error> {
         let config_content = std::fs::read_to_string(config_file).map_err(|err| {
             Error::from_string(
                 ErrorKind::ConfigError,
-                format!("Failed to read config file {}, err: {:?}", config_file, err),
+                format!("Failed to read config file {config_file}, err: {err:?}"),
             )
         })?;
         let config: Config = toml::from_str(&config_content).map_err(|err| {
             Error::from_string(
                 ErrorKind::ConfigError,
-                format!("Invalid toml config file {}, err: {:?}", config_file, err),
+                format!("Invalid toml config file {config_file}, err: {err:?}"),
             )
         })?;
 
@@ -100,7 +100,7 @@ pub fn handle_cmdline() -> Result<(), Error> {
                 eprintln!("Failed to validate config file!");
                 return Err(err);
             }
-            println!("The configuration file {} syntax is Ok", config_file);
+            println!("The configuration file {config_file} syntax is Ok");
             return Ok(());
         }
         config

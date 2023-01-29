@@ -104,8 +104,7 @@ impl Log {
                     Error::from_string(
                         ErrorKind::ConfigError,
                         format!(
-                            "Failed to create parent directory for log file: {}, err: {:?}",
-                            log_file, err
+                            "Failed to create parent directory for log file: {log_file}, err: {err:?}"
                         ),
                     )
                 })?;
@@ -116,7 +115,7 @@ impl Log {
                     .map_err(|err| {
                         Error::from_string(
                             ErrorKind::ConfigError,
-                            format!("Failed to create log file: {}, err: {:?}", log_file, err),
+                            format!("Failed to create log file: {log_file}, err: {err:?}"),
                         )
                     })?;
             }

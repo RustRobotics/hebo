@@ -5,14 +5,13 @@
 use codec::v5;
 
 use super::Session;
-use crate::error::Error;
 
 impl Session {
     /// Handle properties in connect packet.
     pub(super) fn process_connect_properties(
         &mut self,
         packet: &v5::ConnectPacket,
-    ) -> Result<(), Error> {
+    ) {
         for property in packet.properties().as_ref() {
             match property {
                 v5::Property::SessionExpiryInterval(interval) => {
@@ -33,6 +32,5 @@ impl Session {
                 }
             }
         }
-        Ok(())
     }
 }

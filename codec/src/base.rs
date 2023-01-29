@@ -2,7 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 
 use super::{ByteArray, DecodeError, EncodeError};
@@ -30,7 +30,7 @@ pub trait DecodePacket: Sized {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum QoS {
     /// At most once delivery.
     #[default]

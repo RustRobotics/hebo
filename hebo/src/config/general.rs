@@ -3,14 +3,14 @@
 // in the LICENSE file.
 
 use codec::QoS;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use crate::error::{Error, ErrorKind};
 
 /// General section in config.
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct General {
     /// Time interval to send $SYS messages in seconds.
     ///
@@ -44,7 +44,7 @@ pub struct General {
     #[serde(default = "General::default_no_delay")]
     no_delay: bool,
 
-    /// Set maximium size for publish message payload.
+    /// Set maximum size for publish message payload.
     ///
     /// Received messages that exceed this size will not be accepted by the broker.
     /// MQTT imposes a maximum payload size of 268435455 bytes.
@@ -119,7 +119,7 @@ impl General {
         if uid == 0 {
             PathBuf::from("/run/hebo.pid")
         } else {
-            PathBuf::from(&format!("/run/user/{}/hebo.pid", uid))
+            PathBuf::from(&format!("/run/user/{uid}/hebo.pid"))
         }
     }
 
@@ -199,6 +199,8 @@ impl General {
     }
 
     #[cfg(unix)]
+    /// # Errors
+    /// Returns error if specific user id does not exist.
     pub fn validate(&self) -> Result<(), Error> {
         let euid = unsafe { nc::geteuid() };
         if euid == 0 {

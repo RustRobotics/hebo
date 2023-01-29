@@ -45,6 +45,8 @@ impl SessionConfig {
         }
     }
 
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
     pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
         let keep_alive = (f64::from(keep_alive) * 1.5).round() as u64;
         self.keep_alive = Duration::from_secs(keep_alive);
@@ -116,6 +118,8 @@ impl SessionConfig {
         self.out_packet_count += 1;
     }
 
+    #[inline]
+    #[must_use]
     pub const fn out_packet_count(&self) -> usize {
         self.out_packet_count
     }

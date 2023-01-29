@@ -64,7 +64,7 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
             .map_err(|err| {
                 Error::from_string(
                     ErrorKind::LoggerError,
-                    format!("Failed to init roller pattern, {:?}", err),
+                    format!("Failed to init roller pattern, {err:?}"),
                 )
             })?;
         let rolling_policy = Box::new(CompoundPolicy::new(
@@ -76,7 +76,7 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
             .map_err(|err| {
                 Error::from_string(
                     ErrorKind::LoggerError,
-                    format!("Failed to init roller appender, {:?}", err),
+                    format!("Failed to init roller appender, {err:?}"),
                 )
             })?;
 
@@ -91,14 +91,14 @@ pub fn init_log(log_conf: &config::Log) -> Result<(), Error> {
         .map_err(|err| {
             Error::from_string(
                 ErrorKind::LoggerError,
-                format!("Failed to build log4rs config, {:?}", err),
+                format!("Failed to build log4rs config, {err:?}"),
             )
         })?;
 
     log4rs::init_config(config).map_err(|err| {
         Error::from_string(
             ErrorKind::LoggerError,
-            format!("Failed to init log4rs, {:?}", err),
+            format!("Failed to init log4rs, {err:?}"),
         )
     })?;
     Ok(())

@@ -157,81 +157,97 @@ pub struct Listener {
 }
 
 impl Listener {
+    #[inline]
     #[must_use]
     pub fn default_listeners() -> Vec<Self> {
         vec![Self::default()]
     }
 
+    #[inline]
     #[must_use]
     pub fn default_bind_device() -> String {
-        "".to_string()
+        String::new()
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_maximum_connections() -> usize {
         0
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_protocol() -> Protocol {
         Protocol::Mqtt
     }
 
+    #[inline]
     #[must_use]
     pub fn default_address() -> String {
         "0.0.0.0:1883".to_string()
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_path() -> Option<String> {
         None
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_cert_file() -> Option<PathBuf> {
         None
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_key_file() -> Option<PathBuf> {
         None
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_username_as_client_id() -> bool {
         false
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_keep_alive() -> u16 {
         60
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_connect_timeout() -> u16 {
         60
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_allow_empty_client_id() -> bool {
         false
     }
 
+    #[inline]
     #[must_use]
     pub const fn default_maximum_inflight_messages() -> u16 {
         20
     }
 
+    #[inline]
     #[must_use]
     pub fn bind_device(&self) -> &str {
         &self.bind_device
     }
 
+    #[inline]
     #[must_use]
     pub const fn maximum_connections(&self) -> usize {
         self.maximum_connections
     }
 
+    #[inline]
     #[must_use]
     pub const fn protocol(&self) -> Protocol {
         self.protocol
@@ -257,37 +273,42 @@ impl Listener {
         self.key_file.as_deref()
     }
 
+    #[inline]
     #[must_use]
     pub const fn username_as_client_id(&self) -> bool {
         self.username_as_client_id
     }
 
+    #[inline]
     #[must_use]
     pub const fn keep_alive(&self) -> u16 {
         self.keep_alive
     }
 
+    #[inline]
     #[must_use]
     pub const fn connect_timeout(&self) -> u16 {
         self.connect_timeout
     }
 
+    #[inline]
     #[must_use]
     pub const fn allow_empty_client_id(&self) -> bool {
         self.allow_empty_client_id
     }
 
+    #[inline]
     #[must_use]
     pub const fn maximum_inflight_messages(&self) -> u16 {
         self.maximum_inflight_messages
     }
 
+    #[cfg(not(unix))]
     /// Validate config.
     ///
     /// # Errors
     ///
     /// Returns error if socket address is invalid or already in use.
-    #[cfg(not(unix))]
     pub fn validate(&self, bind_address: bool) -> Result<(), Error> {
         if bind_address {
             let _socket = TcpListener::bind(&self.address).map_err(|err| {

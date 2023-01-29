@@ -50,10 +50,8 @@ impl FileAuth {
     ///
     /// Returns error if failed to calculate password hash.
     pub fn is_match(&self, username: &str, password: &[u8]) -> Result<bool, Error> {
-        match self.0.get(username) {
-            None => Ok(false),
-            Some(p) => p.is_match(password),
-        }
+        self.0.get(username).map_or(Ok(false),
+                                    |p| p.is_match(password))
     }
 }
 
@@ -151,7 +149,7 @@ pub fn add_delete_users<P: AsRef<Path>>(
         if username.contains(':') {
             return Err(Error::from_string(
                 ErrorKind::ParameterError,
-                format!("Invalid username to delete: {:?}", username),
+                format!("Invalid username to delete: {username:?}"),
             ));
         }
 

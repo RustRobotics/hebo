@@ -29,13 +29,12 @@ impl SubTrie {
         session_gid: SessionGid,
         packet: &v3::SubscribePacket,
     ) -> (v3::SubscribeAckPacket, usize) {
-        let patterns = match self.map.get_mut(&session_gid) {
-            Some(patterns) => patterns,
-            None => {
-                let patterns = HashMap::new();
-                self.map.insert(session_gid, patterns);
-                self.map.get_mut(&session_gid).unwrap()
-            }
+        let patterns = if let Some(patterns) = self.map.get_mut(&session_gid) {
+            patterns
+        } else {
+            let patterns = HashMap::new();
+            self.map.insert(session_gid, patterns);
+            self.map.get_mut(&session_gid).unwrap()
         };
 
         // If a Server receives a SUBSCRIBE packet that contains multiple Topic Filters
@@ -75,13 +74,12 @@ impl SubTrie {
         session_gid: SessionGid,
         packet: &v5::SubscribePacket,
     ) -> (v5::SubscribeAckPacket, usize) {
-        let patterns = match self.map.get_mut(&session_gid) {
-            Some(patterns) => patterns,
-            None => {
-                let patterns = HashMap::new();
-                self.map.insert(session_gid, patterns);
-                self.map.get_mut(&session_gid).unwrap()
-            }
+        let patterns = if let Some(patterns) = self.map.get_mut(&session_gid) {
+            patterns
+        } else {
+            let patterns = HashMap::new();
+            self.map.insert(session_gid, patterns);
+            self.map.get_mut(&session_gid).unwrap()
         };
 
         // TODO(Shaohua): Add comments

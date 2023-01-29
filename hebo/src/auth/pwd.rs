@@ -79,14 +79,14 @@ impl Password {
         if parts.len() != 2 {
             return Err(Error::from_string(
                 ErrorKind::FormatError,
-                format!("Invalid password entry: {:?}", s),
+                format!("Invalid password entry: {s:?}"),
             ));
         }
         let username = parts[0];
         if username.is_empty() {
             return Err(Error::from_string(
                 ErrorKind::FormatError,
-                format!("Username is empty in entry: {:?}", s),
+                format!("Username is empty in entry: {s:?}"),
             ));
         }
         let password = parts[1];
@@ -118,14 +118,14 @@ impl Password {
         if parts.len() != 2 {
             return Err(Error::from_string(
                 ErrorKind::FormatError,
-                format!("Invalid password entry: {:?}", s),
+                format!("Invalid password entry: {s:?}"),
             ));
         }
         let username = parts[0];
         if username.is_empty() {
             return Err(Error::from_string(
                 ErrorKind::FormatError,
-                format!("Username is empty in entry: {:?}", s),
+                format!("Username is empty in entry: {s:?}"),
             ));
         }
         let password = Self::parse_password(parts[1])?;
@@ -137,7 +137,7 @@ impl Password {
         let parts: Vec<&str> = s.split('$').collect();
         let err = Err(Error::from_string(
             ErrorKind::FormatError,
-            format!("Invalid password : {:?}", s),
+            format!("Invalid password : {s:?}"),
         ));
         if parts.len() != 4 {
             return err;
@@ -167,9 +167,9 @@ impl Password {
         if self.valid {
             let salt = base64::encode(self.salt.0);
             let hash = base64::encode(self.password_hash.0);
-            format!("{}:${}${}${}", username, PW_SHA512, salt, hash)
+            format!("{username}:${PW_SHA512}${salt}${hash}")
         } else {
-            format!("{}:", username)
+            format!("{username}:")
         }
     }
 

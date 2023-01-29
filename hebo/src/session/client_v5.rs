@@ -21,21 +21,19 @@ impl Session {
         let mut ba = ByteArray::new(buf);
         let mut packet = match v5::ConnectPacket::decode(&mut ba) {
             Ok(packet) => packet,
-            Err(err) => match err {
-                DecodeError::InvalidClientId => {
+            Err(err) => {
+                if let DecodeError::InvalidClientId = err {
                     self.reject_client_id_v5().await?;
                     // TODO(Shaohua): disconnect socket stream
-                    return Err(err.into());
-                }
-                _ => {
-                    log::error!("on_client_connect_v5() Uncatched error: {:?}", err);
+                } else {
+                    log::error!("on_client_connect_v5() Uncaught error: {:?}", err);
                     // Got malformed packet, disconnect client.
                     self.status = Status::Disconnected;
                     // TODO(Shaohua): disconnect socket stream.
                     // TODO(Shaohua): Return reason-code to client.
-                    return Err(err.into());
                 }
-            },
+                return Err(err.into());
+            }
         };
 
         // Check connection status first.
@@ -75,7 +73,7 @@ impl Session {
         // TODO(Shaohua): Handle other connection flags.
         // TODO(Shaohua): Check will and will_qos is valid.
 
-        self.process_connect_properties(&packet)?;
+        self.process_connect_properties(&packet);
 
         // TODO(Shaohua): Read auth-method and auth-data in properties.
 

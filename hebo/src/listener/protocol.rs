@@ -22,14 +22,14 @@ pub enum Protocol {
 impl fmt::Debug for Protocol {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let msg = match self {
-            Protocol::Mqtt(..) => "Mqtt",
-            Protocol::Mqtts(..) => "Mqtts",
-            Protocol::Ws(..) => "Ws",
-            Protocol::Wss(..) => "Wss",
+            Self::Mqtt(..) => "Mqtt",
+            Self::Mqtts(..) => "Mqtts",
+            Self::Ws(..) => "Ws",
+            Self::Wss(..) => "Wss",
             #[cfg(unix)]
-            Protocol::Uds(..) => "Uds",
-            Protocol::Quic(..) => "Quic",
+            Self::Uds(..) => "Uds",
+            Self::Quic(..) => "Quic",
         };
-        write!(f, "{}", msg)
+        write!(f, "{msg}")
     }
 }
