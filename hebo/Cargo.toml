@@ -1,6 +1,6 @@
 [package]
 name = "hebo"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Xu Shaohua <shaohua@biofan.org>"]
 description = "Distributed MQTT broker"
 edition = "2021"
