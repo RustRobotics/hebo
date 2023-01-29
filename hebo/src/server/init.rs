@@ -12,7 +12,6 @@ use crate::auth::AuthApp;
 use crate::backends::BackendsApp;
 use crate::bridge::BridgeApp;
 use crate::commands::DispatcherToMetricsCmd;
-use crate::dashboard::DashboardApp;
 use crate::dispatcher::Dispatcher;
 use crate::error::Error;
 use crate::gateway::GatewayApp;
@@ -21,6 +20,8 @@ use crate::metrics::Metrics;
 
 #[cfg(feature = "acl")]
 use crate::acl::AclApp;
+#[cfg(feature = "dashboard")]
+use crate::dashboard::DashboardApp;
 #[cfg(feature = "rule_engine")]
 use crate::rule_engine::RuleEngineApp;
 
@@ -187,6 +188,7 @@ impl ServerContext {
         handles.push(bridge_handle);
 
         // dashboard module.
+        #[cfg(feature = "dashboard")]
         if self.config.dashboard().enable() {
             let mut dashboard_app = DashboardApp::new(
                 self.config.dashboard(),

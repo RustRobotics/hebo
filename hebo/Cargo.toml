@@ -38,6 +38,7 @@ mysql_conn = ["mysql_async"]
 pgsql_conn = ["tokio-postgres"]
 redis_conn = ["redis"]
 acl = []
+dashboard = []
 rule_engine = []
 
 [dependencies]

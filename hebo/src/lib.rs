@@ -19,7 +19,6 @@ pub mod cache_types;
 pub mod commands;
 pub mod config;
 pub mod connectors;
-pub mod dashboard;
 pub mod dispatcher;
 pub mod error;
 pub mod gateway;
@@ -35,7 +34,8 @@ pub mod types;
 
 #[cfg(feature = "acl")]
 pub mod acl;
-
+#[cfg(feature = "dashboard")]
+pub mod dashboard;
 #[cfg(feature = "rule_engine")]
 pub mod rule_engine;
 
