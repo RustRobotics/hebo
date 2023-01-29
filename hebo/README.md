@@ -1,8 +1,8 @@
 
-[![](resources/logo/hebo.png)](https://github.com/HeboProject/hebo)
+[![](resources/logo/hebo.png)](https://github.com/RustRobotics/hebo)
 
 # Hebo
-![Build status](https://github.com/HeboProject/hebo/actions/workflows/rust.yml/badge.svg)
+![Build status](https://github.com/RustRobotics/hebo/actions/workflows/rust.yml/badge.svg)
 [![Latest version](https://img.shields.io/crates/v/hebo.svg)](https://crates.io/crates/hebo)
 [![Documentation](https://docs.rs/hebo/badge.svg)](https://docs.rs/hebo)
 ![Minimum rustc version](https://img.shields.io/badge/rustc-1.56+-yellow.svg)
@@ -11,7 +11,7 @@
 HeBo (河伯) is a distributed MQTT broker in Rust.
 
 - [Documentation](https://docs.rs/hebo)
-- [Release notes](https://github.com/HeboProject/hebo/releases)
+- [Release notes](https://github.com/RustRobotics/hebo/releases)
 
 ## Build on Linux
 First install dependencies:

@@ -14,8 +14,8 @@ keywords = [
   "qos",
   "ruo",
 ]
-repository = "https://github.com/HeboProject/hebo"
-homepage = "https://github.com/HeboProject/hebo/tree/main/ruo"
+repository = "https://github.com/RustRobotics/hebo"
+homepage = "https://github.com/RustRobotics/hebo/tree/main/ruo"
 license = "Apache-2.0"
 edition = "2021"
 readme = "./README.md"

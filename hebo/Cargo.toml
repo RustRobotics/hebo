@@ -14,8 +14,8 @@ keywords = [
   "mqtt",
   "qos",
 ]
-repository = "https://github.com/HeboProject/hebo"
-homepage = "https://github.com/HeboProject/hebo"
+repository = "https://github.com/RustRobotics/hebo"
+homepage = "https://github.com/RustRobotics/hebo"
 license = "AGPL-3.0-only"
 readme = "./README.md"
 publish = true
