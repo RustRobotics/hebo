@@ -18,10 +18,11 @@ use crate::error::Error;
 use crate::gateway::GatewayApp;
 use crate::listener::Listener;
 use crate::metrics::Metrics;
-use crate::rule_engine::RuleEngineApp;
 
 #[cfg(feature = "acl")]
 use crate::acl::AclApp;
+#[cfg(feature = "rule_engine")]
+use crate::rule_engine::RuleEngineApp;
 
 impl ServerContext {
     #[allow(clippy::too_many_lines)]
@@ -220,17 +221,26 @@ impl ServerContext {
             mpsc::channel(CHANNEL_CAPACITY);
         let (dispatcher_to_rule_engine_sender, dispatcher_to_rule_engine_receiver) =
             mpsc::channel(CHANNEL_CAPACITY);
-        let mut rule_engine_app = RuleEngineApp::new(
-            // dispatcher
-            rule_engine_to_dispatcher_sender,
-            dispatcher_to_rule_engine_receiver,
-            // server ctx
-            self.rule_engine_receiver.take().unwrap(),
-        );
-        let rule_engine_handle = runtime.spawn(async move {
-            rule_engine_app.run_loop().await;
-        });
-        handles.push(rule_engine_handle);
+
+        #[cfg(feature = "rule_engine")]
+        {
+            let mut rule_engine_app = RuleEngineApp::new(
+                // dispatcher
+                rule_engine_to_dispatcher_sender,
+                dispatcher_to_rule_engine_receiver,
+                // server ctx
+                self.rule_engine_receiver.take().unwrap(),
+            );
+            let rule_engine_handle = runtime.spawn(async move {
+                rule_engine_app.run_loop().await;
+            });
+            handles.push(rule_engine_handle);
+        }
+        #[cfg(not(feature = "rule_engine"))]
+        {
+            drop(rule_engine_to_dispatcher_sender);
+            drop(dispatcher_to_rule_engine_receiver);
+        }
 
         // Dispatcher module.
         let mut dispatcher = Dispatcher::new(

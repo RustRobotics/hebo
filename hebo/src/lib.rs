@@ -36,6 +36,7 @@ pub mod types;
 #[cfg(feature = "acl")]
 pub mod acl;
 
+#[cfg(feature = "rule_engine")]
 pub mod rule_engine;
 
 pub use error::Error;
