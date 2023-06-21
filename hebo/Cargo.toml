@@ -54,7 +54,7 @@ log = "0.4.17"
 log4rs = { version = "1.2.0", default-features = true, features = [ "all_components", "background_rotation", "gzip" ] }
 mongodb = { version = "2.5.0", optional = true }
 mysql_async = { version = "0.31.3", optional = true }
-openssl = "0.10.52"
+openssl = "0.10.55"
 quinn = { version = "0.9.3", features = ["runtime-tokio"] }
 rand = "0.8.5"
 redis = { version = "0.22.3", features = ["tokio-comp", "connection-manager"], optional = true }
