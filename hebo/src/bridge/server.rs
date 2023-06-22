@@ -7,6 +7,7 @@ use crate::commands::ServerContextToBridgeCmd;
 
 impl BridgeApp {
     /// Server context handler
+    #[allow(clippy::unused_async)]
     pub(super) async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToBridgeCmd) {
         log::info!("cmd: {:?}", cmd);
     }

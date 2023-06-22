@@ -165,7 +165,7 @@ impl Listener {
 
     #[inline]
     #[must_use]
-    pub fn default_bind_device() -> String {
+    pub const fn default_bind_device() -> String {
         String::new()
     }
 

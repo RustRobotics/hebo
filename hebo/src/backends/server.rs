@@ -8,6 +8,7 @@ use super::BackendsApp;
 use crate::commands::ServerContextToBackendsCmd;
 
 impl BackendsApp {
+    #[allow(clippy::unused_async)]
     pub(super) async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToBackendsCmd) {
         log::info!("cmd: {:?}", cmd);
     }

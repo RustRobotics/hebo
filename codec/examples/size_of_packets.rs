@@ -23,7 +23,12 @@ fn print_basic_types() {
 }
 
 fn print_v3_packets() {
-    use hebo_codec::v3::{ConnectAckPacket, ConnectPacket, DisconnectPacket, PingRequestPacket, PingResponsePacket, PublishAckPacket, PublishCompletePacket, PublishPacket, PublishReceivedPacket, PublishReleasePacket, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket};
+    use hebo_codec::v3::{
+        ConnectAckPacket, ConnectPacket, DisconnectPacket, PingRequestPacket, PingResponsePacket,
+        PublishAckPacket, PublishCompletePacket, PublishPacket, PublishReceivedPacket,
+        PublishReleasePacket, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,
+        UnsubscribePacket,
+    };
 
     println!("==== V3 ====");
     println!("ConnectAckPacket: {}", size_of::<ConnectAckPacket>());
@@ -55,7 +60,12 @@ fn print_v3_packets() {
 }
 
 fn print_v5_packets() {
-    use hebo_codec::v5::{ConnectAckPacket, ConnectPacket, DisconnectPacket, PingRequestPacket, PingResponsePacket, Properties, Property, PublishAckPacket, PublishCompletePacket, PublishPacket, PublishReceivedPacket, PublishReleasePacket, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket, UnsubscribePacket};
+    use hebo_codec::v5::{
+        ConnectAckPacket, ConnectPacket, DisconnectPacket, PingRequestPacket, PingResponsePacket,
+        Properties, Property, PublishAckPacket, PublishCompletePacket, PublishPacket,
+        PublishReceivedPacket, PublishReleasePacket, SubscribeAckPacket, SubscribePacket,
+        UnsubscribeAckPacket, UnsubscribePacket,
+    };
 
     println!("==== V5 ====");
     println!("ConnectAckPacket: {}", size_of::<ConnectAckPacket>());

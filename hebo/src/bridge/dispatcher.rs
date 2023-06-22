@@ -7,6 +7,8 @@ use crate::commands::DispatcherToBridgeCmd;
 use crate::error::Error;
 
 impl BridgeApp {
+    #[allow(clippy::unused_async)]
+
     pub(super) async fn handle_dispatcher_cmd(
         &mut self,
         cmd: DispatcherToBridgeCmd,

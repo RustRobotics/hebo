@@ -75,7 +75,7 @@ impl Listener {
             rustls_pemfile::certs(&mut BufReader::new(File::open(path)?)).map_err(|err| {
                 Error::from_string(
                     ErrorKind::CertError,
-                    format!("Failed to load cert file at {:?}, got: {:?}", path, err),
+                    format!("Failed to load cert file at {path:?}, got: {err:?}"),
                 )
             })?;
         Ok(items.into_iter().map(rustls::Certificate).collect())
@@ -96,7 +96,7 @@ impl Listener {
 
         Err(Error::from_string(
             ErrorKind::CertError,
-            format!("Failed to load key file at {:?}", path),
+            format!("Failed to load key file at {path:?}"),
         ))
     }
 
@@ -118,7 +118,7 @@ impl Listener {
             .map_err(|err| {
                 Error::from_string(
                     ErrorKind::CertError,
-                    format!("Failed to init ConfigBuilder, got {:?}", err),
+                    format!("Failed to init ConfigBuilder, got {err:?}"),
                 )
             })?
             .with_no_client_auth()
@@ -126,7 +126,7 @@ impl Listener {
             .map_err(|err| {
                 Error::from_string(
                     ErrorKind::CertError,
-                    format!("Failed to init ServerConfig, got {:?}", err),
+                    format!("Failed to init ServerConfig, got {err:?}"),
                 )
             })
     }

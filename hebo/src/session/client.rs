@@ -152,7 +152,7 @@ impl Session {
         let mut packet = match v3::ConnectPacket::decode(&mut ba) {
             Ok(packet) => packet,
             Err(err) => {
-                if let DecodeError::InvalidClientId = err {
+                if matches!(err, DecodeError::InvalidClientId) {
                     self.reject_client_id().await?;
                     // TODO(Shaohua): disconnect socket stream
                 } else {

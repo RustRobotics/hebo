@@ -7,6 +7,7 @@ use crate::commands::DispatcherToGatewayCmd;
 use crate::error::Error;
 
 impl GatewayApp {
+    #[allow(clippy::unused_async)]
     pub(super) async fn handle_dispatcher_cmd(
         &mut self,
         cmd: DispatcherToGatewayCmd,

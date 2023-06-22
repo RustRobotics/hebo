@@ -115,10 +115,7 @@ impl std::error::Error for Error {}
 
 impl From<std::net::AddrParseError> for Error {
     fn from(err: std::net::AddrParseError) -> Self {
-        Self::from_string(
-            ErrorKind::ConfigError,
-            format!("Invalid ip address, {err}"),
-        )
+        Self::from_string(ErrorKind::ConfigError, format!("Invalid ip address, {err}"))
     }
 }
 
@@ -136,19 +133,13 @@ impl From<tungstenite::Error> for Error {
 
 impl From<quinn::ReadError> for Error {
     fn from(err: quinn::ReadError) -> Self {
-        Self::from_string(
-            ErrorKind::SocketError,
-            format!("Quic read error: {err:?}"),
-        )
+        Self::from_string(ErrorKind::SocketError, format!("Quic read error: {err:?}"))
     }
 }
 
 impl From<quinn::WriteError> for Error {
     fn from(err: quinn::WriteError) -> Self {
-        Self::from_string(
-            ErrorKind::SocketError,
-            format!("Quic write error: {err:?}"),
-        )
+        Self::from_string(ErrorKind::SocketError, format!("Quic write error: {err:?}"))
     }
 }
 

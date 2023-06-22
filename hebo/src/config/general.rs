@@ -2,6 +2,8 @@
 // Use of this source is governed by Affero General Public License that can be found
 // in the LICENSE file.
 
+#![allow(clippy::unsafe_derive_deserialize)]
+
 use codec::QoS;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};

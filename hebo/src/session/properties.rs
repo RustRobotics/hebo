@@ -8,10 +8,7 @@ use super::Session;
 
 impl Session {
     /// Handle properties in connect packet.
-    pub(super) fn process_connect_properties(
-        &mut self,
-        packet: &v5::ConnectPacket,
-    ) {
+    pub(super) fn process_connect_properties(&mut self, packet: &v5::ConnectPacket) {
         for property in packet.properties().as_ref() {
             match property {
                 v5::Property::SessionExpiryInterval(interval) => {

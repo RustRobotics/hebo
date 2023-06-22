@@ -31,7 +31,6 @@ pub mod socket;
 pub mod stream;
 pub mod types;
 
-
 #[cfg(feature = "acl")]
 pub mod acl;
 #[cfg(feature = "dashboard")]

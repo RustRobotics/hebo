@@ -4,6 +4,8 @@
 
 //! Backends app handlers
 
+#![allow(clippy::unused_async)]
+
 use codec::{v3, v5};
 
 use super::Dispatcher;

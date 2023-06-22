@@ -25,11 +25,13 @@ impl BackendsApp {
         }
     }
 
+    #[allow(clippy::unused_async)]
     async fn handle_session_added(&mut self, session: SessionInfo) -> Result<(), Error> {
         log::info!("session added: {}", session.session_id);
         Ok(())
     }
 
+    #[allow(clippy::unused_async)]
     async fn handle_session_removed(
         &mut self,
         listener_id: ListenerId,

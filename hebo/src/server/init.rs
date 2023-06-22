@@ -27,6 +27,7 @@ use crate::rule_engine::RuleEngineApp;
 
 impl ServerContext {
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::collection_is_never_read)]
     pub(crate) async fn init_modules(&mut self, runtime: &Runtime) -> Result<(), Error> {
         log::info!("ServerContext::init_modules()");
 
@@ -38,7 +39,6 @@ impl ServerContext {
         let mut auth_to_listener_senders = Vec::new();
         let (listeners_to_acl_sender, listeners_to_acl_receiver) = mpsc::channel(CHANNEL_CAPACITY);
         let mut acl_to_listener_senders = Vec::new();
-
         let mut handles = Vec::new();
         let mut listeners_info = Vec::new();
 
@@ -71,8 +71,8 @@ impl ServerContext {
                 listeners_to_acl_sender.clone(),
                 acl_to_listener_receiver,
             )
-                .await
-                .unwrap_or_else(|_| panic!("Failed to listen at {:?}", &listeners_info.last()));
+            .await
+            .unwrap_or_else(|_| panic!("Failed to listen at {:?}", &listeners_info.last()));
             listener_objs.push(listener);
         }
 

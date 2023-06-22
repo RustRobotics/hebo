@@ -73,13 +73,16 @@ fn handle_password_subcmd(matches: &ArgMatches) -> Result<(), Error> {
 pub fn handle_cmdline() -> Result<(), Error> {
     let args = Arguments::parse();
 
-    let config_file = if let Some(config_file) = args.config.as_deref() {
-        Some(config_file)
-    } else if Path::new(DEFAULT_CONFIG).exists() {
-        Some(DEFAULT_CONFIG)
-    } else {
-        None
-    };
+    let config_file = args.config.as_deref().map_or_else(
+        || {
+            if Path::new(DEFAULT_CONFIG).exists() {
+                Some(DEFAULT_CONFIG)
+            } else {
+                None
+            }
+        },
+        Some,
+    );
 
     let config = if let Some(config_file) = config_file {
         let config_content = std::fs::read_to_string(config_file).map_err(|err| {

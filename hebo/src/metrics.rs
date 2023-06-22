@@ -5,6 +5,8 @@
 //! Metrics service backend.
 //! Embed a `sys_tree` module to send $SYS messages to dispatcher.
 
+#![allow(clippy::unused_async)]
+
 use codec::{v3, QoS};
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};

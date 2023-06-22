@@ -50,8 +50,9 @@ impl FileAuth {
     ///
     /// Returns error if failed to calculate password hash.
     pub fn is_match(&self, username: &str, password: &[u8]) -> Result<bool, Error> {
-        self.0.get(username).map_or(Ok(false),
-                                    |p| p.is_match(password))
+        self.0
+            .get(username)
+            .map_or(Ok(false), |p| p.is_match(password))
     }
 }
 

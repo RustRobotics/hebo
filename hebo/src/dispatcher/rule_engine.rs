@@ -8,6 +8,7 @@ use super::Dispatcher;
 use crate::dispatcher::RuleEngineToDispatcherCmd;
 
 impl Dispatcher {
+    #[allow(clippy::unused_async)]
     pub(super) async fn handle_rule_engine_cmd(&mut self, cmd: RuleEngineToDispatcherCmd) {
         log::info!("cmd: {:?}", cmd);
     }
