@@ -60,7 +60,7 @@ impl Topic {
     /// Returns true if this topic matches string slice.
     #[must_use]
     pub fn is_match(&self, s: &str) -> bool {
-        for (index, part) in s.split('/').into_iter().enumerate() {
+        for (index, part) in s.split('/').enumerate() {
             match self.parts.get(index) {
                 None | Some(TopicPart::Empty) => return false,
                 Some(TopicPart::Normal(ref s_part) | TopicPart::Internal(ref s_part)) => {

@@ -87,12 +87,6 @@ impl From<tungstenite::Error> for Error {
     }
 }
 
-impl From<tokio_rustls::webpki::Error> for Error {
-    fn from(err: tokio_rustls::webpki::Error) -> Self {
-        Self::from_string(ErrorKind::ConfigError, format!("webpki error: {err:?}"))
-    }
-}
-
 impl From<quinn::ConnectError> for Error {
     fn from(err: quinn::ConnectError) -> Self {
         Self::from_string(

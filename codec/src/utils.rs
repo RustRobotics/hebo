@@ -145,9 +145,9 @@ pub fn validate_client_id(id: &str) -> Result<(), StringError> {
         return Err(StringError::InvalidLength);
     }
     for byte in id.bytes() {
-        if !((b'0'..=b'9').contains(&byte)
-            || (b'a'..=b'z').contains(&byte)
-            || (b'A'..=b'Z').contains(&byte)
+        if !(byte.is_ascii_digit()
+            || byte.is_ascii_lowercase()
+            || byte.is_ascii_uppercase()
             || b'-' == byte
             || b'_' == byte
             || b'.' == byte)
