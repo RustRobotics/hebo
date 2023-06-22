@@ -2,6 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+#![allow(clippy::unused_async)]
+
 use codec::v5::{
     ConnectAckPacket, ConnectPacket, DisconnectPacket, PingRequestPacket, PublishAckPacket,
     PublishPacket, ReasonCode, SubscribeAckPacket, SubscribePacket, UnsubscribeAckPacket,

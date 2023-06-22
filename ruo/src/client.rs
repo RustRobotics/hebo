@@ -2,6 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
+#![allow(clippy::future_not_send)]
+
 use codec::{ProtocolLevel, QoS};
 use std::fmt;
 use std::future::Future;
