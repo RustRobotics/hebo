@@ -284,19 +284,19 @@ impl ServerContext {
                         log::error!("Failed to handle dashboard cmd: {:?}", err);
                     }
                 }
-                Some(_) = sigusr1_stream.recv() => {
+                Some(_n) = sigusr1_stream.recv() => {
                     log::info!("Realod config");
                     // TODO(Shaohua): Reload config and send new config to other apps.
                 },
-                Some(_) = sigterm_stream.recv() => {
+                Some(_n) = sigterm_stream.recv() => {
                     log::info!("Quit with SIGTERM");
                     break;
                 }
-                Some(_) = sigquit_stream.recv() => {
+                Some(_n) = sigquit_stream.recv() => {
                     log::info!("Quit with SIGQUIT");
                     break;
                 }
-                Some(_) = sigint_stream.recv() => {
+                Some(_n) = sigint_stream.recv() => {
                     log::info!("Quit with SIGINT");
                     break;
                 }

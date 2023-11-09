@@ -8,6 +8,9 @@ use rand::{thread_rng, Rng};
 pub const MAXIMUM_CLIENT_ID: usize = 32;
 
 /// Generate random string.
+///
+/// # Panics
+/// Raise painic if generate invalid string.
 #[must_use]
 pub fn random_string(len: usize) -> String {
     String::from_utf8(
@@ -20,6 +23,9 @@ pub fn random_string(len: usize) -> String {
 }
 
 /// Generate random client id in valid characters.
+///
+/// # Panics
+/// Raise painic if generate invalid string.
 #[must_use]
 pub fn random_client_id() -> String {
     let mut rng = rand::thread_rng();

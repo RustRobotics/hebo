@@ -81,7 +81,7 @@ impl Stream {
             }
 
             Self::Ws(ws_stream) => {
-                let msg = ws_stream.read_message()?;
+                let msg = ws_stream.read()?;
                 let data = msg.into_data();
                 let data_len = data.len();
                 buf.extend(data);
@@ -108,7 +108,7 @@ impl Stream {
 
             Self::Ws(ws_stream) => {
                 let msg = Message::binary(buf);
-                ws_stream.write_message(msg)?;
+                ws_stream.send(msg)?;
                 Ok(buf.len())
             }
 

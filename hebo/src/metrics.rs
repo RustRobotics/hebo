@@ -87,6 +87,7 @@ impl Metrics {
     }
 
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::cast_possible_wrap)]
     async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToMetricsCmd) {
         match cmd {
             DispatcherToMetricsCmd::ListenerAdded(listener_id, address) => {

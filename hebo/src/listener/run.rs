@@ -13,6 +13,8 @@ use crate::session::{Session, SessionConfig};
 use crate::stream::Stream;
 
 impl Listener {
+    /// # Panics
+    /// Raise panic if failed to unpack channel receivers.
     pub async fn run_loop(&mut self) -> ! {
         // Take ownership of mpsc receiver or else tokio select will raise error.
         let mut session_receiver = self
