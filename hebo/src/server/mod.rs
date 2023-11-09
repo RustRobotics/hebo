@@ -6,6 +6,7 @@
 
 use std::fs::File;
 use std::io::{Read, Write};
+use sysinfo::{System, SystemExt, UserExt};
 use tokio::runtime::Runtime;
 #[cfg(unix)]
 use tokio::signal::unix::{signal, SignalKind};
@@ -205,29 +206,33 @@ impl ServerContext {
         let euid = unsafe { nc::geteuid() };
         if euid == 0 {
             // For root only.
-            let user = self.config.general().user();
-            users::get_user_by_name(user).map_or_else(
-                || {
-                    Err(Error::from_string(
-                        ErrorKind::ConfigError,
-                        format!("Failed to get user entry by name: {user}"),
-                    ))
-                },
-                |user| {
-                    let real_uid = user.uid();
-                    if let Err(errno) = unsafe { nc::setuid(real_uid) } {
+            let user_name = self.config.general().user();
+            let s = System::new_all();
+            s.users()
+                .iter()
+                .find(|user| user.name() == user_name)
+                .map_or_else(
+                    || {
                         Err(Error::from_string(
                             ErrorKind::ConfigError,
-                            format!(
-                                "Failed to setuid({real_uid}), got err: {}",
-                                nc::strerror(errno)
-                            ),
+                            format!("Failed to get user entry by name: {user_name}"),
                         ))
-                    } else {
-                        Ok(())
-                    }
-                },
-            )
+                    },
+                    |user| {
+                        let real_uid: u32 = **user.id();
+                        if let Err(errno) = unsafe { nc::setuid(real_uid) } {
+                            Err(Error::from_string(
+                                ErrorKind::ConfigError,
+                                format!(
+                                    "Failed to setuid({real_uid}), got err: {}",
+                                    nc::strerror(errno)
+                                ),
+                            ))
+                        } else {
+                            Ok(())
+                        }
+                    },
+                )
         } else {
             // Normal user, do nothing.
             Ok(())
