@@ -28,14 +28,14 @@ blocking = [ "tungstenite" ]
 [dependencies]
 byteorder = "1.5.0"
 codec = { path = "../codec", package = "hebo_codec", version = "0.2.3" }
-env_logger = "0.10.0"
-futures = "0.3.29"
-futures-util = "0.3.29"
+env_logger = "0.10.2"
+futures = "0.3.30"
+futures-util = "0.3.30"
 log = "0.4.20"
 quinn = "0.10.2"
-rustls-pemfile = "1.0.3"
-tokio = { version = "1.33.0", features = ["full"] }
+rustls-pemfile = "1.0.4"
+tokio = { version = "1.36.0", features = ["full"] }
 tokio-rustls = "0.24.1"
 tokio-tungstenite = { version = "0.20.1", features = ["rustls-tls-webpki-roots"] }
 tungstenite = { version = "0.20.1", optional = true }
-webpki-roots = "0.25.2"
+webpki-roots = "0.25.4"
