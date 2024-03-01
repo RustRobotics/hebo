@@ -32,4 +32,4 @@ For more information,
 see [openssl document](https://docs.rs/crate/openssl-sys/0.9.19)
 
 ## License
-This project is release with [Affero General Public License](LICENSE).
+This project is Licensed under [GNU General Public License, version 3.0](LICENSE).

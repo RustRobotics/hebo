@@ -16,7 +16,7 @@ keywords = [
 ]
 repository = "https://github.com/RustRobotics/hebo"
 homepage = "https://github.com/RustRobotics/hebo"
-license = "AGPL-3.0-only"
+license = "GPL-3.0-only"
 readme = "./README.md"
 publish = true
 

@@ -15,3 +15,6 @@ It also includes a MQTT client, named `ruo`.
 - [Documentation](https://docs.rs/hebo)
 - [Release notes](https://github.com/RustRobotics/hebo/releases)
 
+## License
+
+This project is Licensed under [GNU General Public License, version 3.0](LICENSE).

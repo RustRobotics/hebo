@@ -18,7 +18,7 @@ keywords = [
 ]
 repository = "https://github.com/RustRobotics/hebo"
 homepage = "https://github.com/RustRobotics/hebo/tree/main/codec"
-license = "Apache-2.0"
+license = "LGPL-3.0"
 edition = "2021"
 readme = "./README.md"
 publish = true
