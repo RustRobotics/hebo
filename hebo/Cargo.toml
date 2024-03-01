@@ -18,6 +18,7 @@ repository = "https://github.com/RustRobotics/hebo"
 homepage = "https://github.com/RustRobotics/hebo"
 license = "GPL-3.0-only"
 readme = "./README.md"
+rust-version = "1.66.0"
 publish = true
 
 [[bin]]

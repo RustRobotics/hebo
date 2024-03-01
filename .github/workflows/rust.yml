@@ -24,16 +24,13 @@ jobs:
         - beta
         include:
         - build: pinned
-          os: ubuntu-20.04
-          rust: 1.56.0
+          os: ubuntu-22.04
+          rust: 1.66.0
         - build: stable
-          os: ubuntu-20.04
+          os: ubuntu-22.04
           rust: stable
-        - build: beta
-          os: ubuntu-20.04
-          rust: beta
         - build: nightly
-          os: ubuntu-20.04
+          os: ubuntu-22.04
           rust: nightly
     steps:
     - uses: actions/checkout@v2
