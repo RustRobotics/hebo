@@ -24,7 +24,7 @@ async fn on_connect(client: &mut Client) {
     client
         .unsubscribe("hello")
         .await
-        .expect("Failed to unsubscribe")
+        .expect("Failed to unsubscribe");
 }
 
 #[tokio::main]

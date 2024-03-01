@@ -39,8 +39,9 @@ impl Session {
             ListenerToSessionCmd::SubscribeAckV5(packet) => {
                 self.on_listener_subscribe_ack_v5(packet).await
             }
-            ListenerToSessionCmd::Disconnect => self.on_listener_disconnect().await,
-            ListenerToSessionCmd::DisconnectV5 => self.on_listener_disconnect().await,
+            ListenerToSessionCmd::Disconnect | ListenerToSessionCmd::DisconnectV5 => {
+                self.on_listener_disconnect().await
+            }
         }
     }
 

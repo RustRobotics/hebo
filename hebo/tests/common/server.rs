@@ -24,7 +24,7 @@ impl Server {
 
         let handler = thread::spawn(move || {
             let output = Command::new(exec_file_clone)
-                .args(&["-c", &config_file_clone])
+                .args(["-c", &config_file_clone])
                 .output()
                 .expect("Failed to run hebo server");
             assert!(output.status.success());

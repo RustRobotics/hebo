@@ -20,7 +20,7 @@ async fn on_connect(client: &mut Client) {
     client
         .publish("hello", QoS::AtMostOnce, b"Hello, world")
         .await
-        .expect("Failed to publish")
+        .expect("Failed to publish");
 }
 
 #[tokio::main]
@@ -41,5 +41,5 @@ async fn main() {
     let mut client = Client::new(options);
     //client.set_connect_callback(Box::new(on_connect));
     client.connect().await.expect("Failed to start");
-    client.run_loop().await
+    client.run_loop().await;
 }

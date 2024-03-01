@@ -225,7 +225,7 @@ impl Session {
         self.send(unsubscribe_ack_packet).await
     }
 
-    pub(super) async fn on_client_disconnect_v5(&mut self, _buf: &[u8]) -> Result<(), Error> {
+    pub(super) async fn on_client_disconnect_v5(&mut self, _: &[u8]) -> Result<(), Error> {
         self.status = Status::Disconnected;
         let cmd = SessionToListenerCmd::DisconnectV5(self.id);
         if let Err(err) = self.sender.send(cmd).await {

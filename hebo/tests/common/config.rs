@@ -22,16 +22,13 @@ impl ServerConfig {
         fs::create_dir_all(parent).map_err(|err| {
             Error::from_string(
                 ErrorKind::ConfigError,
-                format!(
-                    "Failed to create parent directory for config: {}, err: {}",
-                    filename, err
-                ),
+                format!("Failed to create parent directory for config: {filename}, err: {err}"),
             )
         })?;
         fs::write(filename, content).map_err(|err| {
             Error::from_string(
                 ErrorKind::ConfigError,
-                format!("Failed to write to config file: {}, err: {}", filename, err),
+                format!("Failed to write to config file: {filename}, err: {err}"),
             )
         })?;
         Ok(Self {

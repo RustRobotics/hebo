@@ -72,7 +72,7 @@ impl ClientInnerV3 {
 
     /// Connct to server.
     ///
-    /// Returns Ok() if success.
+    /// Returns `Ok()` if success.
     pub fn connect(&mut self) -> Result<(), Error> {
         // TODO(Shaohua): Do not return bool, return errors instead.
         assert_eq!(self.status, ClientStatus::Disconnected);

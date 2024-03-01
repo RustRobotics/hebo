@@ -388,7 +388,7 @@ impl Session {
     }
 
     /// Handle disconnect request from client.
-    async fn on_client_disconnect(&mut self, _buf: &[u8]) -> Result<(), Error> {
+    async fn on_client_disconnect(&mut self, _: &[u8]) -> Result<(), Error> {
         self.status = Status::Disconnected;
         let cmd = SessionToListenerCmd::Disconnect(self.id);
         if let Err(err) = self.sender.send(cmd).await {

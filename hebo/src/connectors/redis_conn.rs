@@ -133,13 +133,13 @@ impl RedisConnConfig {
             // For `redis+unix:///<path>[?db=<db>[&pass=<password>][&user=<username>]]`
             uri.push_str(&format!("redis+unix://{}", self.socket));
             if let Some(db) = self.database {
-                uri.push_str(&format!("?db={}", db));
+                uri.push_str(&format!("?db={db}"));
             }
             if let Some(username) = &self.username {
-                uri.push_str(&format!("&username={}", username));
+                uri.push_str(&format!("&username={username}"));
             }
             if let Some(password) = &self.password {
-                uri.push_str(&format!("&pass={}", password));
+                uri.push_str(&format!("&pass={password}"));
             }
         } else {
             // For `redis://[<username>][:<password>@]<hostname>[:port][/<db>]`
@@ -148,11 +148,11 @@ impl RedisConnConfig {
                 uri.push_str(username);
             }
             if let Some(password) = &self.password {
-                uri.push_str(&format!(":{}@", password));
+                uri.push_str(&format!(":{password}@"));
             }
             uri.push_str(&format!("{}:{}", self.host, self.port));
             if let Some(db) = self.database {
-                uri.push_str(&format!("/{}", db));
+                uri.push_str(&format!("/{db}"));
             }
         }
 
