@@ -35,7 +35,7 @@ futures-util = "0.3.30"
 log = "0.4.21"
 quinn = "0.10.2"
 rustls-pemfile = "1.0.4"
-tokio = { version = "1.36.0", features = ["full"] }
+tokio = { version = "1.37.0", features = ["full"] }
 tokio-rustls = "0.24.1"
 tokio-tungstenite = { version = "0.20.1", features = ["rustls-tls-webpki-roots"] }
 tungstenite = { version = "0.20.1", optional = true }

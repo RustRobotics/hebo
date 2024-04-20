@@ -60,17 +60,17 @@ quinn = { version = "0.10.2", features = ["runtime-tokio"] }
 rand = "0.8.5"
 redis = { version = "0.23.3", features = ["tokio-comp", "connection-manager"], optional = true }
 rustls-pemfile = "1.0.4"
-serde = { version = "1.0.197", features = ["derive"] }
-tokio = { version = "1.36.0", features = ["full"] }
+serde = { version = "1.0.198", features = ["derive"] }
+tokio = { version = "1.37.0", features = ["full"] }
 tokio-postgres = { version = "0.7.10", optional = true }
 tokio-rustls = "0.24.1"
 tokio-tungstenite = { version = "0.20.1", features = ["rustls"] }
 toml = "0.8.9"
-warp = "0.3.6"
+warp = "0.3.7"
 webpki-roots = "0.25.4"
 
 [target.'cfg(unix)'.dependencies]
-nc = "0.8.19"
+nc = "0.8.20"
 sysinfo = "0.29.11"
 
 [dev-dependencies]
