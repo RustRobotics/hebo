@@ -12,7 +12,7 @@ use crate::error::Error;
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Deserialize, Clone)]
 pub struct MongoConnConfig {
-    /// Use unix domain socket connection to MongoDB.
+    /// Use unix domain socket connection to `MongoDB`.
     ///
     /// Default is false.
     #[serde(default = "MongoConnConfig::default_use_uds")]

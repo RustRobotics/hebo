@@ -230,7 +230,7 @@ pub enum Property {
     /// If the Session Expiry Interval is absent the value 0 is used. If it is set to 0,
     /// or is absent, the Session ends when the Network Connection is closed.
     ///
-    /// If the Session Expiry Interval is 0xFFFFFFFF (UINT_MAX), the Session does not expire.
+    /// If the Session Expiry Interval is 0xFFFFFFFF (`UINT_MAX`), the Session does not expire.
     ///
     /// The Client and Server MUST store the Session State after the Network Connection
     /// is closed if the Session Expiry Interval is greater than 0 [MQTT-3.1.2-23].
@@ -407,9 +407,9 @@ pub enum Property {
     /// It is a Protocol Error to include the Receive Maximum value more than once
     /// or for it to have the value 0.
     ///
-    /// The Client uses this value to limit the number of QoS 1 and QoS 2 publications
+    /// The Client uses this value to limit the number of `QoS` 1 and `QoS` 2 publications
     /// that it is willing to process concurrently. There is no mechanism to limit
-    /// the QoS 0 publications that the Server might try to send.
+    /// the `QoS` 0 publications that the Server might try to send.
     ///
     /// The value of Receive Maximum applies only to the current Network Connection.
     /// If the Receive Maximum value is absent then its value defaults to 65,535.
@@ -484,31 +484,31 @@ pub enum Property {
     /// they will in general be referring to different Topics.
     TopicAlias(U16Data),
 
-    /// Maximum QoS
+    /// Maximum `QoS`
     ///
     /// Byte.
     /// Used in CONNACK.
     ///
     /// Followed by a Byte with a value of either 0 or 1. It is a Protocol Error
-    /// to include Maximum QoS more than once, or to have a value other than 0 or 1.
-    /// If the Maximum QoS is absent, the Client uses a Maximum QoS of 2.
+    /// to include Maximum `QoS` more than once, or to have a value other than 0 or 1.
+    /// If the Maximum `QoS` is absent, the Client uses a Maximum `QoS` of 2.
     ///
-    /// If a Server does not support QoS 1 or QoS 2 PUBLISH packets it MUST send
-    /// a Maximum QoS in the CONNACK packet specifying the highest QoS it supports [MQTT-3.2.2-9].
+    /// If a Server does not support `QoS` 1 or `QoS` 2 PUBLISH packets it MUST send
+    /// a Maximum `QoS` in the CONNACK packet specifying the highest `QoS` it supports [MQTT-3.2.2-9].
     ///
-    /// A Server that does not support QoS 1 or QoS 2 PUBLISH packets MUST still
-    /// accept SUBSCRIBE packets containing a Requested QoS of 0, 1 or 2 [MQTT-3.2.2-10].
+    /// A Server that does not support `QoS` 1 or `QoS` 2 PUBLISH packets MUST still
+    /// accept SUBSCRIBE packets containing a Requested `QoS` of 0, 1 or 2 [MQTT-3.2.2-10].
     ///
-    /// If a Client receives a Maximum QoS from a Server, it MUST NOT send PUBLISH packets
-    /// at a QoS level exceeding the Maximum QoS level specified [MQTT-3.2.2-11].
+    /// If a Client receives a Maximum `QoS` from a Server, it MUST NOT send PUBLISH packets
+    /// at a `QoS` level exceeding the Maximum `QoS` level specified [MQTT-3.2.2-11].
     ///
-    /// It is a Protocol Error if the Server receives a PUBLISH packet with a QoS
-    /// greater than the Maximum QoS it specified. In this case use DISCONNECT
-    /// with Reason Code 0x9B (QoS not supported).
+    /// It is a Protocol Error if the Server receives a PUBLISH packet with a `QoS`
+    /// greater than the Maximum `QoS` it specified. In this case use DISCONNECT
+    /// with Reason Code 0x9B (`QoS` not supported).
     ///
-    /// If a Server receives a CONNECT packet containing a Will QoS that exceeds
+    /// If a Server receives a CONNECT packet containing a Will `QoS` that exceeds
     /// its capabilities, it MUST reject the connection. It SHOULD use a CONNACK packet
-    /// with Reason Code 0x9B (QoS not supported) Handling errors, and MUST close
+    /// with Reason Code 0x9B (`QoS` not supported) Handling errors, and MUST close
     /// the Network Connection [MQTT-3.2.2-12].
     MaximumQoS(QoS),
 

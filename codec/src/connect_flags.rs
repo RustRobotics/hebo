@@ -28,7 +28,7 @@ pub struct ConnectFlags {
     /// If the `will` field is false, then the `retain` field msut be false.
     will_retain: bool,
 
-    /// QoS level to be used in the Will Message.
+    /// `QoS` level to be used in the Will Message.
     will_qos: QoS,
 
     /// If this field is set to true, a Will Message will be stored on the Server side when
@@ -48,8 +48,8 @@ pub struct ConnectFlags {
     /// cannot be reused in subsequent connections.
     ///
     /// Client side of Session State consists of:
-    /// * QoS 1 and QoS 2 messages which have been sent to server but not be acknowledged yet.
-    /// * QoS 2 messages which have been received from server but have not been fully acknowledged yet.
+    /// * `QoS` 1 and `QoS` 2 messages which have been sent to server but not be acknowledged yet.
+    /// * `QoS` 2 messages which have been received from server but have not been fully acknowledged yet.
     ///
     /// Server side of Session State consists of:
     /// * Client subscriptions

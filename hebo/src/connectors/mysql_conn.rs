@@ -10,7 +10,7 @@ use crate::error::Error;
 /// Configuration for connection to `MySQL` server.
 #[derive(Debug, Deserialize, Clone)]
 pub struct MySQLConnConfig {
-    /// Use unix domain socket connection to MySQL.
+    /// Use unix domain socket connection to `MySQL`.
     ///
     /// Default is false.
     #[serde(default = "MySQLConnConfig::default_use_uds")]
@@ -22,7 +22,7 @@ pub struct MySQLConnConfig {
     #[serde(default = "MySQLConnConfig::default_socket")]
     pub socket: Option<String>,
 
-    /// MySQL server ip or hostname.
+    /// `MySQL` server ip or hostname.
     ///
     /// Default is "127.0.0.1"
     #[serde(default = "MySQLConnConfig::default_host")]
@@ -34,7 +34,7 @@ pub struct MySQLConnConfig {
     #[serde(default = "MySQLConnConfig::default_port")]
     pub port: u16,
 
-    /// MySQL database name.
+    /// `MySQL` database name.
     ///
     /// Default is `hebo-mqtt`.
     #[serde(default = "MySQLConnConfig::default_database")]

@@ -130,31 +130,31 @@ pub struct ConnectPacket {
     /// `client_id` is used to identify client connections in server. Session is based on this field.
     /// It must be valid UTF-8 string, length shall be between 1 and 23 bytes.
     /// It can only contain the characters: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    /// If `client_id` is invalid, the Server will reply ConnectAck Packet with return code
+    /// If `client_id` is invalid, the Server will reply `ConnectAck` Packet with return code
     /// 0x02(Identifier rejected).
     ///
-    /// The Client Identifier (ClientID) identifies the Client to the Server. Each Client
-    /// connecting to the Server has a unique ClientID. The ClientID MUST be used by Clients
+    /// The Client Identifier (`ClientID`) identifies the Client to the Server. Each Client
+    /// connecting to the Server has a unique `ClientID`. The `ClientID` MUST be used by Clients
     /// and by Servers to identify state that they hold relating to this MQTT Session
     /// between the Client and the Server [MQTT-3.1.3-2].
     ///
-    /// The ClientID MUST be present and is the first field in the CONNECT packet Payload [MQTT-3.1.3-3].
+    /// The `ClientID` MUST be present and is the first field in the CONNECT packet Payload [MQTT-3.1.3-3].
     ///
-    /// The ClientID MUST be a UTF-8 Encoded String [MQTT-3.1.3-4].
+    /// The `ClientID` MUST be a UTF-8 Encoded String [MQTT-3.1.3-4].
     ///
     /// The Server MUST allow ClientID’s which are between 1 and 23 UTF-8 encoded bytes
     /// in length, and that contain only the characters
     /// "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" [MQTT-3.1.3-5].
     ///
-    /// A Server MAY allow a Client to supply a ClientID that has a length of zero bytes,
+    /// A Server MAY allow a Client to supply a `ClientID` that has a length of zero bytes,
     /// however if it does so the Server MUST treat this as a special case and
-    /// assign a unique ClientID to that Client [MQTT-3.1.3-6].
+    /// assign a unique `ClientID` to that Client [MQTT-3.1.3-6].
     ///
     /// It MUST then process the CONNECT packet as if the Client had provided
-    /// that unique ClientID, and MUST return the Assigned Client Identifier
+    /// that unique `ClientID`, and MUST return the Assigned Client Identifier
     /// in the CONNACK packet [MQTT-3.1.3-7]
     ///
-    /// If the Server rejects the ClientID it MAY respond to the CONNECT packet
+    /// If the Server rejects the `ClientID` it MAY respond to the CONNECT packet
     /// with a CONNACK using Reason Code 0x85 (Client Identifier not valid),
     /// and then it MUST close the Network Connection [MQTT-3.1.3-8].
     client_id: StringData,

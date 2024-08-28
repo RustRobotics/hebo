@@ -46,8 +46,8 @@ pub struct Listener {
     ///
     /// This is useful when an device has multiple addresses or the address may change.
     /// If used with the [ip address/host name] part of the address definition, then the
-    /// bind_device option will take priority.
-    /// Example: bind_device eth0
+    /// `bind_device` option will take priority.
+    /// Example: `bind_device` eth0
     ///
     /// Default is empty.
     #[serde(default = "Listener::default_bind_device")]
@@ -76,8 +76,8 @@ pub struct Listener {
     /// - 0.0.0.0:1883, for mqtt
     /// - 0.0.0.0:8883, for mqtts
     /// - 0.0.0.0:8993, for mqtt over QUIC
-    /// - 0.0.0.0:8083, for mqtt over WebSocket
-    /// - 0.0.0.0:8084, for mqtt over secure WebSocket
+    /// - 0.0.0.0:8083, for mqtt over `WebSocket`
+    /// - 0.0.0.0:8084, for mqtt over secure `WebSocket`
     ///
     /// Default is 0.0.0.0:1883
     #[serde(default = "Listener::default_address")]
@@ -119,7 +119,7 @@ pub struct Listener {
     /// Disconnect the client if the maximium time interval is reached before
     /// receiving Control Packet from client.
     ///
-    /// If client does not set keep_alive flag in ConnectPacket, this value will be
+    /// If client does not set `keep_alive` flag in `ConnectPacket`, this value will be
     /// used.
     ///
     /// Default is 60.
@@ -134,18 +134,18 @@ pub struct Listener {
     #[serde(default = "Listener::default_connect_timeout")]
     connect_timeout: u16,
 
-    /// MAY allow a Client to supply a ClientId that has a length of zero bytes.
+    /// MAY allow a Client to supply a `ClientId` that has a length of zero bytes.
     ///
-    /// Hebo treats this as a special case and assignis a unique ClientId to that Client.
+    /// Hebo treats this as a special case and assignis a unique `ClientId` to that Client.
     /// if this flags is true.
     ///
-    /// Or send IdentifierRejected ConnectAckPackdet if this flag is false.
+    /// Or send `IdentifierRejected` `ConnectAckPackdet` if this flag is false.
     ///
     /// Default is false.
     #[serde(default = "Listener::default_allow_empty_client_id")]
     allow_empty_client_id: bool,
 
-    /// The maximum number of QoS 1 and 2 messages currently inflight per
+    /// The maximum number of `QoS` 1 and 2 messages currently inflight per
     /// client.
     ///
     /// This includes messages that are partway through handshakes and

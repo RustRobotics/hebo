@@ -124,8 +124,8 @@ pub struct ConnectOptions {
     /// Supported protocols are:
     /// - TCP
     /// - TCP over TLS
-    /// - WebSocket
-    /// - WebSocket over TLS
+    /// - `WebSocket`
+    /// - `WebSocket` over TLS
     /// - Unix domain socket
     /// - QUIC
     ///

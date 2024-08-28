@@ -73,11 +73,11 @@ pub struct ConnectAckPacket {
     /// Acknowledge flags is the first byte in variable header.
     /// Session Present flag is set in bit 0 of Ack flags, bits 7-1 are reserved.
     ///
-    /// If CleanSession flag in ConnectPacket is true, then this flag must be false
+    /// If `CleanSession` flag in `ConnectPacket` is true, then this flag must be false
     /// and return code is set to zero.
     ///
-    /// If CleanSession flag in ConnectPacket is false, and the Server have stored
-    /// SessionState with the same ClientId, then this field is set to true, indicating
+    /// If `CleanSession` flag in `ConnectPacket` is false, and the Server have stored
+    /// `SessionState` with the same `ClientId`, then this field is set to true, indicating
     /// that there is already a session state value present on the Server side.
     ///
     /// If return code is not zero, then this flag MUST be false.

@@ -13,7 +13,7 @@ use crate::error::Error;
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Deserialize, Clone)]
 pub struct PgSQLConnConfig {
-    /// Use unix domain socket connection to PgSQL.
+    /// Use unix domain socket connection to `PgSQL`.
     ///
     /// Default is false.
     #[serde(default = "PgSQLConnConfig::default_use_uds")]
@@ -25,7 +25,7 @@ pub struct PgSQLConnConfig {
     #[serde(default = "PgSQLConnConfig::default_socket")]
     pub socket: String,
 
-    /// PgSQL server ip or hostname.
+    /// `PgSQL` server ip or hostname.
     ///
     /// Default is "127.0.0.1"
     #[serde(default = "PgSQLConnConfig::default_host")]
@@ -37,7 +37,7 @@ pub struct PgSQLConnConfig {
     #[serde(default = "PgSQLConnConfig::default_port")]
     pub port: u16,
 
-    /// PgSQL database .
+    /// `PgSQL` database .
     ///
     /// Default is `hebo-mqtt`.
     #[serde(default = "PgSQLConnConfig::default_database")]

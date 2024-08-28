@@ -16,7 +16,7 @@ pub struct SubscribeTopic {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
     topic: SubTopic,
 
-    /// Maximum level of QoS of packet the Server can send to the Client.
+    /// Maximum level of `QoS` of packet the Server can send to the Client.
     qos: QoS,
 }
 
@@ -120,7 +120,7 @@ impl DecodePacket for SubscribeTopic {
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SubscribePacket {
-    /// `packet_id` is used by the Server to reply SubscribeAckPacket to the client.
+    /// `packet_id` is used by the Server to reply `SubscribeAckPacket` to the client.
     packet_id: PacketId,
 
     /// A list of topic the Client subscribes to.

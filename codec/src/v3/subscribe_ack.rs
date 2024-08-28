@@ -11,7 +11,7 @@ use crate::{
 #[repr(u8)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum SubscribeAck {
-    /// Maximum level of QoS the Server granted for this topic.
+    /// Maximum level of `QoS` the Server granted for this topic.
     QoS(QoS),
 
     /// This subscription if failed or not.

@@ -25,7 +25,7 @@ pub struct Security {
     /// The password (and colon) may be omitted if desired, although this
     /// offers very little in the way of security.
     ///
-    /// If an auth_plugin is used as well as password_file, the auth_plugin check will be made first.
+    /// If an `auth_plugin` is used as well as `password_file`, the `auth_plugin` check will be made first.
     ///
     /// Default is None.
     #[serde(default = "Security::default_password_file")]

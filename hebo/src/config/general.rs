@@ -56,23 +56,23 @@ pub struct General {
     #[serde(default = "General::default_message_size_limit")]
     message_size_limit: u32,
 
-    /// For MQTT v5 clients, it is possible to have the server send a "server keep_alive" value
-    /// that will override the keep_alive value set by the client.
+    /// For MQTT v5 clients, it is possible to have the server send a "server `keep_alive`" value
+    /// that will override the `keep_alive` value set by the client.
     ///
     /// This is intended to be used as a mechanism to say that the server will disconnect the client
-    /// earlier than it anticipated, and that the client should use the new keep_alive value.
+    /// earlier than it anticipated, and that the client should use the new `keep_alive` value.
     /// The `max_keep_alive` option allows you to specify that clients may only
-    /// connect with keep_alive less than or equal to this value, otherwise they will be
-    /// sent a server keep_alive telling them to use `max_keep_alive`.
+    /// connect with `keep_alive` less than or equal to this value, otherwise they will be
+    /// sent a server `keep_alive` telling them to use `max_keep_alive`.
     /// This only applies to MQTT v5 clients. The maximum value allowable is 65535. Do not set below 10.
     ///
     /// Default value is 65535.
     #[serde(default = "General::default_maximum_keep_alive")]
     maximum_keep_alive: u32,
 
-    /// Set the maximum QoS supported.
+    /// Set the maximum `QoS` supported.
     ///
-    /// Clients publishing at a QoS higher than specified here will be disconnected.
+    /// Clients publishing at a `QoS` higher than specified here will be disconnected.
     /// Available values are 0, 1 and 2.
     ///
     /// Default is 2.
@@ -81,7 +81,7 @@ pub struct General {
 
     /// For MQTT v5 clients, it is possible to have the server send a "maximum packet size" value
     /// that will instruct the client it will not accept MQTT packets with size
-    /// greater than max_packet_size bytes.
+    /// greater than `max_packet_size` bytes.
     ///
     /// This applies to the full MQTT packet, not just the payload. Setting this option
     /// to a positive value will set the maximum packet size to that number of bytes.

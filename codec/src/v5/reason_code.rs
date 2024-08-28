@@ -19,7 +19,7 @@ use crate::{ByteArray, DecodeError, DecodePacket, EncodeError, EncodePacket};
 pub enum ReasonCode {
     /// - Success: CONNACK, PUBACK, PUBREC, PUBREL, PUBCOMP, UNSUBACK, AUTH
     /// - Normal disconnection: DISCONNECT
-    /// - Granted QoS 0: SUBACK
+    /// - Granted `QoS` 0: SUBACK
     ///
     /// CONNACK: Connection accepted.
     ///
@@ -28,30 +28,30 @@ pub enum ReasonCode {
     ///
     /// UNSUBACK: The subscription is deleted.
     ///
-    /// SUBACK: The subscription is accepted and the maximum QoS sent will be QoS 0.
-    /// This might be a lower QoS than was requested.
+    /// SUBACK: The subscription is accepted and the maximum `QoS` sent will be `QoS` 0.
+    /// This might be a lower `QoS` than was requested.
     ///
     /// AUTH: Authentication is successful. Sent by server.
     ///
-    /// PUBACK: The message is accepted. Publication of the QoS 1 message proceeds.
+    /// PUBACK: The message is accepted. Publication of the `QoS` 1 message proceeds.
     ///
     /// PUBCOMP: Message released.
     ///
-    /// PUBREC: The message is accepted. Publication of the QoS 2 message proceeds.
+    /// PUBREC: The message is accepted. Publication of the `QoS` 2 message proceeds.
     ///
     /// PUBREL: Message released.
     #[default]
     Success = 0x00,
 
-    /// Granted QoS 1: SUBACK
+    /// Granted `QoS` 1: SUBACK
     ///
-    /// SUBACK: The subscription is accepted and the maximum QoS sent will be QoS 1.
-    /// This might be a lower QoS than was requested.
+    /// SUBACK: The subscription is accepted and the maximum `QoS` sent will be `QoS` 1.
+    /// This might be a lower `QoS` than was requested.
     GrantedQoS1 = 0x01,
 
-    /// Granted QoS 2: SUBACK
+    /// Granted `QoS` 2: SUBACK
     ///
-    /// SUBACK: The subscription is accepted and any received QoS will be sent to this subscription.
+    /// SUBACK: The subscription is accepted and any received `QoS` will be sent to this subscription.
     GrantedQoS2 = 0x02,
 
     /// Disconnect with Will Message: DISCONNECT
@@ -205,7 +205,7 @@ pub enum ReasonCode {
 
     /// Session taken over: DISCONNECT
     ///
-    /// DISCONNECT: Another Connection using the same ClientID has connected causing this Connection to be closed.
+    /// DISCONNECT: Another Connection using the same `ClientID` has connected causing this Connection to be closed.
     /// Sent by server.
     SessionTakenOver = 0x8e,
 
@@ -301,9 +301,9 @@ pub enum ReasonCode {
     /// Retain not supported: CONNACK, DISCONNECT
     RetainNotSupported = 0x9a,
 
-    /// QoS not supported: CONNACK, DISCONNECT
+    /// `QoS` not supported: CONNACK, DISCONNECT
     ///
-    /// CONNACK: The Server does not support the QoS set in Will QoS.
+    /// CONNACK: The Server does not support the `QoS` set in Will `QoS`.
     QoSNotSupported = 0x9b,
 
     /// Use another server: CONNACK, DISCONNECT

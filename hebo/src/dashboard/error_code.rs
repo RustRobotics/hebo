@@ -11,7 +11,7 @@ pub enum ErrorCode {
 
     /// Bad rpc.
     ///
-    /// Channel connected to server_ctx is closed abnormally.
+    /// Channel connected to `server_ctx` is closed abnormally.
     BadRpc = 101,
 
     /// Unknown error.

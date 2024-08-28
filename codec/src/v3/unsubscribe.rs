@@ -40,7 +40,7 @@ use crate::{
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct UnsubscribePacket {
-    /// Used in UnsubscribeAck packet.
+    /// Used in `UnsubscribeAck` packet.
     packet_id: PacketId,
 
     /// Topic filters to be unsubscribed.

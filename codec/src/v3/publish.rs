@@ -46,40 +46,40 @@ pub struct PublishPacket {
     /// If it is true, then this packet might be re-delivery of an earlier attempt to send the
     /// Packet.
     ///
-    /// It must be false if QoS is 0.
+    /// It must be false if `QoS` is 0.
     dup: bool,
 
     /// `qos` field indicates the level of assurance for delivery of packet.
     qos: QoS,
 
-    /// Usage of `retain` flag in PublishPacket is complex:
+    /// Usage of `retain` flag in `PublishPacket` is complex:
     ///
     /// If `retain` flag is true in the packet the Client sent to the Server,
     /// this packet is stored on the server so that it can be delivered to future
     /// subscribers. When a new subscription is established, the last retained packet
-    /// will be sent to the subscriber. If the Server receives a QoS 0 message with
+    /// will be sent to the subscriber. If the Server receives a `QoS` 0 message with
     /// the `retain` flag set to true, it must discard any message previously retained
-    /// for the same topic. The Server should store the new QoS 0 message as the new
+    /// for the same topic. The Server should store the new `QoS` 0 message as the new
     /// retained message for that topic, but may choose to discard it at any time.
     ///
-    /// When sending a PublishPacket the Server must set the `retain` flag to true if
+    /// When sending a `PublishPacket` the Server must set the `retain` flag to true if
     /// a message is sent as a result of a new subscription. The Server must set
-    /// `retain` flag to false when sending PublishPacket to already connected subscribers.
+    /// `retain` flag to false when sending `PublishPacket` to already connected subscribers.
     ///
-    /// If a PublishPacket sent to the Server with `retain` flag on and payload contains
+    /// If a `PublishPacket` sent to the Server with `retain` flag on and payload contains
     /// zero bytes, this packet is normally delivered to subscribers. And this packet is
     /// used as notification to the Server to delete any retained messages on the same topic.
     /// And any future subscribers for the same topic will not receive any retained messages
     /// any more. So this means one-time shot.
     ///
-    /// If `retain` flag is false in PublishPacket sent to the Server, status of
+    /// If `retain` flag is false in `PublishPacket` sent to the Server, status of
     /// the retained message of that topic is not removed or replaced.
     retain: bool,
 
     /// `topic` name must not contain wildcard characters.
     topic: PubTopic,
 
-    /// `packet_id` field is useless if QoS is 0.
+    /// `packet_id` field is useless if `QoS` is 0.
     packet_id: PacketId,
 
     /// Payload contains `msg` field.

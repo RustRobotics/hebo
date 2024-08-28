@@ -53,7 +53,7 @@ pub struct PublishPacket {
     /// The DUP flag MUST be set to 1 by the Client or Server when it attempts to re-deliver
     /// a PUBLISH packet [MQTT-3.3.1-1].
     ///
-    /// The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
+    /// The DUP flag MUST be set to 0 for all `QoS` 0 messages [MQTT-3.3.1-2].
     ///
     /// The value of the DUP flag from an incoming PUBLISH packet is not propagated
     /// when the PUBLISH packet is sent to subscribers by the Server. The DUP flag
@@ -64,13 +64,13 @@ pub struct PublishPacket {
 
     /// This field indicates the level of assurance for delivery of an Application Message.
     ///
-    /// If the Server included a Maximum QoS in its CONNACK response to a Client and
-    /// it receives a PUBLISH packet with a QoS greater than this, then it uses DISCONNECT
-    /// with Reason Code 0x9B (QoS not supported).
+    /// If the Server included a Maximum `QoS` in its CONNACK response to a Client and
+    /// it receives a PUBLISH packet with a `QoS` greater than this, then it uses DISCONNECT
+    /// with Reason Code 0x9B (`QoS` not supported).
     ///
-    /// A PUBLISH Packet MUST NOT have both QoS bits set to 1 [MQTT-3.3.1-4].
+    /// A PUBLISH Packet MUST NOT have both `QoS` bits set to 1 [MQTT-3.3.1-4].
     ///
-    /// If a Server or Client receives a PUBLISH packet which has both QoS bits set to 1
+    /// If a Server or Client receives a PUBLISH packet which has both `QoS` bits set to 1
     /// it is a Malformed Packet. Use DISCONNECT with Reason Code 0x81 (Malformed Packet).
     qos: QoS,
 
@@ -109,7 +109,7 @@ pub struct PublishPacket {
     /// - If Retain Handling is set to 2, the Server MUST NOT send the retained messages [MQTT-3.3.1-11].
     ///
     /// If the Server receives a PUBLISH packet with the RETAIN flag set to 1,
-    /// and QoS 0 it SHOULD store the new QoS 0 message as the new retained message
+    /// and `QoS` 0 it SHOULD store the new `QoS` 0 message as the new retained message
     /// for that topic, but MAY choose to discard it at any time. If this happens
     /// there will be no retained message for that topic.
     ///
@@ -143,7 +143,7 @@ pub struct PublishPacket {
     /// It is a Protocol Error if the Topic Name is zero length and there is no Topic Alias.
     topic: PubTopic,
 
-    /// The Packet Identifier field is only present in PUBLISH packets where the QoS level is 1 or 2.
+    /// The Packet Identifier field is only present in PUBLISH packets where the `QoS` level is 1 or 2.
     packet_id: PacketId,
 
     properties: Properties,

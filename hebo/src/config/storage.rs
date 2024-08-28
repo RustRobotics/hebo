@@ -26,7 +26,7 @@ pub struct Storage {
     #[serde(default = "Storage::default_db_path")]
     db_path: PathBuf,
 
-    /// If persistence is enabled, save the in-memory database to disk every autosave_interval seconds.
+    /// If persistence is enabled, save the in-memory database to disk every `autosave_interval` seconds.
     ///
     /// If set to 0, the persistence database will only be written when hebo exits.
     /// See also `autosave_on_changes`.

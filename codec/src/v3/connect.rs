@@ -75,7 +75,7 @@ pub struct ConnectPacket {
     connect_flags: ConnectFlags,
 
     /// Time interval between two packets in seconds.
-    /// Client must send PingRequest Packet before exceeding this interval.
+    /// Client must send `PingRequest` Packet before exceeding this interval.
     /// If this value is not zero and time exceeds after last packet, the Server
     /// will disconnect the network.
     ///
@@ -88,7 +88,7 @@ pub struct ConnectPacket {
     /// `client_id` is used to identify client connections in server. Session is based on this field.
     /// It must be valid UTF-8 string, length shall be between 1 and 23 bytes.
     /// It can only contain the characters: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    /// If `client_id` is invalid, the Server will reply ConnectAck Packet with return code
+    /// If `client_id` is invalid, the Server will reply `ConnectAck` Packet with return code
     /// 0x02(Identifier rejected).
     client_id: StringData,
 

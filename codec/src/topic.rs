@@ -258,7 +258,7 @@ pub struct SubscribePattern {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
     topic: Topic,
 
-    /// Maximum level of QoS of packet the Server can send to the Client.
+    /// Maximum level of `QoS` of packet the Server can send to the Client.
     qos: QoS,
 }
 

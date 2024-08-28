@@ -47,16 +47,16 @@ pub struct SubscribeTopic {
     /// Subscribed `topic` contains wildcard characters to match interested topics with patterns.
     topic: SubTopic,
 
-    /// Bits 0 and 1 of the Subscription Options represent Maximum QoS field.
+    /// Bits 0 and 1 of the Subscription Options represent Maximum `QoS` field.
     ///
-    /// This gives the maximum QoS level at which the Server can send Application Messages
-    /// to the Client. It is a Protocol Error if the Maximum QoS field has the value 3.
+    /// This gives the maximum `QoS` level at which the Server can send Application Messages
+    /// to the Client. It is a Protocol Error if the Maximum `QoS` field has the value 3.
     qos: QoS,
 
     /// Bit 2 of the Subscription Options represents the No Local option.
     ///
     /// If the value is 1, Application Messages MUST NOT be forwarded to a connection
-    /// with a ClientID equal to the ClientID of the publishing connection [MQTT-3.8.3-3].
+    /// with a `ClientID` equal to the `ClientID` of the publishing connection [MQTT-3.8.3-3].
     ///
     /// It is a Protocol Error to set the No Local bit to 1 on a Shared Subscription [MQTT-3.8.3-4].
     no_local: bool,
@@ -261,7 +261,7 @@ impl DecodePacket for SubscribeTopic {
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SubscribePacket {
-    /// `packet_id` is used by the Server to reply SubscribeAckPacket to the client.
+    /// `packet_id` is used by the Server to reply `SubscribeAckPacket` to the client.
     packet_id: PacketId,
 
     properties: Properties,

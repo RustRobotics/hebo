@@ -12,7 +12,7 @@ use super::var_int::VarIntError;
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub enum DecodeError {
-    /// ClientId is empty or its length exceeds 23.
+    /// `ClientId` is empty or its length exceeds 23.
     /// Or contains invalid characters.
     InvalidClientId,
 
@@ -27,16 +27,16 @@ pub enum DecodeError {
     /// Resrved bit in connect packet is not zero.
     InvalidConnectFlags,
 
-    /// QoS not 0, 1, 2
+    /// `QoS` not 0, 1, 2
     InvalidQoS,
 
     /// Invalid flag value in fixed header.
     ///
-    /// Does not contain InvalidQoS.
+    /// Does not contain `InvalidQoS`.
     InvalidPacketFlags,
 
-    /// PacketId should be present but not set.
-    /// Or PacketId is none where it is required.
+    /// `PacketId` should be present but not set.
+    /// Or `PacketId` is none where it is required.
     InvalidPacketId,
 
     /// Failed to parse variable byte integer.
@@ -82,7 +82,7 @@ pub enum DecodeError {
 pub enum EncodeError {
     InvalidData,
 
-    /// ClientId is empty or its length exceeds 23.
+    /// `ClientId` is empty or its length exceeds 23.
     /// Or contains invalid characters.
     InvalidClientId,
 
@@ -92,8 +92,8 @@ pub enum EncodeError {
 
     InvalidPacketLevel,
 
-    /// PacketId should be present but not set.
-    /// Or PacketId is none where it is required.
+    /// `PacketId` should be present but not set.
+    /// Or `PacketId` is none where it is required.
     InvalidPacketId,
 
     /// Length of data exceeds its limitation
