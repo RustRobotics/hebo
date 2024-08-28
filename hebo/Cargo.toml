@@ -70,7 +70,7 @@ warp = "0.3.7"
 webpki-roots = "0.25.4"
 
 [target.'cfg(unix)'.dependencies]
-nc = "0.8.20"
+nc = "0.9.3"
 sysinfo = "0.29.11"
 
 [dev-dependencies]

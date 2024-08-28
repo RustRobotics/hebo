@@ -4,6 +4,7 @@
 
 #![allow(clippy::module_name_repetitions)]
 
+use std::ffi::c_void;
 use std::net::UdpSocket;
 #[cfg(unix)]
 use std::os::unix::io::{AsRawFd, RawFd};
@@ -21,7 +22,7 @@ fn bind_device(socket_fd: RawFd, device: &str) -> Result<(), Error> {
                 socket_fd,
                 nc::SOL_SOCKET,
                 nc::SO_BINDTODEVICE,
-                device.as_ptr() as usize,
+                device.as_ptr().cast::<c_void>(),
                 socket_len,
             )
             .map_err(|errno| {
@@ -49,7 +50,7 @@ fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
     // For the others, just a boolean value for enable and disable.
     #[cfg(not(unix))]
     let queue_len: i32 = 1;
-    let queue_len_ptr = std::ptr::addr_of!(queue_len) as usize;
+    let queue_len_ptr = std::ptr::addr_of!(queue_len) as *const c_void;
 
     unsafe {
         #[allow(clippy::cast_possible_truncation)]
