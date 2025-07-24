@@ -19,9 +19,9 @@ keywords = [
 repository = "https://github.com/RustRobotics/hebo"
 homepage = "https://github.com/RustRobotics/hebo/tree/main/codec"
 license = "Apache-2.0"
-edition = "2021"
+edition = "2024"
 readme = "./README.md"
-rust-version = "1.66.0"
+rust-version = "1.88.0"
 publish = true
 
 [dependencies]

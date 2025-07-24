@@ -63,7 +63,7 @@ impl Topic {
         for (index, part) in s.split('/').enumerate() {
             match self.parts.get(index) {
                 None | Some(TopicPart::Empty) => return false,
-                Some(TopicPart::Normal(ref s_part) | TopicPart::Internal(ref s_part)) => {
+                Some(TopicPart::Normal(s_part) | TopicPart::Internal(s_part)) => {
                     if s_part != part {
                         return false;
                     }

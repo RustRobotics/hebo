@@ -33,9 +33,9 @@ impl Stream {
     pub async fn read_buf(&mut self, buf: &mut Vec<u8>) -> Result<usize, Error> {
         // TODO(Shaohua): Replace with bytes::BufMute
         match self {
-            Self::Mqtt(ref mut tcp_stream) => Ok(tcp_stream.read_buf(buf).await?),
-            Self::Mqtts(ref mut tls_stream) => Ok(tls_stream.read_buf(buf).await?),
-            Self::Ws(ref mut ws_stream) => {
+            Self::Mqtt(tcp_stream) => Ok(tcp_stream.read_buf(buf).await?),
+            Self::Mqtts(tls_stream) => Ok(tls_stream.read_buf(buf).await?),
+            Self::Ws(ws_stream) => {
                 if let Some(msg) = ws_stream.next().await {
                     let msg = msg?;
                     let data = msg.into_data();
@@ -46,7 +46,7 @@ impl Stream {
                     Ok(0)
                 }
             }
-            Self::Wss(ref mut wss_stream) => {
+            Self::Wss(wss_stream) => {
                 if let Some(msg) = wss_stream.next().await {
                     let msg = msg?;
                     let data = msg.into_data();
@@ -58,8 +58,8 @@ impl Stream {
                 }
             }
             #[cfg(unix)]
-            Self::Uds(ref mut uds_stream) => Ok(uds_stream.read_buf(buf).await?),
-            Self::Quic(ref mut quic_connection) => {
+            Self::Uds(uds_stream) => Ok(uds_stream.read_buf(buf).await?),
+            Self::Quic(quic_connection) => {
                 if let Ok(mut recv) = quic_connection.accept_uni().await {
                     Ok(recv.read_buf(buf).await?)
                 } else {
