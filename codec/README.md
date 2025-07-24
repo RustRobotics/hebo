@@ -14,4 +14,4 @@ hebo-codec is used to handle packets in MQTT protocol.
 
 
 ## License
-This crate is release with Apache-2.0 [license][LICENSE]
+hebo-codec is [Apache-2.0 licensed][LICENSE]

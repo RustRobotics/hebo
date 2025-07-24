@@ -17,4 +17,4 @@ It also includes a MQTT client, named `ruo`.
 
 ## License
 
-This project is Licensed under [GNU General Public License, version 3.0](LICENSE).
+hebo is [Apache-2.0 licensed](LICENSE).
