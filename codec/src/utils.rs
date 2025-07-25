@@ -2,8 +2,8 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use rand::distr::Alphanumeric;
+use rand::Rng;
 
 pub const MAXIMUM_CLIENT_ID: usize = 32;
 
@@ -13,9 +13,9 @@ pub const MAXIMUM_CLIENT_ID: usize = 32;
 /// Raise painic if generate invalid string.
 #[must_use]
 pub fn random_string(len: usize) -> String {
+    let rng = rand::rng();
     String::from_utf8(
-        thread_rng()
-            .sample_iter(&Alphanumeric)
+        rng.sample_iter(&Alphanumeric)
             .take(len)
             .collect::<Vec<u8>>(),
     )
@@ -28,8 +28,8 @@ pub fn random_string(len: usize) -> String {
 /// Raise painic if generate invalid string.
 #[must_use]
 pub fn random_client_id() -> String {
-    let mut rng = rand::thread_rng();
-    let len = rng.gen_range(14..22);
+    let mut rng = rand::rng();
+    let len = rng.random_range(14..22);
     String::from_utf8(
         rng.sample_iter(&Alphanumeric)
             .take(len)
