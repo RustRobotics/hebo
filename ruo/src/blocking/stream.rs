@@ -100,6 +100,7 @@ impl Stream {
     /// If an error is returned then no bytes in the buffer were written to this writer.
     pub fn write_all(&mut self, buf: &[u8]) -> Result<usize, Error> {
         // TODO(Shaohua): Replace with io::Write trait.
+        // TODO(Shaohua): Replace type of buf with bytes::Bytes
         match self {
             Self::Mqtt(stream) => {
                 stream.write_all(buf)?;
@@ -107,7 +108,7 @@ impl Stream {
             }
 
             Self::Ws(ws_stream) => {
-                let msg = Message::binary(buf);
+                let msg = Message::binary(buf.to_vec());
                 ws_stream.send(msg)?;
                 Ok(buf.len())
             }

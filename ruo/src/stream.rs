@@ -14,7 +14,7 @@ use tokio::net::TcpStream;
 use tokio::net::UnixStream;
 use tokio_rustls::client::TlsStream;
 use tokio_rustls::rustls;
-use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
+use tokio_tungstenite::{self, WebSocketStream, tungstenite::protocol::Message};
 
 #[cfg(unix)]
 use crate::connect_options::UdsConnect;
@@ -81,28 +81,24 @@ impl Stream {
         match tls_type {
             TlsType::SelfSigned(self_signed) => {
                 let mut pem_buf = BufReader::new(File::open(&self_signed.cert)?);
-                let pem_data = rustls_pemfile::certs(&mut pem_buf).unwrap();
-                root_store.add_parsable_certificates(&pem_data);
+                let pem_certs: Vec<_> = rustls_pemfile::certs(&mut pem_buf)
+                    .map(|pem_cert| pem_cert.unwrap())
+                    .collect();
+                root_store.add_parsable_certificates(pem_certs);
             }
             TlsType::CASigned => {
-                root_store.add_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
-                    rustls::OwnedTrustAnchor::from_subject_spki_name_constraints(
-                        ta.subject,
-                        ta.spki,
-                        ta.name_constraints,
-                    )
-                }));
+                root_store = rustls::RootCertStore::from_iter(
+                    webpki_roots::TLS_SERVER_ROOTS.iter().cloned(),
+                );
             }
         }
-        let config_builder = rustls::ClientConfig::builder()
-            .with_safe_defaults()
-            .with_root_certificates(root_store);
+        let config_builder = rustls::ClientConfig::builder().with_root_certificates(root_store);
         let client_config: rustls::ClientConfig = config_builder.with_no_client_auth();
         let rc_client_config = Arc::new(client_config);
         let connector = tokio_rustls::TlsConnector::from(rc_client_config);
         let tcp_stream = TcpStream::connect(server_address).await?;
         // TODO(Shaohua): Convert error type.
-        let domain = rustls::ServerName::try_from(server_domain).unwrap();
+        let domain = rustls::pki_types::ServerName::try_from(server_domain).unwrap().to_owned();
 
         // TODO(Shaohua): Convert error type.
         let tls_stream = connector
@@ -230,12 +226,12 @@ impl Stream {
             Self::Mqtt(tcp_stream) => Ok(tcp_stream.write(buf).await?),
             Self::Mqtts(tls_socket) => Ok(tls_socket.write(buf).await?),
             Self::Ws(ws_stream) => {
-                let msg = Message::binary(buf);
+                let msg = Message::binary(buf.to_vec());
                 ws_stream.send(msg).await?;
                 Ok(buf.len())
             }
             Self::Wss(wss_stream) => {
-                let msg = Message::binary(buf);
+                let msg = Message::binary(buf.to_vec());
                 wss_stream.send(msg).await?;
                 Ok(buf.len())
             }
@@ -244,7 +240,7 @@ impl Stream {
             Self::Quic(quic_connection) => {
                 let mut send = quic_connection.open_uni().await?;
                 send.write_all(buf).await?;
-                send.finish().await?;
+                send.finish()?;
                 Ok(buf.len())
             }
             Self::None => unreachable!(),

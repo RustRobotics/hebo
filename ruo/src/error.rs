@@ -131,3 +131,9 @@ impl From<codec::DecodeError> for Error {
         Self::from_string(ErrorKind::DecodeError, format!("{err:?}"))
     }
 }
+
+impl From<quinn::ClosedStream> for Error {
+    fn from(err: quinn::ClosedStream) -> Self {
+        Self::from_string(ErrorKind::IoError, format!("Quic closed stream err: {err:?}"))
+    }
+}
