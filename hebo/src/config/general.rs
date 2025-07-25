@@ -8,7 +8,7 @@ use codec::QoS;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-use sysinfo::{System, SystemExt, UserExt};
+use sysinfo::Users;
 
 use crate::error::{Error, ErrorKind};
 
@@ -208,8 +208,8 @@ impl General {
         let euid = unsafe { nc::geteuid() };
         if euid == 0 {
             // For root only.
-            let s = System::new_all();
-            if !s.users().iter().any(|user| user.name() == self.user) {
+            let users = Users::new();
+            if !users.iter().any(|user| user.name() == self.user) {
                 return Err(Error::from_string(
                     ErrorKind::ConfigError,
                     format!("Failed to find user info with name: {}", &self.user),

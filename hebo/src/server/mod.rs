@@ -2,11 +2,11 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-//! `ServerContex` is the main entry pointer of hebo server.
+//! `ServerContext` is the main entry pointer of hebo server.
 
 use std::fs::File;
 use std::io::{Read, Write};
-use sysinfo::{System, SystemExt, UserExt};
+use sysinfo::Users;
 use tokio::runtime::Runtime;
 #[cfg(unix)]
 use tokio::signal::unix::{signal, SignalKind};
@@ -203,12 +203,12 @@ impl ServerContext {
 
     #[cfg(unix)]
     fn set_uid(&self) -> Result<(), Error> {
+        // TODO(Shaohua): remove unsafe block
         let euid = unsafe { nc::geteuid() };
         if euid == 0 {
             // For root only.
             let user_name = self.config.general().user();
-            let s = System::new_all();
-            s.users()
+            Users::new()
                 .iter()
                 .find(|user| user.name() == user_name)
                 .map_or_else(

@@ -9,7 +9,9 @@ use ruo::connect_options::ConnectOptions;
 use ruo::error::Error;
 
 fn main() -> Result<(), Error> {
-    std::env::set_var("RUST_LOG", "info");
+    unsafe {
+        std::env::set_var("RUST_LOG", "info");
+    }
     env_logger::init();
 
     let mut client = Client::new(ConnectOptions::default());

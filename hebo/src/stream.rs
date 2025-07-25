@@ -75,16 +75,17 @@ impl Stream {
     ///
     /// Returns error if socket/stream gets error.
     pub async fn write(&mut self, buf: &[u8]) -> Result<usize, Error> {
+        // TODO(Shaohua): Replace type of buf with bytes::Bytes
         match self {
             Self::Mqtt(tcp_stream) => Ok(tcp_stream.write(buf).await?),
             Self::Mqtts(tls_stream) => Ok(tls_stream.write(buf).await?),
             Self::Ws(ws_stream) => {
-                let msg = Message::binary(buf);
+                let msg = Message::binary(buf.to_vec());
                 ws_stream.send(msg).await?;
                 Ok(buf.len())
             }
             Self::Wss(wss_stream) => {
-                let msg = Message::binary(buf);
+                let msg = Message::binary(buf.to_vec());
                 wss_stream.send(msg).await?;
                 Ok(buf.len())
             }
@@ -93,7 +94,7 @@ impl Stream {
             Self::Quic(quic_connection) => {
                 let mut send = quic_connection.open_uni().await?;
                 send.write_all(buf).await?;
-                send.finish().await?;
+                send.finish()?;
                 Ok(buf.len())
             }
         }

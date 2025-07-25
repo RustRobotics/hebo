@@ -235,6 +235,18 @@ impl From<oneshot::error::RecvError> for Error {
     }
 }
 
+impl From<quinn::ClosedStream> for Error {
+    fn from(err: quinn::ClosedStream) -> Self {
+        Self::from_string(ErrorKind::IoError, format!("Quic closed stream err: {err:?}"))
+    }
+}
+
+impl From<rustls_pki_types::pem::Error> for Error {
+    fn from(err: rustls_pki_types::pem::Error) -> Self {
+        Self::from_string(ErrorKind::CertError, format!("cert error: {err:?}"))
+    }
+}
+
 macro_rules! convert_send_error {
     ($cmd_type: ident) => {
         impl From<mpsc::error::SendError<$cmd_type>> for Error {

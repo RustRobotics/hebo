@@ -29,7 +29,9 @@ async fn on_connect(client: &mut Client) {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    std::env::set_var("RUST_LOG", "info");
+    unsafe {
+        std::env::set_var("RUST_LOG", "info");
+    }
     env_logger::init();
 
     let options = ConnectOptions::new();
