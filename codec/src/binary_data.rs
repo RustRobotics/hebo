@@ -42,7 +42,7 @@ impl BinaryData {
 
     /// Get byte length used in packet.
     #[must_use]
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
         2 + self.0.len()
     }
 

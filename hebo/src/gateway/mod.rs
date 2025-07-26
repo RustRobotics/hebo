@@ -40,7 +40,7 @@ impl GatewayApp {
             tokio::select! {
                 Some(cmd) = self.dispatcher_receiver.recv() => {
                     if let Err(err) = self.handle_dispatcher_cmd(cmd).await {
-                        log::error!("Failed to handle dispatcher cmd: {:?}", err);
+                        log::error!("Failed to handle dispatcher cmd: {err:?}");
                     }
                 }
 

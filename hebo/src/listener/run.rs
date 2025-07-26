@@ -37,25 +37,25 @@ impl Listener {
 
                 Some(cmd) = session_receiver.recv() => {
                     if let Err(err) = self.handle_session_cmd(cmd).await {
-                        log::error!("handle session cmd failed: {:?}", err);
+                        log::error!("handle session cmd failed: {err:?}");
                     }
                 },
 
                 Some(cmd) = dispatcher_receiver.recv() => {
                     if let Err(err) = self.handle_dispatcher_cmd(cmd).await {
-                        log::error!("handle dispatcher cmd failed: {:?}", err);
+                        log::error!("handle dispatcher cmd failed: {err:?}");
                     }
                 }
 
                 Some(cmd) = auth_receiver.recv() => {
                     if let Err(err) = self.handle_auth_cmd(cmd).await {
-                        log::error!("handle auth cmd failed: {:?}", err);
+                        log::error!("handle auth cmd failed: {err:?}");
                     }
                 }
 
                 Some(cmd) = acl_receiver.recv() => {
                     if let Err(err) = self.handle_acl_cmd(cmd).await {
-                        log::error!("handle acl cmd failed: {:?}", err);
+                        log::error!("handle acl cmd failed: {err:?}");
                     }
                 }
             }
@@ -86,7 +86,7 @@ impl Listener {
             .send(ListenerToDispatcherCmd::SessionAdded(self.id))
             .await
         {
-            log::error!("Failed to send NewSession cmd: {:?}", err);
+            log::error!("Failed to send NewSession cmd: {err:?}");
         }
     }
 }

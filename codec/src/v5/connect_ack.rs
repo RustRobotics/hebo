@@ -150,7 +150,7 @@ impl ConnectAckPacket {
     }
 
     /// Update session present flag.
-    pub fn set_session_present(&mut self, present: bool) -> &mut Self {
+    pub const fn set_session_present(&mut self, present: bool) -> &mut Self {
         self.session_present = present;
         self
     }
@@ -162,7 +162,7 @@ impl ConnectAckPacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn properties_mut(&mut self) -> &mut Properties {
+    pub const fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -182,7 +182,7 @@ impl DecodePacket for ConnectAckPacket {
         let session_present = ack_flags & 0b0000_0001 == 0b0000_0001;
         let reason_code = ReasonCode::decode(ba)?;
         if !CONNECT_REASONS.contains(&reason_code) {
-            log::error!("Invalid reason code {:?}", reason_code);
+            log::error!("Invalid reason code {reason_code:?}");
             return Err(DecodeError::InvalidReasonCode);
         }
         let properties = Properties::decode(ba)?;
@@ -191,8 +191,7 @@ impl DecodePacket for ConnectAckPacket {
             check_property_type_list(properties.props(), CONNECT_ACK_PROPERTIES)
         {
             log::error!(
-                "v5/ConnectAckPacket: property type {:?} cannot be used in properties!",
-                property_type
+                "v5/ConnectAckPacket: property type {property_type:?} cannot be used in properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }

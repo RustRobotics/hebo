@@ -102,7 +102,7 @@ impl ConnectAckPacket {
     }
 
     /// Update return code.
-    pub fn set_return_code(&mut self, code: ConnectReturnCode) -> &mut Self {
+    pub const fn set_return_code(&mut self, code: ConnectReturnCode) -> &mut Self {
         self.return_code = code;
         self
     }
@@ -114,7 +114,7 @@ impl ConnectAckPacket {
     }
 
     /// Update session-present flag.
-    pub fn set_session_present(&mut self, present: bool) -> &mut Self {
+    pub const fn set_session_present(&mut self, present: bool) -> &mut Self {
         self.session_present = present;
         self
     }

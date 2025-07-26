@@ -26,7 +26,7 @@ impl Session {
                     self.reject_client_id_v5().await?;
                     // TODO(Shaohua): disconnect socket stream
                 } else {
-                    log::error!("on_client_connect_v5() Uncaught error: {:?}", err);
+                    log::error!("on_client_connect_v5() Uncaught error: {err:?}");
                     // Got malformed packet, disconnect client.
                     self.status = Status::Disconnected;
                     // TODO(Shaohua): disconnect socket stream.
@@ -183,7 +183,7 @@ impl Session {
             .await
         {
             // Send subscribe ack (failed) to client.
-            log::error!("Failed to send subscribe command to server: {:?}", err);
+            log::error!("Failed to send subscribe command to server: {err:?}");
             let reason = v5::ReasonCode::UnspecifiedError;
 
             let subscribe_ack_packet = v5::SubscribeAckPacket::new(packet_id, reason);
@@ -217,7 +217,7 @@ impl Session {
             .send(SessionToListenerCmd::UnsubscribeV5(self.id, packet))
             .await
         {
-            log::warn!("Failed to send unsubscribe command to server: {:?}", err);
+            log::warn!("Failed to send unsubscribe command to server: {err:?}");
         }
 
         let unsubscribe_ack_packet =
@@ -229,7 +229,7 @@ impl Session {
         self.status = Status::Disconnected;
         let cmd = SessionToListenerCmd::DisconnectV5(self.id);
         if let Err(err) = self.sender.send(cmd).await {
-            log::warn!("Failed to send disconnect command to server: {:?}", err);
+            log::warn!("Failed to send disconnect command to server: {err:?}");
         }
         Ok(())
     }

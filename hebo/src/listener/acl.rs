@@ -42,15 +42,12 @@ impl Listener {
             let cmd = ListenerToSessionCmd::PublishAck(packet.packet_id(), packet.qos(), accepted);
             if let Err(err) = session_sender.send(cmd).await {
                 log::error!(
-                    "listener: Failed to send publish ack to session: {:?}, err: {:?}",
-                    session_id,
-                    err
+                    "listener: Failed to send publish ack to session: {session_id:?}, err: {err:?}"
                 );
             }
         } else {
             log::error!(
-                "listener: Failed to find session sender with id: {}",
-                session_id
+                "listener: Failed to find session sender with id: {session_id}"
             );
         }
 
@@ -73,15 +70,12 @@ impl Listener {
                 ListenerToSessionCmd::PublishAckV5(packet.packet_id(), packet.qos(), accepted);
             if let Err(err) = session_sender.send(cmd).await {
                 log::error!(
-                    "listener: Failed to send publish ack to session: {:?}, err: {:?}",
-                    session_id,
-                    err
+                    "listener: Failed to send publish ack to session: {session_id:?}, err: {err:?}"
                 );
             }
         } else {
             log::error!(
-                "listener: Failed to find session sender with id: {}",
-                session_id
+                "listener: Failed to find session sender with id: {session_id}"
             );
         }
 

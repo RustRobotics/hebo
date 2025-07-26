@@ -59,7 +59,7 @@ impl StringPairData {
 
     /// Get byte length in packet.
     #[must_use]
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
         self.0.bytes() + self.1.bytes()
     }
 }

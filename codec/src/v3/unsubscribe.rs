@@ -82,7 +82,7 @@ impl UnsubscribePacket {
     }
 
     /// Update packet id.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
@@ -125,7 +125,7 @@ impl UnsubscribePacket {
     }
 
     /// Get a mutable reference to topic list.
-    pub fn mut_topics(&mut self) -> &mut Vec<SubTopic> {
+    pub const fn mut_topics(&mut self) -> &mut Vec<SubTopic> {
         &mut self.topics
     }
 

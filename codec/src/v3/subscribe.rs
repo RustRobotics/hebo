@@ -44,7 +44,7 @@ impl SubscribeTopic {
 
     /// Get byte length in packet.
     #[must_use]
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
         1 + self.topic.bytes()
     }
 }
@@ -142,7 +142,7 @@ impl SubscribePacket {
     }
 
     /// Update packet id.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
@@ -168,7 +168,7 @@ impl SubscribePacket {
     }
 
     /// Get a mutable reference to topic list.
-    pub fn mut_topics(&mut self) -> &mut Vec<SubscribeTopic> {
+    pub const fn mut_topics(&mut self) -> &mut Vec<SubscribeTopic> {
         &mut self.topics
     }
 

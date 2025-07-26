@@ -205,7 +205,7 @@ impl ClientInnerV5 {
                     return Ok(Some(msg));
                 }
                 t => {
-                    log::error!("Unhandled msg: {:?}", t);
+                    log::error!("Unhandled msg: {t:?}");
                 }
             }
 
@@ -245,7 +245,7 @@ impl ClientInnerV5 {
             log::info!("Topic `{}` publish confirmed!", p.topic());
             self.publishing_qos1_packets.remove(&packet.packet_id());
         } else {
-            log::warn!("Failed to find PublishAckPacket: {}", packet_id);
+            log::warn!("Failed to find PublishAckPacket: {packet_id}");
         }
         Ok(())
     }
@@ -255,7 +255,7 @@ impl ClientInnerV5 {
         let packet = SubscribeAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
         if self.subscribing_packets.remove(&packet_id).is_none() {
-            log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
+            log::warn!("Failed to find SubscribeAckPacket: {packet_id}");
         }
         Ok(())
     }
@@ -264,7 +264,7 @@ impl ClientInnerV5 {
         let packet = UnsubscribeAckPacket::decode(ba)?;
         let packet_id = packet.packet_id();
         if self.unsubscribing_packets.remove(&packet_id).is_none() {
-            log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
+            log::warn!("Failed to find UnsubscribeAckPacket: {packet_id}");
         }
         Ok(())
     }

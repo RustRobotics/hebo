@@ -73,7 +73,7 @@ impl AuthApp {
             tokio::select! {
                 Some(cmd) = self.listener_receiver.recv() => {
                     if let Err(err) = self.handle_listener_cmd(cmd).await {
-                        log::error!("Failed to handle listener cmd: {:?}", err);
+                        log::error!("Failed to handle listener cmd: {err:?}");
                     }
                 },
                 Some(cmd) = self.server_ctx_receiver.recv() => {

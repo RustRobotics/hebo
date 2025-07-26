@@ -118,7 +118,7 @@ impl<'a> ByteArray<'a> {
     }
 
     /// Reset offset value to 0.
-    pub fn reset_offset(&mut self) {
+    pub const fn reset_offset(&mut self) {
         self.offset = 0;
     }
 

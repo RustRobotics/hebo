@@ -29,7 +29,7 @@ impl AuthPacket {
     }
 
     /// Update reason code.
-    pub fn set_reason_code(&mut self, code: ReasonCode) -> &mut Self {
+    pub const fn set_reason_code(&mut self, code: ReasonCode) -> &mut Self {
         self.reason_code = code;
         self
     }
@@ -41,7 +41,7 @@ impl AuthPacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn properties_mut(&mut self) -> &mut Properties {
+    pub const fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -101,15 +101,14 @@ impl DecodePacket for AuthPacket {
 
         let reason_code = ReasonCode::decode(ba)?;
         if !AUTH_REASONS.contains(&reason_code) {
-            log::error!("Invalid reason code: {:?}", reason_code);
+            log::error!("Invalid reason code: {reason_code:?}");
             return Err(DecodeError::InvalidReasonCode);
         }
 
         let properties = Properties::decode(ba)?;
         if let Err(property_type) = check_property_type_list(properties.props(), AUTH_PROPERTIES) {
             log::error!(
-                "v5/AuthPacket: property type {:?} cannot be used in properties!",
-                property_type
+                "v5/AuthPacket: property type {property_type:?} cannot be used in properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }

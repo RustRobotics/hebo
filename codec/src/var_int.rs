@@ -64,11 +64,11 @@ impl VarInt {
         self.0
     }
 
-    pub fn unchecked_add(&mut self, v: usize) {
+    pub const fn unchecked_add(&mut self, v: usize) {
         self.0 += v;
     }
 
-    pub fn unchecked_sub(&mut self, v: usize) {
+    pub const fn unchecked_sub(&mut self, v: usize) {
         self.0 -= v;
     }
 
@@ -77,7 +77,7 @@ impl VarInt {
     /// # Errors
     ///
     /// Returns error if result is overflow.
-    pub fn add(&mut self, v: usize) -> Result<(), EncodeError> {
+    pub const fn add(&mut self, v: usize) -> Result<(), EncodeError> {
         let new_len = self.0 + v;
         if new_len > MAX_PACKET_LEN {
             return Err(EncodeError::InvalidVarInt);
@@ -90,7 +90,7 @@ impl VarInt {
     /// # Errors
     ///
     /// Returns error if result is underflow.
-    pub fn sub(&mut self, v: usize) -> Result<(), EncodeError> {
+    pub const fn sub(&mut self, v: usize) -> Result<(), EncodeError> {
         if self.0 < v {
             return Err(EncodeError::InvalidVarInt);
         }

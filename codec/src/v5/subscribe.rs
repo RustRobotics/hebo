@@ -116,7 +116,7 @@ impl SubscribeTopic {
     }
 
     /// Update `qos` value.
-    pub fn set_qos(&mut self, qos: QoS) -> &mut Self {
+    pub const fn set_qos(&mut self, qos: QoS) -> &mut Self {
         self.qos = qos;
         self
     }
@@ -128,7 +128,7 @@ impl SubscribeTopic {
     }
 
     /// Set `no_local` flag.
-    pub fn set_no_local(&mut self, no_local: bool) -> &mut Self {
+    pub const fn set_no_local(&mut self, no_local: bool) -> &mut Self {
         self.no_local = no_local;
         self
     }
@@ -140,7 +140,7 @@ impl SubscribeTopic {
     }
 
     /// Update `retain_as_published` flag.
-    pub fn set_retain_as_published(&mut self, retain_as_published: bool) -> &mut Self {
+    pub const fn set_retain_as_published(&mut self, retain_as_published: bool) -> &mut Self {
         self.retain_as_published = retain_as_published;
         self
     }
@@ -152,7 +152,7 @@ impl SubscribeTopic {
     }
 
     /// Update `retain_handling` flag.
-    pub fn set_retain_handling(&mut self, retain_handling: RetainHandling) -> &mut Self {
+    pub const fn set_retain_handling(&mut self, retain_handling: RetainHandling) -> &mut Self {
         self.retain_handling = retain_handling;
         self
     }
@@ -163,7 +163,7 @@ impl SubscribeTopic {
         self.retain_handling
     }
 
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
         1 + self.topic.bytes()
     }
 }
@@ -300,7 +300,7 @@ impl SubscribePacket {
     }
 
     /// Update packet id.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
@@ -312,7 +312,7 @@ impl SubscribePacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn properties_mut(&mut self) -> &mut Properties {
+    pub const fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -336,7 +336,7 @@ impl SubscribePacket {
     }
 
     /// Get a mutable reference to topic patterns.
-    pub fn mut_topics(&mut self) -> &mut Vec<SubscribeTopic> {
+    pub const fn mut_topics(&mut self) -> &mut Vec<SubscribeTopic> {
         &mut self.topics
     }
 
@@ -369,15 +369,13 @@ impl DecodePacket for SubscribePacket {
             check_property_type_list(properties.props(), SUBSCRIBE_PROPERTIES)
         {
             log::error!(
-                "v5/SubscribePacket: property type {:?} cannot be used in properties!",
-                property_type
+                "v5/SubscribePacket: property type {property_type:?} cannot be used in properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }
         if let Err(property_type) = check_multiple_subscription_identifiers(properties.props()) {
             log::error!(
-                "v5/SubscribePacket: property type {:?} cannot be used in properties!",
-                property_type
+                "v5/SubscribePacket: property type {property_type:?} cannot be used in properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }

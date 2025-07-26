@@ -14,7 +14,7 @@ impl BackendsApp {
         &mut self,
         cmd: DispatcherToBackendsCmd,
     ) -> Result<(), Error> {
-        log::info!("cmd: {:?}", cmd);
+        log::info!("cmd: {cmd:?}");
         match cmd {
             DispatcherToBackendsCmd::SessionAdded(session) => {
                 self.handle_session_added(session).await
@@ -37,7 +37,7 @@ impl BackendsApp {
         listener_id: ListenerId,
         session_id: SessionId,
     ) -> Result<(), Error> {
-        log::info!("session removed: {}, {}", listener_id, session_id);
+        log::info!("session removed: {listener_id}, {session_id}");
         Ok(())
     }
 }

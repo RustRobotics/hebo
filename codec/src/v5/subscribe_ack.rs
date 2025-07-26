@@ -93,7 +93,7 @@ impl SubscribeAckPacket {
     }
 
     /// Update packet id.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
@@ -105,7 +105,7 @@ impl SubscribeAckPacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn properties_mut(&mut self) -> &mut Properties {
+    pub const fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -116,7 +116,7 @@ impl SubscribeAckPacket {
     }
 
     /// Get a mutable reference to reason code list.
-    pub fn reasons_mut(&mut self) -> &mut Vec<ReasonCode> {
+    pub const fn reasons_mut(&mut self) -> &mut Vec<ReasonCode> {
         &mut self.reasons
     }
 
@@ -146,8 +146,7 @@ impl DecodePacket for SubscribeAckPacket {
             check_property_type_list(properties.props(), SUBSCRIBE_ACK_PROPERTIES)
         {
             log::error!(
-                "v5/SubscribeAckPacket: property type {:?} cannot be used in properties!",
-                property_type
+                "v5/SubscribeAckPacket: property type {property_type:?} cannot be used in properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }

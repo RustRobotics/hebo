@@ -16,7 +16,7 @@ pub const PW_SHA512: i32 = 6;
 struct Salt([u8; SALT_LEN]);
 
 impl Salt {
-    fn from_slice(s: &[u8]) -> Self {
+    const fn from_slice(s: &[u8]) -> Self {
         let mut v = [0; SALT_LEN];
         v.copy_from_slice(s);
         Self(v)
@@ -30,7 +30,7 @@ impl Hash {
     const fn new() -> Self {
         Self([0; HASH_LEN])
     }
-    fn from_slice(s: &[u8]) -> Self {
+    const fn from_slice(s: &[u8]) -> Self {
         let mut v = [0; HASH_LEN];
         v.copy_from_slice(s);
         Self(v)

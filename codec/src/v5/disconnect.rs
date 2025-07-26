@@ -43,7 +43,7 @@ impl DisconnectPacket {
     }
 
     /// Update reason code.
-    pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> &mut Self {
+    pub const fn set_reason_code(&mut self, reason_code: ReasonCode) -> &mut Self {
         self.reason_code = reason_code;
         self
     }
@@ -55,7 +55,7 @@ impl DisconnectPacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn properties_mut(&mut self) -> &mut Properties {
+    pub const fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -130,7 +130,7 @@ impl DecodePacket for DisconnectPacket {
 
         let reason_code = ReasonCode::decode(ba)?;
         if !DISCONNECT_REASONS.contains(&reason_code) {
-            log::error!("Invalid reason code {:?}", reason_code);
+            log::error!("Invalid reason code {reason_code:?}");
             return Err(DecodeError::InvalidReasonCode);
         }
 
@@ -139,8 +139,7 @@ impl DecodePacket for DisconnectPacket {
             check_property_type_list(properties.props(), DISCONNECT_PROPERTIES)
         {
             log::error!(
-                "v5/DisconnectPacket: property type {:?} cannot be used in properties!",
-                property_type
+                "v5/DisconnectPacket: property type {property_type:?} cannot be used in properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }

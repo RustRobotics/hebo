@@ -59,9 +59,7 @@ impl Dispatcher {
             );
             if let Err(err) = listener_sender.send(cmd).await {
                 log::error!(
-                    "dispatcher: Failed to send check cached session to listener: {:?}, err: {:?}",
-                    session_gid,
-                    err
+                    "dispatcher: Failed to send check cached session to listener: {session_gid:?}, err: {err:?}"
                 );
             }
         } else {
@@ -95,9 +93,7 @@ impl Dispatcher {
                 DispatcherToListenerCmd::SubscribeAck(session_gid.session_id(), sub_ack_packet);
             if let Err(err) = listener_sender.send(cmd).await {
                 log::error!(
-                    "dispatcher: Failed to send subscribe ack to listener: {:?}, err: {:?}",
-                    session_gid,
-                    err
+                    "dispatcher: Failed to send subscribe ack to listener: {session_gid:?}, err: {err:?}"
                 );
             }
         } else {
@@ -123,9 +119,7 @@ impl Dispatcher {
                 DispatcherToListenerCmd::SubscribeAckV5(session_gid.session_id(), sub_ack_packet);
             if let Err(err) = listener_sender.send(cmd).await {
                 log::error!(
-                    "dispatcher: Failed to send subscribe ack to listener: {:?}, err: {:?}",
-                    session_gid,
-                    err
+                    "dispatcher: Failed to send subscribe ack to listener: {session_gid:?}, err: {err:?}"
                 );
             }
         } else {

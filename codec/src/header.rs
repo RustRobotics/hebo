@@ -145,7 +145,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::Connect)
                 } else {
-                    log::error!("header: Got packet flag in Connect: {:#b}", flag);
+                    log::error!("header: Got packet flag in Connect: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -153,7 +153,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::ConnectAck)
                 } else {
-                    log::error!("header: Got packet flag in ConnectAck: {:#b}", flag);
+                    log::error!("header: Got packet flag in ConnectAck: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -174,7 +174,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::PublishAck)
                 } else {
-                    log::error!("header: Got packet flag in PublishAck: {:#b}", flag);
+                    log::error!("header: Got packet flag in PublishAck: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -182,7 +182,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::PublishReceived)
                 } else {
-                    log::error!("header: Got packet flag in PublishReceived: {:#b}", flag);
+                    log::error!("header: Got packet flag in PublishReceived: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -190,7 +190,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0010 {
                     Ok(Self::PublishRelease)
                 } else {
-                    log::error!("header: Got packet flag in PublishRelease: {:#b}", flag);
+                    log::error!("header: Got packet flag in PublishRelease: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -198,7 +198,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::PublishComplete)
                 } else {
-                    log::error!("header: Got packet flag in PublishComplete: {:#b}", flag);
+                    log::error!("header: Got packet flag in PublishComplete: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -206,7 +206,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0010 {
                     Ok(Self::Subscribe)
                 } else {
-                    log::error!("header: Got packet flag in Subscribe: {:#b}", flag);
+                    log::error!("header: Got packet flag in Subscribe: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -214,7 +214,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::SubscribeAck)
                 } else {
-                    log::error!("header: Got packet flag in Subscribe: {:#b}", flag);
+                    log::error!("header: Got packet flag in Subscribe: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -222,7 +222,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0010 {
                     Ok(Self::Unsubscribe)
                 } else {
-                    log::error!("header: Got packet flag in Unsubscribe: {:#b}", flag);
+                    log::error!("header: Got packet flag in Unsubscribe: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -230,7 +230,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::UnsubscribeAck)
                 } else {
-                    log::error!("header: Got packet flag in UnsubscribeAck: {:#b}", flag);
+                    log::error!("header: Got packet flag in UnsubscribeAck: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -238,7 +238,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::PingRequest)
                 } else {
-                    log::error!("header: Got packet flag in PingRequest: {:#b}", flag);
+                    log::error!("header: Got packet flag in PingRequest: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -246,7 +246,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::PingResponse)
                 } else {
-                    log::error!("header: Got packet flag in PingResponse: {:#b}", flag);
+                    log::error!("header: Got packet flag in PingResponse: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -254,7 +254,7 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::Disconnect)
                 } else {
-                    log::error!("header: Got packet flag in Disconnect: {:#b}", flag);
+                    log::error!("header: Got packet flag in Disconnect: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
@@ -265,12 +265,12 @@ impl TryFrom<u8> for PacketType {
                 if flag == 0b0000_0000 {
                     Ok(Self::Auth)
                 } else {
-                    log::error!("header: Got packet flag in Auth: {:#b}", flag);
+                    log::error!("header: Got packet flag in Auth: {flag:#b}");
                     Err(DecodeError::InvalidPacketFlags)
                 }
             }
             t => {
-                log::error!("Invlaid type_bits: {:#b}", t);
+                log::error!("Invlaid type_bits: {t:#b}");
                 Err(DecodeError::InvalidPacketType)
             }
         }

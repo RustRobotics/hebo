@@ -37,8 +37,7 @@ impl Dispatcher {
             .await
         {
             log::error!(
-                "Dispatcher: Failed to send UpdatePublishPacket, err: {:?}",
-                err
+                "Dispatcher: Failed to send UpdatePublishPacket, err: {err:?}"
             );
         }
     }
@@ -50,8 +49,7 @@ impl Dispatcher {
             .await
         {
             log::error!(
-                "Dispatcher: Failed to send SessionAdded cmd, err: {:?}",
-                err
+                "Dispatcher: Failed to send SessionAdded cmd, err: {err:?}"
             );
         }
     }
@@ -63,8 +61,7 @@ impl Dispatcher {
             .await
         {
             log::error!(
-                "Dispatcher: Failed to send SessionRemoved cmd, err: {:?}",
-                err
+                "Dispatcher: Failed to send SessionRemoved cmd, err: {err:?}"
             );
         }
     }
@@ -80,8 +77,7 @@ impl Dispatcher {
             .await
         {
             log::error!(
-                "Dispatcher: Failed to send SubscriptionsAdded cmd, err: {:?}",
-                err
+                "Dispatcher: Failed to send SubscriptionsAdded cmd, err: {err:?}"
             );
         }
     }
@@ -97,8 +93,7 @@ impl Dispatcher {
             .await
         {
             log::error!(
-                "Dispatcher: Failed to send SubscriptionsRemoved cmd, err: {:?}",
-                err
+                "Dispatcher: Failed to send SubscriptionsRemoved cmd, err: {err:?}"
             );
         }
     }

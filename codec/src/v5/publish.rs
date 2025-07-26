@@ -230,7 +230,7 @@ impl PublishPacket {
     }
 
     /// Update `retian` flag.
-    pub fn set_retain(&mut self, retain: bool) -> &mut Self {
+    pub const fn set_retain(&mut self, retain: bool) -> &mut Self {
         self.retain = retain;
         self
     }
@@ -279,7 +279,7 @@ impl PublishPacket {
     /// Update packet id.
     ///
     /// The packet id field is only present in publish packets where the `QoS` level is 1 or 2.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
@@ -307,7 +307,7 @@ impl PublishPacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn properties_mut(&mut self) -> &mut Properties {
+    pub const fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -383,8 +383,7 @@ impl DecodePacket for PublishPacket {
         if let Err(property_type) = check_property_type_list(properties.props(), PUBLISH_PROPERTIES)
         {
             log::error!(
-                "v5/PublishPacket: property type {:?} cannot be used in properties!",
-                property_type
+                "v5/PublishPacket: property type {property_type:?} cannot be used in properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }

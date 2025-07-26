@@ -70,7 +70,7 @@ impl ConnectFlags {
     }
 
     /// Update `has_username` flag.
-    pub fn set_has_username(&mut self, has_username: bool) -> &mut Self {
+    pub const fn set_has_username(&mut self, has_username: bool) -> &mut Self {
         self.has_username = has_username;
         self
     }
@@ -83,7 +83,7 @@ impl ConnectFlags {
     }
 
     /// Update `has_password` flag.
-    pub fn set_has_password(&mut self, has_password: bool) -> &mut Self {
+    pub const fn set_has_password(&mut self, has_password: bool) -> &mut Self {
         self.has_password = has_password;
         self
     }
@@ -96,7 +96,7 @@ impl ConnectFlags {
     }
 
     /// Update will-retain flag.
-    pub fn set_will_retain(&mut self, will_retain: bool) -> &mut Self {
+    pub const fn set_will_retain(&mut self, will_retain: bool) -> &mut Self {
         self.will_retain = will_retain;
         self
     }
@@ -109,7 +109,7 @@ impl ConnectFlags {
     }
 
     /// Update will-qos.
-    pub fn set_will_qos(&mut self, qos: QoS) -> &mut Self {
+    pub const fn set_will_qos(&mut self, qos: QoS) -> &mut Self {
         self.will_qos = qos;
         self
     }
@@ -122,7 +122,7 @@ impl ConnectFlags {
     }
 
     /// Update will flag.
-    pub fn set_will(&mut self, will: bool) -> &mut Self {
+    pub const fn set_will(&mut self, will: bool) -> &mut Self {
         if !will {
             self.will_qos = QoS::AtMostOnce;
             self.will_retain = false;
@@ -139,7 +139,7 @@ impl ConnectFlags {
     }
 
     /// Update clean-session flag.
-    pub fn set_clean_session(&mut self, clean_session: bool) -> &mut Self {
+    pub const fn set_clean_session(&mut self, clean_session: bool) -> &mut Self {
         self.clean_session = clean_session;
         self
     }

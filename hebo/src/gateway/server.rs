@@ -10,6 +10,6 @@ use crate::commands::ServerContextToGatewayCmd;
 impl GatewayApp {
     #[allow(clippy::unused_async)]
     pub(super) async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToGatewayCmd) {
-        log::info!("cmd: {:?}", cmd);
+        log::info!("cmd: {cmd:?}");
     }
 }

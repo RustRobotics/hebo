@@ -661,7 +661,7 @@ impl Property {
     /// Get byte length used in packets.
     #[allow(clippy::match_same_arms)]
     #[must_use]
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
         let value_bytes = match self {
             Self::AssignedClientIdentifier(value) => value.bytes(),
             Self::AuthenticationData(value) => value.bytes(),
@@ -746,14 +746,14 @@ impl DecodePacket for Property {
     #[allow(clippy::too_many_lines)]
     fn decode(ba: &mut ByteArray) -> Result<Self, DecodeError> {
         let property_type_byte = ba.read_byte()?;
-        log::info!("property_type_byte: {}", property_type_byte);
+        log::info!("property_type_byte: {property_type_byte}");
         let property_type = PropertyType::try_from(property_type_byte)?;
-        log::info!("property_type: {:?}", property_type);
+        log::info!("property_type: {property_type:?}");
         match property_type {
             PropertyType::SessionExpiryInterval => {
                 log::info!("SessionExpiryInterval");
                 let interval = U32Data::decode(ba)?;
-                log::info!("interval: {}", interval);
+                log::info!("interval: {interval}");
                 Ok(Self::SessionExpiryInterval(interval))
             }
             PropertyType::ReceiveMaximum => {
@@ -931,13 +931,13 @@ impl Properties {
     /// Get length of property list.
     #[must_use]
     #[inline]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.0.len()
     }
 
     /// Check whether property list is empty.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 

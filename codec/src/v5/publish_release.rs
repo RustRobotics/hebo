@@ -50,7 +50,7 @@ impl PublishReleasePacket {
     }
 
     /// Update packet id.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
@@ -62,7 +62,7 @@ impl PublishReleasePacket {
     }
 
     /// Update reason code.
-    pub fn set_reason_code(&mut self, reason_code: ReasonCode) -> &mut Self {
+    pub const fn set_reason_code(&mut self, reason_code: ReasonCode) -> &mut Self {
         self.reason_code = reason_code;
         self
     }
@@ -80,7 +80,7 @@ impl PublishReleasePacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn mut_properties(&mut self) -> &mut Properties {
+    pub const fn mut_properties(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -145,7 +145,7 @@ impl DecodePacket for PublishReleasePacket {
             ReasonCode::default()
         };
         if !PUBLISH_RELEASE_REASONS.contains(&reason_code) {
-            log::error!("Invalid reason code: {:?}", reason_code);
+            log::error!("Invalid reason code: {reason_code:?}");
             return Err(DecodeError::InvalidReasonCode);
         }
 
@@ -155,8 +155,7 @@ impl DecodePacket for PublishReleasePacket {
                 check_property_type_list(properties.props(), PUBLISH_RELEASE_PROPERTIES)
             {
                 log::error!(
-                    "v5/PublishReleasePacket: property type {:?} cannot be used in properties!",
-                    property_type
+                    "v5/PublishReleasePacket: property type {property_type:?} cannot be used in properties!"
                 );
                 return Err(DecodeError::InvalidPropertyType);
             }

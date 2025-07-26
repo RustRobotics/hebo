@@ -119,7 +119,7 @@ impl SubTrie {
     ) -> usize {
         self.map.get_mut(&session_gid).map_or_else(
             || {
-                log::error!("trie: No subscription for gid: {:?}", session_gid);
+                log::error!("trie: No subscription for gid: {session_gid:?}");
                 0
             },
             |set| {
@@ -145,7 +145,7 @@ impl SubTrie {
     ) -> usize {
         self.map.get_mut(&session_gid).map_or_else(
             || {
-                log::error!("trie: No subscription for gid: {:?}", session_gid);
+                log::error!("trie: No subscription for gid: {session_gid:?}");
                 0
             },
             |set| {

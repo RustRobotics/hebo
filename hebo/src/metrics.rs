@@ -91,59 +91,59 @@ impl Metrics {
     async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToMetricsCmd) {
         match cmd {
             DispatcherToMetricsCmd::ListenerAdded(listener_id, address) => {
-                log::info!("Add listener id: {}, addr: {:?}", listener_id, address);
+                log::info!("Add listener id: {listener_id}, addr: {address:?}");
                 assert!(self.listeners.get(&listener_id).is_none());
                 let listener_cache = ListenerMetrics::new(listener_id, address);
                 self.listeners.insert(listener_id, listener_cache);
                 self.system.listener_count += 1;
             }
             DispatcherToMetricsCmd::ListenerRemoved(listener_id) => {
-                log::info!("Remove listener with id: {}", listener_id);
+                log::info!("Remove listener with id: {listener_id}");
                 assert!(self.listeners.remove(&listener_id).is_some());
                 self.system.listener_count -= 1;
             }
             DispatcherToMetricsCmd::SessionAdded(listener_id, count) => {
-                log::info!("{} sessions added to #{}", count, listener_id);
+                log::info!("{count} sessions added to #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     listener.sessions += count;
                     self.system.sessions += count;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
             DispatcherToMetricsCmd::SessionRemoved(listener_id, count) => {
-                log::info!("{} sessions removed from #{}", count, listener_id);
+                log::info!("{count} sessions removed from #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     listener.sessions -= count;
                     self.system.sessions -= count;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
             DispatcherToMetricsCmd::SubscriptionsAdded(listener_id, count) => {
-                log::info!("{} subscriptions added to #{}", count, listener_id);
+                log::info!("{count} subscriptions added to #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     listener.subscriptions += count;
                     self.system.subscriptions += count;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
             DispatcherToMetricsCmd::SubscriptionsRemoved(listener_id, count) => {
-                log::info!("{} subscriptions removed from #{}", count, listener_id);
+                log::info!("{count} subscriptions removed from #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     listener.subscriptions -= count;
                     self.system.subscriptions -= count;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
             DispatcherToMetricsCmd::RetainedMessageAdded(listener_id, count, bytes) => {
-                log::info!("{} retained messages added to #{}", count, listener_id);
+                log::info!("{count} retained messages added to #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     let bytes = bytes as i64;
@@ -152,11 +152,11 @@ impl Metrics {
                     self.system.retained_messages += count;
                     self.system.retained_bytes += bytes;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
             DispatcherToMetricsCmd::RetainedMessageRemoved(listener_id, count, bytes) => {
-                log::info!("{} retained messages removed from #{}", count, listener_id);
+                log::info!("{count} retained messages removed from #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     let bytes = bytes as i64;
@@ -165,11 +165,11 @@ impl Metrics {
                     self.system.retained_messages -= count;
                     self.system.retained_bytes -= bytes;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
             DispatcherToMetricsCmd::PublishPacketSent(listener_id, count, bytes) => {
-                log::info!("{} publishPacketSent added to #{}", count, listener_id);
+                log::info!("{count} publishPacketSent added to #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     let bytes = bytes as i64;
@@ -178,11 +178,11 @@ impl Metrics {
                     self.system.publish_messages_sent += count;
                     self.system.publish_bytes_sent += bytes;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
             DispatcherToMetricsCmd::PublishPacketReceived(listener_id, count, bytes) => {
-                log::info!("{} publishPacketReceived added to #{}", count, listener_id);
+                log::info!("{count} publishPacketReceived added to #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     let bytes = bytes as i64;
@@ -191,18 +191,18 @@ impl Metrics {
                     self.system.publish_messages_received += count;
                     self.system.publish_bytes_received += bytes;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
             DispatcherToMetricsCmd::PublishPacketDropped(count, bytes) => {
-                log::info!("{} publishPacket dropped", count);
+                log::info!("{count} publishPacket dropped");
                 let count = count as i64;
                 let bytes = bytes as i64;
                 self.system.publish_messages_dropped += count;
                 self.system.publish_bytes_dropped += bytes;
             }
             DispatcherToMetricsCmd::PacketSent(listener_id, count, bytes) => {
-                log::info!("{} packetSent added to #{}", count, listener_id);
+                log::info!("{count} packetSent added to #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     let bytes = bytes as i64;
@@ -211,11 +211,11 @@ impl Metrics {
                     self.system.messages_sent += count;
                     self.system.bytes_sent += bytes;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
             DispatcherToMetricsCmd::PacketReceived(listener_id, count, bytes) => {
-                log::info!("{} packetReceived added to #{}", count, listener_id);
+                log::info!("{count} packetReceived added to #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
                     let count = count as i64;
                     let bytes = bytes as i64;
@@ -224,7 +224,7 @@ impl Metrics {
                     self.system.messages_received += count;
                     self.system.bytes_received += bytes;
                 } else {
-                    log::error!("Failed to found listener with id: {}", listener_id);
+                    log::error!("Failed to found listener with id: {listener_id}");
                 }
             }
         }
@@ -234,8 +234,7 @@ impl Metrics {
         // TODO(Shaohua): Send other messages.
         if let Err(err) = self.sys_tree_send_uptime().await {
             log::error!(
-                "Failed to send publish packet from metrics to dispatcher: {:?}",
-                err
+                "Failed to send publish packet from metrics to dispatcher: {err:?}"
             );
         }
     }
@@ -246,7 +245,7 @@ impl Metrics {
                 self.uptime = duration.as_secs();
             }
             Err(err) => {
-                log::error!("Failed to update uptime, got error: {}", err);
+                log::error!("Failed to update uptime, got error: {err}");
             }
         }
     }
@@ -267,7 +266,7 @@ impl Metrics {
         match cmd {
             ServerContextToMetricsCmd::MetricsGetUptime(resp_tx) => {
                 if let Err(err) = resp_tx.send(self.uptime) {
-                    log::error!("Failed to send uptime to server ctx: {:?}", err);
+                    log::error!("Failed to send uptime to server ctx: {err:?}");
                 }
             }
         }

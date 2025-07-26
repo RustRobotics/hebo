@@ -12,7 +12,7 @@ impl GatewayApp {
         &mut self,
         cmd: DispatcherToGatewayCmd,
     ) -> Result<(), Error> {
-        log::info!("cmd: {:?}", cmd);
+        log::info!("cmd: {cmd:?}");
         Ok(())
     }
 }

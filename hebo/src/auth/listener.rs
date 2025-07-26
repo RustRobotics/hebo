@@ -14,7 +14,7 @@ impl AuthApp {
         &mut self,
         cmd: ListenerToAuthCmd,
     ) -> Result<(), Error> {
-        log::info!("AuthApp::handle_listener_cmd(), cmd: {:?}", cmd);
+        log::info!("AuthApp::handle_listener_cmd(), cmd: {cmd:?}");
         match cmd {
             ListenerToAuthCmd::RequestAuth(session_gid, packet) => {
                 self.on_listener_request_auth(session_gid, packet).await
@@ -40,7 +40,7 @@ impl AuthApp {
             false
         };
         if !access_granted {
-            log::error!("AuthApp: Check auth failed, {}:{:?}", username, password);
+            log::error!("AuthApp: Check auth failed, {username}:{password:?}");
         }
         for (sender_listener_id, sender) in &self.listener_senders {
             if *sender_listener_id == session_gid.listener_id() {
@@ -78,7 +78,7 @@ impl AuthApp {
             false
         };
         if !access_granted {
-            log::error!("AuthApp: Check auth failed, {:?}:{:?}", username, password);
+            log::error!("AuthApp: Check auth failed, {username:?}:{password:?}");
         }
         for (sender_listener_id, sender) in &self.listener_senders {
             if *sender_listener_id == session_gid.listener_id() {

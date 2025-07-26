@@ -30,7 +30,7 @@ fn main() -> Result<(), Error> {
     client.publish("hello", QoS::AtMostOnce, b"Hello, world")?;
     loop {
         if let Some(message) = client.wait_for_message()? {
-            log::info!("got message: {:?}", message);
+            log::info!("got message: {message:?}");
             break;
         } else {
             log::info!("No message");

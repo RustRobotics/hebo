@@ -20,7 +20,7 @@ impl Session {
             Ok(fixed_header) => fixed_header,
             Err(err) => {
                 // Disconnect the network if Connect Packet is invalid.
-                log::error!("session: Invalid packet: {:?}, content: {:?}", err, buf);
+                log::error!("session: Invalid packet: {err:?}, content: {buf:?}");
                 self.send_disconnect().await?;
                 return Err(err.into());
             }
@@ -53,7 +53,7 @@ impl Session {
                     self.on_client_publish(buf).await
                 }
             }
-            PacketType::PublishRelease { .. } => {
+            PacketType::PublishRelease => {
                 if self.protocol_level == ProtocolLevel::V5 {
                     self.on_client_publish_release_v5(buf).await
                 } else {
@@ -82,7 +82,7 @@ impl Session {
                 }
             }
             t => {
-                log::warn!("Unhandled msg: {:?}", t);
+                log::warn!("Unhandled msg: {t:?}");
                 self.send_disconnect().await
             }
         }
@@ -136,7 +136,7 @@ impl Session {
                 }
             },
         };
-        log::info!("on_client_connect(), protocol level: {:?}", protocol_level);
+        log::info!("on_client_connect(), protocol level: {protocol_level:?}");
 
         self.protocol_level = protocol_level;
         if protocol_level == ProtocolLevel::V5 {
@@ -345,7 +345,7 @@ impl Session {
             .await
         {
             // Send subscribe ack (failed) to client.
-            log::error!("Failed to send subscribe command to server: {:?}", err);
+            log::error!("Failed to send subscribe command to server: {err:?}");
             let ack = v3::SubscribeAck::Failed;
 
             let subscribe_ack_packet = v3::SubscribeAckPacket::new(packet_id, ack);
@@ -380,7 +380,7 @@ impl Session {
             .send(SessionToListenerCmd::Unsubscribe(self.id, packet))
             .await
         {
-            log::warn!("Failed to send unsubscribe command to server: {:?}", err);
+            log::warn!("Failed to send unsubscribe command to server: {err:?}");
         }
 
         let unsubscribe_ack_packet = v3::UnsubscribeAckPacket::new(packet_id);
@@ -392,7 +392,7 @@ impl Session {
         self.status = Status::Disconnected;
         let cmd = SessionToListenerCmd::Disconnect(self.id);
         if let Err(err) = self.sender.send(cmd).await {
-            log::warn!("Failed to send disconnect command to server: {:?}", err);
+            log::warn!("Failed to send disconnect command to server: {err:?}");
         }
         Ok(())
     }

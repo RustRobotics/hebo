@@ -30,7 +30,7 @@ impl FileAuth {
             let line = line?;
             match Password::parse(&line) {
                 Err(err) => {
-                    log::error!("err: {:?}, line: {}", err, line);
+                    log::error!("err: {err:?}, line: {line}");
                 }
                 Ok(None) => {
                     // continue
@@ -72,7 +72,7 @@ pub fn update_file_hash<P: AsRef<Path>>(password_file: P) -> Result<(), Error> {
         let line = line?;
         match Password::parse_raw_text(&line) {
             Err(err) => {
-                log::error!("err: {:?}, line: {}", err, line);
+                log::error!("err: {err:?}, line: {line}");
             }
             Ok(None) => {
                 // continue
@@ -116,7 +116,7 @@ pub fn add_delete_users<P: AsRef<Path>>(
         let line = line?;
         match Password::parse(&line) {
             Err(err) => {
-                log::error!("Failed to parse line {:?}, got err: {:?}", line, err);
+                log::error!("Failed to parse line {line:?}, got err: {err:?}");
                 return Err(err);
             }
             Ok(None) => {
@@ -132,11 +132,11 @@ pub fn add_delete_users<P: AsRef<Path>>(
     for item in add_users {
         match Password::parse_raw_text(item) {
             Err(err) => {
-                log::error!("Failed to parse pair {:?}, got err: {:?}", item, err);
+                log::error!("Failed to parse pair {item:?}, got err: {err:?}");
                 return Err(err);
             }
             Ok(None) => {
-                log::info!("Ignore empty line: {}", item);
+                log::info!("Ignore empty line: {item}");
                 // continue
             }
             Ok(Some((username, password))) => {
@@ -164,7 +164,7 @@ pub fn add_delete_users<P: AsRef<Path>>(
         .open(password_file.as_ref())?;
     for (username, password) in users {
         let line = password.dump(&username);
-        log::info!("line: {}", line);
+        log::info!("line: {line}");
         let _size = fd.write(line.as_bytes())?;
         let _size = fd.write(b"\n")?;
     }

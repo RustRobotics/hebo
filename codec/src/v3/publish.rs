@@ -111,7 +111,7 @@ impl PublishPacket {
     }
 
     /// Update `retain` flag.
-    pub fn set_retain(&mut self, retain: bool) -> &mut Self {
+    pub const fn set_retain(&mut self, retain: bool) -> &mut Self {
         self.retain = retain;
         self
     }
@@ -158,7 +158,7 @@ impl PublishPacket {
     }
 
     /// The Packet Identifier field is only present in PUBLISH Packets where the `QoS` level is 1 or 2.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }

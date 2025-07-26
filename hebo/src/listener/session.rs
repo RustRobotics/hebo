@@ -16,7 +16,7 @@ use crate::types::{SessionGid, SessionId};
 use crate::Error;
 
 impl Listener {
-    pub(super) fn next_session_id(&mut self) -> SessionId {
+    pub(super) const fn next_session_id(&mut self) -> SessionId {
         self.current_session_id += 1;
         self.current_session_id
     }
@@ -25,7 +25,7 @@ impl Listener {
         &mut self,
         cmd: SessionToListenerCmd,
     ) -> Result<(), Error> {
-        log::info!("Listener::handle_session_cmd: {:?}", cmd);
+        log::info!("Listener::handle_session_cmd: {cmd:?}");
         match cmd {
             SessionToListenerCmd::Connect(session_id, packet) => {
                 self.on_session_connect(session_id, packet).await
@@ -74,9 +74,7 @@ impl Listener {
             let old_session_id = *old_session_id;
             if let Err(err) = self.disconnect_session(old_session_id).await {
                 log::error!(
-                    "Failed to send disconnect cmd to {}, err: {:?}",
-                    old_session_id,
-                    err
+                    "Failed to send disconnect cmd to {old_session_id}, err: {err:?}"
                 );
             }
         }
@@ -109,9 +107,7 @@ impl Listener {
             let old_session_id = *old_session_id;
             if let Err(err) = self.disconnect_session(old_session_id).await {
                 log::error!(
-                    "Failed to send disconnect cmd to {}, err: {:?}",
-                    old_session_id,
-                    err
+                    "Failed to send disconnect cmd to {old_session_id}, err: {err:?}"
                 );
             }
         }
@@ -133,7 +129,7 @@ impl Listener {
         log::info!("Listener::on_session_disconnect()");
         // Delete session info
         if self.session_senders.remove(&session_id).is_none() {
-            log::error!("Failed to remove pipeline with session id: {}", session_id);
+            log::error!("Failed to remove pipeline with session id: {session_id}");
         }
 
         self.dispatcher_sender
@@ -146,7 +142,7 @@ impl Listener {
         log::info!("Listener::on_session_disconnect_v5()");
         // Delete session info
         if self.session_senders.remove(&session_id).is_none() {
-            log::error!("Failed to remove pipeline with session id: {}", session_id);
+            log::error!("Failed to remove pipeline with session id: {session_id}");
         }
 
         self.dispatcher_sender

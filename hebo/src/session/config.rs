@@ -70,7 +70,7 @@ impl SessionConfig {
         self.connect_timeout
     }
 
-    pub fn set_maximum_inflight_messages(&mut self, maximum_inflight_messages: u16) -> &mut Self {
+    pub const fn set_maximum_inflight_messages(&mut self, maximum_inflight_messages: u16) -> &mut Self {
         self.maximum_inflight_messages = maximum_inflight_messages as usize;
         self
     }
@@ -81,7 +81,7 @@ impl SessionConfig {
         self.maximum_inflight_messages
     }
 
-    pub fn set_maximum_packet_size(&mut self, maximum_packet_size: u32) -> &mut Self {
+    pub const fn set_maximum_packet_size(&mut self, maximum_packet_size: u32) -> &mut Self {
         self.maximum_packet_size = maximum_packet_size as usize;
         self
     }
@@ -92,7 +92,7 @@ impl SessionConfig {
         self.maximum_packet_size
     }
 
-    pub fn set_maximum_topic_alias(&mut self, maximum_topic_alias: u16) -> &mut Self {
+    pub const fn set_maximum_topic_alias(&mut self, maximum_topic_alias: u16) -> &mut Self {
         self.maximum_topic_alias = maximum_topic_alias;
         self
     }
@@ -103,7 +103,7 @@ impl SessionConfig {
         self.maximum_topic_alias
     }
 
-    pub fn set_allow_empty_client_id(&mut self, allow_empty_client_id: bool) -> &mut Self {
+    pub const fn set_allow_empty_client_id(&mut self, allow_empty_client_id: bool) -> &mut Self {
         self.allow_empty_client_id = allow_empty_client_id;
         self
     }
@@ -114,7 +114,7 @@ impl SessionConfig {
         self.allow_empty_client_id
     }
 
-    pub fn out_packet_count_add_one(&mut self) {
+    pub const fn out_packet_count_add_one(&mut self) {
         self.out_packet_count += 1;
     }
 
@@ -124,7 +124,7 @@ impl SessionConfig {
         self.out_packet_count
     }
 
-    pub fn renew_last_packet_id(&mut self) -> u16 {
+    pub const fn renew_last_packet_id(&mut self) -> u16 {
         let last_packet_id = self.last_packet_id;
         self.last_packet_id += 1;
         last_packet_id

@@ -61,7 +61,7 @@ impl SubscribeAckPacket {
 
     /// Create a subscribe ack packet with multiple `acknowledgements`.
     #[must_use]
-    pub fn with_vec(packet_id: PacketId, acknowledgements: Vec<SubscribeAck>) -> Self {
+    pub const fn with_vec(packet_id: PacketId, acknowledgements: Vec<SubscribeAck>) -> Self {
         Self {
             packet_id,
             acknowledgements,
@@ -69,7 +69,7 @@ impl SubscribeAckPacket {
     }
 
     /// Update packet id.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }

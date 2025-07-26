@@ -79,7 +79,7 @@ impl ClientInnerV3 {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
                     if n_recv > 0 {
                         if let Err(err) = self.handle_session_packet(&buf).await {
-                            log::error!("err: {:?}", err);
+                            log::error!("err: {err:?}");
                         }
                         buf.clear();
                     }
@@ -87,7 +87,7 @@ impl ClientInnerV3 {
                 _ = timer.tick() => {
                     log::info!("tick()");
                     if let Err(err) = self.ping().await {
-                        log::error!("Ping failed: {:?}", err);
+                        log::error!("Ping failed: {err:?}");
                     }
                 },
             }
@@ -105,7 +105,7 @@ impl ClientInnerV3 {
             PacketType::UnsubscribeAck => self.unsubscribe_ack(buf),
             PacketType::PingResponse => self.on_ping_resp().await,
             t => {
-                log::info!("Unhandled msg: {:?}", t);
+                log::info!("Unhandled msg: {t:?}");
                 Ok(())
             }
         }
@@ -184,7 +184,7 @@ impl ClientInnerV3 {
     /// - `topic` pattern is invalid
     /// - Socket stream returns error
     pub async fn subscribe(&mut self, topic: &str, qos: QoS) -> Result<(), Error> {
-        log::info!("subscribe to: {}", topic);
+        log::info!("subscribe to: {topic}");
         let packet_id = self.next_packet_id();
         self.topics.insert(topic.to_string(), packet_id);
         let packet = SubscribePacket::new(topic, qos, packet_id)?;
@@ -200,7 +200,7 @@ impl ClientInnerV3 {
     /// - `topic` pattern is invalid
     /// - Socket stream returns error
     pub async fn unsubscribe(&mut self, topic: &str) -> Result<(), Error> {
-        log::info!("unsubscribe to: {:?}", topic);
+        log::info!("unsubscribe to: {topic:?}");
         let packet_id = self.next_packet_id();
         let packet = UnsubscribePacket::new(topic, packet_id)?;
         self.unsubscribing_packets.insert(packet_id, packet.clone());
@@ -252,7 +252,7 @@ impl ClientInnerV3 {
         log::info!("on_message()");
         let mut ba = ByteArray::new(buf);
         let packet = PublishPacket::decode(&mut ba)?;
-        log::info!("packet: {:?}", packet);
+        log::info!("packet: {packet:?}");
         //if let Some(cb) = &self.on_message_cb {
         //    cb(self, &packet);
         //}
@@ -288,7 +288,7 @@ impl ClientInnerV3 {
             log::info!("Topic `{}` publish confirmed!", p.topic());
             self.publishing_qos1_packets.remove(&packet.packet_id());
         } else {
-            log::warn!("Failed to find PublishAckPacket: {}", packet_id);
+            log::warn!("Failed to find PublishAckPacket: {packet_id}");
         }
         Ok(())
     }
@@ -303,7 +303,7 @@ impl ClientInnerV3 {
             log::info!("Subscription {:?} confirmed!", p.topics());
             self.subscribing_packets.remove(&packet.packet_id());
         } else {
-            log::warn!("Failed to find SubscribeAckPacket: {}", packet_id);
+            log::warn!("Failed to find SubscribeAckPacket: {packet_id}");
         }
         Ok(())
     }
@@ -314,10 +314,10 @@ impl ClientInnerV3 {
         let packet = UnsubscribeAckPacket::decode(&mut ba)?;
         let packet_id = packet.packet_id();
         if let Some(p) = self.unsubscribing_packets.get(&packet_id) {
-            log::info!("Topics {:?} unsubscribe confirmed!", p);
+            log::info!("Topics {p:?} unsubscribe confirmed!");
             self.unsubscribing_packets.remove(&packet.packet_id());
         } else {
-            log::warn!("Failed to find UnsubscribeAckPacket: {}", packet_id);
+            log::warn!("Failed to find UnsubscribeAckPacket: {packet_id}");
         }
         Ok(())
     }

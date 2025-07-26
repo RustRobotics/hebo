@@ -134,24 +134,24 @@ impl Listener {
         };
         match listener_config.protocol() {
             config::Protocol::Mqtt => {
-                log::info!("bind mqtt://{}", address);
+                log::info!("bind mqtt://{address}");
                 let listener = new_tcp_listener(address, device).await?;
                 new_listener(Protocol::Mqtt(listener))
             }
             config::Protocol::Mqtts => {
-                log::info!("bind mqtts://{}", address);
+                log::info!("bind mqtts://{address}");
                 let config = Self::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
                 let listener = new_tcp_listener(address, device).await?;
                 new_listener(Protocol::Mqtts(listener, acceptor))
             }
             config::Protocol::Ws => {
-                log::info!("bind ws://{}", address);
+                log::info!("bind ws://{address}");
                 let listener = new_tcp_listener(address, device).await?;
                 new_listener(Protocol::Ws(listener))
             }
             config::Protocol::Wss => {
-                log::info!("bind wss://{}", address);
+                log::info!("bind wss://{address}");
                 let config = Self::get_cert_config(&listener_config)?;
                 let acceptor = TlsAcceptor::from(Arc::new(config));
                 let listener = new_tcp_listener(address, device).await?;
@@ -160,7 +160,7 @@ impl Listener {
 
             #[cfg(unix)]
             config::Protocol::Uds => {
-                log::info!("bind uds://{}", address);
+                log::info!("bind uds://{address}");
 
                 // Try to clean up old socket file, not that this operation is not atomic.
                 if let Ok(_attr) = fs::metadata(address) {
@@ -171,7 +171,7 @@ impl Listener {
             }
 
             config::Protocol::Quic => {
-                log::info!("bind quic://{}", address);
+                log::info!("bind quic://{address}");
 
                 let key_file = listener_config
                     .key_file()

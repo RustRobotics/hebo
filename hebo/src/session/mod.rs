@@ -107,10 +107,10 @@ impl Session {
 
             tokio::select! {
                 Ok(n_recv) = self.stream.read_buf(&mut buf) => {
-                    log::info!("n_recv: {}", n_recv);
+                    log::info!("n_recv: {n_recv}");
                     if n_recv > 0 {
                         if let Err(err) = self.handle_client_packet(&buf).await {
-                            log::error!("handle_client_packet() failed: {:?}", err);
+                            log::error!("handle_client_packet() failed: {err:?}");
                             break;
                         }
                         buf.clear();
@@ -118,14 +118,14 @@ impl Session {
                     } else {
                         log::info!("session: Empty packet received, disconnect client, {}", self.id);
                         if let Err(err) = self.send_disconnect().await {
-                            log::error!("session: Failed to send disconnect packet: {:?}", err);
+                            log::error!("session: Failed to send disconnect packet: {err:?}");
                         }
                         break;
                     }
                 }
                 Some(cmd) = self.receiver.recv() => {
                     if let Err(err) = self.handle_listener_cmd(cmd).await {
-                        log::error!("Failed to handle server packet: {:?}", err);
+                        log::error!("Failed to handle server packet: {err:?}");
                     }
                 },
             }
@@ -148,7 +148,7 @@ impl Session {
             {
                 log::warn!("sessoin: keep_alive time reached, disconnect client!");
                 if let Err(err) = self.send_disconnect().await {
-                    log::error!("session: Failed to send disconnect packet: {:?}", err);
+                    log::error!("session: Failed to send disconnect packet: {err:?}");
                 }
                 break;
             }
@@ -204,7 +204,7 @@ impl Session {
         packet.encode(&mut buf)?;
         let n_write = self.stream.write(&buf).await?;
         if n_write != buf.len() {
-            log::error!("packet: {:?}", packet);
+            log::error!("packet: {packet:?}");
             return Err(Error::from_string(
                 ErrorKind::SocketError,
                 format!(

@@ -179,7 +179,7 @@ impl ConnectOptions {
     }
 
     /// Update mqtt protocol level.
-    pub fn set_protocol_level(&mut self, protocol_level: ProtocolLevel) -> &mut Self {
+    pub const fn set_protocol_level(&mut self, protocol_level: ProtocolLevel) -> &mut Self {
         self.protocol_level = protocol_level;
         self
     }
@@ -215,7 +215,7 @@ impl ConnectOptions {
     }
 
     /// Update connection timeout duration.
-    pub fn set_connect_timeout(&mut self, connect_timeout: Duration) -> &mut Self {
+    pub const fn set_connect_timeout(&mut self, connect_timeout: Duration) -> &mut Self {
         self.connect_timeout = connect_timeout;
         self
     }
@@ -227,7 +227,7 @@ impl ConnectOptions {
     }
 
     /// Update keep alive value of network connection.
-    pub fn set_keepalive(&mut self, keep_alive: Duration) -> &mut Self {
+    pub const fn set_keepalive(&mut self, keep_alive: Duration) -> &mut Self {
         self.keep_alive = keep_alive;
         self
     }

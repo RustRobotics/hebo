@@ -12,6 +12,7 @@ use crate::{
 };
 
 /// Text fields within the MQTT Control Packets described later are encoded as UTF-8 strings.
+///
 /// UTF-8 [RFC3629] is an efficient encoding of Unicode [Unicode] characters that
 /// optimizes the encoding of ASCII characters in support of text-based communications.
 ///
@@ -79,13 +80,13 @@ impl StringData {
 
     /// Get byte length in packet.
     #[must_use]
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
         2 + self.0.len()
     }
 
     /// Returns true if string data is empty.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 

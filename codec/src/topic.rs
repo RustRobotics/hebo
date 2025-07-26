@@ -85,19 +85,19 @@ impl Topic {
 
     /// Get topic length.
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.topic.len()
     }
 
     /// Returns true if topic is empty.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.topic.is_empty()
     }
 
     /// Used as byte slice.
     #[must_use]
-    pub fn as_bytes(&self) -> &[u8] {
+    pub const fn as_bytes(&self) -> &[u8] {
         self.topic.as_bytes()
     }
 }
@@ -220,7 +220,7 @@ pub enum TopicPart {
 
 impl TopicPart {
     fn has_wildcard(s: &str) -> bool {
-        s.contains(|c| c == '#' || c == '+')
+        s.contains(['#', '+'])
     }
 
     /// Returns true if topic is used in broker inner only.
@@ -311,7 +311,7 @@ impl PubTopic {
 
     /// Get byte length in packet.
     #[must_use]
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
         2 + self.0.len()
     }
 }
@@ -359,7 +359,7 @@ impl SubTopic {
 
     /// Get byte length in packet.
     #[must_use]
-    pub fn bytes(&self) -> usize {
+    pub const fn bytes(&self) -> usize {
         2 + self.0.len()
     }
 }

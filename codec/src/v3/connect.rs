@@ -175,7 +175,7 @@ impl ConnectPacket {
     }
 
     /// Update connect flags
-    pub fn set_connect_flags(&mut self, flags: ConnectFlags) -> &Self {
+    pub const fn set_connect_flags(&mut self, flags: ConnectFlags) -> &Self {
         self.connect_flags = flags;
         self
     }
@@ -188,7 +188,7 @@ impl ConnectPacket {
     }
 
     /// Update keep alive value in milliseconds.
-    pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
+    pub const fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
         self.keep_alive = KeepAlive::new(keep_alive);
         self
     }

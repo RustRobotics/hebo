@@ -227,7 +227,7 @@ impl ConnectPacket {
     }
 
     /// Update protocol level.
-    pub fn set_protcol_level(&mut self, level: ProtocolLevel) -> &mut Self {
+    pub const fn set_protcol_level(&mut self, level: ProtocolLevel) -> &mut Self {
         self.protocol_level = level;
         self
     }
@@ -239,7 +239,7 @@ impl ConnectPacket {
     }
 
     /// Update connect flags
-    pub fn set_connect_flags(&mut self, flags: ConnectFlags) -> &Self {
+    pub const fn set_connect_flags(&mut self, flags: ConnectFlags) -> &Self {
         self.connect_flags = flags;
         self
     }
@@ -252,7 +252,7 @@ impl ConnectPacket {
     }
 
     /// Update keep-alive value.
-    pub fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
+    pub const fn set_keep_alive(&mut self, keep_alive: u16) -> &mut Self {
         self.keep_alive = KeepAlive::new(keep_alive);
         self
     }
@@ -264,7 +264,7 @@ impl ConnectPacket {
     }
 
     /// Update will-retain flag.
-    pub fn set_will_retain(&mut self, will_retain: bool) -> &mut Self {
+    pub const fn set_will_retain(&mut self, will_retain: bool) -> &mut Self {
         self.connect_flags.set_will_retain(will_retain);
         self
     }
@@ -276,7 +276,7 @@ impl ConnectPacket {
     }
 
     /// Update will-qos value.
-    pub fn set_will_qos(&mut self, qos: QoS) -> &mut Self {
+    pub const fn set_will_qos(&mut self, qos: QoS) -> &mut Self {
         self.connect_flags.set_will_qos(qos);
         self
     }
@@ -288,7 +288,7 @@ impl ConnectPacket {
     }
 
     /// Update will flag.
-    pub fn set_will(&mut self, will: bool) -> &mut Self {
+    pub const fn set_will(&mut self, will: bool) -> &mut Self {
         self.connect_flags.set_will(will);
         self
     }
@@ -300,7 +300,7 @@ impl ConnectPacket {
     }
 
     /// Update clean-session flag.
-    pub fn set_clean_session(&mut self, clean_session: bool) -> &mut Self {
+    pub const fn set_clean_session(&mut self, clean_session: bool) -> &mut Self {
         self.connect_flags.set_clean_session(clean_session);
         self
     }
@@ -312,7 +312,7 @@ impl ConnectPacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn properties_mut(&mut self) -> &mut Properties {
+    pub const fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -384,7 +384,7 @@ impl ConnectPacket {
     }
 
     /// Get a mutable reference to will property list.
-    pub fn will_properties_mut(&mut self) -> &mut Properties {
+    pub const fn will_properties_mut(&mut self) -> &mut Properties {
         &mut self.will_properties
     }
 
@@ -536,15 +536,14 @@ impl DecodePacket for ConnectPacket {
         let properties = match properties {
             Ok(properties) => properties,
             Err(err) => {
-                log::error!("err: {:?}", err);
+                log::error!("err: {err:?}");
                 return Err(DecodeError::InvalidPropertyType);
             }
         };
         if let Err(property_type) = check_property_type_list(properties.props(), CONNECT_PROPERTIES)
         {
             log::error!(
-                "v5/ConnectPacket: property type {:?} cannot be used in properties!",
-                property_type
+                "v5/ConnectPacket: property type {property_type:?} cannot be used in properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }
@@ -565,8 +564,7 @@ impl DecodePacket for ConnectPacket {
             check_property_type_list(will_properties.props(), CONNECT_WILL_PROPERTIES)
         {
             log::error!(
-                "v5/ConnectPacket: property type {:?} cannot be used in will properties!",
-                property_type
+                "v5/ConnectPacket: property type {property_type:?} cannot be used in will properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }

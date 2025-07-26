@@ -64,7 +64,7 @@ impl UnsubscribeAckPacket {
     }
 
     /// Update packet id.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) {
         self.packet_id = packet_id;
     }
 
@@ -75,7 +75,7 @@ impl UnsubscribeAckPacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn properties_mut(&mut self) -> &mut Properties {
+    pub const fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -85,7 +85,7 @@ impl UnsubscribeAckPacket {
         &self.properties
     }
 
-    pub fn reasons_mut(&mut self) -> &mut Vec<ReasonCode> {
+    pub const fn reasons_mut(&mut self) -> &mut Vec<ReasonCode> {
         &mut self.reasons
     }
 
@@ -139,8 +139,7 @@ impl DecodePacket for UnsubscribeAckPacket {
                 check_property_type_list(properties.props(), UNSUBSCRIBE_ACK_PROPERTIES)
             {
                 log::error!(
-                    "v5/UnsubscribeAckPacket: property type {:?} cannot be used in properties!",
-                    property_type
+                    "v5/UnsubscribeAckPacket: property type {property_type:?} cannot be used in properties!"
                 );
                 return Err(DecodeError::InvalidPropertyType);
             }
@@ -155,7 +154,7 @@ impl DecodePacket for UnsubscribeAckPacket {
         while remaining_length < fixed_header.remaining_length() {
             let reason = ReasonCode::decode(ba)?;
             if !UNSUBSCRIBE_REASONS.contains(&reason) {
-                log::error!("Invalid reason code: {:?}", reason);
+                log::error!("Invalid reason code: {reason:?}");
                 return Err(DecodeError::InvalidReasonCode);
             }
             reasons.push(reason);

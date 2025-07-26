@@ -10,6 +10,7 @@ use crate::{
 };
 
 /// The Client request to unsubscribe topics from the Server.
+///
 /// When the Server receives this packet, no more Publish packet will be sent to the Client.
 /// Unfinished `QoS` 1 and `QoS` 2 packets will be delivered as usual.
 ///
@@ -88,7 +89,7 @@ impl UnsubscribePacket {
     }
 
     /// Update packet id.
-    pub fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
+    pub const fn set_packet_id(&mut self, packet_id: PacketId) -> &mut Self {
         self.packet_id = packet_id;
         self
     }
@@ -100,7 +101,7 @@ impl UnsubscribePacket {
     }
 
     /// Get a mutable reference to property list.
-    pub fn properties_mut(&mut self) -> &mut Properties {
+    pub const fn properties_mut(&mut self) -> &mut Properties {
         &mut self.properties
     }
 
@@ -142,7 +143,7 @@ impl UnsubscribePacket {
     }
 
     /// Get a mutable references to unsubscribed topic patterns.
-    pub fn mut_topics(&mut self) -> &mut Vec<SubTopic> {
+    pub const fn mut_topics(&mut self) -> &mut Vec<SubTopic> {
         &mut self.topics
     }
 
@@ -176,8 +177,7 @@ impl DecodePacket for UnsubscribePacket {
             check_property_type_list(properties.props(), UNSUBSCRIBE_PROPERTIES)
         {
             log::error!(
-                "v5/UnsubscribePacket: property type {:?} cannot be used in properties!",
-                property_type
+                "v5/UnsubscribePacket: property type {property_type:?} cannot be used in properties!"
             );
             return Err(DecodeError::InvalidPropertyType);
         }

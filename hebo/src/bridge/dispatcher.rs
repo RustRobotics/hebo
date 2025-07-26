@@ -13,7 +13,7 @@ impl BridgeApp {
         &mut self,
         cmd: DispatcherToBridgeCmd,
     ) -> Result<(), Error> {
-        log::info!("cmd: {:?}", cmd);
+        log::info!("cmd: {cmd:?}");
         Ok(())
     }
 }

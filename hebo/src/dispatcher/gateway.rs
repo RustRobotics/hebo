@@ -10,6 +10,6 @@ use crate::commands::GatewayToDispatcherCmd;
 impl Dispatcher {
     #[allow(clippy::unused_async)]
     pub(super) async fn handle_gateway_cmd(&mut self, cmd: GatewayToDispatcherCmd) {
-        log::info!("cmd: {:?}", cmd);
+        log::info!("cmd: {cmd:?}");
     }
 }

@@ -148,11 +148,11 @@ impl ServerContext {
     /// Notify server process to reload config by sending a signal.
     #[cfg(unix)]
     fn send_signal(&mut self, sig: i32) -> Result<(), Error> {
-        log::info!("send_signal() {}", sig);
+        log::info!("send_signal() {sig}");
         let mut fd = File::open(self.config.general().pid_file())?;
         let mut pid_str = String::new();
         fd.read_to_string(&mut pid_str)?;
-        log::info!("pid str: {}", pid_str);
+        log::info!("pid str: {pid_str}");
         let pid = pid_str.parse::<i32>().map_err(|err| {
             Error::from_string(
                 ErrorKind::PidError,
@@ -286,7 +286,7 @@ impl ServerContext {
             tokio::select! {
                 Some(cmd) = self.dashboard_receiver.recv() => {
                     if let Err(err) = self.handle_dashboard_cmd(cmd).await {
-                        log::error!("Failed to handle dashboard cmd: {:?}", err);
+                        log::error!("Failed to handle dashboard cmd: {err:?}");
                     }
                 }
                 Some(_n) = sigusr1_stream.recv() => {
