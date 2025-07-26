@@ -238,12 +238,12 @@ impl ClientInnerV3 {
         }
     }
 
-    async fn on_connect(&mut self) -> Result<(), Error> {
+    async fn on_connect(&self) -> Result<(), Error> {
         log::info!("on_connect()");
         todo!()
     }
 
-    fn on_disconnect(&mut self) -> Result<(), Error> {
+    fn on_disconnect(&self) -> Result<(), Error> {
         log::info!("on_disconnect()");
         todo!()
     }

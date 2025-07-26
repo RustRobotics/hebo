@@ -50,7 +50,7 @@ fn enable_fast_open(socket_fd: RawFd) -> Result<(), Error> {
     // For the others, just a boolean value for enable and disable.
     #[cfg(not(unix))]
     let queue_len: i32 = 1;
-    let queue_len_ptr = std::ptr::addr_of!(queue_len) as *const c_void;
+    let queue_len_ptr = std::ptr::addr_of!(queue_len).cast::<c_void>();
 
     unsafe {
         #[allow(clippy::cast_possible_truncation)]

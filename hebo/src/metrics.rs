@@ -86,13 +86,16 @@ impl Metrics {
         }
     }
 
-    #[allow(clippy::too_many_lines)]
-    #[allow(clippy::cast_possible_wrap)]
+    #[allow(
+        clippy::cast_possible_wrap,
+        clippy::cognitive_complexity,
+        clippy::too_many_lines
+    )]
     async fn handle_dispatcher_cmd(&mut self, cmd: DispatcherToMetricsCmd) {
         match cmd {
             DispatcherToMetricsCmd::ListenerAdded(listener_id, address) => {
                 log::info!("Add listener id: {listener_id}, addr: {address:?}");
-                assert!(self.listeners.get(&listener_id).is_none());
+                assert!(!self.listeners.contains_key(&listener_id));
                 let listener_cache = ListenerMetrics::new(listener_id, address);
                 self.listeners.insert(listener_id, listener_cache);
                 self.system.listener_count += 1;
@@ -105,6 +108,7 @@ impl Metrics {
             DispatcherToMetricsCmd::SessionAdded(listener_id, count) => {
                 log::info!("{count} sessions added to #{listener_id}");
                 if let Some(listener) = self.listeners.get_mut(&listener_id) {
+                    // FIXME(Shaohua): Fix type cast warning
                     let count = count as i64;
                     listener.sessions += count;
                     self.system.sessions += count;
@@ -230,12 +234,10 @@ impl Metrics {
         }
     }
 
-    async fn sys_tree_handle_timeout(&mut self) {
+    async fn sys_tree_handle_timeout(&self) {
         // TODO(Shaohua): Send other messages.
         if let Err(err) = self.sys_tree_send_uptime().await {
-            log::error!(
-                "Failed to send publish packet from metrics to dispatcher: {err:?}"
-            );
+            log::error!("Failed to send publish packet from metrics to dispatcher: {err:?}");
         }
     }
 
@@ -250,7 +252,7 @@ impl Metrics {
         }
     }
 
-    async fn sys_tree_send_uptime(&mut self) -> Result<(), Error> {
+    async fn sys_tree_send_uptime(&self) -> Result<(), Error> {
         //log::info!("metrics::sys_tree_send_uptime()");
         let msg = format!("{}", self.uptime).into_bytes();
         let packet = v3::PublishPacket::new(UPTIME, QoS::AtMostOnce, &msg)?;
@@ -262,7 +264,7 @@ impl Metrics {
     }
 
     /// Server context handler
-    async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToMetricsCmd) {
+    async fn handle_server_ctx_cmd(&self, cmd: ServerContextToMetricsCmd) {
         match cmd {
             ServerContextToMetricsCmd::MetricsGetUptime(resp_tx) => {
                 if let Err(err) = resp_tx.send(self.uptime) {

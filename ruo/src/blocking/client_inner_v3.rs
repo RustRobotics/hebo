@@ -221,7 +221,7 @@ impl ClientInnerV3 {
     }
 
     #[allow(clippy::unused_self)]
-    fn on_publish_message(&mut self, ba: &mut ByteArray) -> Result<PublishMessage, Error> {
+    fn on_publish_message(&self, ba: &mut ByteArray) -> Result<PublishMessage, Error> {
         // TODO(Shaohua): Support QoS1 / QoS2.
         let packet = PublishPacket::decode(ba)?;
         Ok(PublishMessage {

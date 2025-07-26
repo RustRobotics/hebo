@@ -54,10 +54,10 @@ pub struct ConnectFlags {
     /// Server side of Session State consists of:
     /// * Client subscriptions
     /// * `QoS` 1 and `QoS` 2 messages which have been sent to subscribed Clients,
-    /// but have not been acknowledged yet.
+    ///   but have not been acknowledged yet.
     /// * `QoS` 1 and `QoS` 2 messages pending transmission to the Client.
     /// * `QoS` 2 messages which have been received from the Clients,
-    /// but have not been fully acknowledged yet.
+    ///   but have not been fully acknowledged yet.
     clean_session: bool,
 }
 

@@ -10,10 +10,7 @@ use crate::error::{Error, ErrorKind};
 use crate::types::SessionGid;
 
 impl AuthApp {
-    pub(super) async fn handle_listener_cmd(
-        &mut self,
-        cmd: ListenerToAuthCmd,
-    ) -> Result<(), Error> {
+    pub(super) async fn handle_listener_cmd(&self, cmd: ListenerToAuthCmd) -> Result<(), Error> {
         log::info!("AuthApp::handle_listener_cmd(), cmd: {cmd:?}");
         match cmd {
             ListenerToAuthCmd::RequestAuth(session_gid, packet) => {
@@ -26,7 +23,7 @@ impl AuthApp {
     }
 
     async fn on_listener_request_auth(
-        &mut self,
+        &self,
         session_gid: SessionGid,
         packet: v3::ConnectPacket,
     ) -> Result<(), Error> {
@@ -64,7 +61,7 @@ impl AuthApp {
     }
 
     async fn on_listener_request_auth_v5(
-        &mut self,
+        &self,
         session_gid: SessionGid,
         packet: v5::ConnectPacket,
     ) -> Result<(), Error> {

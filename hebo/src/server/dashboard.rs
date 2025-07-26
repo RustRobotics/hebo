@@ -13,7 +13,7 @@ use crate::types::Uptime;
 
 impl ServerContext {
     pub(crate) async fn handle_dashboard_cmd(
-        &mut self,
+        &self,
         cmd: DashboardToServerContexCmd,
     ) -> Result<(), Error> {
         match cmd {
@@ -23,10 +23,7 @@ impl ServerContext {
         }
     }
 
-    async fn handle_metrics_uptime(
-        &mut self,
-        resp_tx: oneshot::Sender<Uptime>,
-    ) -> Result<(), Error> {
+    async fn handle_metrics_uptime(&self, resp_tx: oneshot::Sender<Uptime>) -> Result<(), Error> {
         let (resp2_tx, resp2_rx) = oneshot::channel();
 
         self.metrics_sender

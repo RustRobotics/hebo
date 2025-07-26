@@ -11,7 +11,7 @@ use crate::types::{ListenerId, SessionId, SessionInfo};
 
 impl BackendsApp {
     pub(super) async fn handle_dispatcher_cmd(
-        &mut self,
+        &self,
         cmd: DispatcherToBackendsCmd,
     ) -> Result<(), Error> {
         log::info!("cmd: {cmd:?}");
@@ -26,14 +26,14 @@ impl BackendsApp {
     }
 
     #[allow(clippy::unused_async)]
-    async fn handle_session_added(&mut self, session: SessionInfo) -> Result<(), Error> {
+    async fn handle_session_added(&self, session: SessionInfo) -> Result<(), Error> {
         log::info!("session added: {}", session.session_id);
         Ok(())
     }
 
     #[allow(clippy::unused_async)]
     async fn handle_session_removed(
-        &mut self,
+        &self,
         listener_id: ListenerId,
         session_id: SessionId,
     ) -> Result<(), Error> {

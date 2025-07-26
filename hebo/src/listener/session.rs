@@ -73,9 +73,7 @@ impl Listener {
         if let Some(old_session_id) = old_session_id {
             let old_session_id = *old_session_id;
             if let Err(err) = self.disconnect_session(old_session_id).await {
-                log::error!(
-                    "Failed to send disconnect cmd to {old_session_id}, err: {err:?}"
-                );
+                log::error!("Failed to send disconnect cmd to {old_session_id}, err: {err:?}");
             }
         }
 
@@ -106,9 +104,7 @@ impl Listener {
         if let Some(old_session_id) = old_session_id {
             let old_session_id = *old_session_id;
             if let Err(err) = self.disconnect_session(old_session_id).await {
-                log::error!(
-                    "Failed to send disconnect cmd to {old_session_id}, err: {err:?}"
-                );
+                log::error!("Failed to send disconnect cmd to {old_session_id}, err: {err:?}");
             }
         }
 
@@ -152,7 +148,7 @@ impl Listener {
     }
 
     async fn on_session_subscribe(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v3::SubscribePacket,
     ) -> Result<(), Error> {
@@ -162,7 +158,7 @@ impl Listener {
     }
 
     async fn on_session_subscribe_v5(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v5::SubscribePacket,
     ) -> Result<(), Error> {
@@ -172,7 +168,7 @@ impl Listener {
     }
 
     async fn on_session_unsubscribe(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v3::UnsubscribePacket,
     ) -> Result<(), Error> {
@@ -188,7 +184,7 @@ impl Listener {
     }
 
     async fn on_session_unsubscribe_v5(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v5::UnsubscribePacket,
     ) -> Result<(), Error> {
@@ -204,7 +200,7 @@ impl Listener {
     }
 
     async fn on_session_publish(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v3::PublishPacket,
     ) -> Result<(), Error> {
@@ -214,7 +210,7 @@ impl Listener {
     }
 
     async fn on_session_publish_v5(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v5::PublishPacket,
     ) -> Result<(), Error> {
@@ -224,7 +220,7 @@ impl Listener {
     }
 
     /// Send disconnect cmd to session.
-    async fn disconnect_session(&mut self, session_id: SessionId) -> Result<(), Error> {
+    async fn disconnect_session(&self, session_id: SessionId) -> Result<(), Error> {
         let cmd = ListenerToSessionCmd::Disconnect;
         if let Some(session_sender) = self.session_senders.get(&session_id) {
             session_sender.send(cmd).await.map_err(Into::into)
@@ -234,7 +230,7 @@ impl Listener {
     }
 
     pub(crate) async fn session_send_connect_ack(
-        &mut self,
+        &self,
         session_id: SessionId,
         reason: v3::ConnectReturnCode,
         cached_session: Option<CachedSession>,
@@ -250,7 +246,7 @@ impl Listener {
     }
 
     pub(crate) async fn session_send_connect_ack_v5(
-        &mut self,
+        &self,
         session_id: SessionId,
         reason: v5::ReasonCode,
         cached_session: Option<CachedSession>,
@@ -266,7 +262,7 @@ impl Listener {
     }
 
     pub(super) async fn session_send_publish_ack(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v3::SubscribeAckPacket,
     ) -> Result<(), Error> {
@@ -279,7 +275,7 @@ impl Listener {
     }
 
     pub(super) async fn session_send_publish_ack_v5(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v5::SubscribeAckPacket,
     ) -> Result<(), Error> {

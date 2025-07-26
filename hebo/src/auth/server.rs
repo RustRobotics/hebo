@@ -9,7 +9,7 @@ use crate::commands::ServerContextToAuthCmd;
 
 impl AuthApp {
     #[allow(clippy::unused_async)]
-    pub(super) async fn handle_server_ctx_cmd(&mut self, cmd: ServerContextToAuthCmd) {
+    pub(super) async fn handle_server_ctx_cmd(&self, cmd: ServerContextToAuthCmd) {
         log::info!("cmd: {cmd:?}");
     }
 }

@@ -2,7 +2,7 @@
 // Use of this source is governed by Apache-2.0 License that can be found
 // in the LICENSE file.
 
-#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::module_name_repetitions, clippy::struct_field_names)]
 
 use codec::{EncodePacket, Packet, PacketId, PacketType, ProtocolLevel};
 use std::collections::HashSet;
@@ -84,6 +84,7 @@ impl Session {
         }
     }
 
+    #[allow(clippy::cognitive_complexity)]
     pub async fn run_loop(mut self) {
         // TODO(Shaohua): Set buffer cap based on settings
         let mut buf = Vec::with_capacity(1024);
@@ -167,7 +168,6 @@ impl Session {
         }
 
         log::info!("Session {} exit main loop", self.id);
-
         // Now session object goes out of scope and stream is dropped.
     }
 

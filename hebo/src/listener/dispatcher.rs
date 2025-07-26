@@ -14,7 +14,7 @@ use crate::types::SessionId;
 
 impl Listener {
     pub(super) async fn handle_dispatcher_cmd(
-        &mut self,
+        &self,
         cmd: DispatcherToListenerCmd,
     ) -> Result<(), Error> {
         match cmd {
@@ -43,7 +43,7 @@ impl Listener {
     }
 
     async fn on_dispatcher_check_cached_session(
-        &mut self,
+        &self,
         session_id: SessionId,
         protocol_level: ProtocolLevel,
         cached_session: Option<CachedSession>,
@@ -62,7 +62,7 @@ impl Listener {
     }
 
     async fn on_dispatcher_publish(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v3::PublishPacket,
     ) -> Result<(), Error> {
@@ -75,7 +75,7 @@ impl Listener {
     }
 
     async fn on_dispatcher_publish_v5(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v5::PublishPacket,
     ) -> Result<(), Error> {
@@ -88,7 +88,7 @@ impl Listener {
     }
 
     async fn on_dispatcher_subscribe_ack(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v3::SubscribeAckPacket,
     ) -> Result<(), Error> {
@@ -96,7 +96,7 @@ impl Listener {
     }
 
     async fn on_dispatcher_subscribe_ack_v5(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v5::SubscribeAckPacket,
     ) -> Result<(), Error> {

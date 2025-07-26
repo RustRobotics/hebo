@@ -12,7 +12,7 @@ use crate::error::Error;
 use crate::types::{SessionGid, SessionId};
 
 impl Listener {
-    pub(super) async fn handle_acl_cmd(&mut self, cmd: AclToListenerCmd) -> Result<(), Error> {
+    pub(super) async fn handle_acl_cmd(&self, cmd: AclToListenerCmd) -> Result<(), Error> {
         match cmd {
             AclToListenerCmd::PublishAck(session_id, packet, accepted) => {
                 self.on_acl_publish_ack(session_id, packet, accepted).await
@@ -33,7 +33,7 @@ impl Listener {
     }
 
     async fn on_acl_publish_ack(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v3::PublishPacket,
         accepted: bool,
@@ -46,9 +46,7 @@ impl Listener {
                 );
             }
         } else {
-            log::error!(
-                "listener: Failed to find session sender with id: {session_id}"
-            );
+            log::error!("listener: Failed to find session sender with id: {session_id}");
         }
 
         // If ACL passed, send publish packet to dispatcher layer.
@@ -60,7 +58,7 @@ impl Listener {
     }
 
     async fn on_acl_publish_ack_v5(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v5::PublishPacket,
         accepted: bool,
@@ -74,9 +72,7 @@ impl Listener {
                 );
             }
         } else {
-            log::error!(
-                "listener: Failed to find session sender with id: {session_id}"
-            );
+            log::error!("listener: Failed to find session sender with id: {session_id}");
         }
 
         // If ACL passed, send publish packet to dispatcher layer.
@@ -88,7 +84,7 @@ impl Listener {
     }
 
     async fn on_acl_subscribe_ack(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v3::SubscribePacket,
         acks: Vec<v3::SubscribeAck>,
@@ -110,7 +106,7 @@ impl Listener {
     }
 
     async fn on_acl_subscribe_ack_v5(
-        &mut self,
+        &self,
         session_id: SessionId,
         packet: v5::SubscribePacket,
         reasons: Vec<v5::ReasonCode>,

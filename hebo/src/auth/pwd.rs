@@ -38,6 +38,7 @@ impl Hash {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(clippy::struct_field_names)]
 pub struct Password {
     salt: Salt,
     password_hash: Hash,

@@ -17,6 +17,7 @@ use crate::{
 /// * `FixedHeader`
 /// * `VariableHeader`
 /// * `Payload`
+///
 /// Note that fixed header part is same in all packets so that we just ignore it.
 ///
 /// Basic struct of `ConnectPacket` is as below:

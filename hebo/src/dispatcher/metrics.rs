@@ -9,7 +9,7 @@ use crate::commands::{DispatcherToMetricsCmd, MetricsToDispatcherCmd};
 use crate::types::ListenerId;
 
 impl Dispatcher {
-    pub(super) async fn handle_metrics_cmd(&mut self, cmd: MetricsToDispatcherCmd) {
+    pub(super) async fn handle_metrics_cmd(&self, cmd: MetricsToDispatcherCmd) {
         match cmd {
             MetricsToDispatcherCmd::Publish(packet) => {
                 self.publish_packet_to_sub_trie(&packet).await;
@@ -22,7 +22,7 @@ impl Dispatcher {
 
     #[allow(dead_code)]
     pub(super) async fn metrics_publish_packet_sent(
-        &mut self,
+        &self,
         listener_id: ListenerId,
         count: usize,
         bytes: usize,
@@ -36,65 +36,47 @@ impl Dispatcher {
             ))
             .await
         {
-            log::error!(
-                "Dispatcher: Failed to send UpdatePublishPacket, err: {err:?}"
-            );
+            log::error!("Dispatcher: Failed to send UpdatePublishPacket, err: {err:?}");
         }
     }
 
-    pub(super) async fn metrics_on_session_added(&mut self, listener_id: ListenerId) {
+    pub(super) async fn metrics_on_session_added(&self, listener_id: ListenerId) {
         if let Err(err) = self
             .metrics_sender
             .send(DispatcherToMetricsCmd::SessionAdded(listener_id, 1))
             .await
         {
-            log::error!(
-                "Dispatcher: Failed to send SessionAdded cmd, err: {err:?}"
-            );
+            log::error!("Dispatcher: Failed to send SessionAdded cmd, err: {err:?}");
         }
     }
 
-    pub(super) async fn metrics_on_session_removed(&mut self, listener_id: ListenerId) {
+    pub(super) async fn metrics_on_session_removed(&self, listener_id: ListenerId) {
         if let Err(err) = self
             .metrics_sender
             .send(DispatcherToMetricsCmd::SessionRemoved(listener_id, 1))
             .await
         {
-            log::error!(
-                "Dispatcher: Failed to send SessionRemoved cmd, err: {err:?}"
-            );
+            log::error!("Dispatcher: Failed to send SessionRemoved cmd, err: {err:?}");
         }
     }
 
-    pub(super) async fn metrics_on_subscription_added(
-        &mut self,
-        listener_id: ListenerId,
-        n: usize,
-    ) {
+    pub(super) async fn metrics_on_subscription_added(&self, listener_id: ListenerId, n: usize) {
         if let Err(err) = self
             .metrics_sender
             .send(DispatcherToMetricsCmd::SubscriptionsAdded(listener_id, n))
             .await
         {
-            log::error!(
-                "Dispatcher: Failed to send SubscriptionsAdded cmd, err: {err:?}"
-            );
+            log::error!("Dispatcher: Failed to send SubscriptionsAdded cmd, err: {err:?}");
         }
     }
 
-    pub(super) async fn metrics_on_subscription_removed(
-        &mut self,
-        listener_id: ListenerId,
-        n: usize,
-    ) {
+    pub(super) async fn metrics_on_subscription_removed(&self, listener_id: ListenerId, n: usize) {
         if let Err(err) = self
             .metrics_sender
             .send(DispatcherToMetricsCmd::SubscriptionsRemoved(listener_id, n))
             .await
         {
-            log::error!(
-                "Dispatcher: Failed to send SubscriptionsRemoved cmd, err: {err:?}"
-            );
+            log::error!("Dispatcher: Failed to send SubscriptionsRemoved cmd, err: {err:?}");
         }
     }
 }

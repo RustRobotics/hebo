@@ -164,7 +164,7 @@ impl SubTrie {
         )
     }
 
-    pub fn match_packet(&mut self, packet: &v3::PublishPacket) -> Vec<SessionGid> {
+    pub fn match_packet(&self, packet: &v3::PublishPacket) -> Vec<SessionGid> {
         let mut vec = vec![];
         let topic = packet.topic();
         for (session_gid, topic_patterns) in &self.map {
@@ -178,7 +178,7 @@ impl SubTrie {
         vec
     }
 
-    pub fn match_packet_v5(&mut self, packet: &v5::PublishPacket) -> Vec<SessionGid> {
+    pub fn match_packet_v5(&self, packet: &v5::PublishPacket) -> Vec<SessionGid> {
         let mut vec = vec![];
         let topic = packet.topic();
         for (session_gid, topic_patterns) in &self.map {
@@ -194,7 +194,7 @@ impl SubTrie {
 }
 
 impl Dispatcher {
-    pub(super) async fn publish_packet_to_sub_trie(&mut self, packet: &v3::PublishPacket) {
+    pub(super) async fn publish_packet_to_sub_trie(&self, packet: &v3::PublishPacket) {
         // match topic in trie
         for session_gid in self.sub_trie.match_packet(packet) {
             // send packet to listener
@@ -217,7 +217,7 @@ impl Dispatcher {
         }
     }
 
-    pub(super) async fn publish_packet_to_sub_trie_v5(&mut self, packet: &v5::PublishPacket) {
+    pub(super) async fn publish_packet_to_sub_trie_v5(&self, packet: &v5::PublishPacket) {
         // match topic in trie
         for session_gid in self.sub_trie.match_packet_v5(packet) {
             // send packet to listener

@@ -107,6 +107,7 @@ pub fn add_delete_users<P: AsRef<Path>>(
 ) -> Result<(), Error> {
     let fd = OpenOptions::new()
         .create(true)
+        .truncate(false)
         .read(true)
         .write(true)
         .open(password_file.as_ref())?;

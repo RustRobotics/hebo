@@ -147,7 +147,7 @@ impl ServerContext {
 
     /// Notify server process to reload config by sending a signal.
     #[cfg(unix)]
-    fn send_signal(&mut self, sig: i32) -> Result<(), Error> {
+    fn send_signal(&self, sig: i32) -> Result<(), Error> {
         log::info!("send_signal() {sig}");
         let mut fd = File::open(self.config.general().pid_file())?;
         let mut pid_str = String::new();
@@ -157,10 +157,8 @@ impl ServerContext {
             Error::from_string(
                 ErrorKind::PidError,
                 format!(
-                    "Failed to parse pid {} from file {:?}, err: {:?}",
-                    pid_str,
-                    &self.config.general().pid_file(),
-                    err
+                    "Failed to parse pid {pid_str} from file {}, err: {err}",
+                    &self.config.general().pid_file().display(),
                 ),
             )
         })?;
@@ -186,9 +184,8 @@ impl ServerContext {
             Error::from_string(
                 ErrorKind::IoError,
                 format!(
-                    "Failed to write pid to file {:?}, got err: {:?}",
-                    &self.config.general().pid_file(),
-                    err
+                    "Failed to write pid to file {}, got err: {err}",
+                    &self.config.general().pid_file().display(),
                 ),
             )
         })?;

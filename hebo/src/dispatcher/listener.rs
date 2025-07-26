@@ -70,11 +70,11 @@ impl Dispatcher {
         }
     }
 
-    pub(super) async fn on_listener_publish(&mut self, packet: &v3::PublishPacket) {
+    pub(super) async fn on_listener_publish(&self, packet: &v3::PublishPacket) {
         self.publish_packet_to_sub_trie(packet).await;
     }
 
-    pub(super) async fn on_listener_publish_v5(&mut self, packet: &v5::PublishPacket) {
+    pub(super) async fn on_listener_publish_v5(&self, packet: &v5::PublishPacket) {
         self.publish_packet_to_sub_trie_v5(packet).await;
     }
 

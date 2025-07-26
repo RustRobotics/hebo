@@ -14,7 +14,7 @@ use tokio::net::TcpStream;
 use tokio::net::UnixStream;
 use tokio_rustls::client::TlsStream;
 use tokio_rustls::rustls;
-use tokio_tungstenite::{self, WebSocketStream, tungstenite::protocol::Message};
+use tokio_tungstenite::{self, tungstenite::protocol::Message, WebSocketStream};
 
 #[cfg(unix)]
 use crate::connect_options::UdsConnect;
@@ -87,9 +87,10 @@ impl Stream {
                 root_store.add_parsable_certificates(pem_certs);
             }
             TlsType::CASigned => {
-                root_store = rustls::RootCertStore::from_iter(
-                    webpki_roots::TLS_SERVER_ROOTS.iter().cloned(),
-                );
+                root_store = webpki_roots::TLS_SERVER_ROOTS
+                    .iter()
+                    .cloned()
+                    .collect::<rustls::RootCertStore>();
             }
         }
         let config_builder = rustls::ClientConfig::builder().with_root_certificates(root_store);
@@ -98,7 +99,9 @@ impl Stream {
         let connector = tokio_rustls::TlsConnector::from(rc_client_config);
         let tcp_stream = TcpStream::connect(server_address).await?;
         // TODO(Shaohua): Convert error type.
-        let domain = rustls::pki_types::ServerName::try_from(server_domain).unwrap().to_owned();
+        let domain = rustls::pki_types::ServerName::try_from(server_domain)
+            .unwrap()
+            .to_owned();
 
         // TODO(Shaohua): Convert error type.
         let tls_stream = connector

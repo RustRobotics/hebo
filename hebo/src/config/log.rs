@@ -9,6 +9,7 @@ use std::path::Path;
 use crate::error::{Error, ErrorKind};
 
 #[derive(Debug, Deserialize, Clone)]
+#[allow(clippy::struct_field_names)]
 pub struct Log {
     /// Alaso print log to console.
     ///

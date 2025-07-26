@@ -22,7 +22,7 @@ impl CachedSession {
 }
 
 impl Session {
-    pub(crate) fn load_cached_session(&mut self, _cached_session: &CachedSession) {
+    pub(crate) fn load_cached_session(&self, _cached_session: &CachedSession) {
         // Do nothing currently.
         todo!()
     }
