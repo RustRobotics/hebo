@@ -167,12 +167,6 @@ impl From<rustls::Error> for Error {
     }
 }
 
-impl From<openssl::error::ErrorStack> for Error {
-    fn from(err: openssl::error::ErrorStack) -> Self {
-        Self::from_string(ErrorKind::SSLError, format!("{err:?}"))
-    }
-}
-
 impl From<base64::DecodeError> for Error {
     fn from(err: base64::DecodeError) -> Self {
         Self::from_string(ErrorKind::FormatError, format!("{err:?}"))
@@ -237,7 +231,10 @@ impl From<oneshot::error::RecvError> for Error {
 
 impl From<quinn::ClosedStream> for Error {
     fn from(err: quinn::ClosedStream) -> Self {
-        Self::from_string(ErrorKind::IoError, format!("Quic closed stream err: {err:?}"))
+        Self::from_string(
+            ErrorKind::IoError,
+            format!("Quic closed stream err: {err:?}"),
+        )
     }
 }
 

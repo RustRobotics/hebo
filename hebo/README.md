@@ -18,7 +18,6 @@ First install dependencies:
 ```bash
 sudo apt install -y \
   gcc \
-  libssl-dev \
   libhiredis-dev \
   libmongoc-dev \
   libmariadb-dev \
@@ -26,10 +25,6 @@ sudo apt install -y \
 ```
 
 ## Build on Windows
-Install [precompiled openssl](https://slproweb.com/products/Win32OpenSSL.html) is the easiest way.
-
-For more information, 
-see [openssl document](https://docs.rs/crate/openssl-sys/0.9.19)
 
 ## License
 hebo is [Apache-2.0 licensed](LICENSE).

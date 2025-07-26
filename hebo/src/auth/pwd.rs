@@ -3,8 +3,8 @@
 // in the LICENSE file.
 
 use base64::Engine;
-use openssl::hash::{Hasher, MessageDigest};
 use rand::Rng;
+use sha2::{Digest, Sha512};
 
 use crate::error::{Error, ErrorKind};
 
@@ -192,10 +192,8 @@ impl Password {
                 valid: false,
             });
         }
-        let mut h = Hasher::new(MessageDigest::sha512())?;
-        h.update(password)?;
-        h.update(&salt.0)?;
-        let res = h.finish()?;
+
+        let res = hash_password_and_salt(password, &salt);
         debug_assert!(res.as_ref().len() == HASH_LEN);
         let password_hash = Hash::from_slice(res.as_ref());
         Ok(Self {
@@ -211,10 +209,7 @@ impl Password {
     ///
     /// Returns error if openssl hash functions got error.
     pub fn update(&mut self, password: &[u8]) -> Result<(), Error> {
-        let mut h = Hasher::new(MessageDigest::sha512())?;
-        h.update(password)?;
-        h.update(&self.salt.0)?;
-        let res = h.finish()?;
+        let res = hash_password_and_salt(password, &self.salt);
         debug_assert!(res.as_ref().len() == HASH_LEN);
         self.password_hash.0.copy_from_slice(res.as_ref());
         Ok(())
@@ -226,12 +221,16 @@ impl Password {
     ///
     /// Returns error if openssl hash functions got error.
     pub fn is_match(&self, password: &[u8]) -> Result<bool, Error> {
-        let mut h = Hasher::new(MessageDigest::sha512())?;
-        h.update(password)?;
-        h.update(&self.salt.0)?;
-        let res = h.finish()?;
+        let res = hash_password_and_salt(password, &self.salt);
         Ok(self.password_hash.0 == res.as_ref())
     }
+}
+
+fn hash_password_and_salt(password: &[u8], salt: &Salt) -> [u8; HASH_LEN] {
+    let mut hasher = Sha512::new();
+    hasher.update(password);
+    hasher.update(&salt.0);
+    hasher.finalize().into()
 }
 
 #[cfg(test)]
