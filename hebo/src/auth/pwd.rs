@@ -184,7 +184,9 @@ impl Password {
     /// Returns error if openssl hash functions got error.
     pub fn generate(password: &[u8]) -> Result<Self, Error> {
         let mut rng = rand::rng();
-        let salt = Salt(rng.random());
+        let mut salt_bytes = [0u8; SALT_LEN];
+        rng.fill_bytes(&mut salt_bytes);
+        let salt = Salt(salt_bytes);
         if password.is_empty() {
             return Ok(Self {
                 salt,

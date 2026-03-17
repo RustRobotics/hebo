@@ -3,7 +3,7 @@
 // in the LICENSE file.
 
 use rand::distr::Alphanumeric;
-use rand::Rng;
+use rand::RngExt;
 
 pub const MAXIMUM_CLIENT_ID: usize = 32;
 
